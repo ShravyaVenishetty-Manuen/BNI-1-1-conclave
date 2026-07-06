@@ -692,7 +692,7 @@ export default function Conclaves() {
           }`}
       />
 
-      <div className={`fixed right-0 top-0 h-screen w-full max-w-[440px] bg-white z-[60] border-l border-zinc-200 shadow-2xl transform transition-transform duration-300 ${selectedConclave ? 'translate-x-0' : 'translate-x-full'
+      <div className={`fixed right-0 top-0 h-screen w-full max-w-[440px] bg-white z-[60] border-l border-zinc-100 shadow-2xl transform transition-transform duration-300 ${selectedConclave ? 'translate-x-0' : 'translate-x-full'
         }`}>
         {selectedConclave && (
           <div className="flex flex-col h-full">
@@ -780,7 +780,7 @@ export default function Conclaves() {
                   openEditModal(selectedConclave);
                   setSelectedConclave(null);
                 }}
-                className="flex-1 py-2.5 bg-white border border-zinc-200 text-zinc-655 hover:bg-zinc-50 rounded-lg text-button font-bold transition-smooth shadow-sm cursor-pointer"
+                className="flex-1 py-2.5 bg-white border border-zinc-100 text-zinc-655 hover:bg-zinc-50 rounded-lg text-button font-bold transition-smooth shadow-sm cursor-pointer"
               >
                 Edit Conclave
               </button>
@@ -802,7 +802,7 @@ export default function Conclaves() {
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
           <form onSubmit={handleAddSubmit} className="w-full max-w-lg bg-white rounded-xl border border-zinc-100 shadow-2xl overflow-hidden animate-scale-up">
-            <div className="p-5 border-b border-zinc-150 bg-zinc-50 flex justify-between items-center">
+            <div className="p-5 border-b border-zinc-100 bg-zinc-50 flex justify-between items-center">
               <h3 className="font-extrabold text-zinc-950 text-body-sm">Create New Conclave</h3>
               <button type="button" onClick={() => setIsAddModalOpen(false)} className="p-1 hover:bg-zinc-200 rounded text-zinc-400 transition-smooth">
                 <X className="w-4 h-4" />
@@ -936,11 +936,11 @@ export default function Conclaves() {
               </div>
             </div>
 
-            <div className="p-4 border-t border-zinc-150 bg-zinc-50/50 flex justify-end gap-2.5">
+            <div className="p-4 border-t border-zinc-100 bg-zinc-50/50 flex justify-end gap-2.5">
               <button
                 type="button"
                 onClick={() => setIsAddModalOpen(false)}
-                className="px-4 py-2 border border-zinc-250 bg-white text-zinc-700 text-button rounded-lg hover:bg-zinc-50 transition-smooth cursor-pointer"
+                className="px-4 py-2 border border-zinc-100 bg-white text-zinc-700 text-button rounded-lg hover:bg-zinc-50 transition-smooth cursor-pointer"
               >
                 Cancel
               </button>
@@ -959,7 +959,7 @@ export default function Conclaves() {
       {isEditModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
           <form onSubmit={handleEditSubmit} className="w-full max-w-lg bg-white rounded-xl border border-zinc-100 shadow-2xl overflow-hidden animate-scale-up">
-            <div className="p-5 border-b border-zinc-150 bg-zinc-50 flex justify-between items-center">
+            <div className="p-5 border-b border-zinc-100 bg-zinc-50 flex justify-between items-center">
               <h3 className="font-extrabold text-zinc-950 text-body-sm">Edit Conclave Profile</h3>
               <button type="button" onClick={() => setIsEditModalOpen(false)} className="p-1 hover:bg-zinc-200 rounded text-zinc-400 transition-smooth">
                 <X className="w-4 h-4" />
@@ -1087,11 +1087,11 @@ export default function Conclaves() {
               </div>
             </div>
 
-            <div className="p-4 border-t border-zinc-150 bg-zinc-50/50 flex justify-end gap-2.5">
+            <div className="p-4 border-t border-zinc-100 bg-zinc-50/50 flex justify-end gap-2.5">
               <button
                 type="button"
                 onClick={() => setIsEditModalOpen(false)}
-                className="px-4 py-2 border border-zinc-250 bg-white text-zinc-700 text-button rounded-lg hover:bg-zinc-50 transition-smooth cursor-pointer"
+                className="px-4 py-2 border border-zinc-100 bg-white text-zinc-700 text-button rounded-lg hover:bg-zinc-50 transition-smooth cursor-pointer"
               >
                 Cancel
               </button>
@@ -1129,7 +1129,7 @@ export default function Conclaves() {
               <button
                 type="button"
                 onClick={() => setDeleteTarget(null)}
-                className="px-3.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-button rounded-lg transition-smooth cursor-pointer text-[10px] font-bold border border-zinc-200"
+                className="px-3.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-button rounded-lg transition-smooth cursor-pointer text-[10px] font-bold border border-zinc-100"
               >
                 Cancel
               </button>
@@ -1168,7 +1168,7 @@ export default function Conclaves() {
               <button
                 type="button"
                 onClick={() => setIsBulkDeleteOpen(false)}
-                className="px-3.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-button rounded-lg transition-smooth cursor-pointer text-[10px] font-bold border border-zinc-200"
+                className="px-3.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-button rounded-lg transition-smooth cursor-pointer text-[10px] font-bold border border-zinc-100"
               >
                 Cancel
               </button>

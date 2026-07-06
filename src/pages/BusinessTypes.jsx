@@ -710,7 +710,7 @@ export default function BusinessTypes() {
               </button>
               <button
                 onClick={() => setSelectedCategory(null)}
-                className="w-full py-2 bg-white border border-zinc-200 text-zinc-650 hover:bg-zinc-50 text-button font-bold rounded-lg shadow-sm transition-smooth cursor-pointer"
+                className="w-full py-2 bg-white border border-zinc-100 text-zinc-650 hover:bg-zinc-50 text-button font-bold rounded-lg shadow-sm transition-smooth cursor-pointer"
               >
                 Close Drawer
               </button>
@@ -722,7 +722,7 @@ export default function BusinessTypes() {
       {/* Add / Edit Category Modal */}
       {isFormOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-md bg-white rounded-xl border border-zinc-200 shadow-2xl overflow-hidden animate-scale-up">
+          <div className="w-full max-w-md bg-white rounded-xl border border-zinc-100 shadow-2xl overflow-hidden animate-scale-up">
             {/* Modal Header */}
             <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50">
               <h3 className="text-section-heading font-extrabold text-zinc-950">
@@ -803,7 +803,7 @@ export default function BusinessTypes() {
       {/* Delete Confirmation Modal */}
       {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
-          <div className="w-full max-w-sm bg-white rounded-xl border border-zinc-200 shadow-2xl p-5 space-y-4 animate-scale-up">
+          <div className="w-full max-w-sm bg-white rounded-xl border border-zinc-100 shadow-2xl p-5 space-y-4 animate-scale-up">
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 rounded-full bg-brand-red/10 text-brand-red flex items-center justify-center shrink-0 mt-0.5">
                 <X className="w-4 h-4" />
@@ -823,7 +823,7 @@ export default function BusinessTypes() {
               <button
                 type="button"
                 onClick={() => setDeleteTarget(null)}
-                className="px-3.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-button rounded-lg transition-smooth cursor-pointer text-[10px] font-bold border border-zinc-200"
+                className="px-3.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-button rounded-lg transition-smooth cursor-pointer text-[10px] font-bold border border-zinc-100"
               >
                 Cancel
               </button>
@@ -862,7 +862,7 @@ export default function BusinessTypes() {
               <button
                 type="button"
                 onClick={() => setIsBulkDeleteConfirmOpen(false)}
-                className="px-3.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-button rounded-lg transition-smooth cursor-pointer text-[10px] font-bold border border-zinc-200"
+                className="px-3.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-button rounded-lg transition-smooth cursor-pointer text-[10px] font-bold border border-zinc-100"
               >
                 Cancel
               </button>

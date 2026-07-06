@@ -670,7 +670,7 @@ export default function ActiveUsers() {
           }`}
       />
 
-      <div className={`fixed right-0 top-0 h-screen w-full max-w-[440px] bg-white z-[60] border-l border-zinc-200 shadow-2xl transform transition-transform duration-300 ${selectedSession ? 'translate-x-0' : 'translate-x-full'
+      <div className={`fixed right-0 top-0 h-screen w-full max-w-[440px] bg-white z-[60] border-l border-zinc-100 shadow-2xl transform transition-transform duration-300 ${selectedSession ? 'translate-x-0' : 'translate-x-full'
         }`}>
         {selectedSession && (
           <div className="flex flex-col h-full">
@@ -692,7 +692,7 @@ export default function ActiveUsers() {
 
               {/* Profile head */}
               <div className="flex flex-col items-center gap-3 text-center bg-zinc-50 p-4 rounded-xl border border-zinc-100">
-                <div className="w-20 h-20 rounded-lg border border-zinc-200 p-1 bg-white overflow-hidden shrink-0 shadow-sm">
+                <div className="w-20 h-20 rounded-lg border border-zinc-100 p-1 bg-white overflow-hidden shrink-0 shadow-sm">
                   {selectedSession.image ? (
                     <img className="w-full h-full object-cover rounded-md" src={selectedSession.image} alt={selectedSession.name} />
                   ) : (
@@ -707,11 +707,11 @@ export default function ActiveUsers() {
 
                   <div className="flex gap-2 mt-2.5 justify-center">
                     {selectedSession.isCaptain && (
-                      <span className="px-2.5 py-0.5 bg-red-50 text-brand-red border border-red-150 rounded-md text-[9px] font-extrabold uppercase">
+                      <span className="px-2.5 py-0.5 bg-red-50 text-brand-red border border-red-100 rounded-md text-[9px] font-extrabold uppercase">
                         Captain
                       </span>
                     )}
-                    <span className="px-2.5 py-0.5 bg-zinc-100 text-zinc-500 border border-zinc-200 rounded-md text-[9px] font-semibold uppercase">
+                    <span className="px-2.5 py-0.5 bg-zinc-100 text-zinc-500 border border-zinc-100 rounded-md text-[9px] font-semibold uppercase">
                       {selectedSession.status}
                     </span>
                   </div>
@@ -782,7 +782,7 @@ export default function ActiveUsers() {
                   showToast('Notification Sent', `Sent session ping alert to ${selectedSession.name}.`);
                   setSelectedSession(null);
                 }}
-                className="flex-1 py-2 bg-white border border-zinc-200 text-zinc-650 hover:bg-zinc-50 rounded-lg text-button font-bold transition-smooth shadow-sm cursor-pointer"
+                className="flex-1 py-2 bg-white border border-zinc-100 text-zinc-655 hover:bg-zinc-50 rounded-lg text-button font-bold transition-smooth shadow-sm cursor-pointer"
               >
                 Notify User
               </button>
@@ -823,7 +823,7 @@ export default function ActiveUsers() {
               <button
                 type="button"
                 onClick={() => setDeleteTarget(null)}
-                className="px-3.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-button rounded-lg transition-smooth cursor-pointer text-[10px] font-bold border border-zinc-200"
+                className="px-3.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-button rounded-lg transition-smooth cursor-pointer text-[10px] font-bold border border-zinc-100"
               >
                 Cancel
               </button>
@@ -862,7 +862,7 @@ export default function ActiveUsers() {
               <button
                 type="button"
                 onClick={() => setIsBulkLogoutOpen(false)}
-                className="px-3.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-button rounded-lg transition-smooth cursor-pointer text-[10px] font-bold border border-zinc-200"
+                className="px-3.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-button rounded-lg transition-smooth cursor-pointer text-[10px] font-bold border border-zinc-100"
               >
                 Cancel
               </button>

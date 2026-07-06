@@ -739,7 +739,7 @@ export default function Members() {
       />
 
       {/* Sliding Drawer component */}
-      <div className={`fixed right-0 top-0 h-screen w-full max-w-[420px] bg-white z-[60] border-l border-zinc-200 shadow-2xl transform transition-transform duration-300 ${selectedMember ? 'translate-x-0' : 'translate-x-full'
+      <div className={`fixed right-0 top-0 h-screen w-full max-w-[420px] bg-white z-[60] border-l border-zinc-100 shadow-2xl transform transition-transform duration-300 ${selectedMember ? 'translate-x-0' : 'translate-x-full'
         }`}>
         {selectedMember && (
           <div className="flex flex-col h-full">
@@ -886,7 +886,7 @@ export default function Members() {
               </button>
               <button 
                 onClick={() => setSelectedMember(null)}
-                className="w-full py-2 bg-white border border-zinc-200 text-zinc-650 hover:bg-zinc-50 rounded-lg text-button font-bold transition-smooth shadow-sm cursor-pointer"
+                className="w-full py-2 bg-white border border-zinc-100 text-zinc-650 hover:bg-zinc-50 rounded-lg text-button font-bold transition-smooth shadow-sm cursor-pointer"
               >
                 Close Drawer
               </button>
@@ -1047,7 +1047,7 @@ export default function Members() {
                 <button
                   type="button"
                   onClick={() => setIsFormOpen(false)}
-                  className="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-button rounded-lg transition-smooth shadow-sm cursor-pointer border border-zinc-200"
+                  className="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-button rounded-lg transition-smooth shadow-sm cursor-pointer border border-zinc-100"
                 >
                   Cancel
                 </button>
@@ -1086,7 +1086,7 @@ export default function Members() {
               <button
                 type="button"
                 onClick={() => setDeleteTarget(null)}
-                className="px-3.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-button rounded-lg transition-smooth cursor-pointer text-[10px] font-bold border border-zinc-200"
+                className="px-3.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-button rounded-lg transition-smooth cursor-pointer text-[10px] font-bold border border-zinc-100"
               >
                 Cancel
               </button>
@@ -1125,7 +1125,7 @@ export default function Members() {
               <button
                 type="button"
                 onClick={() => setIsBulkDeleteConfirmOpen(false)}
-                className="px-3.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-button rounded-lg transition-smooth cursor-pointer text-[10px] font-bold border border-zinc-200"
+                className="px-3.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-button rounded-lg transition-smooth cursor-pointer text-[10px] font-bold border border-zinc-100"
               >
                 Cancel
               </button>
@@ -1180,7 +1180,7 @@ export default function Members() {
                 <button 
                   type="button"
                   onClick={() => setReassignTarget(null)}
-                  className="px-3.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-button rounded-lg transition-smooth cursor-pointer text-[10px] font-bold border border-zinc-200"
+                  className="px-3.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-button rounded-lg transition-smooth cursor-pointer text-[10px] font-bold border border-zinc-100"
                 >
                   Cancel
                 </button>
