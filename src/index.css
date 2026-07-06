@@ -9,72 +9,129 @@
 /* Custom Typography Utilities from Specs */
 @utility text-dashboard-title {
   font-family: "Manrope", sans-serif;
-  font-size: 28px;
-  line-height: 36px;
+  font-size: 20px;
+  line-height: 28px;
   font-weight: 700;
 }
 
 @utility text-module-title {
   font-family: "Manrope", sans-serif;
-  font-size: 24px;
-  line-height: 32px;
+  font-size: 16px;
+  line-height: 22px;
   font-weight: 700;
 }
 
 @utility text-section-heading {
   font-family: "Manrope", sans-serif;
-  font-size: 18px;
-  line-height: 26px;
+  font-size: 14px;
+  line-height: 18px;
   font-weight: 600;
 }
 
 @utility text-card-title {
   font-family: "Manrope", sans-serif;
-  font-size: 16px;
-  line-height: 24px;
+  font-size: 13px;
+  line-height: 18px;
   font-weight: 600;
 }
 
 @utility text-body-text {
   font-family: "Inter", sans-serif;
-  font-size: 14px;
-  line-height: 20px;
+  font-size: 12px;
+  line-height: 16px;
   font-weight: 400;
 }
 
 @utility text-table-text {
   font-family: "Inter", sans-serif;
-  font-size: 14px;
-  line-height: 20px;
+  font-size: 12px;
+  line-height: 16px;
   font-weight: 500;
 }
 
 @utility text-sidebar {
   font-family: "Inter", sans-serif;
-  font-size: 14px;
-  line-height: 20px;
+  font-size: 12px;
+  line-height: 16px;
   font-weight: 500;
 }
 
 @utility text-button {
   font-family: "Inter", sans-serif;
-  font-size: 14px;
-  line-height: 20px;
+  font-size: 12px;
+  line-height: 16px;
   font-weight: 600;
 }
 
 @utility text-label {
   font-family: "Inter", sans-serif;
-  font-size: 13px;
-  line-height: 18px;
+  font-size: 11px;
+  line-height: 14px;
   font-weight: 500;
 }
 
 @utility text-caption {
   font-family: "Inter", sans-serif;
+  font-size: 10px;
+  line-height: 12px;
+  font-weight: 400;
+}
+
+/* Custom compact utilities matching the dashboard's layout classes */
+@utility text-display-sm {
+  font-family: "Manrope", sans-serif;
+  font-size: 20px;
+  line-height: 26px;
+  font-weight: 700;
+}
+
+@utility text-headline-lg {
+  font-family: "Manrope", sans-serif;
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 700;
+}
+
+@utility text-headline-md {
+  font-family: "Manrope", sans-serif;
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 600;
+}
+
+@utility text-title-lg {
+  font-family: "Manrope", sans-serif;
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 600;
+}
+
+@utility text-body-md {
+  font-family: "Inter", sans-serif;
   font-size: 12px;
   line-height: 16px;
   font-weight: 400;
+}
+
+@utility text-body-sm {
+  font-family: "Inter", sans-serif;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 400;
+}
+
+@utility text-label-md {
+  font-family: "Inter", sans-serif;
+  font-size: 11px;
+  line-height: 14px;
+  font-weight: 550;
+}
+
+@utility text-label-xs {
+  font-family: "Inter", sans-serif;
+  font-size: 10px;
+  line-height: 12px;
+  font-weight: 600;
 }
 
 /* Animations and Transitions */
