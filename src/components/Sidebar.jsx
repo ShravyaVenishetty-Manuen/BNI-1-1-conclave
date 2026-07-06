@@ -6,12 +6,14 @@ import {
   Award, 
   CalendarRange, 
   BarChart3, 
-  Settings 
+  Settings,
+  Activity
 } from 'lucide-react';
 
 const navItems = [
   { id: 'dashboard', label: 'Dashboard', Icon: LayoutDashboard },
   { id: 'members', label: 'Members', Icon: Users },
+  { id: 'active-users', label: 'Active Users', Icon: Activity },
   { id: 'business-types', label: 'Business Types', Icon: Layers },
   { id: 'captains', label: 'Captains', Icon: Award },
   { id: 'conclaves', label: 'Conclaves', Icon: CalendarRange },
