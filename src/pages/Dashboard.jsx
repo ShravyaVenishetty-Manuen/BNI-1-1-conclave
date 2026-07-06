@@ -1,4 +1,5 @@
 import React from 'react';
+import { PieChart, Pie } from 'recharts';
 import {
   Users,
   Bolt,
@@ -6,15 +7,18 @@ import {
   Calendar,
   CheckCircle2,
   TrendingUp,
-  Plus,
   ArrowUpRight,
   Clock,
   ClipboardList,
   Layers,
   ChevronRight,
-  ShieldCheck,
   UserCheck,
-  MapPin
+  MapPin,
+  UserPlus,
+  PlusCircle,
+  BadgeCheck,
+  Sparkles,
+  BarChart3
 } from 'lucide-react';
 
 export default function Dashboard() {
@@ -30,9 +34,9 @@ export default function Dashboard() {
       {/* Page Header section */}
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-zinc-100 pb-6">
         <div>
-          <h2 className="text-dashboard-title text-zinc-950 font-bold tracking-tight">Admin Dashboard</h2>
+          <h2 className="text-dashboard-title text-zinc-950 font-extrabold tracking-tight">Admin Dashboard</h2>
           <p className="text-body-text text-zinc-500 mt-1">
-            Welcome back, Admin. Here is the overview for <span className="font-semibold text-zinc-800">{formattedDate}</span>.
+            Welcome back, Admin.
           </p>
         </div>
 
@@ -50,12 +54,12 @@ export default function Dashboard() {
 
       {/* KPI Grid */}
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        
+
         {/* Total Members */}
         <div className="p-6 border border-zinc-200/80 rounded-xl bg-white transition-smooth shadow-sm group">
           <div className="flex justify-between items-start mb-3">
             <p className="text-label-md text-zinc-500 uppercase font-semibold">Total Members</p>
-            <div className="p-2 rounded-lg bg-zinc-50 text-zinc-400 group-hover:bg-brand-red/5 group-hover:text-brand-red transition-smooth">
+            <div className="p-2 rounded-lg bg-brand-red/5 text-brand-red">
               <Users className="w-5 h-5" />
             </div>
           </div>
@@ -79,7 +83,7 @@ export default function Dashboard() {
         <div className="p-6 border border-zinc-200/80 rounded-xl bg-white transition-smooth shadow-sm group">
           <div className="flex justify-between items-start mb-3">
             <p className="text-label-md text-zinc-500 uppercase font-semibold">Active Capacity</p>
-            <div className="p-2 rounded-lg bg-zinc-50 text-zinc-400 group-hover:bg-brand-red/5 group-hover:text-brand-red transition-smooth">
+            <div className="p-2 rounded-lg bg-brand-red/5 text-brand-red">
               <Bolt className="w-5 h-5" />
             </div>
           </div>
@@ -99,7 +103,7 @@ export default function Dashboard() {
         <div className="p-6 border border-zinc-200/80 rounded-xl bg-white transition-smooth shadow-sm group">
           <div className="flex justify-between items-start mb-3">
             <p className="text-label-md text-zinc-500 uppercase font-semibold">Leadership</p>
-            <div className="p-2 rounded-lg bg-zinc-50 text-zinc-400 group-hover:bg-brand-red/5 group-hover:text-brand-red transition-smooth">
+            <div className="p-2 rounded-lg bg-brand-red/5 text-brand-red">
               <Award className="w-5 h-5" />
             </div>
           </div>
@@ -122,7 +126,7 @@ export default function Dashboard() {
         <div className="p-6 border border-zinc-200/80 rounded-xl bg-white transition-smooth shadow-sm group">
           <div className="flex justify-between items-start mb-3">
             <p className="text-label-md text-zinc-500 uppercase font-semibold">Conclave Pipeline</p>
-            <div className="p-2 rounded-lg bg-zinc-50 text-zinc-400 group-hover:bg-brand-red/5 group-hover:text-brand-red transition-smooth">
+            <div className="p-2 rounded-lg bg-brand-red/5 text-brand-red">
               <Layers className="w-5 h-5" />
             </div>
           </div>
@@ -142,106 +146,109 @@ export default function Dashboard() {
 
       {/* Quick Actions & Featured Conclave Highlight */}
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        
+
         {/* Quick Management Panel */}
-        <div className="lg:col-span-3 flex flex-col justify-between p-6 border border-zinc-200 rounded-xl bg-zinc-50/50 shadow-sm space-y-4">
-          <div>
-            <h4 className="text-label-xs font-bold text-zinc-400 uppercase px-1 tracking-wider">Quick Actions</h4>
-            <p className="text-caption text-zinc-500 px-1 mt-1 leading-relaxed">Operate conclave cycles and validation checks.</p>
-          </div>
+        <div className="lg:col-span-3 flex flex-col gap-2.5">
+          <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1.5 px-0.5">Quick Management</span>
 
-          <div className="space-y-2">
-            <button className="w-full flex items-center justify-between px-4 py-3 bg-brand-red hover:bg-red-700 text-white rounded-lg transition-smooth shadow-sm hover:shadow group cursor-pointer">
+          <div className="flex flex-col gap-3">
+            <button className="w-full flex items-center justify-between px-4 py-3.5 bg-brand-red hover:bg-red-700 text-white rounded-lg transition-smooth shadow-sm cursor-pointer font-bold tracking-tight">
               <span className="text-button">Add New Member</span>
-              <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform" />
+              <UserPlus className="w-[18px] h-[18px]" />
             </button>
 
-            <button className="w-full flex items-center justify-between px-4 py-3 bg-zinc-950 hover:bg-zinc-800 text-white rounded-lg transition-smooth shadow-sm hover:shadow group cursor-pointer">
+            <button className="w-full flex items-center justify-between px-4 py-3.5 bg-brand-red hover:bg-red-700 text-white rounded-lg transition-smooth shadow-sm cursor-pointer font-bold tracking-tight">
               <span className="text-button">Create Conclave</span>
-              <Calendar className="w-4 h-4 group-hover:scale-110 transition-transform" />
+              <PlusCircle className="w-[18px] h-[18px]" />
             </button>
 
-            <button className="w-full flex items-center justify-between px-4 py-3 bg-white border border-zinc-200 hover:bg-zinc-50 text-zinc-800 rounded-lg transition-smooth shadow-sm hover:shadow group cursor-pointer">
-              <span className="text-button">Run Validation Gate</span>
-              <ShieldCheck className="w-4 h-4 text-emerald-500 group-hover:scale-110 transition-transform" />
+            <button className="w-full flex items-center justify-between px-4 py-3.5 bg-brand-red hover:bg-red-700 text-white rounded-lg transition-smooth shadow-sm cursor-pointer font-bold tracking-tight">
+              <span className="text-button">Run Validation</span>
+              <BadgeCheck className="w-[18px] h-[18px]" />
             </button>
 
-            <button className="w-full flex items-center justify-between px-4 py-3 bg-white border border-zinc-200 hover:bg-zinc-50 text-zinc-800 rounded-lg transition-smooth shadow-sm hover:shadow group cursor-pointer">
+            <button className="w-full flex items-center justify-between px-4 py-3.5 bg-brand-red hover:bg-red-700 text-white rounded-lg transition-smooth shadow-sm cursor-pointer font-bold tracking-tight">
               <span className="text-button">Generate Schedule</span>
-              <Bolt className="w-4 h-4 text-amber-500 group-hover:animate-pulse transition-transform" />
+              <Sparkles className="w-[18px] h-[18px]" />
+            </button>
+
+            <button className="w-full flex items-center justify-between px-4 py-3.5 bg-brand-red hover:bg-red-700 text-white rounded-lg transition-smooth shadow-sm cursor-pointer font-bold tracking-tight">
+              <span className="text-button">View Reports</span>
+              <BarChart3 className="w-[18px] h-[18px]" />
             </button>
           </div>
         </div>
 
         {/* Featured Conclave Highlight */}
-        <div className="lg:col-span-9 p-6 border border-brand-red/20 rounded-xl bg-brand-red text-white flex flex-col md:flex-row gap-6 relative overflow-hidden group shadow-md">
-          
-          <div className="flex-1 space-y-5 z-10 flex flex-col justify-between">
+        <div className="lg:col-span-9 p-6 border border-brand-red/20 rounded-xl bg-brand-red text-white flex flex-col md:flex-row gap-6 relative overflow-hidden group shadow-md justify-between items-stretch">
+
+          <div className="flex-1 z-10 flex flex-col justify-between py-1">
             <div className="flex items-center gap-3">
-              <span className="p-3 bg-white/20 rounded-xl text-white border border-white/10 shadow-inner flex items-center justify-center">
+              <span className="p-2.5 bg-white/20 rounded-xl text-white border border-white/10 shadow-inner flex items-center justify-center">
                 <Calendar className="w-5 h-5" />
               </span>
               <div>
                 <h3 className="text-headline-md font-bold leading-tight">Annual Conclave Q4</h3>
-                <div className="flex flex-wrap gap-3 mt-1.5">
-                  <span className="text-label-xs bg-emerald-500 text-white px-2.5 py-0.5 rounded-full font-bold uppercase tracking-tight shadow-sm">
-                    Live Status: Running
+                <div className="flex flex-wrap gap-3 mt-1.5 items-center">
+                  <span className="text-[9px] bg-[#00c896] text-white px-2 py-0.5 rounded font-extrabold uppercase tracking-wider shadow-sm">
+                    Current Conclave Running
                   </span>
-                  <span className="text-label-xs text-white/80 flex items-center gap-1">
+                  <span className="text-label-xs text-white/80 flex items-center gap-1 font-semibold">
                     <MapPin className="w-3.5 h-3.5" /> Mumbai, Grand Ballroom
                   </span>
                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-2 border-y border-white/10">
+            <div className="grid grid-cols-4 gap-2.5 py-4 border-y border-white/10">
               <div className="space-y-0.5">
-                <p className="text-label-xs text-white/70 uppercase font-semibold">Round Progress</p>
-                <p className="font-bold text-title-lg">2 / 5 Rounds</p>
+                <p className="text-[10px] text-white/70 uppercase font-bold tracking-wider">Round Progress</p>
+                <p className="font-extrabold text-[15px] leading-tight mt-1">2 / 5</p>
+                <p className="font-extrabold text-[15px] leading-tight">Rounds</p>
               </div>
               <div className="space-y-0.5">
-                <p className="text-label-xs text-white/70 uppercase font-semibold">Tables</p>
-                <p className="font-bold text-title-lg">24 Active</p>
+                <p className="text-[10px] text-white/70 uppercase font-bold tracking-wider">Tables</p>
+                <p className="font-extrabold text-[15px] leading-tight mt-1">24 Active</p>
               </div>
               <div className="space-y-0.5">
-                <p className="text-label-xs text-white/70 uppercase font-semibold">Attendance</p>
-                <p className="font-bold text-title-lg">310 / 320</p>
+                <p className="text-[10px] text-white/70 uppercase font-bold tracking-wider">Attendance</p>
+                <p className="font-extrabold text-[15px] leading-tight mt-1">310 / 320</p>
               </div>
               <div className="space-y-0.5">
-                <p className="text-label-xs text-white/70 uppercase font-semibold">Validation</p>
-                <p className="font-bold text-white flex items-center gap-1 text-title-lg">
-                  <CheckCircle2 className="w-4 h-4 text-white" /> Passed
+                <p className="text-[10px] text-white/70 uppercase font-bold tracking-wider">Validation</p>
+                <p className="font-extrabold text-[15px] leading-tight mt-1 flex items-center gap-1.5">
+                  <CheckCircle2 className="w-[18px] h-[18px] text-white" /> Passed
                 </p>
               </div>
             </div>
 
-            <div className="space-y-2 pt-1">
-              <div className="flex justify-between text-label-xs font-bold uppercase text-white/80">
+            <div className="space-y-2">
+              <div className="flex justify-between text-[10px] font-bold uppercase text-white/95 tracking-wider">
                 <span>Overall Conclave Progress</span>
                 <span>40%</span>
               </div>
-              <div className="w-full bg-white/20 h-2.5 rounded-full overflow-hidden shadow-inner">
+              <div className="w-full bg-white/20 h-2 rounded-full overflow-hidden shadow-inner">
                 <div className="bg-white h-full w-[40%] rounded-full shadow-[0_0_8px_rgba(255,255,255,0.4)]"></div>
               </div>
             </div>
           </div>
 
-          <div className="w-full md:w-[240px] bg-white/10 backdrop-blur-md p-5 rounded-lg border border-white/25 space-y-4 z-10 flex flex-col justify-between">
+          <div className="w-full md:w-[250px] bg-white/10 backdrop-blur-md p-5 rounded-lg border border-white/20 z-10 flex flex-col justify-between min-h-[220px]">
             <div>
-              <p className="text-label-xs font-bold text-white/80 uppercase tracking-wider">Captain Activity</p>
-              <div className="space-y-2.5 mt-3">
+              <p className="text-[10px] font-bold text-white/90 uppercase tracking-widest">Captain Activity</p>
+              <div className="space-y-3 mt-4">
                 <div className="flex items-center gap-2">
                   <span className="h-2 w-2 rounded-full bg-emerald-400"></span>
-                  <span className="text-body-sm font-semibold">12 Captains Online</span>
+                  <span className="text-body-sm font-semibold text-white">12 Captains Online</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="h-2 w-2 rounded-full bg-amber-400"></span>
-                  <span className="text-body-sm font-semibold">3 Pending Approval</span>
+                  <span className="text-body-sm font-semibold text-white">3 Pending Approval</span>
                 </div>
               </div>
             </div>
 
-            <button className="w-full py-2.5 text-label-md font-bold text-white border border-white/40 rounded-lg hover:bg-white/10 transition-smooth cursor-pointer mt-4">
+            <button className="w-full py-2.5 text-label-md font-bold text-white border border-white/35 rounded-lg hover:bg-white/10 transition-smooth cursor-pointer mt-4 uppercase tracking-wider text-[11px]">
               Manage Logistics
             </button>
           </div>
@@ -251,96 +258,120 @@ export default function Dashboard() {
       {/* Analytics: Validation & Business Mix */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-        {/* Validation health radial chart */}
-        <div className="p-6 border border-zinc-200/80 rounded-xl bg-white shadow-sm hover:shadow-md transition-smooth">
-          <div className="flex justify-between items-center mb-6">
-            <h4 className="text-title-lg text-zinc-950 font-bold">Validation Health</h4>
-            <span className="text-label-xs text-zinc-400 font-bold uppercase tracking-wider">Last Run: 12m ago</span>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-center gap-8">
-            <div className="relative w-32 h-32 flex items-center justify-center shrink-0">
-              <svg className="w-full h-full transform -rotate-90">
-                <circle className="text-zinc-50" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" strokeWidth="8"></circle>
-                <circle className="text-emerald-500" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" strokeDasharray="364.4" stroke-dashoffset="7.2" stroke-width="8" strokeLinecap="round"></circle>
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-display-sm text-zinc-950 font-bold leading-none">98%</span>
-                <span className="text-label-xs text-zinc-400 font-bold uppercase tracking-wider mt-1">Score</span>
-              </div>
+        {/* Referrals Tracker card */}
+        <div className="p-5 border border-zinc-200/80 rounded-xl bg-white shadow-sm hover:shadow-md transition-smooth flex flex-col justify-between">
+          <div>
+            <div className="flex justify-between items-center mb-5">
+              <h4 className="text-title-lg text-zinc-950 font-semibold">Referrals Tracker</h4>
+              <span className="text-label-xs text-zinc-400 font-bold uppercase tracking-wider">Goal: 1,500 Referrals</span>
             </div>
 
-            <div className="flex-1 w-full space-y-2.5">
-              <div className="flex justify-between items-center p-3 bg-zinc-50 rounded-lg border border-zinc-100 shadow-sm">
-                <span className="text-body-sm font-semibold text-zinc-500 flex items-center gap-1.5">
-                  <span className="h-2 w-2 bg-emerald-500 rounded-full"></span> Rules Passed
-                </span>
-                <span className="font-bold text-emerald-600 text-body-md">42</span>
+            <div className="flex flex-col sm:flex-row items-center gap-6 mt-3">
+              <div className="relative w-32 h-32 flex items-center justify-center shrink-0">
+                <PieChart width={128} height={128}>
+                  <Pie
+                    data={[
+                      { value: 1320, fill: '#cf2e2e' },
+                      { value: 1500 - 1320, fill: '#f4f4f5' }
+                    ]}
+                    dataKey="value"
+                    innerRadius={46}
+                    outerRadius={56}
+                    startAngle={90}
+                    endAngle={-270}
+                    stroke="none"
+                  />
+                </PieChart>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-display-sm text-zinc-950 font-bold leading-none">1,320</span>
+                  <span className="text-label-xs text-zinc-400 font-bold uppercase tracking-wider mt-1">88% Goal</span>
+                </div>
               </div>
-              <div className="flex justify-between items-center p-3 bg-zinc-50 rounded-lg border border-zinc-100 shadow-sm">
-                <span className="text-body-sm font-semibold text-zinc-500 flex items-center gap-1.5">
-                  <span className="h-2 w-2 bg-amber-500 rounded-full"></span> Warnings
-                </span>
-                <span className="font-bold text-amber-600 text-body-md">2</span>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-zinc-50 rounded-lg border border-zinc-100 shadow-sm">
-                <span className="text-body-sm font-semibold text-zinc-500 flex items-center gap-1.5">
-                  <span className="h-2 w-2 bg-brand-red rounded-full"></span> Critical Errors
-                </span>
-                <span className="font-bold text-brand-red text-body-md">0</span>
+
+              <div className="flex-1 w-full space-y-2">
+                <div className="flex justify-between items-center p-2.5 bg-zinc-50 rounded-lg border border-zinc-100 shadow-sm">
+                  <span className="text-body-sm font-semibold text-zinc-500 flex items-center gap-1.5">
+                    <span className="h-2 w-2 bg-brand-red rounded-full"></span> Inside Referrals
+                  </span>
+                  <span className="font-bold text-zinc-800 text-body-md">842</span>
+                </div>
+                <div className="flex justify-between items-center p-2.5 bg-zinc-50 rounded-lg border border-zinc-100 shadow-sm">
+                  <span className="text-body-sm font-semibold text-zinc-500 flex items-center gap-1.5">
+                    <span className="h-2 w-2 bg-zinc-400 rounded-full"></span> Outside Referrals
+                  </span>
+                  <span className="font-bold text-zinc-800 text-body-md">478</span>
+                </div>
+                <div className="flex justify-between items-center p-2.5 bg-zinc-50 rounded-lg border border-zinc-100 shadow-sm">
+                  <span className="text-body-sm font-semibold text-zinc-500 flex items-center gap-1.5">
+                    <span className="h-2 w-2 bg-emerald-500 rounded-full"></span> Closed Business Value
+                  </span>
+                  <span className="font-bold text-emerald-600 text-body-md">$54,600</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Business type distribution */}
-        <div className="p-6 border border-zinc-200/80 rounded-xl bg-white shadow-sm hover:shadow-md transition-smooth">
-          <div className="flex justify-between items-center mb-6">
-            <h4 className="text-title-lg text-zinc-950 font-bold">Business Type Mix</h4>
-            <button className="text-brand-red text-label-md font-bold hover:underline transition-smooth cursor-pointer flex items-center gap-0.5">
-              View All 124 <ArrowUpRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          <div className="space-y-4">
-            <div className="space-y-1.5">
-              <div className="flex justify-between text-body-sm">
-                <span className="text-zinc-600 font-semibold">Real Estate & Construction</span>
-                <span className="font-bold text-zinc-900">24%</span>
-              </div>
-              <div className="w-full bg-zinc-100 h-2 rounded-full overflow-hidden">
-                <div className="bg-brand-red h-full w-[24%] rounded-full shadow-sm"></div>
-              </div>
+        {/* Top Referral Givers Leaderboard */}
+        <div className="p-5 border border-zinc-200/80 rounded-xl bg-white shadow-sm hover:shadow-md transition-smooth flex flex-col justify-between">
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <h4 className="text-title-lg text-zinc-950 font-semibold">Top Referral Givers</h4>
+              <button className="text-brand-red text-label-md font-bold hover:underline transition-smooth cursor-pointer flex items-center gap-0.5">
+                Leaderboard <ArrowUpRight className="w-3.5 h-3.5" />
+              </button>
             </div>
 
-            <div className="space-y-1.5">
-              <div className="flex justify-between text-body-sm">
-                <span className="text-zinc-600 font-semibold">Financial Services</span>
-                <span className="font-bold text-zinc-900">18%</span>
-              </div>
-              <div className="w-full bg-zinc-100 h-2 rounded-full overflow-hidden">
-                <div className="bg-zinc-800 h-full w-[18%] rounded-full shadow-sm"></div>
-              </div>
-            </div>
+            <div className="space-y-1">
 
-            <div className="space-y-1.5">
-              <div className="flex justify-between text-body-sm">
-                <span className="text-zinc-600 font-semibold">Marketing & Advertising</span>
-                <span className="font-bold text-zinc-900">15%</span>
+              <div className="flex items-center justify-between py-1.5 px-2 hover:bg-zinc-50 rounded-lg transition-smooth border border-transparent hover:border-zinc-100/50">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-brand-red/10 text-brand-red font-bold text-xs flex items-center justify-center shrink-0 border border-brand-red/10">
+                    1
+                  </div>
+                  <div>
+                    <p className="text-body-sm font-semibold text-zinc-900 leading-tight">Rajesh Mehta</p>
+                    <p className="text-caption text-zinc-500 mt-0.5 leading-none">Real Estate & Construction</p>
+                  </div>
+                </div>
+                <div className="text-right shrink-0">
+                  <span className="text-body-sm font-bold text-brand-red">42</span>
+                  <span className="text-[9px] text-zinc-400 font-semibold uppercase block tracking-wider mt-0.5">Referrals</span>
+                </div>
               </div>
-              <div className="w-full bg-zinc-100 h-2 rounded-full overflow-hidden">
-                <div className="bg-amber-500 h-full w-[15%] rounded-full shadow-sm"></div>
-              </div>
-            </div>
 
-            <div className="space-y-1.5">
-              <div className="flex justify-between text-body-sm">
-                <span className="text-zinc-600 font-semibold">Information Technology</span>
-                <span className="font-bold text-zinc-900">12%</span>
+              <div className="flex items-center justify-between py-1.5 px-2 hover:bg-zinc-50 rounded-lg transition-smooth border border-transparent hover:border-zinc-100/50">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-brand-red/10 text-brand-red font-bold text-xs flex items-center justify-center shrink-0 border border-brand-red/10">
+                    2
+                  </div>
+                  <div>
+                    <p className="text-body-sm font-semibold text-zinc-900 leading-tight">Anjali Sharma</p>
+                    <p className="text-caption text-zinc-500 mt-0.5 leading-none">Marketing & Advertising</p>
+                  </div>
+                </div>
+                <div className="text-right shrink-0">
+                  <span className="text-body-sm font-bold text-brand-red">38</span>
+                  <span className="text-[9px] text-zinc-400 font-semibold uppercase block tracking-wider mt-0.5">Referrals</span>
+                </div>
               </div>
-              <div className="w-full bg-zinc-100 h-2 rounded-full overflow-hidden">
-                <div className="bg-emerald-500 h-full w-[12%] rounded-full shadow-sm"></div>
+
+              <div className="flex items-center justify-between py-1.5 px-2 hover:bg-zinc-50 rounded-lg transition-smooth border border-transparent hover:border-zinc-100/50">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-brand-red/10 text-brand-red font-bold text-xs flex items-center justify-center shrink-0 border border-brand-red/10">
+                    3
+                  </div>
+                  <div>
+                    <p className="text-body-sm font-semibold text-zinc-900 leading-tight">Vikram Malhotra</p>
+                    <p className="text-caption text-zinc-500 mt-0.5 leading-none">Financial Services</p>
+                  </div>
+                </div>
+                <div className="text-right shrink-0">
+                  <span className="text-body-sm font-bold text-brand-red">35</span>
+                  <span className="text-[9px] text-zinc-400 font-semibold uppercase block tracking-wider mt-0.5">Referrals</span>
+                </div>
               </div>
+
             </div>
           </div>
         </div>
@@ -353,7 +384,7 @@ export default function Dashboard() {
         {/* Recent conclaves list */}
         <div className="lg:col-span-8 p-6 border border-zinc-200/80 rounded-xl bg-white flex flex-col shadow-sm hover:shadow-md transition-smooth">
           <div className="flex justify-between items-center mb-5">
-            <h4 className="text-title-lg text-zinc-950 font-bold">Recent Conclaves</h4>
+            <h4 className="text-title-lg text-zinc-950 font-semibold">Recent Conclaves</h4>
             <button className="text-zinc-500 hover:text-zinc-950 text-label-md flex items-center gap-1.5 transition-smooth cursor-pointer font-semibold border border-zinc-200 px-3 py-1.5 rounded-lg bg-zinc-50/50 hover:bg-zinc-100">
               <ClipboardList className="w-4 h-4" /> Filter
             </button>
@@ -430,7 +461,7 @@ export default function Dashboard() {
         {/* Recent activity timeline */}
         <div className="lg:col-span-4 p-6 border border-zinc-200/80 rounded-xl bg-white shadow-sm hover:shadow-md transition-smooth flex flex-col justify-between">
           <div>
-            <h4 className="text-title-lg text-zinc-950 font-bold mb-6">Recent Activity</h4>
+            <h4 className="text-title-lg text-zinc-950 font-semibold mb-6">Recent Activity</h4>
 
             <div className="relative space-y-6 before:content-[''] before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[1px] before:bg-zinc-100">
 
@@ -440,7 +471,7 @@ export default function Dashboard() {
                 </div>
                 <div>
                   <p className="text-body-sm text-zinc-700">
-                    <span className="font-semibold text-zinc-900">Sarah Jenkins</span> generated a new schedule for Alpha Conclave.
+                    <span className="font-semibold text-zinc-900">Shweta Iyer</span> generated a new schedule for Alpha Conclave.
                   </p>
                   <p className="text-label-xs text-zinc-400 mt-1.5 uppercase font-bold flex items-center gap-1">
                     <Clock className="w-3 h-3" /> 5 minutes ago
@@ -454,7 +485,7 @@ export default function Dashboard() {
                 </div>
                 <div>
                   <p className="text-body-sm text-zinc-700">
-                    <span className="font-semibold text-zinc-900">Captain Michael</span> assigned to Table 14.
+                    <span className="font-semibold text-zinc-900">Captain Manoj</span> assigned to Table 14.
                   </p>
                   <p className="text-label-xs text-zinc-400 mt-1.5 uppercase font-bold flex items-center gap-1">
                     <Clock className="w-3 h-3" /> 2 hours ago
@@ -478,21 +509,11 @@ export default function Dashboard() {
 
             </div>
           </div>
-
           <button className="w-full mt-6 py-2.5 text-label-md font-bold text-zinc-500 border border-zinc-200 rounded-lg hover:bg-zinc-50 hover:text-zinc-800 transition-smooth cursor-pointer">
             View Audit Log
           </button>
         </div>
-
       </section>
-
-      {/* Floating Action Button */}
-      <div className="fixed bottom-6 right-6 z-50">
-        <button className="w-14 h-14 bg-brand-red hover:bg-red-700 text-white rounded-full shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-smooth flex items-center justify-center group cursor-pointer">
-          <Plus className="w-6 h-6 group-hover:rotate-90 transition-transform" />
-        </button>
-      </div>
-
     </div>
   );
 }

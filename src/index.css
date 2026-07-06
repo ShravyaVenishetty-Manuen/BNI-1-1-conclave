@@ -6,12 +6,11 @@
   --font-sans: "Inter", sans-serif;
 }
 
-/* Custom Typography Utilities from Specs */
 @utility text-dashboard-title {
   font-family: "Manrope", sans-serif;
-  font-size: 20px;
+  font-size: 26px;
   line-height: 28px;
-  font-weight: 700;
+  font-weight: 1000;
 }
 
 @utility text-module-title {
@@ -82,7 +81,7 @@
   font-family: "Manrope", sans-serif;
   font-size: 20px;
   line-height: 26px;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 @utility text-headline-lg {
@@ -96,7 +95,7 @@
   font-family: "Manrope", sans-serif;
   font-size: 15px;
   line-height: 20px;
-  font-weight: 600;
+  font-weight: 650;
 }
 
 @utility text-title-lg {
@@ -124,7 +123,7 @@
   font-family: "Inter", sans-serif;
   font-size: 11px;
   line-height: 14px;
-  font-weight: 550;
+  font-weight: 500;
 }
 
 @utility text-label-xs {
