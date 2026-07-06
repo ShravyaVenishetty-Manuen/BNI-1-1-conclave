@@ -30,11 +30,6 @@ export default function Dashboard() {
       {/* Page Header section */}
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-zinc-100 pb-6">
         <div>
-          <nav className="flex text-label-xs text-zinc-400 uppercase tracking-widest mb-1.5 font-bold">
-            <span className="hover:text-brand-red cursor-pointer transition-smooth">Admin</span>
-            <span className="mx-2 text-zinc-300">/</span>
-            <span className="text-zinc-800">Dashboard</span>
-          </nav>
           <h2 className="text-dashboard-title text-zinc-950 font-bold tracking-tight">Admin Dashboard</h2>
           <p className="text-body-text text-zinc-500 mt-1">
             Welcome back, Admin. Here is the overview for <span className="font-semibold text-zinc-800">{formattedDate}</span>.
@@ -55,9 +50,9 @@ export default function Dashboard() {
 
       {/* KPI Grid */}
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-
+        
         {/* Total Members */}
-        <div className="p-6 border border-zinc-200/80 rounded-xl bg-white hover:border-brand-red/30 transition-smooth shadow-sm hover:shadow-md group">
+        <div className="p-6 border border-zinc-200/80 rounded-xl bg-white transition-smooth shadow-sm group">
           <div className="flex justify-between items-start mb-3">
             <p className="text-label-md text-zinc-500 uppercase font-semibold">Total Members</p>
             <div className="p-2 rounded-lg bg-zinc-50 text-zinc-400 group-hover:bg-brand-red/5 group-hover:text-brand-red transition-smooth">
@@ -81,7 +76,7 @@ export default function Dashboard() {
         </div>
 
         {/* Active Capacity */}
-        <div className="p-6 border border-zinc-200/80 rounded-xl bg-white hover:border-brand-red/30 transition-smooth shadow-sm hover:shadow-md group">
+        <div className="p-6 border border-zinc-200/80 rounded-xl bg-white transition-smooth shadow-sm group">
           <div className="flex justify-between items-start mb-3">
             <p className="text-label-md text-zinc-500 uppercase font-semibold">Active Capacity</p>
             <div className="p-2 rounded-lg bg-zinc-50 text-zinc-400 group-hover:bg-brand-red/5 group-hover:text-brand-red transition-smooth">
@@ -101,7 +96,7 @@ export default function Dashboard() {
         </div>
 
         {/* Leadership */}
-        <div className="p-6 border border-zinc-200/80 rounded-xl bg-white hover:border-brand-red/30 transition-smooth shadow-sm hover:shadow-md group">
+        <div className="p-6 border border-zinc-200/80 rounded-xl bg-white transition-smooth shadow-sm group">
           <div className="flex justify-between items-start mb-3">
             <p className="text-label-md text-zinc-500 uppercase font-semibold">Leadership</p>
             <div className="p-2 rounded-lg bg-zinc-50 text-zinc-400 group-hover:bg-brand-red/5 group-hover:text-brand-red transition-smooth">
@@ -115,16 +110,16 @@ export default function Dashboard() {
           <div className="mt-4 flex items-center justify-between">
             <div className="flex -space-x-2 items-center">
               <div className="w-7 h-7 rounded-full border-2 border-white bg-indigo-100 flex items-center justify-center text-[10px] font-bold text-indigo-700 shadow-sm">JI</div>
-              <div className="w-7 h-7 rounded-full border-2 border-white bg-emerald-100 flex items-center justify-center text-[10px] font-bold text-emerald-700 shadow-sm">SM</div>
-              <div className="w-7 h-7 rounded-full border-2 border-white bg-amber-100 flex items-center justify-center text-[10px] font-bold text-amber-700 shadow-sm">AR</div>
-              <div className="w-7 h-7 rounded-full border-2 border-white bg-brand-red text-white flex items-center justify-center text-[10px] font-bold shadow-sm">+45</div>
+              <div className="w-7 h-7 rounded-full border-2 border-white bg-emerald-100 flex items-center justify-center text-[9px] font-bold text-emerald-700 shadow-sm">SM</div>
+              <div className="w-7 h-7 rounded-full border-2 border-white bg-amber-100 flex items-center justify-center text-[9px] font-bold text-amber-700 shadow-sm">AR</div>
+              <div className="w-7 h-7 rounded-full border-2 border-white bg-brand-red text-white flex items-center justify-center text-[9px] font-bold shadow-sm">+45</div>
             </div>
             <span className="text-caption text-zinc-400 font-semibold cursor-pointer hover:text-brand-red transition-smooth">View All</span>
           </div>
         </div>
 
         {/* Conclave Pipeline */}
-        <div className="p-6 border border-zinc-200/80 rounded-xl bg-white hover:border-brand-red/30 transition-smooth shadow-sm hover:shadow-md group">
+        <div className="p-6 border border-zinc-200/80 rounded-xl bg-white transition-smooth shadow-sm group">
           <div className="flex justify-between items-start mb-3">
             <p className="text-label-md text-zinc-500 uppercase font-semibold">Conclave Pipeline</p>
             <div className="p-2 rounded-lg bg-zinc-50 text-zinc-400 group-hover:bg-brand-red/5 group-hover:text-brand-red transition-smooth">
@@ -147,7 +142,7 @@ export default function Dashboard() {
 
       {/* Quick Actions & Featured Conclave Highlight */}
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-
+        
         {/* Quick Management Panel */}
         <div className="lg:col-span-3 flex flex-col justify-between p-6 border border-zinc-200 rounded-xl bg-zinc-50/50 shadow-sm space-y-4">
           <div>
@@ -180,11 +175,7 @@ export default function Dashboard() {
 
         {/* Featured Conclave Highlight */}
         <div className="lg:col-span-9 p-6 border border-brand-red/20 rounded-xl bg-brand-red text-white flex flex-col md:flex-row gap-6 relative overflow-hidden group shadow-md">
-          {/* Decorative Background Icon */}
-          <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none transition-opacity group-hover:opacity-20">
-            <Award className="w-[180px] h-[180px] text-white" />
-          </div>
-
+          
           <div className="flex-1 space-y-5 z-10 flex flex-col justify-between">
             <div className="flex items-center gap-3">
               <span className="p-3 bg-white/20 rounded-xl text-white border border-white/10 shadow-inner flex items-center justify-center">
