@@ -26,14 +26,14 @@ const initialTables = [
     warningText: 'Warning: Business Conflict',
     capacity: '7/8',
     captain: {
-      name: 'David Chen',
+      name: 'Amit Patel',
       role: 'Table Captain',
       image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA0YVKPZAJ4MiWcqOMOYXB3kIVtFsf3WAoWtVnYwxUag3sPtNII98m5E8UR3uD4gLgvi4atHrrfpMjn30Z1Sn_xDVTn-Yo1zsx_2PfKYlDdIO5sXPamYI0ErRItsKNB5t7H0u1MmqNew88W3lelThN4VxqjU-5fZiIhB15sU6bBjPZb57ui1U61c5PVk2Zg6hf-z42WKrkr9i1wr2ECSlAXDfo33EBlcS-qCZl2DPNa9WP2uBmwTIuVdtLORKWBD8n-BMNZjV0NqIU'
     },
     members: [
-      { id: 'm-1', initials: 'JS', name: 'James Smith', category: 'Legal', conflict: false },
-      { id: 'm-2', initials: 'AL', name: 'Alice Lo', category: 'Legal', conflict: true },
-      { id: 'm-3', initials: 'MK', name: 'Mike Kane', category: 'Banking', conflict: false }
+      { id: 'm-1', initials: 'JS', name: 'Jayesh Sharma', category: 'Legal', conflict: false },
+      { id: 'm-2', initials: 'AL', name: 'Ananya Lal', category: 'Legal', conflict: true },
+      { id: 'm-3', initials: 'MK', name: 'Mahendra Kumar', category: 'Banking', conflict: false }
     ]
   },
   {
@@ -41,14 +41,14 @@ const initialTables = [
     status: 'validated',
     capacity: '8/8',
     captain: {
-      name: 'Sarah Adams',
+      name: 'Shreya Acharya',
       role: 'Table Captain',
       initials: 'SA'
     },
     members: [
-      { id: 'm-4', name: 'Robert Fox', category: 'Real Estate' },
-      { id: 'm-5', name: 'Esther Howard', category: 'Insurance' },
-      { id: 'm-6', name: 'Wade Warren', category: 'Marketing' }
+      { id: 'm-4', name: 'Rohan Fadia', category: 'Real Estate' },
+      { id: 'm-5', name: 'Esha Haria', category: 'Insurance' },
+      { id: 'm-6', name: 'Vikram Wadhwa', category: 'Marketing' }
     ]
   },
   {
@@ -63,7 +63,7 @@ const initialTables = [
   },
   {
     id: 'Table 05',
-    status: 'review',
+    status: 'validated',
     capacity: '8/8'
   }
 ];
@@ -108,7 +108,7 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
     }
   };
 
-  // Auto-resolve Seating Conflict (Swap Alice Lo out of Table 01)
+  // Auto-resolve Seating Conflict (Swap Ananya Lal out of Table 01)
   const handleAutoResolveConflict = () => {
     setTables(prev => prev.map(t => {
       if (t.id === 'Table 01') {
@@ -117,7 +117,7 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
           status: 'validated',
           warningText: null,
           capacity: '8/8',
-          members: t.members.map(m => m.id === 'm-2' ? { ...m, name: 'Emma Wilson', category: 'Hospitality', conflict: false, initials: 'EW' } : m)
+          members: t.members.map(m => m.id === 'm-2' ? { ...m, name: 'Esha Wadhwa', category: 'Hospitality', conflict: false, initials: 'EW' } : m)
         };
       }
       return t;
@@ -132,7 +132,7 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
       spread: 60,
       origin: { y: 0.6 }
     });
-    showToast('Conflict Resolved', 'Swapped Alice Lo for Emma Wilson. Table 01 is now validated.');
+    showToast('Conflict Resolved', 'Swapped Ananya Lal for Esha Wadhwa. Table 01 is now validated.');
   };
 
   // Filtered tables by search query & status filter

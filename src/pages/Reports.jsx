@@ -29,9 +29,9 @@ import {
 
 // Mock Seating Logs
 const initialMembers = [
-  { id: 1, name: 'Jonathan Doe', region: 'Region A - NYC', category: 'LEGAL', captain: 'Sarah Wilson', rounds: '6 / 6', meetings: 12, status: 'COMPLETED' },
-  { id: 2, name: 'Elena Martinez', region: 'Region C - Austin', category: 'MARKETING', captain: 'Mark Thompson', rounds: '5 / 6', meetings: 10, status: 'IN PROGRESS' },
-  { id: 3, name: 'Arjun Kapoor', region: 'Region B - Mumbai', category: 'FINANCE', captain: 'Sarah Wilson', rounds: '6 / 6', meetings: 12, status: 'COMPLETED' }
+  { id: 1, name: 'Amit Sharma', region: 'Peak Performance - Mumbai', category: 'LEGAL', captain: 'Shweta Iyer', rounds: '6 / 6', meetings: 12, status: 'COMPLETED' },
+  { id: 2, name: 'Komal Shah', region: 'Apex Chapter - Bengaluru', category: 'MARKETING', captain: 'Manoj Kumar', rounds: '5 / 6', meetings: 10, status: 'IN PROGRESS' },
+  { id: 3, name: 'Arjun Kapoor', region: 'Capital Chapter - Hyderabad', category: 'FINANCE', captain: 'Shweta Iyer', rounds: '6 / 6', meetings: 12, status: 'COMPLETED' }
 ];
 
 const conclaveList = [
@@ -241,8 +241,8 @@ export default function Reports({ searchQuery: globalSearchQuery }) {
               className="px-4 py-2.5 border border-zinc-200 bg-white rounded-lg text-body-sm font-bold text-zinc-700 transition-smooth cursor-pointer focus:outline-none focus:border-brand-red"
             >
               <option value="all">All Captains</option>
-              <option value="Sarah Wilson">Sarah Wilson</option>
-              <option value="Mark Thompson">Mark Thompson</option>
+              <option value="Shweta Iyer">Shweta Iyer</option>
+              <option value="Manoj Kumar">Manoj Kumar</option>
             </select>
           </div>
         </div>
