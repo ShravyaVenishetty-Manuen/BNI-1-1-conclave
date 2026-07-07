@@ -1,5 +1,5 @@
 import React from 'react';
-import { PieChart, Pie } from 'recharts';
+import { ResponsiveContainer, PieChart, Pie, BarChart, Bar, Cell, XAxis, YAxis, Tooltip } from 'recharts';
 import {
   Users,
   Bolt,
@@ -21,7 +21,7 @@ import {
   BarChart3
 } from 'lucide-react';
 
-export default function Dashboard() {
+export default function Dashboard({ setActiveTab }) {
   const formattedDate = new Date().toLocaleDateString('en-US', {
     month: 'long',
     day: 'numeric',
@@ -65,17 +65,17 @@ export default function Dashboard() {
           </div>
           <div className="flex items-baseline gap-2.5">
             <h3 className="text-display-sm font-bold text-zinc-900 leading-none">842</h3>
-            <span className="text-emerald-600 text-label-xs font-bold bg-emerald-50 px-2 py-0.5 rounded-md flex items-center gap-0.5">
-              <TrendingUp className="w-3 h-3" /> +12%
-            </span>
           </div>
-          <div className="mt-4 h-8 w-full bg-zinc-50 rounded-lg relative overflow-hidden flex items-end gap-[3px] p-1">
-            <div className="flex-1 bg-emerald-100/50 h-[35%] rounded-sm"></div>
-            <div className="flex-1 bg-emerald-100 h-[50%] rounded-sm"></div>
-            <div className="flex-1 bg-emerald-100 h-[45%] rounded-sm"></div>
-            <div className="flex-1 bg-emerald-200 h-[70%] rounded-sm"></div>
-            <div className="flex-1 bg-emerald-300 h-[85%] rounded-sm"></div>
-            <div className="flex-1 bg-brand-red h-[100%] rounded-sm"></div>
+          <div className="mt-4 h-8 w-full bg-zinc-50 rounded-lg p-1 overflow-hidden">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={[{ v: 35, c: '#a7f3d0' }, { v: 50, c: '#a7f3d0' }, { v: 45, c: '#a7f3d0' }, { v: 70, c: '#6ee7b7' }, { v: 85, c: '#34d399' }, { v: 100, c: '#af101a' }]}>
+                <Bar dataKey="v" radius={[2, 2, 0, 0]}>
+                  {[{ v: 35, c: '#a7f3d0' }, { v: 50, c: '#a7f3d0' }, { v: 45, c: '#a7f3d0' }, { v: 70, c: '#6ee7b7' }, { v: 85, c: '#34d399' }, { v: 100, c: '#af101a' }].map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.c} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </div>
 
@@ -92,8 +92,15 @@ export default function Dashboard() {
             <span className="text-zinc-500 text-label-xs font-medium">/ 842 active</span>
           </div>
           <div className="mt-6">
-            <div className="w-full bg-zinc-100 h-2 rounded-full overflow-hidden">
-              <div className="bg-brand-red h-full w-[94%] rounded-full shadow-[0_0_8px_rgba(207,46,46,0.3)]"></div>
+            <div className="w-full h-2 rounded-full overflow-hidden cursor-pointer">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart layout="vertical" data={[{ name: 'Capacity', value: 94 }]} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                  <XAxis type="number" domain={[0, 100]} hide />
+                  <YAxis type="category" dataKey="name" hide />
+                  <Tooltip formatter={(value) => `${value}%`} cursor={false} />
+                  <Bar dataKey="value" fill="#af101a" radius={[4, 4, 4, 4]} background={{ fill: '#f4f4f5' }} barSize={8} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
             <span className="text-caption text-zinc-400 mt-2 block font-medium">94% capacity occupied</span>
           </div>
@@ -118,7 +125,6 @@ export default function Dashboard() {
               <div className="w-7 h-7 rounded-full border-2 border-white bg-amber-100 flex items-center justify-center text-[9px] font-bold text-amber-700 shadow-sm">AR</div>
               <div className="w-7 h-7 rounded-full border-2 border-white bg-brand-red text-white flex items-center justify-center text-[9px] font-bold shadow-sm">+45</div>
             </div>
-            <span className="text-caption text-zinc-400 font-semibold cursor-pointer hover:text-brand-red transition-smooth">View All</span>
           </div>
         </div>
 
@@ -152,103 +158,128 @@ export default function Dashboard() {
           <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1.5 px-0.5">Quick Management</span>
 
           <div className="flex flex-col gap-3">
-            <button className="w-full flex items-center justify-between px-4 py-3.5 bg-brand-red hover:bg-red-700 text-white rounded-lg transition-smooth shadow-sm cursor-pointer font-bold tracking-tight">
+            <button
+              onClick={() => setActiveTab && setActiveTab('members')}
+              className="w-full flex items-center justify-between px-4 py-3.5 border quick-action-btn text-zinc-850 rounded-lg transition-smooth cursor-pointer font-bold tracking-tight"
+            >
               <span className="text-button">Add New Member</span>
-              <UserPlus className="w-[18px] h-[18px]" />
+              <UserPlus className="w-[18px] h-[18px] text-brand-red" />
             </button>
 
-            <button className="w-full flex items-center justify-between px-4 py-3.5 bg-brand-red hover:bg-red-700 text-white rounded-lg transition-smooth shadow-sm cursor-pointer font-bold tracking-tight">
+            <button
+              onClick={() => setActiveTab && setActiveTab('conclaves')}
+              className="w-full flex items-center justify-between px-4 py-3.5 border quick-action-btn text-zinc-850 rounded-lg transition-smooth cursor-pointer font-bold tracking-tight"
+            >
               <span className="text-button">Create Conclave</span>
-              <PlusCircle className="w-[18px] h-[18px]" />
+              <PlusCircle className="w-[18px] h-[18px] text-brand-red" />
             </button>
 
-            <button className="w-full flex items-center justify-between px-4 py-3.5 bg-brand-red hover:bg-red-700 text-white rounded-lg transition-smooth shadow-sm cursor-pointer font-bold tracking-tight">
+            <button
+              onClick={() => setActiveTab && setActiveTab('validation')}
+              className="w-full flex items-center justify-between px-4 py-3.5 border quick-action-btn text-zinc-850 rounded-lg transition-smooth cursor-pointer font-bold tracking-tight"
+            >
               <span className="text-button">Run Validation</span>
-              <BadgeCheck className="w-[18px] h-[18px]" />
+              <BadgeCheck className="w-[18px] h-[18px] text-brand-red" />
             </button>
 
-            <button className="w-full flex items-center justify-between px-4 py-3.5 bg-brand-red hover:bg-red-700 text-white rounded-lg transition-smooth shadow-sm cursor-pointer font-bold tracking-tight">
+            <button
+              onClick={() => setActiveTab && setActiveTab('schedule-gen')}
+              className="w-full flex items-center justify-between px-4 py-3.5 border quick-action-btn text-zinc-850 rounded-lg transition-smooth cursor-pointer font-bold tracking-tight"
+            >
               <span className="text-button">Generate Schedule</span>
-              <Sparkles className="w-[18px] h-[18px]" />
+              <Sparkles className="w-[18px] h-[18px] text-brand-red" />
             </button>
 
-            <button className="w-full flex items-center justify-between px-4 py-3.5 bg-brand-red hover:bg-red-700 text-white rounded-lg transition-smooth shadow-sm cursor-pointer font-bold tracking-tight">
+            <button
+              onClick={() => setActiveTab && setActiveTab('reports')}
+              className="w-full flex items-center justify-between px-4 py-3.5 border quick-action-btn text-zinc-850 rounded-lg transition-smooth cursor-pointer font-bold tracking-tight"
+            >
               <span className="text-button">View Reports</span>
-              <BarChart3 className="w-[18px] h-[18px]" />
+              <BarChart3 className="w-[18px] h-[18px] text-brand-red" />
             </button>
           </div>
         </div>
 
         {/* Featured Conclave Highlight */}
-        <div className="lg:col-span-9 p-6 border border-brand-red/20 rounded-xl bg-brand-red text-white flex flex-col md:flex-row gap-6 relative overflow-hidden group shadow-md justify-between items-stretch">
+        <div className="lg:col-span-9 p-6 border border-zinc-200 bg-zinc-50/50 text-zinc-800 flex flex-col md:flex-row gap-6 relative overflow-hidden group shadow-sm rounded-xl justify-between items-stretch">
 
           <div className="flex-1 z-10 flex flex-col justify-between py-1">
             <div className="flex items-center gap-3">
-              <span className="p-2.5 bg-white/20 rounded-xl text-white border border-white/10 shadow-inner flex items-center justify-center">
+              <span className="p-2.5 bg-white rounded-xl text-brand-red border border-zinc-200 shadow-inner flex items-center justify-center">
                 <Calendar className="w-5 h-5" />
               </span>
               <div>
-                <h3 className="text-headline-md font-bold leading-tight">Annual Conclave Q4</h3>
+                <h3 className="text-headline-md font-bold leading-tight text-zinc-950">Annual Conclave Q4</h3>
                 <div className="flex flex-wrap gap-3 mt-1.5 items-center">
-                  <span className="text-[9px] bg-[#00c896] text-white px-2 py-0.5 rounded font-extrabold uppercase tracking-wider shadow-sm">
+                  <span className="text-[9px] bg-emerald-600 text-white px-2 py-0.5 rounded font-extrabold uppercase tracking-wider shadow-sm">
                     Current Conclave Running
                   </span>
-                  <span className="text-label-xs text-white/80 flex items-center gap-1 font-semibold">
-                    <MapPin className="w-3.5 h-3.5" /> Mumbai, Grand Ballroom
+                  <span className="text-label-xs text-zinc-500 flex items-center gap-1 font-semibold">
+                    <MapPin className="w-3.5 h-3.5 text-zinc-400" /> Mumbai, Grand Ballroom
                   </span>
                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-4 gap-2.5 py-4 border-y border-white/10">
+            <div className="grid grid-cols-4 gap-2.5 py-4 border-y border-zinc-200/80 mt-4 md:mt-0">
               <div className="space-y-0.5">
-                <p className="text-[10px] text-white/70 uppercase font-bold tracking-wider">Round Progress</p>
-                <p className="font-extrabold text-[15px] leading-tight mt-1">2 / 5</p>
-                <p className="font-extrabold text-[15px] leading-tight">Rounds</p>
+                <p className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider">Round Progress</p>
+                <p className="font-extrabold text-[15px] text-zinc-950 leading-tight mt-1">2 / 5</p>
+                <p className="font-extrabold text-[15px] text-zinc-950 leading-tight">Rounds</p>
               </div>
               <div className="space-y-0.5">
-                <p className="text-[10px] text-white/70 uppercase font-bold tracking-wider">Tables</p>
-                <p className="font-extrabold text-[15px] leading-tight mt-1">24 Active</p>
+                <p className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider">Tables</p>
+                <p className="font-extrabold text-[15px] text-zinc-950 leading-tight mt-1">24 Active</p>
               </div>
               <div className="space-y-0.5">
-                <p className="text-[10px] text-white/70 uppercase font-bold tracking-wider">Attendance</p>
-                <p className="font-extrabold text-[15px] leading-tight mt-1">310 / 320</p>
+                <p className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider">Attendance</p>
+                <p className="font-extrabold text-[15px] text-zinc-950 leading-tight mt-1">310 / 320</p>
               </div>
               <div className="space-y-0.5">
-                <p className="text-[10px] text-white/70 uppercase font-bold tracking-wider">Validation</p>
-                <p className="font-extrabold text-[15px] leading-tight mt-1 flex items-center gap-1.5">
-                  <CheckCircle2 className="w-[18px] h-[18px] text-white" /> Passed
+                <p className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider">Validation</p>
+                <p className="font-extrabold text-[15px] text-emerald-700 leading-tight mt-1 flex items-center gap-1.5">
+                  <CheckCircle2 className="w-[18px] h-[18px] text-emerald-600" /> Passed
                 </p>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <div className="flex justify-between text-[10px] font-bold uppercase text-white/95 tracking-wider">
+            <div className="space-y-2 mt-4 md:mt-0">
+              <div className="flex justify-between text-[10px] font-bold uppercase text-zinc-500 tracking-wider">
                 <span>Overall Conclave Progress</span>
-                <span>40%</span>
+                <span className="text-zinc-950">40%</span>
               </div>
-              <div className="w-full bg-white/20 h-2 rounded-full overflow-hidden shadow-inner">
-                <div className="bg-white h-full w-[40%] rounded-full shadow-[0_0_8px_rgba(255,255,255,0.4)]"></div>
+              <div className="w-full h-2 rounded-full overflow-hidden bg-zinc-250 cursor-pointer">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart layout="vertical" data={[{ name: 'Progress', value: 40 }]} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                    <XAxis type="number" domain={[0, 100]} hide />
+                    <YAxis type="category" dataKey="name" hide />
+                    <Tooltip formatter={(value) => `${value}%`} cursor={false} />
+                    <Bar dataKey="value" fill="#cf2e2e" radius={[4, 4, 4, 4]} background={{ fill: '#e4e4e7' }} barSize={8} />
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
             </div>
           </div>
 
-          <div className="w-full md:w-[250px] bg-white/10 backdrop-blur-md p-5 rounded-lg border border-white/20 z-10 flex flex-col justify-between min-h-[220px]">
+          <div className="w-full md:w-[250px] bg-white p-5 rounded-lg border border-zinc-200 z-10 flex flex-col justify-between min-h-[220px]">
             <div>
-              <p className="text-[10px] font-bold text-white/90 uppercase tracking-widest">Captain Activity</p>
+              <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Captain Activity</p>
               <div className="space-y-3 mt-4">
                 <div className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-emerald-400"></span>
-                  <span className="text-body-sm font-semibold text-white">12 Captains Online</span>
+                  <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
+                  <span className="text-body-sm font-semibold text-zinc-800">12 Captains Online</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-amber-400"></span>
-                  <span className="text-body-sm font-semibold text-white">3 Pending Approval</span>
+                  <span className="h-2 w-2 rounded-full bg-amber-500"></span>
+                  <span className="text-body-sm font-semibold text-zinc-800">3 Pending Approval</span>
                 </div>
               </div>
             </div>
 
-            <button className="w-full py-2.5 text-label-md font-bold text-white border border-white/35 rounded-lg hover:bg-white/10 transition-smooth cursor-pointer mt-4 uppercase tracking-wider text-[11px]">
+            <button
+              onClick={() => setActiveTab && setActiveTab('captains')}
+              className="w-full py-2.5 text-label-md font-bold text-zinc-850 border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 hover:text-zinc-950 transition-smooth cursor-pointer mt-4 uppercase tracking-wider text-[11px] shadow-xs"
+            >
               Manage Logistics
             </button>
           </div>
@@ -317,9 +348,6 @@ export default function Dashboard() {
           <div>
             <div className="flex justify-between items-center mb-4">
               <h4 className="text-title-lg text-zinc-950 font-semibold">Top Referral Givers</h4>
-              <button className="text-brand-red text-label-md font-bold hover:underline transition-smooth cursor-pointer flex items-center gap-0.5">
-                Leaderboard <ArrowUpRight className="w-3.5 h-3.5" />
-              </button>
             </div>
 
             <div className="space-y-1">
@@ -385,9 +413,6 @@ export default function Dashboard() {
         <div className="lg:col-span-8 p-6 border border-zinc-200/80 rounded-xl bg-white flex flex-col shadow-sm hover:shadow-md transition-smooth">
           <div className="flex justify-between items-center mb-5">
             <h4 className="text-title-lg text-zinc-950 font-semibold">Recent Conclaves</h4>
-            <button className="text-zinc-500 hover:text-zinc-950 text-label-md flex items-center gap-1.5 transition-smooth cursor-pointer font-semibold border border-zinc-200 px-3 py-1.5 rounded-lg bg-zinc-50/50 hover:bg-zinc-100">
-              <ClipboardList className="w-4 h-4" /> Filter
-            </button>
           </div>
 
           <div className="overflow-x-auto flex-1">
@@ -414,7 +439,10 @@ export default function Dashboard() {
                     </span>
                   </td>
                   <td className="px-4 py-4 text-right">
-                    <button className="p-1.5 hover:bg-zinc-100 rounded-lg text-zinc-400 hover:text-brand-red transition-smooth cursor-pointer flex items-center justify-center ml-auto">
+                    <button
+                      onClick={() => setActiveTab && setActiveTab('conclaves')}
+                      className="p-1.5 hover:bg-zinc-100 rounded-lg text-zinc-400 hover:text-brand-red transition-smooth cursor-pointer flex items-center justify-center ml-auto"
+                    >
                       <ChevronRight className="w-4 h-4" />
                     </button>
                   </td>
@@ -431,7 +459,10 @@ export default function Dashboard() {
                     </span>
                   </td>
                   <td className="px-4 py-4 text-right">
-                    <button className="p-1.5 hover:bg-zinc-100 rounded-lg text-zinc-400 hover:text-brand-red transition-smooth cursor-pointer flex items-center justify-center ml-auto">
+                    <button
+                      onClick={() => setActiveTab && setActiveTab('conclaves')}
+                      className="p-1.5 hover:bg-zinc-100 rounded-lg text-zinc-400 hover:text-brand-red transition-smooth cursor-pointer flex items-center justify-center ml-auto"
+                    >
                       <ChevronRight className="w-4 h-4" />
                     </button>
                   </td>
@@ -448,7 +479,10 @@ export default function Dashboard() {
                     </span>
                   </td>
                   <td className="px-4 py-4 text-right">
-                    <button className="p-1.5 hover:bg-zinc-100 rounded-lg text-zinc-400 hover:text-brand-red transition-smooth cursor-pointer flex items-center justify-center ml-auto">
+                    <button
+                      onClick={() => setActiveTab && setActiveTab('conclaves')}
+                      className="p-1.5 hover:bg-zinc-100 rounded-lg text-zinc-400 hover:text-brand-red transition-smooth cursor-pointer flex items-center justify-center ml-auto"
+                    >
                       <ChevronRight className="w-4 h-4" />
                     </button>
                   </td>
@@ -509,7 +543,10 @@ export default function Dashboard() {
 
             </div>
           </div>
-          <button className="w-full mt-6 py-2.5 text-label-md font-bold text-zinc-500 border border-zinc-200 rounded-lg hover:bg-zinc-50 hover:text-zinc-800 transition-smooth cursor-pointer">
+          <button
+            onClick={() => setActiveTab && setActiveTab('active-users')}
+            className="w-full mt-6 py-2.5 text-label-md font-bold text-zinc-500 border border-zinc-200 rounded-lg hover:bg-zinc-50 hover:text-zinc-800 transition-smooth cursor-pointer"
+          >
             View Audit Log
           </button>
         </div>
