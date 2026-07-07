@@ -61,7 +61,7 @@ export default function RoundRunner() {
 
   // Live feed updates
   const [feedLogs, setFeedLogs] = useState([
-    { event: 'Table 14 Ready', detail: 'Michael Chen confirmed table readiness.', time: '12:44:02' },
+    { event: 'Table 14 Ready', detail: 'Manoj Kumar confirmed table readiness.', time: '12:44:02' },
     { event: 'Manual Seating Override', detail: 'Admin added Guest Member to Table 5.', time: '12:43:15' },
     { event: 'Round 2 Started', detail: 'System auto-triggered Round 2.', time: '12:40:00' },
     { event: 'Round 1 Finished', detail: 'All tables reported completion.', time: '12:38:42' },
@@ -91,8 +91,8 @@ export default function RoundRunner() {
   useEffect(() => {
     const feedInterval = setInterval(() => {
       const mockEvents = [
-        { event: 'Table 15 Active', detail: 'Sarah Jenkins reported table is fully active.', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) },
-        { event: 'Table 16 Synced', detail: 'David Ross confirmed member rosters check.', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) },
+        { event: 'Table 15 Active', detail: 'Shweta Iyer reported table is fully active.', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) },
+        { event: 'Table 16 Synced', detail: 'Devendra Chawla confirmed member rosters check.', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) },
         { event: 'Roster Broadcast', detail: 'Mobile notifications re-sent to round 2 captains.', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) }
       ];
       const randomEvent = mockEvents[Math.floor(Math.random() * mockEvents.length)];
@@ -292,7 +292,7 @@ export default function RoundRunner() {
                   1
                 </div>
                 <div>
-                  <p className="text-body-sm font-extrabold text-zinc-800">John Doe</p>
+                  <p className="text-body-sm font-extrabold text-zinc-800">Amit Patel</p>
                   <p className="text-[9px] text-zinc-455 font-bold uppercase tracking-wider">Marketing</p>
                 </div>
               </div>
@@ -309,7 +309,7 @@ export default function RoundRunner() {
                   2
                 </div>
                 <div>
-                  <p className="text-body-sm font-extrabold text-zinc-800">Sarah Jenkins</p>
+                  <p className="text-body-sm font-extrabold text-zinc-800">Shweta Iyer</p>
                   <p className="text-[9px] text-zinc-455 font-bold uppercase tracking-wider">Real Estate</p>
                 </div>
               </div>
@@ -326,7 +326,7 @@ export default function RoundRunner() {
                   3
                 </div>
                 <div>
-                  <p className="text-body-sm font-extrabold text-zinc-800">Michael Chen</p>
+                  <p className="text-body-sm font-extrabold text-zinc-800">Manoj Kumar</p>
                   <p className="text-[9px] text-zinc-455 font-bold uppercase tracking-wider">Legal</p>
                 </div>
               </div>
