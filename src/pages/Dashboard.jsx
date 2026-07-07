@@ -224,8 +224,7 @@ export default function Dashboard({ setActiveTab }) {
             <div className="grid grid-cols-4 gap-2.5 py-4 border-y border-zinc-200/80 mt-4 md:mt-0">
               <div className="space-y-0.5">
                 <p className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider">Round Progress</p>
-                <p className="font-extrabold text-[15px] text-zinc-950 leading-tight mt-1">2 / 5</p>
-                <p className="font-extrabold text-[15px] text-zinc-950 leading-tight">Rounds</p>
+                <p className="font-extrabold text-[15px] text-zinc-950 leading-tight mt-1">2 / 5 Rounds</p>
               </div>
               <div className="space-y-0.5">
                 <p className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider">Tables</p>
