@@ -318,26 +318,40 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
               className="bg-white border border-zinc-200/80 rounded-xl overflow-hidden shadow-sm flex flex-col"
             >
               {/* Header card info */}
-              <div className="p-4 border-b border-zinc-100 flex justify-between items-center">
-                <div>
-                  <span className="font-extrabold text-zinc-900 text-body-sm">{table.id}</span>
-                  {table.status === 'warning' && (
-                    <div className="flex items-center gap-1 mt-1 text-brand-red">
-                      <AlertTriangle className="w-3.5 h-3.5 animate-pulse" />
-                      <span className="text-[9px] uppercase font-bold tracking-wider">{table.warningText}</span>
-                    </div>
-                  )}
-                  {table.status === 'validated' && (
-                    <div className="flex items-center gap-1 mt-1 text-emerald-600">
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span className="text-[9px] uppercase font-bold tracking-wider">Validated</span>
-                    </div>
-                  )}
+              <div className="p-4 border-b border-zinc-100 flex flex-col gap-2 flex-shrink-0">
+                <div className="flex justify-between items-center">
+                  <span className="font-extrabold text-zinc-950 text-body-sm">{table.id}</span>
+                  <div className="text-right flex items-center gap-1">
+                    <span className="text-body-sm font-extrabold text-zinc-950">{table.capacity}</span>
+                    <span className="text-[9px] text-zinc-400 font-bold uppercase">Capacity</span>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <span className="text-headline-md font-extrabold text-zinc-950 leading-none">{table.capacity}</span>
-                  <p className="text-[9px] text-zinc-400 uppercase font-bold mt-0.5">Capacity</p>
-                </div>
+
+                {/* Status Bar Indicator */}
+                {table.status === 'warning' && (
+                  <div className="flex items-center gap-1.5 text-brand-red bg-red-50/50 border border-red-100/50 px-2 py-0.5 rounded text-[9px] uppercase font-bold tracking-wider">
+                    <AlertTriangle className="w-3.5 h-3.5 animate-pulse shrink-0" />
+                    <span className="truncate">{table.warningText}</span>
+                  </div>
+                )}
+                {table.status === 'validated' && (
+                  <div className="flex items-center gap-1.5 text-emerald-700 bg-emerald-50/50 border border-emerald-100/50 px-2 py-0.5 rounded text-[9px] uppercase font-bold tracking-wider">
+                    <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                    <span>Validated</span>
+                  </div>
+                )}
+                {table.status === 'locked' && (
+                  <div className="flex items-center gap-1.5 text-zinc-550 bg-zinc-50 border border-zinc-200/50 px-2 py-0.5 rounded text-[9px] uppercase font-bold tracking-wider">
+                    <Lock className="w-3.5 h-3.5 shrink-0" />
+                    <span>Locked</span>
+                  </div>
+                )}
+                {table.status === 'review' && (
+                  <div className="flex items-center gap-1.5 text-amber-700 bg-amber-50/50 border border-amber-100/50 px-2 py-0.5 rounded text-[9px] uppercase font-bold tracking-wider">
+                    <Clock className="w-3.5 h-3.5 shrink-0 animate-pulse" />
+                    <span>Ready for Review</span>
+                  </div>
+                )}
               </div>
 
               {/* Card body Seating */}
