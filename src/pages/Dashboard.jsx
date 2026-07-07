@@ -203,7 +203,7 @@ export default function Dashboard({ setActiveTab }) {
         {/* Featured Conclave Highlight */}
         <div className="lg:col-span-9 p-6 border border-zinc-200 bg-zinc-50/50 text-zinc-800 flex flex-col md:flex-row gap-6 relative overflow-hidden group shadow-sm rounded-xl justify-between items-stretch">
 
-          <div className="flex-1 z-10 flex flex-col justify-between py-1">
+          <div className="flex-1 z-10 flex flex-col gap-6 py-1">
             <div className="flex items-center gap-3">
               <span className="p-2.5 bg-white rounded-xl text-brand-red border border-zinc-200 shadow-inner flex items-center justify-center">
                 <Calendar className="w-5 h-5" />
