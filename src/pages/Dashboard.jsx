@@ -215,7 +215,7 @@ export default function Dashboard({ setActiveTab }) {
                     Current Conclave Running
                   </span>
                   <span className="text-label-xs text-zinc-500 flex items-center gap-1 font-semibold">
-                    <MapPin className="w-3.5 h-3.5 text-zinc-400" /> Mumbai, Grand Ballroom
+                    <MapPin className="w-3.5 h-3.5 text-zinc-400" /> V Convention, Guntur
                   </span>
                 </div>
               </div>
