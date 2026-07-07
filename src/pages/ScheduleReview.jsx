@@ -193,7 +193,7 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
   };
 
   return (
-    <div className="p-6 max-w-[1600px] mx-auto w-full flex flex-col gap-6 animate-fade-in relative pb-28">
+    <div className="p-4 sm:p-6 max-w-[1600px] mx-auto w-full flex flex-col gap-6 animate-fade-in relative pb-28">
 
       {/* Breadcrumbs & Header */}
       <div className="border-b border-zinc-100 pb-6 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
@@ -232,7 +232,7 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
       </div>
 
       {/* KPI Row cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-6 gap-3.5">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
         <div className="bg-white border border-zinc-200/80 p-4 rounded-xl shadow-sm">
           <p className="text-[10px] font-bold text-zinc-400 uppercase mb-1">Rounds</p>
           <h4 className="text-headline-md font-extrabold text-zinc-900 mt-1">3</h4>
@@ -544,7 +544,7 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
 
       {/* Sticky footer action overlay */}
       {hasUnsavedChanges && (
-        <div className="fixed bottom-0 left-64 right-0 bg-zinc-900 border-t border-zinc-800 px-6 py-4 z-40 flex justify-between items-center shadow-2xl animate-slide-up">
+        <div className="fixed bottom-0 left-0 lg:left-[220px] right-0 bg-zinc-900 border-t border-zinc-800 px-4 sm:px-6 py-4 z-40 flex justify-between items-center shadow-2xl animate-slide-up">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 bg-zinc-800 flex items-center justify-center rounded-lg border border-zinc-700 shrink-0">
               <Save className="w-4.5 h-4.5 text-brand-red" />
@@ -561,7 +561,7 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
                 setHasUnsavedChanges(false);
                 showToast('Changes Discarded', 'Reverted back to standard algorithm seating.');
               }}
-              className="px-4 py-1.5 text-zinc-350 hover:text-white font-bold text-button text-[10px] cursor-pointer"
+              className="px-4 py-1.5 text-zinc-400 hover:text-white font-bold text-button text-[10px] cursor-pointer"
             >
               Discard
             </button>

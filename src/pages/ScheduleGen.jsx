@@ -129,7 +129,7 @@ export default function ScheduleGen() {
   };
 
   return (
-    <div className="p-6 max-w-[1600px] mx-auto w-full flex flex-col gap-6 animate-fade-in">
+    <div className="p-4 sm:p-6 max-w-[1600px] mx-auto w-full flex flex-col gap-6 animate-fade-in">
 
       {/* Header Section */}
       <div className="border-b border-zinc-100 pb-6 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
@@ -197,7 +197,7 @@ export default function ScheduleGen() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-6 gap-4 pt-1 font-semibold text-zinc-650">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 pt-1 font-semibold text-zinc-650">
           <div className="flex flex-col">
             <span className="text-[10px] text-zinc-400 font-bold uppercase">Members</span>
             <span className="text-body-sm font-bold text-zinc-900 mt-0.5">1,240</span>

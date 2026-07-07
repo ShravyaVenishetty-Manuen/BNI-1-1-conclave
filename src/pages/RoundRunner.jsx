@@ -123,7 +123,7 @@ export default function RoundRunner() {
 
 
   return (
-    <div className="p-6 max-w-[1600px] mx-auto w-full flex flex-col gap-6 animate-fade-in relative">
+    <div className="p-4 sm:p-6 max-w-[1600px] mx-auto w-full flex flex-col gap-6 animate-fade-in relative">
 
       {/* Header Section */}
       <div className="border-b border-zinc-100 pb-6 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">

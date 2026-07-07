@@ -13,7 +13,8 @@ import {
   SlidersHorizontal,
   Lock,
   Play,
-  LogOut
+  LogOut,
+  X
 } from 'lucide-react';
 
 const navItems = [
@@ -32,12 +33,12 @@ const navItems = [
   { id: 'reports', label: 'Reports', Icon: BarChart3 },
 ];
 
-export default function Sidebar({ activeTab, setActiveTab, onLogout }) {
+export default function Sidebar({ activeTab, setActiveTab, onLogout, isOpen, onClose }) {
   return (
-    <aside className="w-[220px] h-screen sticky left-0 top-0 flex flex-col py-6 bg-zinc-50 border-r border-zinc-200 text-sidebar font-medium shrink-0">
+    <aside className={`fixed inset-y-0 left-0 z-50 w-[240px] h-screen flex flex-col py-6 bg-zinc-50 border-r border-zinc-200 text-sidebar font-medium shrink-0 transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 lg:w-[220px] ${isOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}`}>
 
       {/* Sticky Branding Header (Non-scrolling) */}
-      <div className="px-4 mb-6 shrink-0">
+      <div className="px-4 mb-6 shrink-0 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-brand-red rounded flex items-center justify-center shadow-md shrink-0">
             <Award className="w-4 h-4 text-white" />
@@ -47,6 +48,14 @@ export default function Sidebar({ activeTab, setActiveTab, onLogout }) {
             <p className="text-caption text-zinc-500 font-semibold tracking-wider mt-0.5 uppercase">Enterprise Admin</p>
           </div>
         </div>
+
+        {/* Mobile Close Button */}
+        <button
+          onClick={onClose}
+          className="lg:hidden p-1 rounded-lg hover:bg-zinc-200 text-zinc-550 hover:text-zinc-800 transition-smooth cursor-pointer"
+        >
+          <X className="w-[18px] h-[18px]" />
+        </button>
       </div>
 
       {/* Scrollable Navigation List */}

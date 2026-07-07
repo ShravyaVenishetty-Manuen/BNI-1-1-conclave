@@ -220,7 +220,7 @@ export default function Validation() {
   };
 
   return (
-    <div className="p-6 max-w-[1600px] mx-auto w-full flex flex-col gap-5 animate-fade-in">
+    <div className="p-4 sm:p-6 max-w-[1600px] mx-auto w-full flex flex-col gap-5 animate-fade-in">
 
       {/* Breadcrumbs & Header */}
       <div className="border-b border-zinc-100 pb-5 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
@@ -300,7 +300,7 @@ export default function Validation() {
         <div className="lg:col-span-8 space-y-5">
 
           {/* KPI Counters Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3.5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
             <div className="bg-white border border-zinc-200/80 p-4 rounded-xl shadow-sm">
               <p className="text-[10px] font-bold text-zinc-400 uppercase mb-1">Passed Rules</p>
               <h4 className="text-headline-md font-extrabold text-emerald-700 mt-1">{activeConclave.passedCount}</h4>

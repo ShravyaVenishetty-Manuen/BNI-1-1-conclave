@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, Bell, X, Check, AlertTriangle, AlertCircle, Sparkles } from 'lucide-react';
+import { Search, Bell, X, Check, AlertTriangle, AlertCircle, Sparkles, Menu } from 'lucide-react';
 
-export default function Header({ searchQuery, setSearchQuery, activeTab, setActiveTab }) {
+export default function Header({ searchQuery, setSearchQuery, activeTab, setActiveTab, onMenuClick }) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([
     {
@@ -58,28 +58,35 @@ export default function Header({ searchQuery, setSearchQuery, activeTab, setActi
   };
 
   return (
-    <header className="w-full sticky top-0 z-40 bg-white border-b border-zinc-200 flex justify-between items-center px-8 h-14 shrink-0 font-sans">
+    <header className="w-full sticky top-0 z-40 bg-white border-b border-zinc-200 flex justify-between items-center px-4 sm:px-8 h-14 shrink-0 font-sans">
 
       {/* Left side: Logo & Navigation */}
-      <div className="flex items-center gap-8">
+      <div className="flex items-center gap-3 sm:gap-8">
+        <button
+          onClick={onMenuClick}
+          className="lg:hidden p-1.5 rounded-lg hover:bg-zinc-100 text-zinc-555 hover:text-zinc-800 transition-smooth cursor-pointer flex items-center justify-center"
+          title="Open Menu"
+        >
+          <Menu className="w-5.5 h-5.5" />
+        </button>
         <span
           onClick={() => setActiveTab && setActiveTab('dashboard')}
-          className="text-body-lg font-extrabold text-brand-red cursor-pointer tracking-tight"
+          className="text-body-md sm:text-body-lg font-extrabold text-brand-red cursor-pointer tracking-tight whitespace-nowrap"
         >
           BNI 1-1-Conclave
         </span>
       </div>
 
       {/* Right side: Search & User Utilities */}
-      <div className="flex items-center gap-4 relative">
+      <div className="flex items-center gap-2.5 sm:gap-4 relative">
         {/* Search Input */}
-        <div className="relative w-64">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+        <div className="relative w-full max-w-[130px] sm:max-w-none sm:w-64">
+          <Search className="w-4 h-4 absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
           <input
             value={searchQuery || ''}
             onChange={(e) => setSearchQuery && setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-1.5 bg-white border border-zinc-200 rounded text-body-md placeholder-zinc-400 focus:outline-none focus:border-zinc-800 transition-smooth font-semibold"
-            placeholder="Search resources..."
+            className="w-full pl-8 sm:pl-9 pr-3 py-1.5 bg-white border border-zinc-200 rounded text-body-sm sm:text-body-md placeholder-zinc-400 focus:outline-none focus:border-zinc-800 transition-smooth font-semibold"
+            placeholder="Search..."
             type="text"
           />
         </div>

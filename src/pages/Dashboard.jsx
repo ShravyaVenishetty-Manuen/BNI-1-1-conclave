@@ -6,10 +6,7 @@ import {
   Award,
   Calendar,
   CheckCircle2,
-  TrendingUp,
-  ArrowUpRight,
   Clock,
-  ClipboardList,
   Layers,
   ChevronRight,
   UserCheck,
@@ -29,7 +26,7 @@ export default function Dashboard({ setActiveTab }) {
   });
 
   return (
-    <div className="space-y-8 p-8 max-w-[1600px] mx-auto w-full">
+    <div className="space-y-6 sm:space-y-8 p-4 sm:p-8 max-w-[1600px] mx-auto w-full">
 
       {/* Page Header section */}
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-zinc-100 pb-6">
@@ -38,17 +35,6 @@ export default function Dashboard({ setActiveTab }) {
           <p className="text-body-text text-zinc-500 mt-1">
             Welcome back, Admin.
           </p>
-        </div>
-
-        {/* Status Badge */}
-        <div className="flex items-center gap-2 bg-emerald-50 text-emerald-800 px-4 py-1.5 rounded-full border border-emerald-100/80 shadow-sm shrink-0">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-          </span>
-          <span className="text-label-md font-bold uppercase tracking-wider">
-            Current Conclave Running
-          </span>
         </div>
       </header>
 
@@ -151,7 +137,7 @@ export default function Dashboard({ setActiveTab }) {
       </section>
 
       {/* Quick Actions & Featured Conclave Highlight */}
-      <section className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
 
         {/* Quick Management Panel */}
         <div className="lg:col-span-3 flex flex-col gap-2.5">
@@ -203,7 +189,7 @@ export default function Dashboard({ setActiveTab }) {
         {/* Featured Conclave Highlight */}
         <div className="lg:col-span-9 p-6 border border-zinc-200 bg-zinc-50/50 text-zinc-800 flex flex-col md:flex-row gap-6 relative overflow-hidden group shadow-sm rounded-xl justify-between items-stretch">
 
-          <div className="flex-1 z-10 flex flex-col gap-6 py-1">
+          <div className="flex-1 z-10 flex flex-col py-1">
             <div className="flex items-center gap-3">
               <span className="p-2.5 bg-white rounded-xl text-brand-red border border-zinc-200 shadow-inner flex items-center justify-center">
                 <Calendar className="w-5 h-5" />
@@ -221,7 +207,7 @@ export default function Dashboard({ setActiveTab }) {
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-x-10 gap-y-4 py-4 border-y border-zinc-200/80 mt-4 md:mt-0">
+            <div className="flex flex-wrap gap-x-10 gap-y-4 py-4 border-y border-zinc-200/80 mt-5">
               <div className="space-y-0.5">
                 <p className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider">Round Progress</p>
                 <p className="font-extrabold text-[15px] text-zinc-950 leading-tight mt-1">2 / 5 Rounds</p>
@@ -242,7 +228,18 @@ export default function Dashboard({ setActiveTab }) {
               </div>
             </div>
 
-            <div className="space-y-2 mt-4 md:mt-0">
+            {/* Live event banner notice to fill spacing */}
+            <div className="bg-red-50/20 border border-red-100/50 rounded-lg p-2.5 mt-3 flex items-start gap-2.5">
+              <span className="flex h-2 w-2 relative mt-1 shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-red opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-red"></span>
+              </span>
+              <p className="text-[10.5px] leading-normal font-semibold text-zinc-650">
+                <strong className="text-brand-red font-bold">Round 3 Seating Setup</strong> is currently in progress. Captains should check-in attendees at their respective tables.
+              </p>
+            </div>
+
+            <div className="space-y-2 mt-auto pt-4">
               <div className="flex justify-between text-[10px] font-bold uppercase text-zinc-500 tracking-wider">
                 <span>Overall Conclave Progress</span>
                 <span className="text-zinc-950">40%</span>
@@ -260,7 +257,7 @@ export default function Dashboard({ setActiveTab }) {
             </div>
           </div>
 
-          <div className="w-full md:w-[250px] bg-white p-5 rounded-lg border border-zinc-200 z-10 flex flex-col justify-between min-h-[220px]">
+          <div className="w-full md:w-[250px] bg-white p-5 rounded-lg border border-zinc-200 z-10 flex flex-col justify-between min-h-[175px]">
             <div>
               <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Captain Activity</p>
               <div className="space-y-3 mt-4">
@@ -273,11 +270,22 @@ export default function Dashboard({ setActiveTab }) {
                   <span className="text-body-sm font-semibold text-zinc-800">3 Pending Approval</span>
                 </div>
               </div>
+
+              {/* Online Captain Avatars Grid */}
+              <div className="flex items-center gap-2 mt-5 pl-0.5">
+                <div className="flex -space-x-1.5">
+                  <div className="w-6 h-6 rounded-full bg-brand-red text-white flex items-center justify-center text-[7.5px] font-black border-2 border-white shadow-xs">MT</div>
+                  <div className="w-6 h-6 rounded-full bg-zinc-700 text-white flex items-center justify-center text-[7.5px] font-black border-2 border-white shadow-xs">ER</div>
+                  <div className="w-6 h-6 rounded-full bg-zinc-500 text-white flex items-center justify-center text-[7.5px] font-black border-2 border-white shadow-xs">DC</div>
+                  <div className="w-6 h-6 rounded-full bg-zinc-300 text-zinc-800 flex items-center justify-center text-[7.5px] font-black border-2 border-white shadow-xs">SR</div>
+                </div>
+                <span className="text-[9.5px] text-zinc-450 font-bold uppercase tracking-wider ml-1">+8 online</span>
+              </div>
             </div>
 
             <button
               onClick={() => setActiveTab && setActiveTab('captains')}
-              className="w-full py-2.5 text-label-md font-bold text-zinc-850 border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 hover:text-zinc-950 transition-smooth cursor-pointer mt-4 uppercase tracking-wider text-[11px] shadow-xs"
+              className="w-full py-2.5 text-label-md font-bold text-zinc-850 border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 hover:text-zinc-950 transition-smooth cursor-pointer mt-auto uppercase tracking-wider text-[11px] shadow-xs"
             >
               Manage Logistics
             </button>

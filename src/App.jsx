@@ -28,6 +28,7 @@ export default function App() {
     return path || 'dashboard';
   });
   
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Handle URL updates when switching tabs
@@ -42,6 +43,7 @@ export default function App() {
     const handlePopState = () => {
       const path = window.location.pathname.replace(/^\/|\/$/g, '');
       setActiveTab(path || 'dashboard');
+      setIsSidebarOpen(false); // Close sidebar on nav
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
@@ -55,6 +57,7 @@ export default function App() {
   const handleLogout = () => {
     localStorage.setItem('bni_logged_in', 'false');
     setIsLoggedIn(false);
+    setIsSidebarOpen(false);
   };
 
   // Sync browser URL to /login when logged out, and back to the active tab when logged in
@@ -70,20 +73,46 @@ export default function App() {
     }
   }, [isLoggedIn]);
 
+  // Wrap tab change to also close sidebar on mobile
+  const handleTabChangeResponsive = (tabId) => {
+    handleTabChange(tabId);
+    setIsSidebarOpen(false);
+  };
+
   // If not logged in, render only the Login page
   if (!isLoggedIn) {
     return <Login onLogin={handleLogin} />;
   }
 
   return (
-    <div className="flex h-screen w-screen bg-white text-zinc-950 font-sans antialiased overflow-hidden">
+    <div className="flex h-screen w-screen bg-white text-zinc-950 font-sans antialiased overflow-hidden relative">
+      {/* Mobile drawer backdrop overlay */}
+      {isSidebarOpen && (
+        <div
+          onClick={() => setIsSidebarOpen(false)}
+          className="fixed inset-0 bg-zinc-950/40 z-45 lg:hidden transition-opacity duration-300 animate-fade-in"
+        />
+      )}
+
       {/* Reusable Sidebar navigation component */}
-      <Sidebar activeTab={activeTab} setActiveTab={handleTabChange} onLogout={handleLogout} />
+      <Sidebar
+        activeTab={activeTab}
+        setActiveTab={handleTabChangeResponsive}
+        onLogout={handleLogout}
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+      />
 
       {/* Main content wrapper */}
       <div className="flex-1 flex flex-col min-w-0 bg-white overflow-hidden">
         {/* Reusable top navigation header component */}
-        <Header searchQuery={searchQuery} setSearchQuery={setSearchQuery} activeTab={activeTab} setActiveTab={setActiveTab} />
+        <Header
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          onMenuClick={() => setIsSidebarOpen(true)}
+        />
 
         {/* Workspace views router */}
         <main className="flex-1 overflow-y-auto bg-white">

@@ -52,7 +52,7 @@ export default function LockConclave() {
   };
 
   return (
-    <div className="p-6 max-w-[1600px] mx-auto w-full flex flex-col gap-6 animate-fade-in relative pb-16">
+    <div className="p-4 sm:p-6 max-w-[1600px] mx-auto w-full flex flex-col gap-6 animate-fade-in relative pb-16">
 
       {/* Header & Lock Trigger */}
       <div className="border-b border-zinc-100 pb-6 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
@@ -128,7 +128,7 @@ export default function LockConclave() {
       </div>
 
       {/* KPI Readiness Overview Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3.5">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
         <div className="bg-white border border-zinc-200/80 p-5 rounded-xl flex items-center justify-between shadow-sm">
           <div>
             <p className="text-[10px] text-zinc-400 font-bold uppercase mb-0.5">Validation</p>
@@ -165,42 +165,39 @@ export default function LockConclave() {
           <span className="inline-block w-2.5 h-2.5 rounded bg-brand-red shrink-0" />
         </div>
 
-        <div className="bg-white border border-zinc-200/80 p-5 rounded-xl flex items-center justify-between shadow-sm">
-          <div>
+        <div className="bg-white border border-zinc-200/80 p-5 rounded-xl flex items-center justify-between shadow-sm gap-3">
+          <div className="flex-1 min-w-0">
             <p className="text-[10px] text-zinc-450 font-bold uppercase mb-0.5">Overall Readiness</p>
             <p className="text-headline-md font-extrabold text-brand-red">{isLocked ? 'Locked' : 'Ready'}</p>
-            <div className="w-20 h-1 mt-1.5 rounded-full overflow-hidden cursor-pointer">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart layout="vertical" data={[{ name: 'Readiness', value: 100 }]} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-                  <XAxis type="number" domain={[0, 100]} hide />
-                  <YAxis type="category" dataKey="name" hide />
-                  <Tooltip formatter={(value) => `${value}%`} cursor={false} />
-                  <Bar dataKey="value" fill="#af101a" radius={[2, 2, 2, 2]} background={{ fill: '#e4e4e7' }} barSize={4} />
-                </BarChart>
-              </ResponsiveContainer>
+            <div className="w-20 h-1 mt-2.5 rounded-full bg-zinc-200/80 overflow-hidden">
+              <div className="h-full bg-brand-red rounded-full" style={{ width: '100%' }} />
             </div>
           </div>
 
-          {/* Recharts Circle progress indicator */}
+          {/* Custom SVG Circle progress indicator */}
           <div className="w-12 h-12 relative flex items-center justify-center shrink-0">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={chartData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={15}
-                  outerRadius={20}
-                  startAngle={90}
-                  endAngle={-270}
-                  dataKey="value"
-                >
-                  <Cell fill="#af101a" stroke="none" />
-                  <Cell fill="#f4f4f5" stroke="none" />
-                </Pie>
-              </PieChart>
-            </ResponsiveContainer>
-            <span className="absolute text-[9px] font-extrabold text-zinc-900">100%</span>
+            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 48 48">
+              <circle
+                cx="24"
+                cy="24"
+                r="18"
+                stroke="#f4f4f5"
+                strokeWidth="3"
+                fill="transparent"
+              />
+              <circle
+                cx="24"
+                cy="24"
+                r="18"
+                stroke="#cf2e2e"
+                strokeWidth="3"
+                fill="transparent"
+                strokeDasharray={2 * Math.PI * 18}
+                strokeDashoffset={0}
+                strokeLinecap="round"
+              />
+            </svg>
+            <span className="absolute text-[9px] font-black text-zinc-950">100%</span>
           </div>
         </div>
       </div>

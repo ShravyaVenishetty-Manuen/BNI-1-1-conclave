@@ -142,7 +142,7 @@ export default function Reports({ searchQuery: globalSearchQuery }) {
   };
 
   return (
-    <div className="p-6 max-w-[1600px] mx-auto w-full flex flex-col gap-6 animate-fade-in relative">
+    <div className="p-4 sm:p-6 max-w-[1600px] mx-auto w-full flex flex-col gap-6 animate-fade-in relative">
 
       {/* Header & Actions */}
       <div className="border-b border-zinc-100 pb-6 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
@@ -249,7 +249,7 @@ export default function Reports({ searchQuery: globalSearchQuery }) {
       </section>
 
       {/* KPI Dashboard Row */}
-      <section className="grid grid-cols-2 md:grid-cols-5 gap-3.5">
+      <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
         <div className="bg-white border border-zinc-200/80 p-5 rounded-xl space-y-3 shadow-sm hover:shadow-md transition-smooth">
           <div className="flex justify-between items-start">
             <div className="w-9 h-9 rounded-lg bg-red-50 flex items-center justify-center text-brand-red">
@@ -433,9 +433,9 @@ export default function Reports({ searchQuery: globalSearchQuery }) {
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-body-sm">
+              <table className="w-full text-left border-collapse text-body-sm min-w-[800px]">
                 <thead>
-                  <tr className="bg-zinc-50/50 border-b border-zinc-100 text-[10px] font-bold text-zinc-450 uppercase">
+                  <tr className="bg-zinc-50/50 border-b border-zinc-100 text-[10px] font-bold text-zinc-455 uppercase">
                     <th className="px-6 py-3">Member</th>
                     <th className="px-6 py-3">Business Type</th>
                     <th className="px-6 py-3">Captain</th>
@@ -466,13 +466,13 @@ export default function Reports({ searchQuery: globalSearchQuery }) {
                       <td className="px-6 py-4.5">
                         <div className="flex items-center gap-2">
                           <span className="w-1.5 h-1.5 rounded-full bg-brand-red animate-pulse" />
-                          <span className="text-[11px]">{m.captain}</span>
+                          <span className="text-[11px] whitespace-nowrap">{m.captain}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4.5 font-mono">{m.rounds}</td>
                       <td className="px-6 py-4.5 font-mono">{m.meetings}</td>
                       <td className="px-6 py-4.5 text-right">
-                        <span className={`px-2 py-0.5 rounded text-[8px] font-extrabold border uppercase ${m.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-800 border-emerald-100' : 'bg-amber-50 text-amber-800 border-amber-100'}`}>
+                        <span className={`px-2 py-0.5 rounded text-[8px] font-extrabold border uppercase whitespace-nowrap ${m.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-800 border-emerald-100' : 'bg-amber-50 text-amber-800 border-amber-100'}`}>
                           {m.status}
                         </span>
                       </td>
