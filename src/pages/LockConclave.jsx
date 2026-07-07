@@ -98,7 +98,7 @@ export default function LockConclave() {
           {/* Venue */}
           <div className="flex items-center gap-2 border-r border-zinc-100 pr-6 last:border-0">
             <MapPin className="w-4 h-4 text-zinc-400 shrink-0" />
-            <span className="text-body-sm font-bold text-zinc-650">JW Marriott</span>
+            <span className="text-body-sm font-bold text-zinc-650">V Convention, Guntur</span>
           </div>
 
           {/* Seating Counts */}

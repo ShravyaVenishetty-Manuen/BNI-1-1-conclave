@@ -26,8 +26,8 @@ const initialConclaves = [
   {
     id: 'CON-2024-0012',
     name: 'Annual Global Summit 2024',
-    venue: 'JW Marriott, Bangalore',
-    venueShort: 'JW Marriott',
+    venue: 'V Convention, Guntur',
+    venueShort: 'V Convention',
     dateRange: 'Nov 12 - Nov 14, 2024',
     startDate: '2024-11-12',
     endDate: '2024-11-14',
@@ -37,7 +37,7 @@ const initialConclaves = [
     captainLimit: 50,
     status: 'Upcoming',
     progress: 65,
-    region: 'Bangalore Central',
+    region: 'Guntur Central',
     coordinator: 'Vikram Malhotra',
     coordinatorAvatar: 'VM',
     description: 'A premier networking conclave focusing on cross-regional business collaboration and strategic B2B referrals. This session aims to connect high-performing entrepreneurs and business leaders across 12 diverse industries.',
@@ -50,8 +50,8 @@ const initialConclaves = [
   {
     id: 'CON-2024-0015',
     name: 'Regional Leadership Meet',
-    venue: 'Bangalore Palace, Malleshwaram',
-    venueShort: 'Bangalore Palace',
+    venue: 'Guntur Club, Guntur',
+    venueShort: 'Guntur Club',
     dateRange: 'Oct 20 - Oct 21, 2024',
     startDate: '2024-10-20',
     endDate: '2024-10-21',
@@ -61,7 +61,7 @@ const initialConclaves = [
     captainLimit: 12,
     status: 'Running',
     progress: 88,
-    region: 'Bangalore West',
+    region: 'Guntur West',
     coordinator: 'Anjali Sharma',
     coordinatorAvatar: 'AS',
     description: 'Annual training and planning meeting for BNI regional leadership, captains, and area directors. Focuses on setting conclave schedules for the next quarter.',
@@ -73,8 +73,8 @@ const initialConclaves = [
   {
     id: 'CON-2024-0018',
     name: 'Q1 Strategic Networking',
-    venue: 'The Leela Bhartiya City, Bangalore',
-    venueShort: 'The Leela',
+    venue: 'Grand Guntur Convention Center',
+    venueShort: 'Grand Guntur',
     dateRange: 'TBD Jan 2025',
     startDate: '2025-01-15',
     endDate: '2025-01-16',
@@ -84,7 +84,7 @@ const initialConclaves = [
     captainLimit: 20,
     status: 'Draft',
     progress: 5,
-    region: 'Bangalore North',
+    region: 'Guntur North',
     coordinator: 'Rajesh Mehta',
     coordinatorAvatar: 'RM',
     description: 'Planning draft for the first national level business networking round table of 2025, targeting real estate and infrastructure startups.',
@@ -95,8 +95,8 @@ const initialConclaves = [
   {
     id: 'CON-2024-0008',
     name: 'South India Business Expo',
-    venue: 'JW Marriott, Bangalore',
-    venueShort: 'JW Marriott',
+    venue: 'V Convention, Guntur',
+    venueShort: 'V Convention',
     dateRange: 'Aug 10 - Aug 12, 2024',
     startDate: '2024-08-10',
     endDate: '2024-08-12',
@@ -109,10 +109,9 @@ const initialConclaves = [
     region: 'South Region',
     coordinator: 'Sanjay Iyer',
     coordinatorAvatar: 'SI',
-    description: 'South India Business Conclave featuring business roundtables, captains verification boards, and snapshot exchanges across 24 regional chapters.',
+    description: 'South India networking and business exhibition event.',
     timeline: [
-      { event: 'Conclave Archive Locked', date: 'Aug 15, 2024 • 06:00 PM', desc: 'Locked and archived' },
-      { event: 'Completed Session Records', date: 'Aug 12, 2024 • 05:00 PM', desc: 'All sessions successfully completed' }
+      { event: 'Expo Closed', date: 'Aug 12, 2024 • 05:00 PM', desc: 'Closed business reported successfully' }
     ]
   }
 ];
@@ -492,9 +491,9 @@ export default function Conclaves({ searchQuery }) {
               className="border border-zinc-200 rounded-lg px-3 py-2 text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-white font-medium text-zinc-700 transition-smooth cursor-pointer"
             >
               <option value="All">All Venues</option>
-              <option value="JW Marriott">JW Marriott</option>
-              <option value="Bangalore Palace">Bangalore Palace</option>
-              <option value="The Leela">The Leela</option>
+              <option value="V Convention">V Convention</option>
+              <option value="Guntur Club">Guntur Club</option>
+              <option value="Grand Guntur">Grand Guntur</option>
             </select>
 
             <select
@@ -840,18 +839,18 @@ export default function Conclaves({ searchQuery }) {
                     value={formData.venue}
                     onChange={(e) => setFormData(prev => ({ ...prev, venue: e.target.value, venueShort: e.target.value.split(',')[0] }))}
                     className="w-full px-3 py-1.5 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-zinc-50/20"
-                    placeholder="JW Marriott, Bangalore"
+                    placeholder="V Convention, Guntur"
                     type="text"
                     required
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold uppercase text-zinc-450 block mb-1">Region Group *</label>
+                  <label className="text-[10px] font-bold uppercase text-zinc-455 block mb-1">Region Group *</label>
                   <input
                     value={formData.region}
                     onChange={(e) => setFormData(prev => ({ ...prev, region: e.target.value }))}
                     className="w-full px-3 py-1.5 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-zinc-50/20"
-                    placeholder="Bangalore Central"
+                    placeholder="Guntur Central"
                     type="text"
                     required
                   />

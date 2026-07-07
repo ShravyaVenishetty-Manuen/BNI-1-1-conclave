@@ -35,8 +35,8 @@ const initialMembers = [
 ];
 
 const conclaveList = [
-  { id: 'c1', name: 'Annual Global Summit 2024', details: 'Nov 12-14, JW Marriott' },
-  { id: 'c2', name: 'Regional Leadership Meet', details: 'Oct 20, Bangalore Palace' }
+  { id: 'c1', name: 'Annual Global Summit 2024', details: 'Nov 12-14, V Convention, Guntur' },
+  { id: 'c2', name: 'Regional Leadership Meet', details: 'Oct 20, Guntur Club' }
 ];
 
 export default function Reports({ searchQuery: globalSearchQuery }) {
