@@ -2,135 +2,195 @@
 
 @theme {
   --color-brand-red: #cf2e2e;
-  --font-display: "Manrope", sans-serif;
-  --font-sans: "Inter", sans-serif;
+  --font-display: "Hanken Grotesk", sans-serif;
+  --font-sans: "Plus Jakarta Sans", sans-serif;
+}
+
+body {
+  font-weight: 600;
+}
+
+th {
+  color: #52525b !important;
+  /* zinc-600: clean, readable mid-dark grey */
+}
+
+/* Remove bottom border lines under headings and subheadings */
+main header.border-b,
+main div.border-b.border-zinc-100,
+h3.border-b,
+h4.border-b,
+h5.border-b,
+span.border-b {
+  border-bottom-width: 0px !important;
+  border-bottom: none !important;
+}
+
+/* Style page description paragraphs to be clean and compact */
+.text-dashboard-title + p {
+  display: block !important;
+  font-size: 11px !important;
+  line-height: 14px !important;
+  color: #71717a !important; /* zinc-500 */
+  margin-top: 0.25rem !important; /* mt-1 */
+  font-weight: 500 !important;
+}
+
+/* Normalize all page containers to have identical layout and spacing */
+main > div {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 1.5rem !important;       /* Exact 24px vertical gap on all pages */
+  padding-top: 1.5rem !important; /* Uniform top padding */
+  padding-bottom: 2rem !important;
+}
+
+/* Remove default margins/padding on the header element (always the first child of the page container) */
+main > div > *:first-child {
+  padding-bottom: 0.25rem !important;
+  margin-bottom: 0px !important;
+}
+
+/* Reset space-y margin overrides on direct children to avoid layout collisions */
+main > div > * {
+  margin-top: 0px !important;
+  margin-bottom: 0px !important;
+}
+
+/* Remove default black focus outline borders on all Recharts wrapper divs and SVG graphics */
+.recharts-wrapper,
+.recharts-wrapper *:focus,
+.recharts-surface:focus,
+.recharts-wrapper:focus {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 @utility text-dashboard-title {
-  font-family: "Manrope", sans-serif;
+  font-family: "Hanken Grotesk", sans-serif;
   font-size: 26px;
   line-height: 28px;
   font-weight: 1000;
 }
 
 @utility text-module-title {
-  font-family: "Manrope", sans-serif;
+  font-family: "Hanken Grotesk", sans-serif;
   font-size: 16px;
   line-height: 22px;
   font-weight: 700;
 }
 
 @utility text-section-heading {
-  font-family: "Manrope", sans-serif;
+  font-family: "Hanken Grotesk", sans-serif;
   font-size: 14px;
   line-height: 18px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 @utility text-card-title {
-  font-family: "Manrope", sans-serif;
+  font-family: "Hanken Grotesk", sans-serif;
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 700;
+}
+
+@utility text-body-text {
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+}
+
+@utility text-table-text {
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+}
+
+@utility text-sidebar {
+  font-family: "Geist", sans-serif;
   font-size: 13px;
   line-height: 18px;
   font-weight: 600;
 }
 
-@utility text-body-text {
-  font-family: "Inter", sans-serif;
-  font-size: 12px;
-  line-height: 16px;
-  font-weight: 400;
-}
-
-@utility text-table-text {
-  font-family: "Inter", sans-serif;
-  font-size: 12px;
-  line-height: 16px;
-  font-weight: 500;
-}
-
-@utility text-sidebar {
-  font-family: "Inter", sans-serif;
-  font-size: 12px;
-  line-height: 16px;
-  font-weight: 500;
-}
-
 @utility text-button {
-  font-family: "Inter", sans-serif;
+  font-family: "Plus Jakarta Sans", sans-serif;
   font-size: 12px;
   line-height: 16px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 @utility text-label {
-  font-family: "Inter", sans-serif;
+  font-family: "Geist", sans-serif;
   font-size: 11px;
   line-height: 14px;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 @utility text-caption {
-  font-family: "Inter", sans-serif;
-  font-size: 10px;
-  line-height: 12px;
-  font-weight: 400;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 11px;
+  line-height: 14px;
+  font-weight: 600;
 }
 
 /* Custom compact utilities matching the dashboard's layout classes */
 @utility text-display-sm {
-  font-family: "Manrope", sans-serif;
+  font-family: "Hanken Grotesk", sans-serif;
   font-size: 20px;
   line-height: 26px;
-  font-weight: 800;
+  font-weight: 850;
 }
 
 @utility text-headline-lg {
-  font-family: "Manrope", sans-serif;
+  font-family: "Hanken Grotesk", sans-serif;
   font-size: 18px;
   line-height: 24px;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 @utility text-headline-md {
-  font-family: "Manrope", sans-serif;
+  font-family: "Hanken Grotesk", sans-serif;
   font-size: 15px;
   line-height: 20px;
-  font-weight: 650;
+  font-weight: 700;
 }
 
 @utility text-title-lg {
-  font-family: "Manrope", sans-serif;
+  font-family: "Hanken Grotesk", sans-serif;
   font-size: 13px;
   line-height: 18px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 @utility text-body-md {
-  font-family: "Inter", sans-serif;
+  font-family: "Plus Jakarta Sans", sans-serif;
   font-size: 12px;
   line-height: 16px;
-  font-weight: 400;
+  font-weight: 600;
 }
 
 @utility text-body-sm {
-  font-family: "Inter", sans-serif;
+  font-family: "Plus Jakarta Sans", sans-serif;
   font-size: 12px;
   line-height: 16px;
-  font-weight: 400;
+  font-weight: 600;
 }
 
 @utility text-label-md {
-  font-family: "Inter", sans-serif;
+  font-family: "Geist", sans-serif;
   font-size: 11px;
   line-height: 14px;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 @utility text-label-xs {
-  font-family: "Inter", sans-serif;
+  font-family: "Geist", sans-serif;
   font-size: 10px;
   line-height: 12px;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 /* Animations and Transitions */
@@ -154,4 +214,27 @@
   display: none;
   width: 0;
   height: 0;
+}
+
+/* Global Card Styling: Subtle, elegant BNI red outline border and shadow removal, keeping original backgrounds */
+*[class*="rounded-xl"].border,
+*[class*="rounded-lg"].border,
+*[class*="rounded-2xl"].border,
+*[class*="rounded-xl"][class*="border-zinc-"],
+*[class*="rounded-lg"][class*="border-zinc-"],
+select[class*="border-zinc-"],
+input[class*="border-zinc-"],
+button[class*="border-zinc-"] {
+  border-color: rgba(207, 46, 46, 0.26) !important;
+  box-shadow: none !important;
+}
+
+/* Quick Actions Buttons: Keep light grey shade but add the BNI red border */
+.quick-action-btn {
+  border-color: rgba(207, 46, 46, 0.26) !important;
+  background-color: #f9f9fb !important; /* bg-zinc-50 */
+  box-shadow: none !important;
+}
+.quick-action-btn:hover {
+  background-color: #f4f4f5 !important; /* hover:bg-zinc-100 */
 }
