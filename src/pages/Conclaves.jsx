@@ -20,6 +20,7 @@ import {
   Play
 } from 'lucide-react';
 import Pagination from '../components/Pagination';
+import { ResponsiveContainer, BarChart, Bar, XAxis } from 'recharts';
 
 const initialConclaves = [
   {
@@ -116,9 +117,10 @@ const initialConclaves = [
   }
 ];
 
-export default function Conclaves() {
+export default function Conclaves({ searchQuery }) {
   const [conclaves, setConclaves] = useState(initialConclaves);
   const [searchTerm, setSearchTerm] = useState('');
+  const searchVal = searchQuery !== undefined ? searchQuery : searchTerm;
   const [statusFilter, setStatusFilter] = useState('All');
   const [venueFilter, setVenueFilter] = useState('All');
   const [sortBy, setSortBy] = useState('DateDesc');
@@ -127,7 +129,7 @@ export default function Conclaves() {
   // Checked rows
   const [selectedRows, setSelectedRows] = useState(new Set());
   const [activeDropdown, setActiveDropdown] = useState(null);
-  
+
   // Modals state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -164,14 +166,14 @@ export default function Conclaves() {
   const filteredConclaves = useMemo(() => {
     setCurrentPage(1);
     setSelectedRows(new Set());
-    
+
     let result = conclaves.filter(c => {
-      const matchesSearch = 
-        c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.venue.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.coordinator.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.id.toLowerCase().includes(searchTerm.toLowerCase());
-      
+      const matchesSearch =
+        c.name.toLowerCase().includes(searchVal.toLowerCase()) ||
+        c.venue.toLowerCase().includes(searchVal.toLowerCase()) ||
+        c.coordinator.toLowerCase().includes(searchVal.toLowerCase()) ||
+        c.id.toLowerCase().includes(searchVal.toLowerCase());
+
       const matchesStatus = statusFilter === 'All' || c.status === statusFilter;
       const matchesVenue = venueFilter === 'All' || c.venueShort === venueFilter;
 
@@ -188,7 +190,7 @@ export default function Conclaves() {
     }
 
     return result;
-  }, [conclaves, searchTerm, statusFilter, venueFilter, sortBy]);
+  }, [conclaves, searchVal, statusFilter, venueFilter, sortBy]);
 
   // Paginated list
   const paginatedConclaves = useMemo(() => {
@@ -240,14 +242,14 @@ export default function Conclaves() {
       c.status,
       c.coordinator
     ]);
-    
+
     const csvContent = "data:text/csv;charset=utf-8,"
       + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-    
+
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `bni_conclaves_export_${new Date().toISOString().slice(0,10)}.csv`);
+    link.setAttribute("download", `bni_conclaves_export_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -268,10 +270,10 @@ export default function Conclaves() {
       c.status,
       c.coordinator
     ]);
-    
+
     const csvContent = "data:text/csv;charset=utf-8,"
       + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-    
+
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -392,33 +394,24 @@ export default function Conclaves() {
 
   return (
     <div className="p-6 max-w-[1600px] mx-auto w-full flex flex-col gap-6 animate-fade-in">
-      
+
       {/* Breadcrumbs & Page Header */}
       <div className="border-b border-zinc-100 pb-6 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
-          <nav aria-label="Breadcrumb" className="flex mb-1.5">
-            <ol className="inline-flex items-center space-x-1.5 text-caption text-zinc-400 font-semibold uppercase">
-              <li>Organization</li>
-              <li className="flex items-center">
-                <ChevronRight className="w-3 h-3 text-zinc-350 mx-1" />
-                <span className="text-zinc-800 font-bold">Conclaves</span>
-              </li>
-            </ol>
-          </nav>
           <h2 className="text-dashboard-title text-zinc-950 font-extrabold tracking-tight">Conclave Management</h2>
           <p className="text-body-text text-zinc-500 mt-2">
-            Create and manage multiple BNI networking conclaves, venues, and matching lifecycles from a single workspace.
+            Create and manage BNI conclave schedules and lifecycle events.
           </p>
         </div>
         <div className="flex items-center gap-2.5 shrink-0 w-full sm:w-auto">
-          <button 
+          <button
             onClick={handleExport}
             className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 border border-zinc-200 bg-white text-zinc-700 font-bold text-button rounded-lg hover:bg-zinc-50 transition-smooth cursor-pointer shadow-sm"
           >
             <Download className="w-4 h-4 text-zinc-400" />
             Export
           </button>
-          <button 
+          <button
             onClick={openAddModal}
             className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 bg-brand-red hover:bg-red-700 text-white font-bold text-button rounded-lg transition-smooth shadow-md cursor-pointer"
           >
@@ -613,8 +606,13 @@ export default function Conclaves() {
                     </td>
                     <td className="px-5 py-4 w-32">
                       <div className="flex items-center gap-2">
-                        <div className="flex-1 bg-zinc-100 h-1.5 rounded-full overflow-hidden border border-zinc-200/10">
-                          <div className={`h-full rounded-full ${conclave.status === 'Completed' ? 'bg-zinc-700' : conclave.status === 'Draft' ? 'bg-zinc-400' : 'bg-brand-red'}`} style={{ width: `${conclave.progress}%` }}></div>
+                        <div className="flex-1 h-1.5 rounded-full overflow-hidden border border-zinc-200/10">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <BarChart layout="vertical" data={[{ value: conclave.progress }]} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                              <XAxis type="number" domain={[0, 100]} hide />
+                              <Bar dataKey="value" fill={conclave.status === 'Completed' ? '#3f3f46' : conclave.status === 'Draft' ? '#a1a1aa' : '#af101a'} radius={[2, 2, 2, 2]} background={{ fill: '#f4f4f5' }} barSize={6} />
+                            </BarChart>
+                          </ResponsiveContainer>
                         </div>
                         <span className="text-[10px] font-bold text-zinc-600">{conclave.progress}%</span>
                       </div>
@@ -699,7 +697,7 @@ export default function Conclaves() {
             {/* Drawer Header */}
             <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50">
               <div className="flex items-center gap-3">
-                <button 
+                <button
                   onClick={() => setSelectedConclave(null)}
                   className="p-1.5 hover:bg-zinc-200 rounded-lg text-zinc-400 hover:text-zinc-700 transition-smooth cursor-pointer"
                 >
@@ -714,7 +712,7 @@ export default function Conclaves() {
 
             {/* Drawer Body */}
             <div className="flex-1 overflow-y-auto p-5 space-y-6">
-              
+
               {/* Description */}
               <div className="space-y-2">
                 <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block">Description</span>
@@ -775,7 +773,7 @@ export default function Conclaves() {
 
             {/* Drawer Footer Actions */}
             <div className="p-4 border-t border-zinc-100 bg-zinc-50/50 flex gap-2 shrink-0">
-              <button 
+              <button
                 onClick={() => {
                   openEditModal(selectedConclave);
                   setSelectedConclave(null);
@@ -784,7 +782,7 @@ export default function Conclaves() {
               >
                 Edit Conclave
               </button>
-              <button 
+              <button
                 onClick={() => {
                   showToast('Fetching reports...', 'Starting file generation.');
                   setSelectedConclave(null);
@@ -1194,14 +1192,14 @@ export default function Conclaves() {
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-zinc-900 text-white rounded-lg shadow-2xl py-2 px-4 flex items-center gap-3.5 border border-zinc-800 animate-slide-up text-body-sm font-semibold select-none">
           <span className="text-[10px] font-extrabold uppercase tracking-wide bg-zinc-800 px-2 py-0.5 rounded text-zinc-350">{selectedRows.size} Selected</span>
           <div className="w-px h-4 bg-zinc-800" />
-          <button 
+          <button
             onClick={handleBulkExport}
             className="text-white hover:text-brand-red transition-smooth flex items-center gap-1.5 cursor-pointer text-button text-[10px]"
           >
             <Download className="w-3.5 h-3.5 animate-bounce-slow" />
             Export Selected
           </button>
-          <button 
+          <button
             onClick={() => setIsBulkDeleteOpen(true)}
             className="text-brand-red hover:text-red-400 transition-smooth flex items-center gap-1.5 cursor-pointer text-button text-[10px]"
           >
@@ -1219,7 +1217,7 @@ export default function Conclaves() {
             <p className="font-bold">{toast.title}</p>
             <p className="text-zinc-400 font-semibold mt-0.5">{toast.desc}</p>
           </div>
-          <button 
+          <button
             onClick={() => setToast(null)}
             className="text-white opacity-40 hover:opacity-100 ml-2"
           >

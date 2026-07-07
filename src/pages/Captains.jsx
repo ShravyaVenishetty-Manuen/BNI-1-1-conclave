@@ -18,6 +18,7 @@ import {
   Star
 } from 'lucide-react';
 import Pagination from '../components/Pagination';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 
 const initialCaptains = [
   {
@@ -114,9 +115,10 @@ const initialCaptains = [
   }
 ];
 
-export default function Captains() {
+export default function Captains({ searchQuery }) {
   const [captains, setCaptains] = useState(initialCaptains);
   const [searchTerm, setSearchTerm] = useState('');
+  const searchVal = searchQuery !== undefined ? searchQuery : searchTerm;
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
 
@@ -168,16 +170,16 @@ export default function Captains() {
     setSelectedRows(new Set());
     return captains.filter(cap => {
       const matchesSearch =
-        cap.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        cap.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        cap.email.toLowerCase().includes(searchTerm.toLowerCase());
+        cap.name.toLowerCase().includes(searchVal.toLowerCase()) ||
+        cap.id.toLowerCase().includes(searchVal.toLowerCase()) ||
+        cap.email.toLowerCase().includes(searchVal.toLowerCase());
 
       const matchesCategory = categoryFilter === 'All' || cap.category === categoryFilter;
       const matchesStatus = statusFilter === 'All' || cap.status === statusFilter;
 
       return matchesSearch && matchesCategory && matchesStatus;
     });
-  }, [captains, searchTerm, categoryFilter, statusFilter]);
+  }, [captains, searchVal, categoryFilter, statusFilter]);
 
   // Paginated List
   const paginatedCaptains = useMemo(() => {
@@ -379,7 +381,7 @@ export default function Captains() {
         <div>
           <h2 className="text-dashboard-title text-zinc-950 font-extrabold tracking-tight">Captain Management</h2>
           <p className="text-body-text text-zinc-500 mt-2">
-            Manage captain assignments and monitor captain availability for upcoming conclaves.
+            Manage table captain assignments and availability.
           </p>
         </div>
         <div className="flex items-center gap-2.5 shrink-0 w-full sm:w-auto">
@@ -724,8 +726,15 @@ export default function Captains() {
                   <span className="text-zinc-650">Financial Category</span>
                   <span className="text-brand-red font-bold">12/15</span>
                 </div>
-                <div className="h-2 bg-zinc-100 rounded-full overflow-hidden border border-zinc-200/30">
-                  <div className="h-full bg-brand-red rounded-full" style={{ width: '80%' }}></div>
+                <div className="h-2 rounded-full overflow-hidden border border-zinc-200/30 cursor-pointer">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart layout="vertical" data={[{ name: 'Financial', value: 80 }]} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                      <XAxis type="number" domain={[0, 100]} hide />
+                      <YAxis type="category" dataKey="name" hide />
+                      <Tooltip formatter={(value) => `${value}%`} cursor={false} />
+                      <Bar dataKey="value" fill="#af101a" radius={[4, 4, 4, 4]} background={{ fill: '#f4f4f5' }} barSize={8} />
+                    </BarChart>
+                  </ResponsiveContainer>
                 </div>
                 <p className="text-[9px] text-zinc-450 mt-1.5 font-bold uppercase">3 Slots Available</p>
               </div>
@@ -735,8 +744,15 @@ export default function Captains() {
                   <span className="text-zinc-650">Real Estate Category</span>
                   <span className="text-zinc-900 font-bold">14/14</span>
                 </div>
-                <div className="h-2 bg-zinc-100 rounded-full overflow-hidden border border-zinc-200/30">
-                  <div className="h-full bg-zinc-900 rounded-full" style={{ width: '100%' }}></div>
+                <div className="h-2 rounded-full overflow-hidden border border-zinc-200/30 cursor-pointer">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart layout="vertical" data={[{ name: 'Real Estate', value: 100 }]} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                      <XAxis type="number" domain={[0, 100]} hide />
+                      <YAxis type="category" dataKey="name" hide />
+                      <Tooltip formatter={(value) => `${value}%`} cursor={false} />
+                      <Bar dataKey="value" fill="#18181b" radius={[4, 4, 4, 4]} background={{ fill: '#f4f4f5' }} barSize={8} />
+                    </BarChart>
+                  </ResponsiveContainer>
                 </div>
                 <p className="text-[9px] text-brand-red mt-1.5 font-extrabold uppercase flex items-center gap-1">
                   <span className="w-1 h-1 rounded-full bg-brand-red"></span> Fully Booked
@@ -748,8 +764,15 @@ export default function Captains() {
                   <span className="text-zinc-650">General Services</span>
                   <span className="text-brand-red font-bold">8/20</span>
                 </div>
-                <div className="h-2 bg-zinc-100 rounded-full overflow-hidden border border-zinc-200/30">
-                  <div className="h-full bg-brand-red rounded-full" style={{ width: '40%' }}></div>
+                <div className="h-2 rounded-full overflow-hidden border border-zinc-200/30 cursor-pointer">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart layout="vertical" data={[{ name: 'General Services', value: 40 }]} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                      <XAxis type="number" domain={[0, 100]} hide />
+                      <YAxis type="category" dataKey="name" hide />
+                      <Tooltip formatter={(value) => `${value}%`} cursor={false} />
+                      <Bar dataKey="value" fill="#af101a" radius={[4, 4, 4, 4]} background={{ fill: '#f4f4f5' }} barSize={8} />
+                    </BarChart>
+                  </ResponsiveContainer>
                 </div>
                 <p className="text-[9px] text-zinc-455 mt-1.5 font-bold uppercase">12 Slots Available</p>
               </div>

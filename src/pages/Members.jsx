@@ -157,9 +157,10 @@ const membersData = [
   }
 ];
 
-export default function Members() {
+export default function Members({ searchQuery }) {
   const [members, setMembers] = useState(membersData);
   const [searchTerm, setSearchTerm] = useState('');
+  const searchVal = searchQuery !== undefined ? searchQuery : searchTerm;
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [captainFilter, setCaptainFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
@@ -186,7 +187,7 @@ export default function Members() {
   // Reset to first page when search or filters change
   useMemo(() => {
     setCurrentPage(1);
-  }, [searchTerm, categoryFilter, captainFilter, statusFilter]);
+  }, [searchVal, categoryFilter, captainFilter, statusFilter]);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingMember, setEditingMember] = useState(null);
@@ -281,10 +282,10 @@ export default function Members() {
   const filteredMembers = useMemo(() => {
     return members.filter(member => {
       const matchesSearch =
-        member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        member.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        member.phone.includes(searchTerm);
+        member.name.toLowerCase().includes(searchVal.toLowerCase()) ||
+        member.id.toLowerCase().includes(searchVal.toLowerCase()) ||
+        member.email.toLowerCase().includes(searchVal.toLowerCase()) ||
+        member.phone.includes(searchVal);
 
       const matchesCategory = categoryFilter === 'All' || member.category === categoryFilter;
 
@@ -297,7 +298,7 @@ export default function Members() {
 
       return matchesSearch && matchesCategory && matchesCaptain && matchesStatus;
     });
-  }, [members, searchTerm, categoryFilter, captainFilter, statusFilter]);
+  }, [members, searchVal, categoryFilter, captainFilter, statusFilter]);
 
   // Paginated members slice
   const paginatedMembers = useMemo(() => {
@@ -452,7 +453,7 @@ export default function Members() {
         <div>
           <h2 className="text-dashboard-title text-zinc-950 font-extrabold tracking-tight">Members Management</h2>
           <p className="text-body-text text-zinc-500 mt-2">
-            Manage registered BNI members participating in Chapter conclaves and round validations.
+            Manage registered BNI members and chapter seating details.
           </p>
         </div>
         <div className="flex items-center gap-2.5 shrink-0 w-full sm:w-auto">

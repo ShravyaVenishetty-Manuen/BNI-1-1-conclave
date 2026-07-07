@@ -97,9 +97,10 @@ const initialCategories = [
   }
 ];
 
-export default function BusinessTypes() {
+export default function BusinessTypes({ searchQuery }) {
   const [categories, setCategories] = useState(initialCategories);
   const [searchTerm, setSearchTerm] = useState('');
+  const searchVal = searchQuery !== undefined ? searchQuery : searchTerm;
   const [statusFilter, setStatusFilter] = useState('All');
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedRows, setSelectedRows] = useState(new Set());
@@ -167,15 +168,15 @@ export default function BusinessTypes() {
     setSelectedRows(new Set());
     return categories.filter(cat => {
       const matchesSearch =
-        cat.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        cat.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        cat.description.toLowerCase().includes(searchTerm.toLowerCase());
+        cat.name.toLowerCase().includes(searchVal.toLowerCase()) ||
+        cat.id.toLowerCase().includes(searchVal.toLowerCase()) ||
+        cat.description.toLowerCase().includes(searchVal.toLowerCase());
 
       const matchesStatus = statusFilter === 'All' || cat.status === statusFilter;
 
       return matchesSearch && matchesStatus;
     });
-  }, [categories, searchTerm, statusFilter]);
+  }, [categories, searchVal, statusFilter]);
 
   // Paginated List
   const paginatedCategories = useMemo(() => {
@@ -341,7 +342,7 @@ export default function BusinessTypes() {
         <div>
           <h2 className="text-dashboard-title text-zinc-950 font-extrabold tracking-tight">Business Types</h2>
           <p className="text-body-text text-zinc-500 mt-2">
-            Refine and manage business classifications for your regional network. Ensures precise validation for conclaves.
+            Manage professional classifications and network categories.
           </p>
         </div>
         <div className="flex items-center gap-2.5 shrink-0 w-full sm:w-auto">

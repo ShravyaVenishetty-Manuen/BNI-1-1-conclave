@@ -15,6 +15,17 @@ import {
   LogOut
 } from 'lucide-react';
 import Pagination from '../components/Pagination';
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  PieChart,
+  Pie,
+  Cell
+} from 'recharts';
 
 const initialSessions = [
   {
@@ -128,11 +139,13 @@ const initialSessions = [
   }
 ];
 
-export default function ActiveUsers() {
+export default function ActiveUsers({ searchQuery }) {
   const [sessions, setSessions] = useState(initialSessions);
   const [searchTerm, setSearchTerm] = useState('');
+  const searchVal = searchQuery !== undefined ? searchQuery : searchTerm;
   const [statusFilter, setStatusFilter] = useState('All');
   const [selectedSession, setSelectedSession] = useState(null);
+  const [hoveredSlice, setHoveredSlice] = useState(null);
 
   // Selection/checkbox states
   const [selectedRows, setSelectedRows] = useState(new Set());
@@ -142,6 +155,20 @@ export default function ActiveUsers() {
 
   // Real-time toast state
   const [toast, setToast] = useState(null);
+
+  // Recharts Data for Widgets
+  const sessionStatusData = useMemo(() => [
+    { name: 'Online', value: 742, color: '#af101a' },
+    { name: 'Idle', value: 312, color: '#fd867d' },
+    { name: 'Expiring', value: 142, color: '#e4beba' }
+  ], []);
+
+  const autoLogoutData = useMemo(() => [
+    { name: '5M', value: 15, color: '#fd867d' },
+    { name: '15M', value: 45, color: '#af101a' },
+    { name: '30M', value: 80, color: '#af101a' },
+    { name: '60M+', value: 60, color: '#271816' }
+  ], []);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -169,9 +196,9 @@ export default function ActiveUsers() {
     setSelectedRows(new Set());
     return sessions.filter(s => {
       const matchesSearch =
-        s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.category.toLowerCase().includes(searchTerm.toLowerCase());
+        s.name.toLowerCase().includes(searchVal.toLowerCase()) ||
+        s.id.toLowerCase().includes(searchVal.toLowerCase()) ||
+        s.category.toLowerCase().includes(searchVal.toLowerCase());
 
       const matchesStatus =
         statusFilter === 'All' ||
@@ -179,7 +206,7 @@ export default function ActiveUsers() {
 
       return matchesSearch && matchesStatus;
     });
-  }, [sessions, searchTerm, statusFilter]);
+  }, [sessions, searchVal, statusFilter]);
 
   // Paginated Sessions
   const paginatedSessions = useMemo(() => {
@@ -278,7 +305,7 @@ export default function ActiveUsers() {
         <div>
           <h2 className="text-dashboard-title text-zinc-950 font-extrabold tracking-tight">Active Users</h2>
           <p className="text-body-text text-zinc-500 mt-2">
-            Monitor active BNI member sessions and participation readiness for upcoming conclaves. Refreshed regularly.
+            Monitor active member sessions and chapter conclave readiness.
           </p>
         </div>
         <div className="flex items-center gap-2.5 shrink-0 w-full sm:w-auto">
@@ -351,39 +378,53 @@ export default function ActiveUsers() {
             Live Session Status
             <Info className="w-4 h-4 text-zinc-400" />
           </h3>
-          <div className="space-y-5 pt-1">
-            {/* Stacked Progress Bar */}
-            <div className="h-3 bg-zinc-100 rounded-full overflow-hidden flex border border-zinc-200/30">
-              <div className="h-full bg-brand-red rounded-l-full" style={{ width: '62%' }} title="Online: 62%"></div>
-              <div className="h-full bg-red-400 animate-pulse" style={{ width: '26%' }} title="Idle: 26%"></div>
-              <div className="h-full bg-zinc-200 rounded-r-full" style={{ width: '12%' }} title="Expiring: 12%"></div>
+          <div className="flex gap-6 items-center h-36 pt-1">
+            <div className="w-32 h-32 relative flex items-center justify-center shrink-0">
+              <ResponsiveContainer width="105%" height="105%">
+                <PieChart>
+                  <Pie
+                    data={sessionStatusData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={35}
+                    outerRadius={47}
+                    paddingAngle={2.5}
+                    dataKey="value"
+                  >
+                    {sessionStatusData.map((entry, index) => (
+                      <Cell 
+                        key={`cell-${index}`} 
+                        fill={entry.color} 
+                        stroke="none" 
+                        onMouseEnter={() => setHoveredSlice(entry)}
+                        onMouseLeave={() => setHoveredSlice(null)}
+                        className="outline-none cursor-pointer"
+                      />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="absolute flex flex-col items-center pointer-events-none">
+                <span className="text-sm font-black text-zinc-950 leading-none">
+                  {hoveredSlice ? hoveredSlice.value : '1,196'}
+                </span>
+                <span className="text-[8px] text-zinc-400 font-bold uppercase mt-1">
+                  {hoveredSlice ? hoveredSlice.name : 'Total'}
+                </span>
+              </div>
             </div>
-
-            {/* Legend & Details */}
-            <div className="space-y-3">
-              <div className="flex justify-between items-center text-body-sm">
-                <div className="flex items-center gap-2 font-semibold text-zinc-700">
-                  <span className="w-2.5 h-2.5 rounded bg-brand-red"></span>
-                  <span>Online</span>
+            <div className="flex-1 space-y-2.5 font-semibold text-zinc-650">
+              {sessionStatusData.map((d, index) => (
+                <div key={index} className="flex justify-between items-center text-[10px]">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: d.color }} />
+                    <span className="text-zinc-600">{d.name}</span>
+                  </div>
+                  <span className="text-zinc-900 font-bold">
+                    {d.value} <span className="text-zinc-450 font-normal text-[9px]">({Math.round((d.value / 1196) * 100)}%)</span>
+                  </span>
                 </div>
-                <span className="font-bold text-zinc-900">742 <span className="text-zinc-400 font-semibold text-xs">(62%)</span></span>
-              </div>
-
-              <div className="flex justify-between items-center text-body-sm border-t border-zinc-100 pt-2.5">
-                <div className="flex items-center gap-2 font-semibold text-zinc-700">
-                  <span className="w-2.5 h-2.5 rounded bg-red-400"></span>
-                  <span>Idle</span>
-                </div>
-                <span className="font-bold text-zinc-900">312 <span className="text-zinc-400 font-semibold text-xs">(26%)</span></span>
-              </div>
-
-              <div className="flex justify-between items-center text-body-sm border-t border-zinc-100 pt-2.5">
-                <div className="flex items-center gap-2 font-semibold text-zinc-700">
-                  <span className="w-2.5 h-2.5 rounded bg-zinc-200"></span>
-                  <span>Expiring</span>
-                </div>
-                <span className="font-bold text-zinc-900">142 <span className="text-zinc-400 font-semibold text-xs">(12%)</span></span>
-              </div>
+              ))}
             </div>
           </div>
         </div>
@@ -394,31 +435,18 @@ export default function ActiveUsers() {
             Auto Logout Monitor
             <Eye className="w-4 h-4 text-zinc-400" />
           </h3>
-          <div className="flex items-end gap-3 h-28 pt-2 px-1">
-            <div className="flex-1 flex flex-col items-center gap-1.5">
-              <div className="w-full bg-zinc-100 rounded-t-md flex flex-col justify-end h-20 overflow-hidden border border-zinc-200/10">
-                <div className="bg-brand-red/70 w-full" style={{ height: '15%' }}></div>
-              </div>
-              <span className="text-[9px] text-zinc-400 font-bold uppercase">5m</span>
-            </div>
-            <div className="flex-1 flex flex-col items-center gap-1.5">
-              <div className="w-full bg-zinc-100 rounded-t-md flex flex-col justify-end h-20 overflow-hidden border border-zinc-200/10">
-                <div className="bg-brand-red w-full" style={{ height: '45%' }}></div>
-              </div>
-              <span className="text-[9px] text-zinc-400 font-bold uppercase">15m</span>
-            </div>
-            <div className="flex-1 flex flex-col items-center gap-1.5">
-              <div className="w-full bg-zinc-100 rounded-t-md flex flex-col justify-end h-20 overflow-hidden border border-zinc-200/10">
-                <div className="bg-brand-red w-full" style={{ height: '80%' }}></div>
-              </div>
-              <span className="text-[9px] text-zinc-400 font-bold uppercase">30m</span>
-            </div>
-            <div className="flex-1 flex flex-col items-center gap-1.5">
-              <div className="w-full bg-zinc-100 rounded-t-md flex flex-col justify-end h-20 overflow-hidden border border-zinc-200/10">
-                <div className="bg-zinc-800 w-full" style={{ height: '60%' }}></div>
-              </div>
-              <span className="text-[9px] text-zinc-400 font-bold uppercase">60m+</span>
-            </div>
+          <div className="h-36 pt-1">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={autoLogoutData} barCategoryGap="20%" margin={{ top: 5, right: 10, left: 10, bottom: 15 }}>
+                <XAxis dataKey="name" stroke="#71717a" fontSize={9} tickLine={false} axisLine={false} />
+                <Tooltip cursor={false} formatter={(value) => `${value}%`} />
+                <Bar dataKey="value" radius={[3, 3, 0, 0]}>
+                  {autoLogoutData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </div>
 
@@ -573,8 +601,13 @@ export default function ActiveUsers() {
                         ) : (
                           <>
                             <span className="text-[10px] font-extrabold text-brand-red font-mono">{session.logoutTimer}</span>
-                            <div className="w-16 bg-zinc-100 h-1 rounded-full overflow-hidden border border-zinc-250/20">
-                              <div className="bg-brand-red h-full rounded-full" style={{ width: `${session.logoutPercent}%` }}></div>
+                            <div className="w-16 h-1.5 rounded-full overflow-hidden">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <BarChart layout="vertical" data={[{ value: session.logoutPercent }]} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                                  <XAxis type="number" domain={[0, 100]} hide />
+                                  <Bar dataKey="value" fill="#af101a" radius={[2, 2, 2, 2]} background={{ fill: '#f4f4f5' }} barSize={6} />
+                                </BarChart>
+                              </ResponsiveContainer>
                             </div>
                           </>
                         )}
