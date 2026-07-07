@@ -100,7 +100,7 @@ export default function ScheduleGen() {
     const headers = ['Parameter', 'Value'];
     const config = [
       ['Conclave', 'Annual Global Summit 2024'],
-      ['Date', 'Nov 12-14, San Francisco'],
+      ['Date', 'Nov 12-14, V Convention, Guntur'],
       ['Members', '1,240'],
       ['Captains', '48'],
       ['Rounds', roundCount],
@@ -186,7 +186,7 @@ export default function ScheduleGen() {
             </div>
             <div>
               <h3 className="text-body-sm font-bold text-zinc-950">Annual Global Summit 2024</h3>
-              <p className="text-[10px] text-zinc-400 font-bold uppercase mt-0.5">San Francisco Convention Center • Nov 12-14</p>
+              <p className="text-[10px] text-zinc-400 font-bold uppercase mt-0.5">V Convention, Guntur • Nov 12-14</p>
             </div>
           </div>
           <div className="flex items-center gap-8 px-2 sm:px-6">
