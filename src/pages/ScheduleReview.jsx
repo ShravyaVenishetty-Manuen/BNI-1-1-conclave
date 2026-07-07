@@ -390,13 +390,13 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
                         key={member.id}
                         className={`flex items-center justify-between p-2 rounded-lg border transition-smooth group/member ${member.conflict ? 'border-red-100 bg-red-50/10' : 'border-transparent hover:border-zinc-200/60 hover:bg-zinc-50/50'}`}
                       >
-                        <div className="flex items-center gap-2.5 flex-1">
+                        <div className="flex items-center gap-2.5 flex-1 min-w-0">
                           <div className={`w-5.5 h-5.5 rounded-full flex items-center justify-center text-[9px] font-extrabold shadow-sm shrink-0 ${member.conflict ? 'bg-red-100 text-brand-red' : 'bg-zinc-100 text-zinc-600'}`}>
                             {member.initials || member.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                           </div>
                           
-                          <div className="flex-1 flex items-center justify-between gap-2">
-                            <span className="font-bold text-zinc-700 text-body-sm select-text">{member.name}</span>
+                          <div className="flex-1 flex items-center justify-between gap-2 min-w-0">
+                            <span className="font-bold text-zinc-700 text-body-sm select-text whitespace-nowrap">{member.name}</span>
                             <span className={`px-2 py-0.5 rounded text-[8px] font-extrabold uppercase shrink-0 ${member.conflict ? 'bg-brand-red text-white' : 'bg-zinc-100 text-zinc-500 border border-zinc-200/50'}`}>
                               {member.category}
                             </span>
