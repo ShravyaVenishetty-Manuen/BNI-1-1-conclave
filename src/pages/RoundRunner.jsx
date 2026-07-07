@@ -19,36 +19,8 @@ import {
 import confetti from 'canvas-confetti';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 
-const initialTables = [
-  { id: 14, captain: 'Manoj Kumar', seated: 8, capacity: 8, status: 'Active' },
-  { id: 15, captain: 'Shweta Iyer', seated: 7, capacity: 8, status: 'Active' },
-  { id: 16, captain: 'Devendra Chawla', seated: 8, capacity: 8, status: 'Ready' },
-  { id: 17, captain: 'Esha Rao', seated: 8, capacity: 8, status: 'Active' },
-  { id: 18, captain: 'Rajesh Mehta', seated: 6, capacity: 8, status: 'Active' },
-  { id: 19, captain: 'Jyoti Sharma', seated: 8, capacity: 8, status: 'Active' }
-];
-
-const mockRosters = {
-  14: [
-    { name: 'Manoj Kumar', role: 'Captain', category: 'Legal' },
-    { name: 'Amit Patel', role: 'Member', category: 'Banking' },
-    { name: 'Anjali Sharma', role: 'Member', category: 'Insurance' },
-    { name: 'Bhavin Joshi', role: 'Member', category: 'Real Estate' },
-    { name: 'Chirag Bhatia', role: 'Member', category: 'Marketing' },
-    { name: 'Devendra Chawla', role: 'Member', category: 'Consulting' },
-    { name: 'Esha Rao', role: 'Member', category: 'IT Services' },
-    { name: 'Farhan Akhtar', role: 'Member', category: 'Accounting' }
-  ],
-  15: [
-    { name: 'Shweta Iyer', role: 'Captain', category: 'Real Estate' },
-    { name: 'Gaurav Nair', role: 'Member', category: 'Marketing' },
-    { name: 'Harish Arora', role: 'Member', category: 'Legal' },
-    { name: 'Inderjeet Singh', role: 'Member', category: 'Banking' },
-    { name: 'Jyoti Sharma', role: 'Member', category: 'Insurance' },
-    { name: 'Karan Johar', role: 'Member', category: 'Consulting' },
-    { name: 'Lalita Iyer', role: 'Member', category: 'IT Services' }
-  ]
-};
+import runnerData from '../data/tables_runner.json';
+const { initialTables, mockRosters } = runnerData;
 
 export default function RoundRunner() {
   const [tables, setTables] = useState(initialTables);

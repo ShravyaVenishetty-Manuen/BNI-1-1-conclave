@@ -27,17 +27,8 @@ import {
   Cell
 } from 'recharts';
 
-// Mock Seating Logs
-const initialMembers = [
-  { id: 1, name: 'Amit Sharma', region: 'Peak Performance - Mumbai', category: 'LEGAL', captain: 'Shweta Iyer', rounds: '6 / 6', meetings: 12, status: 'COMPLETED' },
-  { id: 2, name: 'Komal Shah', region: 'Apex Chapter - Bengaluru', category: 'MARKETING', captain: 'Manoj Kumar', rounds: '5 / 6', meetings: 10, status: 'IN PROGRESS' },
-  { id: 3, name: 'Arjun Kapoor', region: 'Capital Chapter - Hyderabad', category: 'FINANCE', captain: 'Shweta Iyer', rounds: '6 / 6', meetings: 12, status: 'COMPLETED' }
-];
-
-const conclaveList = [
-  { id: 'c1', name: 'Annual Global Summit 2024', details: 'Nov 12-14, V Convention, Guntur' },
-  { id: 'c2', name: 'Regional Leadership Meet', details: 'Oct 20, Guntur Club' }
-];
+import reportsSeed from '../data/reports_data.json';
+const { initialMembers, conclaveList } = reportsSeed;
 
 export default function Reports({ searchQuery: globalSearchQuery }) {
   const [activeConclaveIndex, setActiveConclaveIndex] = useState(0);

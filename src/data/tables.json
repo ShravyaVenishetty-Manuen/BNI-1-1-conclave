@@ -1,0 +1,48 @@
+[
+  {
+    "id": "Table 01",
+    "status": "warning",
+    "warningText": "Warning: Business Conflict",
+    "capacity": "7/8",
+    "captain": {
+      "name": "Amit Patel",
+      "role": "Table Captain",
+      "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuA0YVKPZAJ4MiWcqOMOYXB3kIVtFsf3WAoWtVnYwxUag3sPtNII98m5E8UR3uD4gLgvi4atHrrfpMjn30Z1Sn_xDVTn-Yo1zsx_2PfKYlDdIO5sXPamYI0ErRItsKNB5t7H0u1MmqNew88W3lelThN4VxqjU-5fZiIhB15sU6bBjPZb57ui1U61c5PVk2Zg6hf-z42WKrkr9i1wr2ECSlAXDfo33EBlcS-qCZl2DPNa9WP2uBmwTIuVdtLORKWBD8n-BMNZjV0NqIU"
+    },
+    "members": [
+      { "id": "m-1", "initials": "JS", "name": "Jayesh Sharma", "category": "Legal", "conflict": false },
+      { "id": "m-2", "initials": "AL", "name": "Ananya Lal", "category": "Legal", "conflict": true },
+      { "id": "m-3", "initials": "MK", "name": "Mahendra Kumar", "category": "Banking", "conflict": false }
+    ]
+  },
+  {
+    "id": "Table 02",
+    "status": "validated",
+    "capacity": "8/8",
+    "captain": {
+      "name": "Shreya Acharya",
+      "role": "Table Captain",
+      "initials": "SA"
+    },
+    "members": [
+      { "id": "m-4", "name": "Rohan Fadia", "category": "Real Estate" },
+      { "id": "m-5", "name": "Esha Haria", "category": "Insurance" },
+      { "id": "m-6", "name": "Vikram Wadhwa", "category": "Marketing" }
+    ]
+  },
+  {
+    "id": "Table 03",
+    "status": "locked",
+    "capacity": "8/8"
+  },
+  {
+    "id": "Table 04",
+    "status": "review",
+    "capacity": "8/8"
+  },
+  {
+    "id": "Table 05",
+    "status": "validated",
+    "capacity": "8/8"
+  }
+]
