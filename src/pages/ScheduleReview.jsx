@@ -280,27 +280,27 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
                   </div>
                 </div>
 
-                {/* Status Bar Indicator */}
+                {/* Status Indicator (Text Only, no box) */}
                 {table.status === 'warning' && (
-                  <div className="flex items-center gap-1.5 text-brand-red bg-red-50/50 border border-red-100/50 px-2 py-0.5 rounded text-[9px] uppercase font-bold tracking-wider">
+                  <div className="flex items-center gap-1.5 text-brand-red text-[10px] font-bold uppercase tracking-wider mt-1">
                     <AlertTriangle className="w-3.5 h-3.5 animate-pulse shrink-0" />
                     <span className="truncate">{table.warningText}</span>
                   </div>
                 )}
                 {table.status === 'validated' && (
-                  <div className="flex items-center gap-1.5 text-emerald-700 bg-emerald-50/50 border border-emerald-100/50 px-2 py-0.5 rounded text-[9px] uppercase font-bold tracking-wider">
+                  <div className="flex items-center gap-1.5 text-emerald-600 text-[10px] font-bold uppercase tracking-wider mt-1">
                     <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                     <span>Validated</span>
                   </div>
                 )}
                 {table.status === 'locked' && (
-                  <div className="flex items-center gap-1.5 text-zinc-550 bg-zinc-50 border border-zinc-200/50 px-2 py-0.5 rounded text-[9px] uppercase font-bold tracking-wider">
+                  <div className="flex items-center gap-1.5 text-zinc-450 text-[10px] font-bold uppercase tracking-wider mt-1">
                     <Lock className="w-3.5 h-3.5 shrink-0" />
                     <span>Locked</span>
                   </div>
                 )}
                 {table.status === 'review' && (
-                  <div className="flex items-center gap-1.5 text-amber-700 bg-amber-50/50 border border-amber-100/50 px-2 py-0.5 rounded text-[9px] uppercase font-bold tracking-wider">
+                  <div className="flex items-center gap-1.5 text-amber-600 text-[10px] font-bold uppercase tracking-wider mt-1">
                     <Clock className="w-3.5 h-3.5 shrink-0 animate-pulse" />
                     <span>Ready for Review</span>
                   </div>
