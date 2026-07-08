@@ -214,9 +214,6 @@ export default function Snapshot({ searchQuery }) {
           <span className="text-label-md text-zinc-500 uppercase font-semibold">Total Registered</span>
           <div className="flex items-baseline justify-between mt-3">
             <span className="text-display-sm font-extrabold text-zinc-900 leading-none">{currentConclave.totalRegistered}</span>
-            <span className="text-label-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
-              +12% vs LY
-            </span>
           </div>
         </div>
 
@@ -225,7 +222,6 @@ export default function Snapshot({ searchQuery }) {
           <span className="text-label-md text-zinc-500 uppercase font-semibold">Active Members</span>
           <div className="flex items-baseline justify-between mt-3">
             <span className="text-display-sm font-extrabold text-zinc-900 leading-none">{currentConclave.activeMembers}</span>
-            <span className="text-label-xs font-semibold text-zinc-500">98% checked</span>
           </div>
         </div>
 
@@ -234,7 +230,6 @@ export default function Snapshot({ searchQuery }) {
           <span className="text-label-md text-zinc-500 uppercase font-semibold">Inactive Members</span>
           <div className="flex items-baseline justify-between mt-3">
             <span className="text-display-sm font-extrabold text-brand-red leading-none">{currentConclave.inactive}</span>
-            <span className="text-label-xs font-bold text-red-700 bg-red-50 px-2 py-0.5 rounded-md border border-red-100">Action Required</span>
           </div>
         </div>
 

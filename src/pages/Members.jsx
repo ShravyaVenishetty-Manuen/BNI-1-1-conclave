@@ -200,7 +200,7 @@ export default function Members({ searchQuery }) {
   const handleBulkExport = () => {
     const selectedList = members.filter(m => selectedRows.has(m.id));
     if (selectedList.length === 0) return;
-    
+
     const headers = ['Member ID', 'Name', 'Category', 'Email', 'Phone', 'Role', 'Status', 'Join Date', 'Company', 'Chapter'];
     const rows = selectedList.map(m => [
       m.id,
@@ -214,10 +214,10 @@ export default function Members({ searchQuery }) {
       `"${m.company}"`,
       `"${m.chapter}"`
     ]);
-    
-    const csvContent = "data:text/csv;charset=utf-8," 
+
+    const csvContent = "data:text/csv;charset=utf-8,"
       + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-    
+
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -356,7 +356,6 @@ export default function Members({ searchQuery }) {
           <span className="text-label-md text-zinc-500 uppercase font-semibold">Active Members</span>
           <div className="flex items-baseline justify-between mt-3">
             <span className="text-display-sm font-extrabold text-zinc-900 leading-none">{activeCount}</span>
-            <span className="text-label-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">{activePercentage}%</span>
           </div>
         </div>
         <div className="bg-white border border-zinc-200/80 p-5 rounded-xl flex flex-col justify-between shadow-sm hover:shadow-md transition-smooth">
@@ -734,7 +733,7 @@ export default function Members({ searchQuery }) {
 
             {/* Drawer Footer */}
             <div className="p-4 border-t border-zinc-100 bg-zinc-50/50 flex flex-col gap-2 shrink-0">
-              <button 
+              <button
                 onClick={() => {
                   setReassignTarget(selectedMember);
                   setNewChapterVal(selectedMember.chapter);
@@ -743,7 +742,7 @@ export default function Members({ searchQuery }) {
               >
                 Reassign Chapter
               </button>
-              <button 
+              <button
                 onClick={() => setSelectedMember(null)}
                 className="w-full py-2 bg-white border border-zinc-100 text-zinc-650 hover:bg-zinc-50 rounded-lg text-button font-bold transition-smooth shadow-sm cursor-pointer"
               >
@@ -1011,7 +1010,7 @@ export default function Members({ searchQuery }) {
           <div className="w-full max-w-sm bg-white rounded-xl border border-zinc-100 shadow-2xl overflow-hidden animate-scale-up">
             <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50">
               <h3 className="text-section-heading font-extrabold text-zinc-950">Reassign Chapter</h3>
-              <button 
+              <button
                 onClick={() => setReassignTarget(null)}
                 className="text-zinc-400 hover:text-zinc-700 font-bold transition-smooth cursor-pointer"
               >
@@ -1036,14 +1035,14 @@ export default function Members({ searchQuery }) {
                 </select>
               </div>
               <div className="pt-3 flex justify-end gap-2 border-t border-zinc-100">
-                <button 
+                <button
                   type="button"
                   onClick={() => setReassignTarget(null)}
                   className="px-3.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-button rounded-lg transition-smooth cursor-pointer text-[10px] font-bold border border-zinc-100"
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   type="button"
                   onClick={() => {
                     setMembers(prev => prev.map(m => m.id === reassignTarget.id ? { ...m, chapter: newChapterVal } : m));
@@ -1066,14 +1065,14 @@ export default function Members({ searchQuery }) {
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-zinc-900 text-white rounded-lg shadow-2xl py-2 px-4 flex items-center gap-3.5 border border-zinc-800 animate-slide-up text-body-sm font-semibold select-none">
           <span className="text-[10px] font-extrabold uppercase tracking-wide bg-zinc-800 px-2 py-0.5 rounded text-zinc-350">{selectedRows.size} Selected</span>
           <div className="w-px h-4 bg-zinc-800" />
-          <button 
+          <button
             onClick={handleBulkExport}
             className="text-white hover:text-brand-red transition-smooth flex items-center gap-1.5 cursor-pointer text-button text-[10px]"
           >
             <Upload className="w-3.5 h-3.5" />
             Export Selected
           </button>
-          <button 
+          <button
             onClick={() => setIsBulkDeleteConfirmOpen(true)}
             className="text-brand-red hover:text-red-400 transition-smooth flex items-center gap-1.5 cursor-pointer text-button text-[10px]"
           >

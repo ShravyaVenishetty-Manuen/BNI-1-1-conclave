@@ -135,7 +135,7 @@ export default function App() {
           ) : activeTab === 'captains' ? (
             <Captains searchQuery={searchQuery} />
           ) : activeTab === 'conclaves' ? (
-            <Conclaves searchQuery={searchQuery} />
+            <Conclaves searchQuery={searchQuery} setActiveTab={handleTabChange} />
           ) : activeTab === 'snapshot' ? (
             <Snapshot searchQuery={searchQuery} />
           ) : activeTab === 'validation' ? (

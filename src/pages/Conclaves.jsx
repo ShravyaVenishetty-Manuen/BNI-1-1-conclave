@@ -23,7 +23,7 @@ import Pagination from '../components/Pagination';
 import { ResponsiveContainer, BarChart, Bar, XAxis } from 'recharts';
 import initialConclaves from '../data/conclaves.json';
 
-export default function Conclaves({ searchQuery }) {
+export default function Conclaves({ searchQuery, setActiveTab }) {
   const [conclaves, setConclaves] = useState(initialConclaves);
   const [searchTerm, setSearchTerm] = useState('');
   const searchVal = searchQuery !== undefined ? searchQuery : searchTerm;
@@ -334,7 +334,6 @@ export default function Conclaves({ searchQuery }) {
           <span className="text-label-md text-zinc-500 uppercase font-semibold">Total Portfolios</span>
           <div className="flex items-baseline justify-between mt-3">
             <span className="text-display-sm font-extrabold text-zinc-900 leading-none">{conclaves.length}</span>
-            <span className="text-label-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">+2</span>
           </div>
         </div>
 
@@ -343,7 +342,6 @@ export default function Conclaves({ searchQuery }) {
           <span className="text-label-md text-zinc-500 uppercase font-semibold">Running Now</span>
           <div className="flex items-baseline justify-between mt-3">
             <span className="text-display-sm font-extrabold text-brand-red leading-none">{runningCount}</span>
-            <span className="w-2.5 h-2.5 rounded-full bg-brand-red animate-pulse"></span>
           </div>
         </div>
 
@@ -352,7 +350,6 @@ export default function Conclaves({ searchQuery }) {
           <span className="text-label-md text-zinc-500 uppercase font-semibold">Upcoming Seminars</span>
           <div className="flex items-baseline justify-between mt-3">
             <span className="text-display-sm font-extrabold text-zinc-900 leading-none">{upcomingCount}</span>
-            <span className="text-label-xs font-semibold text-zinc-500">Scheduled</span>
           </div>
         </div>
 
@@ -361,7 +358,6 @@ export default function Conclaves({ searchQuery }) {
           <span className="text-label-md text-zinc-500 uppercase font-semibold">Completed Runs</span>
           <div className="flex items-baseline justify-between mt-3">
             <span className="text-display-sm font-extrabold text-zinc-900 leading-none">{completedCount}</span>
-            <span className="text-label-xs font-bold text-zinc-500 bg-zinc-50 border border-zinc-150 px-1.5 py-0.5 rounded">Archived</span>
           </div>
         </div>
       </div>
@@ -690,7 +686,11 @@ export default function Conclaves({ searchQuery }) {
               </button>
               <button
                 onClick={() => {
-                  showToast('Fetching reports...', 'Starting file generation.');
+                  if (setActiveTab) {
+                    setActiveTab('reports');
+                  } else {
+                    showToast('Fetching reports...', 'Starting file generation.');
+                  }
                   setSelectedConclave(null);
                 }}
                 className="flex-1 py-2.5 bg-brand-red hover:bg-red-700 text-white rounded-lg text-button font-bold transition-smooth shadow-sm cursor-pointer"

@@ -39,99 +39,31 @@ export default function Dashboard({ setActiveTab }) {
       </header>
 
       {/* KPI Grid */}
-      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Statistics KPI Grid */}
+      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
 
         {/* Total Members */}
-        <div className="p-6 border border-zinc-200/80 rounded-xl bg-white transition-smooth shadow-sm group">
-          <div className="flex justify-between items-start mb-3">
-            <p className="text-label-md text-zinc-500 uppercase font-semibold">Total Members</p>
-            <div className="p-2 rounded-lg bg-brand-red/5 text-brand-red">
-              <Users className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="flex items-baseline gap-2.5">
-            <h3 className="text-display-sm font-bold text-zinc-900 leading-none">842</h3>
-          </div>
-          <div className="mt-4 h-8 w-full bg-zinc-50 rounded-lg p-1 overflow-hidden">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={[{ v: 35, c: '#a7f3d0' }, { v: 50, c: '#a7f3d0' }, { v: 45, c: '#a7f3d0' }, { v: 70, c: '#6ee7b7' }, { v: 85, c: '#34d399' }, { v: 100, c: '#af101a' }]}>
-                <Bar dataKey="v" radius={[2, 2, 0, 0]}>
-                  {[{ v: 35, c: '#a7f3d0' }, { v: 50, c: '#a7f3d0' }, { v: 45, c: '#a7f3d0' }, { v: 70, c: '#6ee7b7' }, { v: 85, c: '#34d399' }, { v: 100, c: '#af101a' }].map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.c} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+        <div className="bg-white border border-zinc-200/80 p-5 rounded-xl flex flex-col justify-between shadow-sm hover:shadow-md transition-smooth">
+          <span className="text-label-md text-zinc-500 uppercase font-semibold">Total Members</span>
+          <span className="text-display-sm font-extrabold text-zinc-900 leading-none mt-3">842</span>
         </div>
 
         {/* Active Capacity */}
-        <div className="p-6 border border-zinc-200/80 rounded-xl bg-white transition-smooth shadow-sm group">
-          <div className="flex justify-between items-start mb-3">
-            <p className="text-label-md text-zinc-500 uppercase font-semibold">Active Capacity</p>
-            <div className="p-2 rounded-lg bg-brand-red/5 text-brand-red">
-              <Bolt className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="flex items-baseline gap-2">
-            <h3 className="text-display-sm font-bold text-zinc-900 leading-none">790</h3>
-            <span className="text-zinc-500 text-label-xs font-medium">/ 842 active</span>
-          </div>
-          <div className="mt-6">
-            <div className="w-full h-2 rounded-full overflow-hidden cursor-pointer pointer-events-none">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart layout="vertical" data={[{ name: 'Capacity', value: 94 }]} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-                  <XAxis type="number" domain={[0, 100]} hide />
-                  <YAxis type="category" dataKey="name" hide />
-                  <Tooltip formatter={(value) => `${value}%`} cursor={false} />
-                  <Bar dataKey="value" fill="#af101a" radius={[4, 4, 4, 4]} background={{ fill: '#f4f4f5' }} barSize={8} activeBar={{ fill: '#af101a' }} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-            <span className="text-caption text-zinc-400 mt-2 block font-medium">94% capacity occupied</span>
-          </div>
+        <div className="bg-white border border-zinc-200/80 p-5 rounded-xl flex flex-col justify-between shadow-sm hover:shadow-md transition-smooth">
+          <span className="text-label-md text-zinc-500 uppercase font-semibold">Active Capacity</span>
+          <span className="text-display-sm font-extrabold text-zinc-900 leading-none mt-3">790</span>
         </div>
 
         {/* Leadership */}
-        <div className="p-6 border border-zinc-200/80 rounded-xl bg-white transition-smooth shadow-sm group">
-          <div className="flex justify-between items-start mb-3">
-            <p className="text-label-md text-zinc-500 uppercase font-semibold">Leadership</p>
-            <div className="p-2 rounded-lg bg-brand-red/5 text-brand-red">
-              <Award className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="flex items-baseline gap-2">
-            <h3 className="text-display-sm font-bold text-zinc-900 leading-none">48</h3>
-            <span className="text-zinc-500 text-label-xs font-medium">Captains Assigned</span>
-          </div>
-          <div className="mt-4 flex items-center justify-between">
-            <div className="flex -space-x-2 items-center">
-              <div className="w-7 h-7 rounded-full border-2 border-white bg-indigo-100 flex items-center justify-center text-[10px] font-bold text-indigo-700 shadow-sm">JI</div>
-              <div className="w-7 h-7 rounded-full border-2 border-white bg-emerald-100 flex items-center justify-center text-[9px] font-bold text-emerald-700 shadow-sm">SM</div>
-              <div className="w-7 h-7 rounded-full border-2 border-white bg-amber-100 flex items-center justify-center text-[9px] font-bold text-amber-700 shadow-sm">AR</div>
-              <div className="w-7 h-7 rounded-full border-2 border-white bg-brand-red text-white flex items-center justify-center text-[9px] font-bold shadow-sm">+45</div>
-            </div>
-          </div>
+        <div className="bg-white border border-zinc-200/80 p-5 rounded-xl flex flex-col justify-between shadow-sm hover:shadow-md transition-smooth">
+          <span className="text-label-md text-zinc-500 uppercase font-semibold">Leadership</span>
+          <span className="text-display-sm font-extrabold text-zinc-900 leading-none mt-3">48</span>
         </div>
 
         {/* Conclave Pipeline */}
-        <div className="p-6 border border-zinc-200/80 rounded-xl bg-white transition-smooth shadow-sm group">
-          <div className="flex justify-between items-start mb-3">
-            <p className="text-label-md text-zinc-500 uppercase font-semibold">Conclave Pipeline</p>
-            <div className="p-2 rounded-lg bg-brand-red/5 text-brand-red">
-              <Layers className="w-5 h-5" />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-2 mt-1">
-            <div className="text-center p-2 bg-zinc-50 rounded-lg border border-zinc-100 shadow-sm">
-              <span className="block font-bold text-title-lg text-zinc-800">2</span>
-              <span className="text-label-xs text-zinc-500 font-semibold uppercase">Drafts</span>
-            </div>
-            <div className="text-center p-2 border border-brand-red/15 bg-brand-red/5 rounded-lg shadow-sm">
-              <span className="block font-bold text-title-lg text-brand-red">1</span>
-              <span className="text-label-xs text-brand-red font-semibold uppercase">Active</span>
-            </div>
-          </div>
+        <div className="bg-white border border-zinc-200/80 p-5 rounded-xl flex flex-col justify-between shadow-sm hover:shadow-md transition-smooth">
+          <span className="text-label-md text-zinc-500 uppercase font-semibold">Conclave Pipeline</span>
+          <span className="text-display-sm font-extrabold text-zinc-900 leading-none mt-3">1 Active</span>
         </div>
 
       </section>

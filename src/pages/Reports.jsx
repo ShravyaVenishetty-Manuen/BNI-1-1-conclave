@@ -12,7 +12,8 @@ import {
   PieChart as PieChartIcon,
   Users,
   RefreshCw,
-  Shield
+  Shield,
+  ChevronDown
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -186,7 +187,7 @@ export default function Reports({ searchQuery: globalSearchQuery }) {
                 <p className="text-[10px] text-zinc-450 font-semibold">{selectedConclave.details}</p>
               </div>
             </div>
-            <span className="text-zinc-400 font-semibold">▼</span>
+            <ChevronDown className={`w-4 h-4 text-zinc-400 shrink-0 transition-transform duration-200 ${isConclaveSelectorOpen ? 'rotate-180' : ''}`} />
           </div>
         </div>
 

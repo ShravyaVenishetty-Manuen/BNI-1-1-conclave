@@ -223,9 +223,6 @@ export default function ActiveUsers({ searchQuery }) {
           <span className="text-label-md text-zinc-500 uppercase font-semibold">Total Active</span>
           <div className="flex items-baseline justify-between mt-3">
             <span className="text-display-sm font-extrabold text-zinc-900 leading-none">1,284</span>
-            <span className="text-label-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
-              +4%
-            </span>
           </div>
         </div>
 
@@ -234,9 +231,6 @@ export default function ActiveUsers({ searchQuery }) {
           <span className="text-label-md text-zinc-500 uppercase font-semibold">Logged In Today</span>
           <div className="flex items-baseline justify-between mt-3">
             <span className="text-display-sm font-extrabold text-zinc-900 leading-none">3,412</span>
-            <span className="text-label-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
-              +12%
-            </span>
           </div>
         </div>
 
@@ -245,7 +239,6 @@ export default function ActiveUsers({ searchQuery }) {
           <span className="text-label-md text-zinc-500 uppercase font-semibold">Ready for Snapshot</span>
           <div className="flex items-baseline justify-between mt-3">
             <span className="text-display-sm font-extrabold text-zinc-900 leading-none">892</span>
-            <span className="text-label-xs font-semibold text-zinc-500">98% of goal</span>
           </div>
         </div>
 
@@ -254,14 +247,13 @@ export default function ActiveUsers({ searchQuery }) {
           <span className="text-label-md text-zinc-500 uppercase font-semibold">Auto Logout Pending</span>
           <div className="flex items-baseline justify-between mt-3">
             <span className="text-display-sm font-extrabold text-zinc-900 leading-none">42</span>
-            <span className="text-label-xs font-bold text-red-700 bg-red-50 px-2 py-0.5 rounded-md border border-red-100">8 critical</span>
           </div>
         </div>
       </div>
 
       {/* Widgets row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        
+
         {/* Widget 1: Live Session Status */}
         <div className="bg-white border border-zinc-200/80 p-5 rounded-xl shadow-sm space-y-4">
           <h3 className="font-bold text-zinc-950 border-b border-zinc-100 pb-2.5 text-body-sm flex items-center justify-between">
@@ -282,10 +274,10 @@ export default function ActiveUsers({ searchQuery }) {
                     dataKey="value"
                   >
                     {sessionStatusData.map((entry, index) => (
-                      <Cell 
-                        key={`cell-${index}`} 
-                        fill={entry.color} 
-                        stroke="none" 
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={entry.color}
+                        stroke="none"
                         onMouseEnter={() => setHoveredSlice(entry)}
                         onMouseLeave={() => setHoveredSlice(null)}
                         className="outline-none cursor-pointer"

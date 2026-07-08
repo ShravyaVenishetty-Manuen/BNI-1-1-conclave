@@ -188,7 +188,7 @@ export default function BusinessTypes({ searchQuery }) {
   const handleBulkExport = () => {
     const selectedList = categories.filter(c => selectedRows.has(c.id));
     if (selectedList.length === 0) return;
-    
+
     const headers = ['Classification ID', 'Name', 'Description', 'Member Count', 'Growth', 'Created Date', 'Status'];
     const rows = selectedList.map(c => [
       c.id,
@@ -199,10 +199,10 @@ export default function BusinessTypes({ searchQuery }) {
       c.createdDate,
       c.status
     ]);
-    
-    const csvContent = "data:text/csv;charset=utf-8," 
+
+    const csvContent = "data:text/csv;charset=utf-8,"
       + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-    
+
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -304,9 +304,6 @@ export default function BusinessTypes({ searchQuery }) {
           <span className="text-label-md text-zinc-500 uppercase font-semibold">Active Classifications</span>
           <div className="flex items-baseline justify-between mt-3">
             <span className="text-display-sm font-extrabold text-zinc-900 leading-none">{activeCount}</span>
-            <span className="text-label-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
-              {totalTypes > 0 ? ((activeCount / totalTypes) * 100).toFixed(0) : 0}% Ratio
-            </span>
           </div>
         </div>
         <div className="bg-white border border-zinc-200/80 p-5 rounded-xl flex flex-col justify-between shadow-sm hover:shadow-md transition-smooth">
@@ -318,10 +315,6 @@ export default function BusinessTypes({ searchQuery }) {
         <div className="bg-white border border-zinc-200/80 p-5 rounded-xl flex flex-col justify-between shadow-sm hover:shadow-md transition-smooth">
           <span className="text-label-md text-zinc-500 uppercase font-semibold">Unused Items</span>
           <div className="flex items-baseline justify-between mt-3">
-            <span className="text-display-sm font-extrabold text-zinc-900 leading-none">{inactiveCount}</span>
-            {inactiveCount > 0 && (
-              <span className="text-label-xs font-bold text-red-700 bg-red-50 px-2 py-0.5 rounded-md border border-red-100">Attention</span>
-            )}
           </div>
         </div>
       </div>
@@ -806,14 +799,14 @@ export default function BusinessTypes({ searchQuery }) {
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-zinc-900 text-white rounded-lg shadow-2xl py-2 px-4 flex items-center gap-3.5 border border-zinc-800 animate-slide-up text-body-sm font-semibold select-none">
           <span className="text-[10px] font-extrabold uppercase tracking-wide bg-zinc-800 px-2 py-0.5 rounded text-zinc-350">{selectedRows.size} Selected</span>
           <div className="w-px h-4 bg-zinc-800" />
-          <button 
+          <button
             onClick={handleBulkExport}
             className="text-white hover:text-brand-red transition-smooth flex items-center gap-1.5 cursor-pointer text-button text-[10px]"
           >
             <Upload className="w-3.5 h-3.5" />
             Export Selected
           </button>
-          <button 
+          <button
             onClick={() => setIsBulkDeleteConfirmOpen(true)}
             className="text-brand-red hover:text-red-400 transition-smooth flex items-center gap-1.5 cursor-pointer text-button text-[10px]"
           >

@@ -329,34 +329,24 @@ export default function Captains({ searchQuery }) {
           <span className="text-label-md text-zinc-500 uppercase font-semibold">Total Captains</span>
           <div className="flex items-baseline justify-between mt-3">
             <span className="text-display-sm font-extrabold text-zinc-900 leading-none">{totalCaptains}</span>
-            <span className="text-label-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
-              +4%
-            </span>
           </div>
         </div>
         <div className="bg-white border border-zinc-200/80 p-5 rounded-xl flex flex-col justify-between shadow-sm hover:shadow-md transition-smooth">
           <span className="text-label-md text-zinc-500 uppercase font-semibold">Available</span>
           <div className="flex items-baseline justify-between mt-3">
             <span className="text-display-sm font-extrabold text-zinc-900 leading-none">{availableCount}</span>
-            <span className="text-label-xs font-semibold text-zinc-500">
-              {totalCaptains > 0 ? ((availableCount / totalCaptains) * 100).toFixed(0) : 0}% capacity
-            </span>
           </div>
         </div>
         <div className="bg-white border border-zinc-200/80 p-5 rounded-xl flex flex-col justify-between shadow-sm hover:shadow-md transition-smooth">
           <span className="text-label-md text-zinc-500 uppercase font-semibold">Assigned Roles</span>
           <div className="flex items-baseline justify-between mt-3">
             <span className="text-display-sm font-extrabold text-zinc-900 leading-none">{assignedCount}</span>
-            <span className="text-label-xs font-semibold text-zinc-500">Active duties</span>
           </div>
         </div>
         <div className="bg-white border border-zinc-200/80 p-5 rounded-xl flex flex-col justify-between shadow-sm hover:shadow-md transition-smooth">
           <span className="text-label-md text-zinc-500 uppercase font-semibold">Busy / On Leave</span>
           <div className="flex items-baseline justify-between mt-3">
             <span className="text-display-sm font-extrabold text-zinc-900 leading-none">{busyCount}</span>
-            {busyCount > 0 && (
-              <span className="text-label-xs font-bold text-red-700 bg-red-50 px-2 py-0.5 rounded-md border border-red-100">Action Req</span>
-            )}
           </div>
         </div>
       </div>
