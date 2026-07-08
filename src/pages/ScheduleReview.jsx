@@ -321,36 +321,51 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
                 <div className="p-4 flex-1 space-y-3.5">
                   {/* Table Captain block */}
                   {table.captain && (
-                    <div className="flex items-center gap-3 p-2 bg-zinc-50 rounded-lg border border-zinc-100">
-                      {table.captain.image ? (
-                        <img className="w-8 h-8 rounded-lg shadow-xs object-cover" src={table.captain.image} alt={table.captain.name} />
-                      ) : (
-                        <div className="w-8 h-8 rounded bg-brand-red text-white flex items-center justify-center font-bold text-xs shadow-xs">
-                          {table.captain.initials}
+                    <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg transition-smooth hover:bg-zinc-50/55 group/captain">
+                      <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                        {table.captain.image ? (
+                          <img className="w-5.5 h-5.5 rounded-full object-cover shadow-xs" src={table.captain.image} alt={table.captain.name} />
+                        ) : (
+                          <div className="w-5.5 h-5.5 rounded-full bg-brand-red text-white flex items-center justify-center font-bold text-[9px] shadow-sm shrink-0">
+                            {table.captain.initials}
+                          </div>
+                        )}
+                        <div className="flex-1 flex items-center justify-between gap-2 min-w-0">
+                          <span className="font-extrabold text-zinc-800 text-body-sm truncate">{table.captain.name}</span>
+                          <span className="px-2 py-0.5 rounded bg-brand-red/10 text-brand-red text-[8px] font-extrabold uppercase shrink-0">
+                            Captain
+                          </span>
                         </div>
-                      )}
-                      <div className="leading-tight">
-                        <p className="text-body-sm font-bold text-zinc-800">{table.captain.name}</p>
-                        <p className="text-[9px] text-brand-red font-bold uppercase tracking-wider">{table.captain.role}</p>
                       </div>
                     </div>
                   )}
 
+                  {table.captain && table.members && table.members.length > 0 && (
+                    <div className="border-t border-zinc-150 my-1 mx-2.5" />
+                  )}
+
                   {/* Members seated */}
-                  <div className="space-y-1.5">
+                  <div className="space-y-0.5">
                     {table.members && table.members.map((member) => (
                       <div
                         key={member.id}
-                        className={`flex items-center justify-between p-2 rounded-lg border transition-smooth group/member ${member.conflict ? 'border-red-100 bg-red-50/10' : 'border-transparent hover:border-zinc-200/60 hover:bg-zinc-50/50'}`}
+                        className="flex items-center justify-between px-2.5 py-1.5 rounded-lg transition-smooth hover:bg-zinc-50/55 group/member"
                       >
                         <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                          <div className={`w-5.5 h-5.5 rounded-full flex items-center justify-center text-[9px] font-extrabold shadow-sm shrink-0 ${member.conflict ? 'bg-red-100 text-brand-red' : 'bg-zinc-100 text-zinc-600'}`}>
+                          <div className={`w-5.5 h-5.5 rounded-full flex items-center justify-center text-[9px] font-extrabold shadow-xs shrink-0 ${member.conflict ? 'bg-red-50 text-brand-red border border-red-100' : 'bg-zinc-100 text-zinc-500'}`}>
                             {member.initials || member.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                           </div>
                           
                           <div className="flex-1 flex items-center justify-between gap-2 min-w-0">
-                            <span className="font-bold text-zinc-700 text-body-sm select-text whitespace-nowrap">{member.name}</span>
-                            <span className={`px-2 py-0.5 rounded text-[8px] font-extrabold uppercase shrink-0 ${member.conflict ? 'bg-brand-red text-white' : 'bg-zinc-100 text-zinc-500 border border-zinc-200/50'}`}>
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <span className={`font-bold text-body-sm select-text truncate ${member.conflict ? 'text-brand-red' : 'text-zinc-700'}`}>
+                                {member.name}
+                              </span>
+                              {member.conflict && (
+                                <AlertTriangle className="w-3 h-3 text-brand-red shrink-0 animate-pulse" />
+                              )}
+                            </div>
+                            <span className={`px-2 py-0.5 rounded text-[8px] font-extrabold uppercase shrink-0 ${member.conflict ? 'bg-brand-red/10 text-brand-red' : 'bg-zinc-50 text-zinc-450 border border-zinc-100'}`}>
                               {member.category}
                             </span>
                           </div>
