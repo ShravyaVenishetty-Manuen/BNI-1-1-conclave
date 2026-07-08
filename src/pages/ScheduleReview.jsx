@@ -268,10 +268,10 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
           {filteredTables.map((table) => (
             <div
               key={table.id}
-              className="bg-white border border-zinc-200/80 rounded-xl overflow-hidden shadow-sm flex flex-col"
+              className="bg-white border border-zinc-200/80 rounded-xl overflow-hidden shadow-sm flex flex-col p-4 space-y-3.5"
             >
               {/* Header card info */}
-              <div className="p-4 border-b border-zinc-100 flex flex-col gap-2 flex-shrink-0">
+              <div className="flex flex-col gap-1 flex-shrink-0">
                 <div className="flex justify-between items-center">
                   <span className="font-extrabold text-zinc-950 text-body-sm">{table.id}</span>
                   <div className="text-right flex items-center gap-1">
@@ -282,26 +282,26 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
 
                 {/* Status Indicator (Text Only, no box) */}
                 {table.status === 'warning' && (
-                  <div className="flex items-center gap-1.5 text-brand-red text-[10px] font-bold uppercase tracking-wider mt-1">
+                  <div className="flex items-center gap-1.5 text-brand-red text-[10px] font-bold uppercase tracking-wider mt-0.5">
                     <AlertTriangle className="w-3.5 h-3.5 animate-pulse shrink-0" />
                     <span className="truncate">{table.warningText}</span>
                   </div>
                 )}
                 {table.status === 'validated' && (
-                  <div className="flex items-center gap-1.5 text-emerald-600 text-[10px] font-bold uppercase tracking-wider mt-1">
+                  <div className="flex items-center gap-1.5 text-emerald-600 text-[10px] font-bold uppercase tracking-wider mt-0.5">
                     <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                     <span>Validated</span>
                   </div>
                 )}
                 {table.status === 'locked' && (
-                  <div className="flex items-center gap-1.5 text-zinc-450 text-[10px] font-bold uppercase tracking-wider mt-1">
+                  <div className="flex items-center gap-1.5 text-zinc-450 text-[10px] font-bold uppercase tracking-wider mt-0.5">
                     <Lock className="w-3.5 h-3.5 shrink-0" />
                     <span>Locked</span>
                   </div>
                 )}
                 {table.status === 'review' && (
-                  <div className="flex items-center gap-1.5 text-amber-600 text-[10px] font-bold uppercase tracking-wider mt-1">
-                    <Clock className="w-3.5 h-3.5 shrink-0 animate-pulse" />
+                  <div className="flex items-center gap-1.5 text-amber-600 text-[10px] font-bold uppercase tracking-wider mt-0.5">
+                    <Clock className="w-3.5 h-3.5 shrink-0" />
                     <span>Ready for Review</span>
                   </div>
                 )}
@@ -309,16 +309,16 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
 
               {/* Card body Seating */}
               {table.status === 'locked' ? (
-                <div className="p-12 flex flex-col items-center justify-center text-zinc-400 italic">
+                <div className="py-6 flex flex-col items-center justify-center text-zinc-400 italic">
                   <LockKeyhole className="w-8 h-8 mb-2 text-zinc-300" />
                   <p className="text-body-sm font-semibold">Standard Seating Active</p>
                 </div>
               ) : table.status === 'review' ? (
-                <div className="p-4 h-36 flex items-center justify-center border-t border-dashed border-zinc-100 m-2">
+                <div className="py-6 flex items-center justify-center border-t border-dashed border-zinc-100">
                   <p className="text-zinc-400 font-semibold text-body-sm">Ready for Review</p>
                 </div>
               ) : (
-                <div className="p-4 flex-1 space-y-3.5">
+                <div className="flex-1 space-y-3.5">
                   {/* Table Captain block */}
                   {table.captain && (
                     <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg transition-smooth hover:bg-zinc-50/55 group/captain">
