@@ -1,5 +1,32 @@
 @import "tailwindcss";
 
+/* Global overrides to replace grey borders (zinc) with consistent brand red shades */
+[class*="border-zinc-50"] {
+  border-color: rgba(207, 46, 46, 0.04) !important;
+}
+[class*="border-zinc-100"] {
+  border-color: rgba(207, 46, 46, 0.08) !important;
+}
+[class*="border-zinc-150"] {
+  border-color: rgba(207, 46, 46, 0.12) !important;
+}
+[class*="border-zinc-200"] {
+  border-color: rgba(207, 46, 46, 0.15) !important;
+}
+[class*="border-zinc-300"] {
+  border-color: rgba(207, 46, 46, 0.25) !important;
+}
+[class*="border-zinc-400"] {
+  border-color: rgba(207, 46, 46, 0.4) !important;
+}
+[class*="border-zinc-700"] {
+  border-color: rgba(207, 46, 46, 0.25) !important;
+}
+[class*="border-zinc-800"] {
+  border-color: rgba(207, 46, 46, 0.3) !important;
+}
+
+
 @theme {
   --color-brand-red: #cf2e2e;
   --font-display: "Hanken Grotesk", sans-serif;

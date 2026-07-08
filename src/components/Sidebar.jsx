@@ -35,7 +35,7 @@ const navItems = [
 
 export default function Sidebar({ activeTab, setActiveTab, onLogout, isOpen, onClose }) {
   return (
-    <aside className={`fixed inset-y-0 left-0 z-50 w-[240px] h-screen flex flex-col py-6 bg-zinc-50 border-r border-zinc-200 text-sidebar font-medium shrink-0 transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 lg:w-[220px] ${isOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}`}>
+    <aside className={`fixed inset-y-0 left-0 z-50 w-[240px] h-screen flex flex-col py-6 bg-zinc-50 border-r border-brand-red/15 text-sidebar font-medium shrink-0 transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 lg:w-[220px] ${isOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}`}>
 
       {/* Sticky Branding Header (Non-scrolling) */}
       <div className="px-4 mb-6 shrink-0 flex items-center justify-between">
@@ -82,7 +82,7 @@ export default function Sidebar({ activeTab, setActiveTab, onLogout, isOpen, onC
       </div>
 
       {/* Sticky Sidebar Footer (Non-scrolling) - replaced with Logout button */}
-      <div className="mt-auto px-2.5 pt-4 border-t border-zinc-200 shrink-0">
+      <div className="mt-auto px-2.5 pt-4 border-t border-brand-red/15 shrink-0">
         <button
           onClick={() => onLogout && onLogout()}
           className="w-full flex items-center gap-2.5 px-3 py-2 text-left rounded-lg transition-smooth text-zinc-650 hover:bg-red-50 hover:text-brand-red group cursor-pointer"
