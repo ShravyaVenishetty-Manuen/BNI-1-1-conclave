@@ -78,13 +78,13 @@ export default function Dashboard({ setActiveTab }) {
             <span className="text-zinc-500 text-label-xs font-medium">/ 842 active</span>
           </div>
           <div className="mt-6">
-            <div className="w-full h-2 rounded-full overflow-hidden cursor-pointer">
+            <div className="w-full h-2 rounded-full overflow-hidden cursor-pointer pointer-events-none">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart layout="vertical" data={[{ name: 'Capacity', value: 94 }]} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
                   <XAxis type="number" domain={[0, 100]} hide />
                   <YAxis type="category" dataKey="name" hide />
                   <Tooltip formatter={(value) => `${value}%`} cursor={false} />
-                  <Bar dataKey="value" fill="#af101a" radius={[4, 4, 4, 4]} background={{ fill: '#f4f4f5' }} barSize={8} />
+                  <Bar dataKey="value" fill="#af101a" radius={[4, 4, 4, 4]} background={{ fill: '#f4f4f5' }} barSize={8} activeBar={{ fill: '#af101a' }} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -229,35 +229,35 @@ export default function Dashboard({ setActiveTab }) {
             </div>
 
             {/* Live event banner notice to fill spacing */}
-            <div className="bg-red-50/20 border border-red-100/50 rounded-lg p-2.5 mt-3 flex items-start gap-2.5">
+            <div className="mt-4 flex items-start gap-2.5">
               <span className="flex h-2 w-2 relative mt-1 shrink-0">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-red opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-red"></span>
               </span>
-              <p className="text-[10.5px] leading-normal font-semibold text-zinc-650">
+              <p className="text-[11px] leading-normal font-semibold text-zinc-600">
                 <strong className="text-brand-red font-bold">Round 3 Seating Setup</strong> is currently in progress. Captains should check-in attendees at their respective tables.
               </p>
             </div>
 
             <div className="space-y-2 mt-auto pt-4">
-              <div className="flex justify-between text-[10px] font-bold uppercase text-zinc-500 tracking-wider">
+              <div className="flex justify-between text-[10px] font-bold uppercase text-zinc-555 tracking-wider">
                 <span>Overall Conclave Progress</span>
                 <span className="text-zinc-950">40%</span>
               </div>
-              <div className="w-full h-2 rounded-full overflow-hidden bg-zinc-250 cursor-pointer">
+              <div className="w-full h-2 rounded-full overflow-hidden bg-zinc-250 cursor-pointer pointer-events-none">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart layout="vertical" data={[{ name: 'Progress', value: 40 }]} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
                     <XAxis type="number" domain={[0, 100]} hide />
                     <YAxis type="category" dataKey="name" hide />
                     <Tooltip formatter={(value) => `${value}%`} cursor={false} />
-                    <Bar dataKey="value" fill="#cf2e2e" radius={[4, 4, 4, 4]} background={{ fill: '#e4e4e7' }} barSize={8} />
+                    <Bar dataKey="value" fill="#cf2e2e" radius={[4, 4, 4, 4]} background={{ fill: '#e4e4e7' }} barSize={8} activeBar={{ fill: '#cf2e2e' }} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </div>
           </div>
 
-          <div className="w-full md:w-[250px] bg-white p-5 rounded-lg border border-zinc-200 z-10 flex flex-col justify-between min-h-[175px]">
+          <div className="w-full md:w-[250px] z-10 flex flex-col justify-between min-h-[175px] md:border-l border-zinc-200/80 md:pl-6 pt-4 md:pt-0">
             <div>
               <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Captain Activity</p>
               <div className="space-y-3 mt-4">
@@ -285,7 +285,7 @@ export default function Dashboard({ setActiveTab }) {
 
             <button
               onClick={() => setActiveTab && setActiveTab('captains')}
-              className="w-full py-2.5 text-label-md font-bold text-zinc-850 border border-zinc-200 bg-zinc-50 hover:bg-zinc-100 hover:text-zinc-950 transition-smooth cursor-pointer mt-auto uppercase tracking-wider text-[11px] shadow-xs"
+              className="w-full py-2.5 text-label-md font-bold text-zinc-800 border border-zinc-200 bg-white hover:bg-zinc-50 transition-smooth cursor-pointer mt-4 uppercase tracking-wider text-[10px] shadow-xs rounded-lg"
             >
               Manage Logistics
             </button>

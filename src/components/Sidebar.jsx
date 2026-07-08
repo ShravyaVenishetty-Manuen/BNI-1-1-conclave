@@ -26,7 +26,7 @@ const navItems = [
   { id: 'conclaves', label: 'Conclaves', Icon: CalendarRange },
   { id: 'snapshot', label: 'Snapshot', Icon: Camera },
   { id: 'validation', label: 'Validation', Icon: ShieldCheck },
-  { id: 'schedule-gen', label: 'Schedule Gen', Icon: TrendingUp },
+  { id: 'schedule-gen', label: 'Schedule Generation', Icon: TrendingUp },
   { id: 'schedule-review', label: 'Schedule Review', Icon: SlidersHorizontal },
   { id: 'lock-conclave', label: 'Lock Conclave', Icon: Lock },
   { id: 'round-runner', label: 'Round Runner', Icon: Play },
@@ -39,13 +39,15 @@ export default function Sidebar({ activeTab, setActiveTab, onLogout, isOpen, onC
 
       {/* Sticky Branding Header (Non-scrolling) */}
       <div className="px-4 mb-6 shrink-0 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-brand-red rounded flex items-center justify-center shadow-md shrink-0">
-            <Award className="w-4 h-4 text-white" />
-          </div>
-          <div>
-            <h1 className="text-section-heading font-bold text-brand-red leading-none">BNI</h1>
-            <p className="text-caption text-zinc-500 font-semibold tracking-wider mt-0.5 uppercase">Enterprise Admin</p>
+        <div className="flex items-center gap-2.5">
+          <img
+            src="/BNI-Guntur-Logo.webp"
+            alt="BNI Logo"
+            className="h-9.5 w-auto object-contain"
+          />
+          <div className="border-l border-zinc-300 pl-2.5 flex flex-col justify-center">
+            <h1 className="text-[12px] font-black text-brand-red leading-none tracking-tight">1-1-CONCLAVE</h1>
+            <p className="text-[8.5px] text-zinc-400 font-bold tracking-widest mt-1.5 uppercase">Enterprise Admin</p>
           </div>
         </div>
 

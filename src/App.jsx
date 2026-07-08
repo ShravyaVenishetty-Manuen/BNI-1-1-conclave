@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import Dashboard from './pages/Dashboard';
@@ -30,6 +30,14 @@ export default function App() {
   
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const mainRef = useRef(null);
+
+  // Scroll main view container to top on tab change
+  useEffect(() => {
+    if (mainRef.current) {
+      mainRef.current.scrollTop = 0;
+    }
+  }, [activeTab]);
 
   // Handle URL updates when switching tabs
   const handleTabChange = (tabId) => {
@@ -115,7 +123,7 @@ export default function App() {
         />
 
         {/* Workspace views router */}
-        <main className="flex-1 overflow-y-auto bg-white">
+        <main ref={mainRef} className="flex-1 overflow-y-auto bg-white">
           {activeTab === 'dashboard' ? (
             <Dashboard setActiveTab={handleTabChange} />
           ) : activeTab === 'members' ? (
@@ -142,18 +150,7 @@ export default function App() {
             <RoundRunner />
           ) : activeTab === 'reports' ? (
             <Reports searchQuery={searchQuery} />
-          ) : (
-            <div className="p-6 max-w-[1600px] mx-auto w-full">
-              {/* Placeholder views for other tabs */}
-              <div className="h-96 flex items-center justify-center border border-dashed border-zinc-200 rounded-xl bg-zinc-50/50">
-                <div className="text-center space-y-2">
-                  <span className="material-symbols-outlined text-zinc-300 text-5xl">construction</span>
-                  <h4 className="text-title-lg text-zinc-900 font-bold capitalize">{activeTab} tab is under construction</h4>
-                  <p className="text-body-text text-zinc-500">Integrating controllers, models, and forms next.</p>
-                </div>
-              </div>
-            </div>
-          )}
+          ) : null}
         </main>
       </div>
     </div>

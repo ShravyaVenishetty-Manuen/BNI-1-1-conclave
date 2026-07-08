@@ -32,7 +32,7 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
   const [issuesCount, setIssuesCount] = useState(2);
   const [warningsCount, setWarningsCount] = useState(2);
   const [overallScore, setOverallScore] = useState(96);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(true);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // Validation affected list
   const [affectedList, setAffectedList] = useState([
@@ -85,6 +85,7 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
       spread: 60,
       origin: { y: 0.6 }
     });
+    setHasUnsavedChanges(true);
     showToast('Conflict Resolved', 'Swapped Ananya Lal for Esha Wadhwa. Table 01 is now validated.');
   };
 
@@ -268,7 +269,9 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
           {filteredTables.map((table) => (
             <div
               key={table.id}
-              className="bg-white border border-zinc-200/80 rounded-xl overflow-hidden shadow-sm flex flex-col p-4 space-y-3.5"
+              className={`bg-white rounded-xl overflow-hidden shadow-sm flex flex-col p-4 space-y-3.5 border ${
+                table.status === 'warning' ? 'border-red-200 bg-red-50/5' : 'border-zinc-200/80'
+              }`}
             >
               {/* Header card info */}
               <div className="flex flex-col gap-1 flex-shrink-0">
@@ -331,7 +334,7 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
                           </div>
                         )}
                         <div className="flex-1 flex items-center justify-between gap-2 min-w-0">
-                          <span className="font-extrabold text-zinc-800 text-body-sm truncate">{table.captain.name}</span>
+                          <span className="font-extrabold text-zinc-800 text-body-sm">{table.captain.name}</span>
                           <span className="px-2 py-0.5 rounded bg-brand-red/10 text-brand-red text-[8px] font-extrabold uppercase shrink-0">
                             Captain
                           </span>
@@ -358,7 +361,7 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
                           
                           <div className="flex-1 flex items-center justify-between gap-2 min-w-0">
                             <div className="flex items-center gap-1.5 min-w-0">
-                              <span className={`font-bold text-body-sm select-text truncate ${member.conflict ? 'text-brand-red' : 'text-zinc-700'}`}>
+                              <span className={`font-bold text-body-sm select-text ${member.conflict ? 'text-brand-red' : 'text-zinc-700'}`}>
                                 {member.name}
                               </span>
                               {member.conflict && (
@@ -373,7 +376,10 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
 
                         <div className="flex gap-1.5 opacity-0 group-hover/member:opacity-100 transition-opacity ml-2 shrink-0">
                           <button
-                            onClick={() => showToast('Swap Option', `Select destination table to swap ${member.name}.`)}
+                            onClick={() => {
+                              setHasUnsavedChanges(true);
+                              showToast('Swap Option', `Select destination table to swap ${member.name}.`);
+                            }}
                             className="p-1 text-zinc-400 hover:text-brand-red transition-smooth cursor-pointer"
                           >
                             <ArrowRightLeft className="w-3.5 h-3.5" />
@@ -389,7 +395,11 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
 
           {/* Dotted border create new table button */}
           <div
-            onClick={() => showToast('Table Created', 'Table 06 allocated under standard parameters.')}
+            onClick={() => {
+              setTables(prev => [...prev, { id: `Table ${String(prev.length + 1).padStart(2, '0')}`, status: 'validated', capacity: '0/8', members: [] }]);
+              setHasUnsavedChanges(true);
+              showToast('Table Created', `Table ${String(tables.length + 1).padStart(2, '0')} allocated under standard parameters.`);
+            }}
             className="border-2 border-zinc-200 border-dashed rounded-xl flex flex-col items-center justify-center p-8 text-zinc-400 cursor-pointer hover:bg-zinc-50 transition-smooth group"
           >
             <PlusCircle className="w-10 h-10 mb-2 text-zinc-300 group-hover:text-brand-red transition-colors" />
