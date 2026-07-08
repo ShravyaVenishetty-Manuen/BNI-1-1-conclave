@@ -58,7 +58,7 @@ export default function Header({ searchQuery, setSearchQuery, activeTab, setActi
   };
 
   return (
-    <header className="w-full sticky top-0 z-40 bg-white border-b border-brand-red/15 flex justify-between items-center px-4 sm:px-8 h-14 shrink-0 font-sans">
+    <header className="w-full sticky top-0 z-40 bg-white border-b border-zinc-200 flex justify-between items-center px-4 sm:px-8 h-14 shrink-0 font-sans">
 
       {/* Left side: Logo & Navigation */}
       <div className="flex items-center gap-3 sm:gap-8">

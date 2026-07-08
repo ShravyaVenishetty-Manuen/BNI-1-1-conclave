@@ -2,28 +2,28 @@
 
 /* Global overrides to replace grey borders (zinc) with consistent brand red shades */
 [class*="border-zinc-50"] {
-  border-color: rgba(207, 46, 46, 0.04) !important;
-}
-[class*="border-zinc-100"] {
   border-color: rgba(207, 46, 46, 0.08) !important;
 }
+[class*="border-zinc-100"] {
+  border-color: #fee2e2 !important; /* Matches border-red-100 */
+}
 [class*="border-zinc-150"] {
-  border-color: rgba(207, 46, 46, 0.12) !important;
+  border-color: #fddcdb !important;
 }
 [class*="border-zinc-200"] {
-  border-color: rgba(207, 46, 46, 0.15) !important;
+  border-color: #fecaca !important; /* Matches border-red-200 */
 }
 [class*="border-zinc-300"] {
-  border-color: rgba(207, 46, 46, 0.25) !important;
+  border-color: rgba(207, 46, 46, 0.3) !important;
 }
 [class*="border-zinc-400"] {
-  border-color: rgba(207, 46, 46, 0.4) !important;
+  border-color: rgba(207, 46, 46, 0.45) !important;
 }
 [class*="border-zinc-700"] {
-  border-color: rgba(207, 46, 46, 0.25) !important;
+  border-color: rgba(207, 46, 46, 0.3) !important;
 }
 [class*="border-zinc-800"] {
-  border-color: rgba(207, 46, 46, 0.3) !important;
+  border-color: rgba(207, 46, 46, 0.4) !important;
 }
 
 
