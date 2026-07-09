@@ -16,6 +16,9 @@ import RoundRunner from './pages/RoundRunner';
 import Reports from './pages/Reports';
 import Login from './pages/Login';
 import CaptainDashboard from './pages/captain/Dashboard';
+import MemberHeader from './components/MemberHeader';
+import MemberDashboard from './pages/member/Dashboard';
+import { Sparkles } from 'lucide-react';
 
 export default function App() {
   // Read logged in status from localStorage
@@ -27,6 +30,7 @@ export default function App() {
   const [userRole, setUserRole] = useState(() => {
     const path = window.location.pathname.replace(/^\/|\/$/g, '');
     if (path.startsWith('captain')) return 'captain';
+    if (path.startsWith('member')) return 'member';
     if (path.startsWith('admin')) return 'admin';
     return localStorage.getItem('bni_user_role') || 'admin';
   });
@@ -37,24 +41,25 @@ export default function App() {
     return data ? JSON.parse(data) : null;
   });
 
+  // Read logged in member info from localStorage
+  const [loggedInMember, setLoggedInMember] = useState(() => {
+    const data = localStorage.getItem('bni_logged_member');
+    return data ? JSON.parse(data) : null;
+  });
+
   // Read active tab path directly from window URL pathname
   const [activeTab, setActiveTab] = useState(() => {
     const path = window.location.pathname.replace(/^\/|\/$/g, '');
     if (path.startsWith('admin/')) return path.replace('admin/', '');
     if (path.startsWith('captain/')) return path.replace('captain/', '');
+    if (path.startsWith('member/')) return path.replace('member/', '');
     return 'dashboard';
   });
   
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  
   const mainRef = useRef(null);
-
-  // Scroll main view container to top on tab change
-  useEffect(() => {
-    if (mainRef.current) {
-      mainRef.current.scrollTop = 0;
-    }
-  }, [activeTab]);
 
   // Handle URL updates when switching tabs
   const handleTabChange = (tabId) => {
@@ -63,6 +68,8 @@ export default function App() {
       window.history.pushState({}, '', `/admin/${tabId}`);
     } else if (userRole === 'captain') {
       window.history.pushState({}, '', `/captain/${tabId}`);
+    } else if (userRole === 'member') {
+      window.history.pushState({}, '', `/member/${tabId}`);
     }
   };
 
@@ -76,8 +83,14 @@ export default function App() {
       } else if (path.startsWith('captain/')) {
         setUserRole('captain');
         setActiveTab(path.replace('captain/', ''));
+      } else if (path.startsWith('member/')) {
+        setUserRole('member');
+        setActiveTab(path.replace('member/', ''));
       } else if (path === 'captain') {
         setUserRole('captain');
+        setActiveTab('dashboard');
+      } else if (path === 'member') {
+        setUserRole('member');
         setActiveTab('dashboard');
       } else if (path === 'admin') {
         setUserRole('admin');
@@ -93,20 +106,32 @@ export default function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, [userRole]);
 
-  const handleLogin = (role, captainPayload) => {
+  const handleLogin = (role, payload) => {
     localStorage.setItem('bni_logged_in', 'true');
     localStorage.setItem('bni_user_role', role);
     setUserRole(role);
     
-    if (captainPayload) {
-      localStorage.setItem('bni_logged_captain', JSON.stringify(captainPayload));
-      setLoggedInCaptain(captainPayload);
+    if (role === 'captain') {
+      localStorage.setItem('bni_logged_captain', JSON.stringify(payload));
+      setLoggedInCaptain(payload);
+      localStorage.removeItem('bni_logged_member');
+      setLoggedInMember(null);
       setIsLoggedIn(true);
       setActiveTab('dashboard');
       window.history.pushState({}, '', `/captain/dashboard`);
-    } else {
+    } else if (role === 'member') {
+      localStorage.setItem('bni_logged_member', JSON.stringify(payload));
+      setLoggedInMember(payload);
       localStorage.removeItem('bni_logged_captain');
       setLoggedInCaptain(null);
+      setIsLoggedIn(true);
+      setActiveTab('dashboard');
+      window.history.pushState({}, '', `/member/dashboard`);
+    } else {
+      localStorage.removeItem('bni_logged_captain');
+      localStorage.removeItem('bni_logged_member');
+      setLoggedInCaptain(null);
+      setLoggedInMember(null);
       setIsLoggedIn(true);
       const defaultTab = 'dashboard';
       setActiveTab(defaultTab);
@@ -118,12 +143,13 @@ export default function App() {
     localStorage.setItem('bni_logged_in', 'false');
     localStorage.removeItem('bni_user_role');
     localStorage.removeItem('bni_logged_captain');
+    localStorage.removeItem('bni_logged_member');
     setLoggedInCaptain(null);
+    setLoggedInMember(null);
     setIsLoggedIn(false);
     setIsSidebarOpen(false);
   };
 
-  // Sync browser URL to /login when logged out, and back to the active tab when logged in
   useEffect(() => {
     if (!isLoggedIn) {
       window.history.pushState({}, '', '/login');
@@ -132,6 +158,12 @@ export default function App() {
       if (userRole === 'captain') {
         const targetTab = activeTab || 'dashboard';
         const expectedPath = `captain/${targetTab}`;
+        if (currentPath !== expectedPath) {
+          window.history.pushState({}, '', `/${expectedPath}`);
+        }
+      } else if (userRole === 'member') {
+        const targetTab = activeTab || 'dashboard';
+        const expectedPath = `member/${targetTab}`;
         if (currentPath !== expectedPath) {
           window.history.pushState({}, '', `/${expectedPath}`);
         }
@@ -146,7 +178,7 @@ export default function App() {
           // If the URL is old/unprefixed (e.g. "dashboard", "members", "schedule-review")
           const cleanPath = currentPath === 'login' ? '' : currentPath;
           const targetTab = cleanPath || activeTab || 'dashboard';
-          const safeTab = targetTab.replace(/^(admin|captain)\//, '') || 'dashboard';
+          const safeTab = targetTab.replace(/^(admin|captain|member)\//, '') || 'dashboard';
           window.history.pushState({}, '', `/admin/${safeTab}`);
           setActiveTab(safeTab);
         }
@@ -174,6 +206,48 @@ export default function App() {
         onTabChange={handleTabChange}
         onLogout={handleLogout}
       />
+    );
+  }
+
+  // If logged in as a Member, render the Member portal layout with MemberHeader
+  if (userRole === 'member') {
+    return (
+      <div className="flex flex-col h-screen w-screen bg-zinc-50 overflow-hidden font-sans">
+        <MemberHeader
+          loggedInMember={loggedInMember}
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          onLogout={handleLogout}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+        />
+        <main className="flex-1 overflow-y-auto p-6 md:p-8 max-w-7xl mx-auto w-full">
+          {activeTab === 'dashboard' ? (
+            <MemberDashboard
+              loggedInMember={loggedInMember}
+              onTabChange={handleTabChange}
+            />
+          ) : (
+            <div className="bg-white rounded-xl border border-zinc-200 p-8 shadow-2xs text-center space-y-4">
+              <div className="w-16 h-16 bg-red-50 text-brand-red rounded-full flex items-center justify-center mx-auto shadow-sm">
+                <Sparkles className="w-8 h-8 animate-pulse" />
+              </div>
+              <h2 className="text-xl font-black text-zinc-955">{activeTab.toUpperCase()} - Under Construction</h2>
+              <p className="text-xs text-zinc-500 font-semibold max-w-md mx-auto">
+                Hello {loggedInMember?.name}! This member page view is currently under construction.
+              </p>
+              <div className="pt-4 max-w-xs mx-auto">
+                <button 
+                  onClick={handleLogout}
+                  className="w-full py-2 bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg text-[10.5px] font-black uppercase tracking-wider transition-smooth cursor-pointer"
+                >
+                  Logout
+                </button>
+              </div>
+            </div>
+          )}
+        </main>
+      </div>
     );
   }
 
@@ -220,22 +294,24 @@ export default function App() {
           ) : activeTab === 'captains' ? (
             <Captains searchQuery={searchQuery} />
           ) : activeTab === 'conclaves' ? (
-            <Conclaves searchQuery={searchQuery} setActiveTab={handleTabChange} />
+            <Conclaves />
           ) : activeTab === 'snapshot' ? (
-            <Snapshot searchQuery={searchQuery} />
+            <Snapshot />
           ) : activeTab === 'validation' ? (
             <Validation />
           ) : activeTab === 'schedule-gen' ? (
             <ScheduleGen />
           ) : activeTab === 'schedule-review' ? (
-            <ScheduleReview setActiveTab={setActiveTab} searchQuery={searchQuery} />
+            <ScheduleReview />
           ) : activeTab === 'lock-conclave' ? (
             <LockConclave />
           ) : activeTab === 'round-runner' ? (
             <RoundRunner />
           ) : activeTab === 'reports' ? (
-            <Reports searchQuery={searchQuery} />
-          ) : null}
+            <Reports />
+          ) : (
+            <div className="p-8 text-center text-zinc-400">View not found</div>
+          )}
         </main>
       </div>
     </div>
