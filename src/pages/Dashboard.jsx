@@ -119,7 +119,7 @@ export default function Dashboard({ setActiveTab }) {
         </div>
 
         {/* Featured Conclave Highlight */}
-        <div className="lg:col-span-9 p-6 border border-zinc-200 bg-zinc-50/50 text-zinc-800 flex flex-col md:flex-row gap-6 relative overflow-hidden group shadow-sm rounded-xl justify-between items-stretch">
+        <div className="lg:col-span-9 p-6 border border-zinc-200 bg-white text-zinc-800 flex flex-col md:flex-row gap-6 relative overflow-hidden group shadow-sm rounded-xl justify-between items-stretch">
 
           <div className="flex-1 z-10 flex flex-col py-1">
             <div className="flex items-center gap-3">
@@ -259,19 +259,19 @@ export default function Dashboard({ setActiveTab }) {
               </div>
 
               <div className="flex-1 w-full space-y-2">
-                <div className="flex justify-between items-center p-2.5 bg-zinc-50 rounded-lg border border-zinc-100 shadow-sm">
+                <div className="flex justify-between items-center p-2.5 bg-white rounded-lg border border-zinc-200/60 shadow-xs">
                   <span className="text-body-sm font-semibold text-zinc-500 flex items-center gap-1.5">
                     <span className="h-2 w-2 bg-brand-red rounded-full"></span> Inside Referrals
                   </span>
-                  <span className="font-bold text-zinc-800 text-body-md">842</span>
+                  <span className="font-bold text-zinc-850 text-body-md">842</span>
                 </div>
-                <div className="flex justify-between items-center p-2.5 bg-zinc-50 rounded-lg border border-zinc-100 shadow-sm">
+                <div className="flex justify-between items-center p-2.5 bg-white rounded-lg border border-zinc-200/60 shadow-xs">
                   <span className="text-body-sm font-semibold text-zinc-500 flex items-center gap-1.5">
                     <span className="h-2 w-2 bg-zinc-400 rounded-full"></span> Outside Referrals
                   </span>
-                  <span className="font-bold text-zinc-800 text-body-md">478</span>
+                  <span className="font-bold text-zinc-850 text-body-md">478</span>
                 </div>
-                <div className="flex justify-between items-center p-2.5 bg-zinc-50 rounded-lg border border-zinc-100 shadow-sm">
+                <div className="flex justify-between items-center p-2.5 bg-white rounded-lg border border-zinc-200/60 shadow-xs">
                   <span className="text-body-sm font-semibold text-zinc-500 flex items-center gap-1.5">
                     <span className="h-2 w-2 bg-emerald-500 rounded-full"></span> Closed Business Value
                   </span>
@@ -357,7 +357,7 @@ export default function Dashboard({ setActiveTab }) {
           <div className="overflow-x-auto flex-1">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-zinc-50 border-y border-zinc-200 text-label-xs font-bold text-zinc-400 uppercase tracking-wider">
+                <tr className="bg-white border-y border-zinc-200 text-label-xs font-bold text-zinc-400 uppercase tracking-wider">
                   <th className="px-4 py-3.5">Conclave Name</th>
                   <th className="px-4 py-3.5 text-center">Date</th>
                   <th className="px-4 py-3.5 text-center">Members</th>

@@ -178,7 +178,7 @@ export default function ScheduleGen() {
       </div>
 
       {/* KPI & Overview Card */}
-      <div className="border border-zinc-100 bg-zinc-50/40 rounded-xl p-5 shadow-sm space-y-4">
+      <div className="border border-zinc-200/60 bg-white rounded-xl p-5 shadow-2xs space-y-4">
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-zinc-100 pb-4">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 bg-red-50 rounded-lg flex items-center justify-center border border-red-100">

@@ -58,7 +58,7 @@ export default function Header({ searchQuery, setSearchQuery, activeTab, setActi
   };
 
   return (
-    <header className="w-full sticky top-0 z-40 bg-white border-b border-zinc-200 flex justify-between items-center px-4 sm:px-8 h-14 shrink-0 font-sans">
+    <header className="w-full sticky top-0 z-40 bg-white border-b border-red-100 flex justify-between items-center px-4 sm:px-8 h-14 shrink-0 font-sans">
 
       {/* Left side: Mobile Menu Button & Search Input */}
       <div className="flex items-center gap-3 sm:gap-4 flex-1">
@@ -192,12 +192,8 @@ export default function Header({ searchQuery, setSearchQuery, activeTab, setActi
         </div>
 
         {/* Profile Avatar */}
-        <div className="w-8 h-8 rounded-full border border-zinc-200 overflow-hidden cursor-pointer shadow-sm">
-          <img
-            className="w-full h-full object-cover"
-            alt="Profile Avatar"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBv-yW3IPbTrSyCD5ymyfzT6t7bql2APlu3hSHHHDVCE7Y4r_YiLmtFMlFIms-Gxo_j1pqDt6HQ9oRxcf-lFNsyt6_-2sghoE9LwLs6_-UP1GJku_ulQ9RLsW4vo6oqSQ4N8B1dbpHl61Zxv9EUgV3iQzQ3XBB3Dae2kGS748eshMj-PkgE7dt8zdeD3B31jLQUF31a4nPao9ZbMPjRIPITWaZjeVaB5VU7S7yBZ9lRWdsrmBZQJVswdKV39drFn-7EvbvaZuwO2_o"
-          />
+        <div className="w-8 h-8 rounded-full bg-brand-red text-white flex items-center justify-center font-bold text-[11px] border border-brand-red/10 shadow-sm cursor-pointer select-none">
+          AD
         </div>
       </div>
 

@@ -446,14 +446,8 @@ export default function ActiveUsers({ searchQuery }) {
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded bg-zinc-50 overflow-hidden border border-zinc-150 shrink-0">
-                          {session.image ? (
-                            <img className="w-full h-full object-cover" src={session.image} alt={session.name} />
-                          ) : (
-                            <div className="w-full h-full bg-brand-red/10 text-brand-red font-bold text-xs flex items-center justify-center">
-                              {session.avatar}
-                            </div>
-                          )}
+                        <div className="w-9 h-9 rounded bg-brand-red/10 text-brand-red font-bold text-xs flex items-center justify-center border border-brand-red/10 shrink-0 select-none">
+                          {session.avatar || session.name.split(' ').map(n => n[0]).join('')}
                         </div>
                         <div>
                           <span className="text-body-sm font-bold text-zinc-900 transition-smooth leading-tight block">{session.name}</span>
@@ -606,15 +600,11 @@ export default function ActiveUsers({ searchQuery }) {
             <div className="flex-1 overflow-y-auto p-5 space-y-6">
 
               {/* Profile head */}
-              <div className="flex flex-col items-center gap-3 text-center bg-zinc-50 p-4 rounded-xl border border-zinc-100">
-                <div className="w-20 h-20 rounded-lg border border-zinc-100 p-1 bg-white overflow-hidden shrink-0 shadow-sm">
-                  {selectedSession.image ? (
-                    <img className="w-full h-full object-cover rounded-md" src={selectedSession.image} alt={selectedSession.name} />
-                  ) : (
-                    <div className="w-full h-full rounded-md bg-brand-red/10 text-brand-red font-bold text-xl flex items-center justify-center">
-                      {selectedSession.avatar}
-                    </div>
-                  )}
+              <div className="flex flex-col items-center gap-3 text-center bg-white p-4 rounded-xl border border-zinc-200/60 shadow-2xs">
+                <div className="w-20 h-20 rounded-lg border border-zinc-200 p-1 bg-white overflow-hidden shrink-0 shadow-sm flex items-center justify-center">
+                  <div className="w-full h-full rounded-md bg-brand-red/10 text-brand-red font-bold text-xl flex items-center justify-center select-none">
+                    {selectedSession.avatar}
+                  </div>
                 </div>
                 <div>
                   <h4 className="text-headline-md font-bold text-zinc-950 leading-tight">{selectedSession.name}</h4>

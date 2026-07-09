@@ -602,7 +602,7 @@ export default function Members({ searchQuery }) {
         {selectedMember && (
           <div className="flex flex-col h-full">
             {/* Drawer Header */}
-            <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50">
+            <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-white">
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setSelectedMember(null)}
@@ -610,7 +610,7 @@ export default function Members({ searchQuery }) {
                 >
                   <X className="w-4 h-4" />
                 </button>
-                <h3 className="text-section-heading font-extrabold text-zinc-950">Member Details</h3>
+                <h3 className="text-section-heading font-extrabold text-zinc-955">Member Details</h3>
               </div>
               <button
                 onClick={() => openEditModal(selectedMember)}
@@ -624,7 +624,7 @@ export default function Members({ searchQuery }) {
             <div className="flex-1 overflow-y-auto p-5 space-y-6">
 
               {/* Profile Card Summary */}
-              <div className="flex flex-col items-center gap-3 text-center bg-zinc-50 p-4 rounded-xl border border-zinc-100">
+              <div className="flex flex-col items-center gap-3 text-center bg-white p-4 rounded-xl border border-zinc-200/60 shadow-2xs">
                 <div className="w-20 h-20 rounded-full border-2 border-brand-red/20 p-1 bg-white">
                   <div className="w-full h-full rounded-full bg-brand-red/10 text-brand-red font-bold text-xl flex items-center justify-center shadow-inner">
                     {selectedMember.avatar}
@@ -639,7 +639,7 @@ export default function Members({ searchQuery }) {
                         Captain
                       </span>
                     ) : (
-                      <span className="px-2.5 py-0.5 border border-zinc-200 text-zinc-500 bg-zinc-50 font-semibold rounded-md text-[9px] uppercase tracking-wide">
+                      <span className="px-2.5 py-0.5 border border-zinc-200 text-zinc-500 bg-white font-semibold rounded-md text-[9px] uppercase tracking-wide">
                         Member
                       </span>
                     )}
@@ -758,7 +758,7 @@ export default function Members({ searchQuery }) {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
           <div className="w-full max-w-lg bg-white rounded-xl border border-zinc-100 shadow-2xl overflow-hidden animate-scale-up">
             {/* Modal Header */}
-            <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50">
+            <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-white">
               <h3 className="text-section-heading font-extrabold text-zinc-950">
                 {editingMember ? 'Edit Member Profile' : 'Add New Member'}
               </h3>
@@ -936,7 +936,7 @@ export default function Members({ searchQuery }) {
                 </p>
               </div>
             </div>
-            <div className="bg-zinc-50 p-3 rounded-lg border border-zinc-100 text-[11px] text-zinc-500 font-medium">
+            <div className="bg-white p-3 rounded-lg border border-zinc-200/60 shadow-2xs text-[11px] text-zinc-500 font-medium">
               Name: <span className="font-bold text-zinc-900">{deleteTarget.name}</span><br />
               ID: <span className="font-mono text-zinc-700 font-bold">{deleteTarget.id}</span>
             </div>
@@ -1008,8 +1008,8 @@ export default function Members({ searchQuery }) {
       {reassignTarget && (
         <div className="fixed inset-0 z-[65] flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
           <div className="w-full max-w-sm bg-white rounded-xl border border-zinc-100 shadow-2xl overflow-hidden animate-scale-up">
-            <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50">
-              <h3 className="text-section-heading font-extrabold text-zinc-950">Reassign Chapter</h3>
+            <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-white">
+              <h3 className="text-section-heading font-extrabold text-zinc-955">Reassign Chapter</h3>
               <button
                 onClick={() => setReassignTarget(null)}
                 className="text-zinc-400 hover:text-zinc-700 font-bold transition-smooth cursor-pointer"
@@ -1018,7 +1018,7 @@ export default function Members({ searchQuery }) {
               </button>
             </div>
             <div className="p-5 space-y-4">
-              <div className="bg-zinc-50 p-3 rounded-lg border border-zinc-100 text-[11px] text-zinc-500 font-medium">
+              <div className="bg-white p-3 rounded-lg border border-zinc-200/60 shadow-2xs text-[11px] text-zinc-500 font-medium">
                 Member: <span className="font-bold text-zinc-900">{reassignTarget.name}</span><br />
                 Current: <span className="font-semibold text-zinc-700">{reassignTarget.chapter}</span>
               </div>
