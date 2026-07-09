@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Award, Lock, Mail, Eye, EyeOff, ShieldCheck, Sparkles, Server } from 'lucide-react';
+import { Award, Lock, Mail, Eye, EyeOff, ShieldCheck, Sparkles } from 'lucide-react';
 
 const MOCK_CAPTAINS = [
   {
@@ -44,8 +44,38 @@ const MOCK_CAPTAINS = [
   }
 ];
 
+const MOCK_MEMBERS = [
+  {
+    id: "BNI-00512",
+    name: "Anjali Sharma",
+    email: "anjali.s@sharmaads.in",
+    phone: "+91 98111 22334",
+    company: "Sharma Ads & Media",
+    chapter: "Apex Chapter",
+    category: "Marketing"
+  },
+  {
+    id: "BNI-00214",
+    name: "Priya Iyer",
+    email: "priya.i@iyergifts.in",
+    phone: "+91 98450 99887",
+    company: "Iyer Gifts & Decor",
+    chapter: "Peak Performance",
+    category: "Corporate Gifting"
+  },
+  {
+    id: "BNI-00789",
+    name: "Amit Patel",
+    email: "amit.p@pateltech.co.in",
+    phone: "+91 98250 88776",
+    company: "Patel Tech & Services",
+    chapter: "Peak Performance",
+    category: "IT Services"
+  }
+];
+
 export default function Login({ onLogin }) {
-  const [role, setRole] = useState('admin'); // 'admin' or 'captain'
+  const [role, setRole] = useState('admin'); // 'admin', 'captain', or 'member'
   const [inputVal, setInputVal] = useState('admin@bni.com');
   const [password, setPassword] = useState('password');
   const [showPassword, setShowPassword] = useState(false);
@@ -73,7 +103,7 @@ export default function Login({ onLogin }) {
         } else {
           setError('Invalid administrator credentials.');
         }
-      } else {
+      } else if (role === 'captain') {
         // Captain Login: email or mobile check
         const captain = MOCK_CAPTAINS.find(
           c => (c.email.toLowerCase() === inputVal.toLowerCase() || c.mobile === inputVal) && c.password === password
@@ -82,6 +112,16 @@ export default function Login({ onLogin }) {
           onLogin && onLogin('captain', captain);
         } else {
           setError('Invalid Captain credentials. Use amit@bni.com / 9876543210 and "password".');
+        }
+      } else {
+        // Member Login: email or mobile check
+        const member = MOCK_MEMBERS.find(
+          m => (m.email.toLowerCase() === inputVal.toLowerCase() || m.phone.replace(/[^0-9]/g, '').includes(inputVal)) && password === 'password'
+        );
+        if (member) {
+          onLogin && onLogin('member', member);
+        } else {
+          setError('Invalid Member credentials. Use anjali.s@sharmaads.in and "password".');
         }
       }
     }, 1200);
@@ -102,51 +142,42 @@ export default function Login({ onLogin }) {
           </div>
           <div>
             <h1 className="text-xl font-black text-white tracking-wider leading-none">
-              {role === 'admin' ? 'BNI ADMIN' : 'BNI CAPTAIN'}
+              {role === 'admin' ? 'BNI ADMIN' : role === 'captain' ? 'BNI CAPTAIN' : 'BNI MEMBER'}
             </h1>
             <p className="text-[9px] text-zinc-400 font-bold uppercase tracking-widest mt-1">
-              {role === 'admin' ? 'Conclave Seating Seeding Portal' : 'Table Attendance Check-in Portal'}
+              {role === 'admin' ? 'Conclave Seating Seeding Portal' : role === 'captain' ? 'Table Attendance Check-in Portal' : 'Conclave Member Portal'}
             </p>
           </div>
         </div>
 
-        {/* Center decorative content: Seating Algorithm highlights */}
-        <div className="relative z-10 my-auto max-w-md space-y-6">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-brand-red/10 border border-brand-red/20 rounded-full text-brand-red text-[10px] font-bold uppercase tracking-wider">
-            <Sparkles className="w-3 h-3" /> Seating Optimizer V2.1
+        {/* Ambient content highlights */}
+        <div className="relative z-10 space-y-6 max-w-md my-auto">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] font-black uppercase text-brand-red tracking-wider">
+            <Sparkles className="w-3.5 h-3.5" />
+            BNI Guntur Chapter
           </div>
           
           <h2 className="text-3xl font-extrabold text-white leading-tight">
             {role === 'admin' 
               ? 'High-Performance Networking Seating Assignments.' 
-              : 'Effortless Attendance Log & Collision Management.'}
+              : role === 'captain'
+              ? 'Effortless Attendance Log & Collision Management.'
+              : 'Track Your Seating & Connect with Table Members.'}
           </h2>
           
           <p className="text-zinc-400 text-body-md font-medium leading-relaxed">
             {role === 'admin'
               ? 'Validate constraints, manage chapter captains, and seed networking pairings using our multi-round optimization engine.'
-              : 'Captains can quickly check-in table attendees, verify business category conflicts, and synchronize round status directly with the admin dashboard.'}
+              : role === 'captain'
+              ? 'Captains can quickly check-in table attendees, verify business category conflicts, and synchronize round status directly with the admin dashboard.'
+              : 'View co-attendees category tags, browse all 6 seating round locations, and track discussion focus timers in real-time.'}
           </p>
-
-          {/* Micro stat overlays */}
-          <div className="grid grid-cols-2 gap-4 pt-4">
-            <div className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] backdrop-blur-md">
-              <span className="text-[10px] text-zinc-500 font-extrabold uppercase tracking-widest block">Accuracy</span>
-              <span className="text-display-sm text-white font-extrabold block mt-1">99.8%</span>
-              <span className="text-[9px] text-emerald-500 font-semibold mt-1 block">Collision Free</span>
-            </div>
-            <div className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] backdrop-blur-md">
-              <span className="text-[10px] text-zinc-500 font-extrabold uppercase tracking-widest block">Capacity</span>
-              <span className="text-display-sm text-white font-extrabold block mt-1">40k+</span>
-              <span className="text-[9px] text-zinc-400 font-semibold mt-1 block">Members Managed</span>
-            </div>
-          </div>
         </div>
 
-        {/* Bottom footer note */}
-        <div className="relative z-10 flex items-center justify-between text-[11px] text-zinc-500 font-semibold border-t border-white/[0.06] pt-6">
-          <div className="flex items-center gap-2">
-            <Server className="w-3.5 h-3.5" />
+        {/* Brand footer */}
+        <div className="relative z-10 flex items-center justify-between text-[10px] text-zinc-550 font-bold tracking-tight border-t border-zinc-800 pt-5">
+          <div className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
             <span>Server cluster node: AP-SOUTH-1</span>
           </div>
           <span>&copy; 2026 BNI Global LLC.</span>
@@ -170,7 +201,7 @@ export default function Login({ onLogin }) {
               <Award className="w-5 h-5 text-white" />
             </div>
             
-            <h3 className="text-2xl font-black text-zinc-950 tracking-tight">Portal Login</h3>
+            <h3 className="text-2xl font-black text-zinc-955 tracking-tight">Portal Login</h3>
             <p className="text-body-md text-zinc-500 font-medium">
               Select your role below and enter credentials.
             </p>
@@ -185,13 +216,13 @@ export default function Login({ onLogin }) {
                 setInputVal('admin@bni.com');
                 setError('');
               }}
-              className={`flex-1 pb-3 text-[11px] font-black uppercase tracking-wider transition-smooth cursor-pointer ${
+              className={`flex-1 pb-3 text-[10px] font-black uppercase tracking-wider transition-smooth cursor-pointer ${
                 role === 'admin'
                   ? 'border-b-2 border-brand-red text-brand-red font-black'
-                  : 'text-zinc-400 hover:text-zinc-700'
+                  : 'text-zinc-400 hover:text-zinc-755'
               }`}
             >
-              Admin Portal
+              Admin
             </button>
             <button
               type="button"
@@ -200,13 +231,28 @@ export default function Login({ onLogin }) {
                 setInputVal('amit@bni.com');
                 setError('');
               }}
-              className={`flex-1 pb-3 text-[11px] font-black uppercase tracking-wider transition-smooth cursor-pointer ${
+              className={`flex-1 pb-3 text-[10px] font-black uppercase tracking-wider transition-smooth cursor-pointer ${
                 role === 'captain'
                   ? 'border-b-2 border-brand-red text-brand-red font-black'
-                  : 'text-zinc-400 hover:text-zinc-700'
+                  : 'text-zinc-400 hover:text-zinc-755'
               }`}
             >
-              Captain Portal
+              Captain
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setRole('member');
+                setInputVal('anjali.s@sharmaads.in');
+                setError('');
+              }}
+              className={`flex-1 pb-3 text-[10px] font-black uppercase tracking-wider transition-smooth cursor-pointer ${
+                role === 'member'
+                  ? 'border-b-2 border-brand-red text-brand-red font-black'
+                  : 'text-zinc-400 hover:text-zinc-755'
+              }`}
+            >
+              Member
             </button>
           </div>
 
@@ -232,7 +278,7 @@ export default function Login({ onLogin }) {
                   value={inputVal}
                   onChange={(e) => setInputVal(e.target.value)}
                   disabled={isLoading}
-                  placeholder={role === 'admin' ? 'admin@bni.com' : '9876543210 or amit@bni.com'}
+                  placeholder={role === 'admin' ? 'admin@bni.com' : 'amit@bni.com or anjali.s@sharmaads.in'}
                   className="w-full pl-10 pr-4 py-2.5 bg-white border border-zinc-200 rounded-lg text-body-md font-semibold outline-none focus:border-zinc-800 transition-smooth placeholder-zinc-400 text-zinc-900"
                 />
               </div>
@@ -306,6 +352,46 @@ export default function Login({ onLogin }) {
               )}
             </button>
           </form>
+
+          {/* Quick Logins */}
+          {role !== 'admin' && (
+            <div className="mt-4 pt-4 border-t border-zinc-150 space-y-2">
+              <span className="text-[9px] font-black text-zinc-400 uppercase tracking-widest block">Quick Demo Logins</span>
+              <div className="grid grid-cols-2 gap-2">
+                {role === 'captain' ? (
+                  MOCK_CAPTAINS.map(c => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => {
+                        setInputVal(c.email);
+                        setPassword('password');
+                      }}
+                      className="p-2 bg-zinc-50 hover:bg-red-50 border border-zinc-200/60 rounded-lg text-[10px] text-left font-bold text-zinc-700 hover:text-brand-red hover:border-brand-red/35 transition-smooth cursor-pointer leading-tight truncate"
+                    >
+                      <span className="block font-black truncate">{c.name}</span>
+                      <span className="text-[8.5px] text-zinc-450 font-semibold truncate block">{c.tableId}</span>
+                    </button>
+                  ))
+                ) : (
+                  MOCK_MEMBERS.map(m => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => {
+                        setInputVal(m.email);
+                        setPassword('password');
+                      }}
+                      className="p-2 bg-zinc-50 hover:bg-red-50 border border-zinc-200/60 rounded-lg text-[10px] text-left font-bold text-zinc-700 hover:text-brand-red hover:border-brand-red/35 transition-smooth cursor-pointer leading-tight truncate"
+                    >
+                      <span className="block font-black truncate">{m.name}</span>
+                      <span className="text-[8.5px] text-zinc-455 font-semibold truncate block">{m.category}</span>
+                    </button>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Terms Footer */}
           <p className="text-[10px] text-zinc-450 text-center leading-relaxed font-semibold pt-4">
