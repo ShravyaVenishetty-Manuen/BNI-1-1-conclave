@@ -1,8 +1,52 @@
 import React, { useState } from 'react';
 import { Award, Lock, Mail, Eye, EyeOff, ShieldCheck, Sparkles, Server } from 'lucide-react';
 
+const MOCK_CAPTAINS = [
+  {
+    id: "BNI-CAPT-01",
+    name: "Amit Patel",
+    email: "amit@bni.com",
+    mobile: "9876543210",
+    password: "password",
+    tableId: "Table 01",
+    chapter: "Peak Performance",
+    category: "Financial Services"
+  },
+  {
+    id: "BNI-CAPT-02",
+    name: "Shreya Acharya",
+    email: "shreya@bni.com",
+    mobile: "9876543211",
+    password: "password",
+    tableId: "Table 02",
+    chapter: "Apex Chapter",
+    category: "Marketing"
+  },
+  {
+    id: "BNI-CAPT-03",
+    name: "Manish Trivedi",
+    email: "m.trivedi@alliance.com",
+    mobile: "9876543212",
+    password: "password",
+    tableId: "Table 03",
+    chapter: "Peak Performance",
+    category: "Financial Consultancy"
+  },
+  {
+    id: "BNI-CAPT-04",
+    name: "Esha Rao",
+    email: "esha.rao@metrorealty.com",
+    mobile: "9876543213",
+    password: "password",
+    tableId: "Table 04",
+    chapter: "Apex Chapter",
+    category: "Real Estate"
+  }
+];
+
 export default function Login({ onLogin }) {
-  const [email, setEmail] = useState('admin@bni.com');
+  const [role, setRole] = useState('admin'); // 'admin' or 'captain'
+  const [inputVal, setInputVal] = useState('admin@bni.com');
   const [password, setPassword] = useState('password');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -12,7 +56,7 @@ export default function Login({ onLogin }) {
     e.preventDefault();
     setError('');
 
-    if (!email || !password) {
+    if (!inputVal || !password) {
       setError('Please fill in all fields.');
       return;
     }
@@ -22,7 +66,24 @@ export default function Login({ onLogin }) {
     // Mock API request delay
     setTimeout(() => {
       setIsLoading(false);
-      onLogin && onLogin();
+      
+      if (role === 'admin') {
+        if (inputVal.toLowerCase() === 'admin@bni.com' && password === 'password') {
+          onLogin && onLogin('admin', null);
+        } else {
+          setError('Invalid administrator credentials.');
+        }
+      } else {
+        // Captain Login: email or mobile check
+        const captain = MOCK_CAPTAINS.find(
+          c => (c.email.toLowerCase() === inputVal.toLowerCase() || c.mobile === inputVal) && c.password === password
+        );
+        if (captain) {
+          onLogin && onLogin('captain', captain);
+        } else {
+          setError('Invalid Captain credentials. Use amit@bni.com / 9876543210 and "password".');
+        }
+      }
     }, 1200);
   };
 
@@ -40,8 +101,12 @@ export default function Login({ onLogin }) {
             <Award className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-black text-white tracking-wider leading-none">BNI ADMIN</h1>
-            <p className="text-[9px] text-zinc-400 font-bold uppercase tracking-widest mt-1">Conclave Seating Seeding Portal</p>
+            <h1 className="text-xl font-black text-white tracking-wider leading-none">
+              {role === 'admin' ? 'BNI ADMIN' : 'BNI CAPTAIN'}
+            </h1>
+            <p className="text-[9px] text-zinc-400 font-bold uppercase tracking-widest mt-1">
+              {role === 'admin' ? 'Conclave Seating Seeding Portal' : 'Table Attendance Check-in Portal'}
+            </p>
           </div>
         </div>
 
@@ -52,11 +117,15 @@ export default function Login({ onLogin }) {
           </div>
           
           <h2 className="text-3xl font-extrabold text-white leading-tight">
-            High-Performance Networking Seating Assignments.
+            {role === 'admin' 
+              ? 'High-Performance Networking Seating Assignments.' 
+              : 'Effortless Attendance Log & Collision Management.'}
           </h2>
           
           <p className="text-zinc-400 text-body-md font-medium leading-relaxed">
-            Validate constraints, manage chapter captains, and seed networking pairings using our multi-round optimization engine.
+            {role === 'admin'
+              ? 'Validate constraints, manage chapter captains, and seed networking pairings using our multi-round optimization engine.'
+              : 'Captains can quickly check-in table attendees, verify business category conflicts, and synchronize round status directly with the admin dashboard.'}
           </p>
 
           {/* Micro stat overlays */}
@@ -93,7 +162,7 @@ export default function Login({ onLogin }) {
         {/* Floating circles on right (ambient visual flair) */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-zinc-50 rounded-full blur-[60px] pointer-events-none"></div>
         
-        <div className="w-full max-w-sm space-y-8 relative z-10">
+        <div className="w-full max-w-sm space-y-6 relative z-10">
           {/* Form Header */}
           <div className="space-y-2">
             {/* Show logo icon on mobile instead */}
@@ -103,12 +172,46 @@ export default function Login({ onLogin }) {
             
             <h3 className="text-2xl font-black text-zinc-950 tracking-tight">Portal Login</h3>
             <p className="text-body-md text-zinc-500 font-medium">
-              Enter your credentials to manage regional conclaves.
+              Select your role below and enter credentials.
             </p>
           </div>
 
+          {/* Role Switcher Tabs */}
+          <div className="flex border-b border-zinc-150">
+            <button
+              type="button"
+              onClick={() => {
+                setRole('admin');
+                setInputVal('admin@bni.com');
+                setError('');
+              }}
+              className={`flex-1 pb-3 text-[11px] font-black uppercase tracking-wider transition-smooth cursor-pointer ${
+                role === 'admin'
+                  ? 'border-b-2 border-brand-red text-brand-red font-black'
+                  : 'text-zinc-400 hover:text-zinc-700'
+              }`}
+            >
+              Admin Portal
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setRole('captain');
+                setInputVal('amit@bni.com');
+                setError('');
+              }}
+              className={`flex-1 pb-3 text-[11px] font-black uppercase tracking-wider transition-smooth cursor-pointer ${
+                role === 'captain'
+                  ? 'border-b-2 border-brand-red text-brand-red font-black'
+                  : 'text-zinc-400 hover:text-zinc-700'
+              }`}
+            >
+              Captain Portal
+            </button>
+          </div>
+
           {/* Form Content */}
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4 pt-2">
             {error && (
               <div className="p-3 bg-red-50 border border-red-100 rounded-lg text-brand-red text-body-sm font-semibold flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-brand-red"></span>
@@ -116,21 +219,21 @@ export default function Login({ onLogin }) {
               </div>
             )}
 
-            {/* Email Field */}
+            {/* Email/Mobile Field */}
             <div className="space-y-1.5">
               <label className="text-[10px] text-zinc-450 font-extrabold uppercase tracking-widest" htmlFor="email-input">
-                Email Address
+                {role === 'admin' ? 'Email Address' : 'Email or Mobile Number'}
               </label>
               <div className="relative">
                 <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
                 <input
                   id="email-input"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  type="text"
+                  value={inputVal}
+                  onChange={(e) => setInputVal(e.target.value)}
                   disabled={isLoading}
-                  placeholder="admin@bni.com"
-                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-zinc-200 rounded-lg text-body-md font-semibold outline-none focus:border-zinc-800 transition-smooth placeholder-zinc-400"
+                  placeholder={role === 'admin' ? 'admin@bni.com' : '9876543210 or amit@bni.com'}
+                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-zinc-200 rounded-lg text-body-md font-semibold outline-none focus:border-zinc-800 transition-smooth placeholder-zinc-400 text-zinc-900"
                 />
               </div>
             </div>
@@ -157,7 +260,7 @@ export default function Login({ onLogin }) {
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={isLoading}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-10 py-2.5 bg-white border border-zinc-200 rounded-lg text-body-md font-semibold outline-none focus:border-zinc-800 transition-smooth placeholder-zinc-400"
+                  className="w-full pl-10 pr-10 py-2.5 bg-white border border-zinc-200 rounded-lg text-body-md font-semibold outline-none focus:border-zinc-800 transition-smooth placeholder-zinc-400 text-zinc-900"
                 />
                 <button
                   type="button"

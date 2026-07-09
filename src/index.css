@@ -235,9 +235,9 @@ button[class*="border-zinc-"] {
 /* Quick Actions Buttons: Keep light grey shade but add the BNI red border */
 .quick-action-btn {
   border-color: rgba(207, 46, 46, 0.26) !important;
-  background-color: #f9f9fb !important; /* bg-zinc-50 */
+  background-color: #ffffff !important; /* bg-white */
   box-shadow: none !important;
 }
 .quick-action-btn:hover {
-  background-color: #f4f4f5 !important; /* hover:bg-zinc-100 */
+  background-color: #fef2f2 !important; /* hover:bg-red-50/50 */
 }
