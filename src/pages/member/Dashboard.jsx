@@ -184,7 +184,7 @@ export default function MemberDashboard({ loggedInMember, onTabChange }) {
           </span>
         </div>
 
-        <div className="flex overflow-x-auto gap-4 pb-2 scrollbar-none select-none">
+        <div className="flex overflow-x-auto gap-4 pt-3.5 pb-2 scrollbar-none select-none -mt-3.5">
           {/* Completed Rounds */}
           <div className="min-w-[210px] flex-shrink-0 p-4.5 rounded-xl border border-zinc-200 bg-zinc-50/50 opacity-60 flex flex-col justify-between">
             <div>
