@@ -335,40 +335,6 @@ export default function MemberDashboard({ loggedInMember, onTabChange }) {
             </div>
           </div>
 
-          {/* Announcements Card */}
-          <div className="bg-white p-5 rounded-xl border border-zinc-200 shadow-2xs space-y-4">
-            <h3 className="font-black text-zinc-900 text-body-sm border-b border-zinc-100 pb-2">Announcements</h3>
-            <div className="space-y-4">
-              <div className="flex gap-3 items-start">
-                <span className="w-1.5 h-1.5 rounded-full bg-brand-red mt-1.5 shrink-0"></span>
-                <div className="space-y-0.5">
-                  <p className="text-[11px] font-semibold text-zinc-800 leading-tight">
-                    Post-event mixer venue changed to <strong className="text-zinc-950 font-black">Terrace Lounge</strong>.
-                  </p>
-                  <span className="text-[8px] text-zinc-400 font-extrabold block">10 mins ago</span>
-                </div>
-              </div>
-              <div className="flex gap-3 items-start">
-                <span className="w-1.5 h-1.5 rounded-full bg-zinc-350 mt-1.5 shrink-0"></span>
-                <div className="space-y-0.5">
-                  <p className="text-[11px] font-semibold text-zinc-500 leading-tight">
-                    Keynote speaker session starts at 15:30.
-                  </p>
-                  <span className="text-[8px] text-zinc-400 font-extrabold block">1 hour ago</span>
-                </div>
-              </div>
-              <div className="flex gap-3 items-start">
-                <span className="w-1.5 h-1.5 rounded-full bg-zinc-350 mt-1.5 shrink-0"></span>
-                <div className="space-y-0.5">
-                  <p className="text-[11px] font-semibold text-zinc-500 leading-tight">
-                    Lunch buffet is now open at Pavilion Hall.
-                  </p>
-                  <span className="text-[8px] text-zinc-400 font-extrabold block">2 hours ago</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
           {/* Event Progress Card */}
           <div className="bg-zinc-50 border border-zinc-200 rounded-xl p-5 shadow-2xs">
             <h3 className="text-[9px] font-black text-zinc-450 uppercase tracking-widest block mb-2.5">Event Seating Progress</h3>
