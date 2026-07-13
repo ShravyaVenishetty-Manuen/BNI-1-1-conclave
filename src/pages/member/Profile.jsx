@@ -94,7 +94,7 @@ export default function MemberProfile({ loggedInMember, onTabChange, onLogout })
                 {profileData.category} at <strong className="text-zinc-800 font-bold">{profileData.company}</strong>
               </p>
               
-              <div className="grid grid-cols-2 gap-4 w-full mt-6 py-4.5 border-y border-zinc-150">
+              <div className="grid grid-cols-2 gap-4 w-full mt-6 py-2">
                 <div>
                   <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">Member ID</p>
                   <p className="font-black text-zinc-800 text-[12.5px] mt-0.5">BNI-7729</p>
@@ -157,7 +157,7 @@ export default function MemberProfile({ loggedInMember, onTabChange, onLogout })
           
           {/* Personal Information */}
           <section className="bg-white border border-zinc-200 rounded-xl shadow-2xs">
-            <div className="p-4 border-b border-zinc-150 flex justify-between items-center bg-zinc-50 rounded-t-xl">
+            <div className="p-4 flex justify-between items-center bg-zinc-50 rounded-t-xl">
               <h2 className="text-body-md font-black text-zinc-900 leading-tight">Personal Information</h2>
               {!isEditing && (
                 <button 
@@ -205,7 +205,7 @@ export default function MemberProfile({ loggedInMember, onTabChange, onLogout })
             {/* Account Settings */}
             <section className="bg-white border border-zinc-200 rounded-xl shadow-2xs flex flex-col justify-between">
               <div>
-                <div className="p-4 border-b border-zinc-150 bg-zinc-50 rounded-t-xl">
+                <div className="p-4 bg-zinc-50 rounded-t-xl">
                   <h2 className="text-body-sm font-black text-zinc-900 leading-tight">Account Preferences</h2>
                 </div>
                 
@@ -271,7 +271,7 @@ export default function MemberProfile({ loggedInMember, onTabChange, onLogout })
               </div>
 
               {/* Security Display */}
-              <div className="p-4 bg-zinc-50 border-t border-zinc-150 rounded-b-xl space-y-2">
+              <div className="p-4 bg-zinc-50 rounded-b-xl space-y-2">
                 <div className="flex items-center gap-1.5 text-zinc-450">
                   <Shield className="w-3.5 h-3.5" />
                   <span className="text-[8.5px] font-black uppercase tracking-wider">Security Status</span>
@@ -292,7 +292,7 @@ export default function MemberProfile({ loggedInMember, onTabChange, onLogout })
 
             {/* Recent Activity Timeline */}
             <section className="bg-white border border-zinc-200 rounded-xl shadow-2xs flex flex-col">
-              <div className="p-4 border-b border-zinc-150 bg-zinc-50 rounded-t-xl">
+              <div className="p-4 bg-zinc-50 rounded-t-xl">
                 <h2 className="text-body-sm font-black text-zinc-900 leading-tight">Recent Activity</h2>
               </div>
               
