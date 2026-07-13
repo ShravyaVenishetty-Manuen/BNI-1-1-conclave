@@ -4,22 +4,22 @@ A premium, interactive web portal designed for BNI members and table captains to
 
 ---
 
-## 🚀 Key Portals & Features
+## Key Portals & Features
 
-### 👤 Member Portal
+### Member Portal
 *   **Live Dashboard**: Real-time round clock timers, wayfinding table indicators, and a clean list of table connection members.
 *   **Structured Schedule**: Interactive progress timeline showing current and upcoming table assignments, niches, and seat-mates.
 *   **Active Round Guidelines**: Interactive step-by-step agenda guides for the active seating session, keeping elevator pitches timed and matched.
 *   **Conclave History**: A comprehensive, filterable archive of past event attendances, connection summary metrics, timeline details drawer, and attendance certificate downloads.
 *   **Profile Preferences**: Editable personal details, custom language/time selects, real-time activity tracking feed, and notification preferences.
 
-### 👑 Captain Portal
+### Captain Portal
 *   **Station Dashboard**: Complete oversight of assigned tables, attendee counts, active check-in controls, and automated log feeds.
 *   **Live Seating Board**: Interactive tabbed view of attendee check-ins across multiple rounds with full filtering, category coloring, and validation markers.
 *   **Current Speaker Queue**: Interactive speech order queue with active timers to manage individual 30-second elevator pitches during active rounds.
 *   **Event Timeline**: Full conclave session timeline tracking.
 
-### ⚙️ Admin Portal
+### Admin Portal
 *   **Enterprise Dashboard**: 
     *   Provides quick metrics overview (Total Members, Active Capacity, Leadership/Table Captains, Conclave pipeline status).
     *   Features quick-management action links (Add Member, Create Conclave, Run Validation, Generate Schedule, View Reports).
@@ -52,7 +52,7 @@ A premium, interactive web portal designed for BNI members and table captains to
 
 ---
 
-## 🛠️ Architecture & Tech Stack
+## Architecture & Tech Stack
 *   **Framework**: [React](https://reactjs.org/) + [Vite](https://vitejs.dev/) for quick reloading and clean components.
 *   **Styling**: [TailwindCSS](https://tailwindcss.com/) with a custom design system tailored for BNI branding guidelines.
 *   **Icons**: [Lucide React](https://lucide.dev/) for clean outline icon vectors.
@@ -60,7 +60,7 @@ A premium, interactive web portal designed for BNI members and table captains to
 
 ---
 
-## 💻 Getting Started
+## Getting Started
 
 ### Prerequisites
 *   Node.js (v16.x or later recommended)
