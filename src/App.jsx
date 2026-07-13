@@ -20,6 +20,7 @@ import MemberHeader from './components/MemberHeader';
 import MemberDashboard from './pages/member/Dashboard';
 import MemberSchedule from './pages/member/MySchedule';
 import MemberCurrentRound from './pages/member/CurrentRound';
+import MemberConclaveHistory from './pages/member/ConclaveHistory';
 import { Sparkles } from 'lucide-react';
 
 export default function App() {
@@ -238,6 +239,10 @@ export default function App() {
             <MemberCurrentRound
               loggedInMember={loggedInMember}
               onTabChange={handleTabChange}
+            />
+          ) : activeTab === 'history' ? (
+            <MemberConclaveHistory
+              loggedInMember={loggedInMember}
             />
           ) : (
             <div className="bg-white rounded-xl border border-zinc-200 p-8 shadow-2xs text-center space-y-4">
