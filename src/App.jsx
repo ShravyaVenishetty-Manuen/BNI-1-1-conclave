@@ -19,6 +19,7 @@ import CaptainDashboard from './pages/captain/Dashboard';
 import MemberHeader from './components/MemberHeader';
 import MemberDashboard from './pages/member/Dashboard';
 import MemberSchedule from './pages/member/MySchedule';
+import MemberCurrentRound from './pages/member/CurrentRound';
 import { Sparkles } from 'lucide-react';
 
 export default function App() {
@@ -230,6 +231,11 @@ export default function App() {
             />
           ) : activeTab === 'my-schedule' ? (
             <MemberSchedule
+              loggedInMember={loggedInMember}
+              onTabChange={handleTabChange}
+            />
+          ) : activeTab === 'current-round' ? (
+            <MemberCurrentRound
               loggedInMember={loggedInMember}
               onTabChange={handleTabChange}
             />
