@@ -331,7 +331,7 @@ export default function MemberCurrentRound({ loggedInMember, onTabChange }) {
         <aside className="col-span-12 lg:col-span-4 space-y-6">
           
           {/* Captain Detail Card */}
-          <div className="bg-white border-l-4 border-l-brand-red border-y border-r border-zinc-200 rounded-xl shadow-2xs overflow-hidden">
+          <div className="bg-white border border-zinc-200 rounded-xl shadow-2xs overflow-hidden">
             <div className="p-5">
               <div className="flex items-start justify-between mb-4">
                 <div className="w-14 h-14 rounded-lg bg-zinc-50 border border-zinc-200 flex items-center justify-center font-bold text-sm text-zinc-450 shrink-0 shadow-inner select-none">
