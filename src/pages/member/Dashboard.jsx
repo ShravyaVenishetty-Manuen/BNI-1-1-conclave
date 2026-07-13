@@ -11,6 +11,8 @@ import {
   Activity
 } from 'lucide-react';
 
+import { tableMembers } from '../../data/mockConclaveData';
+
 export default function MemberDashboard({ loggedInMember, onTabChange }) {
   // Countdown timer starting at 08:42 (522 seconds)
   const [timeLeft, setTimeLeft] = useState(522);
@@ -32,16 +34,6 @@ export default function MemberDashboard({ loggedInMember, onTabChange }) {
   const memberChapter = loggedInMember?.chapter || 'Apex Chapter';
   const memberCompany = loggedInMember?.company || 'Sharma Ads & Media';
   const memberCategory = loggedInMember?.category || 'Marketing';
-
-  // Static list of table members for Table 5 matching the design
-  const tableMembers = [
-    { name: "Sanjay Joshi", company: "Zenith Systems", category: "IT INFRASTRUCTURE", chapter: "BNI Phoenix Chapter", initials: "SJ" },
-    { name: "Manish Tiwari", company: "Prime Realty Group", category: "REAL ESTATE", chapter: "BNI Synergy Chapter", initials: "MT" },
-    { name: "Anita Rao", company: "Spark Media", category: "DIGITAL MARKETING", chapter: "BNI Global Chapter", initials: "AR" },
-    { name: "Deepak Chawla", company: "Logistics Pro", category: "SUPPLY CHAIN", chapter: "BNI Summit Chapter", initials: "DC" },
-    { name: "Ekta Ramachandran", company: "Rodriguez Partners", category: "LAW & LEGAL", chapter: "BNI Elite Chapter", initials: "ER" },
-    { name: "Ganesh V. (Captain)", company: "WealthWise Advisors", category: "FINANCIAL PLANNING", chapter: "BNI Prosperity Chapter", initials: "GV", isCaptain: true }
-  ];
 
   return (
     <div className="space-y-8 animate-fade-in font-sans pb-16">

@@ -15,6 +15,8 @@ import {
   FileText 
 } from 'lucide-react';
 
+import { conclavesHistory } from '../../data/mockConclaveData';
+
 export default function MemberConclaveHistory({ loggedInMember }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedYear, setSelectedYear] = useState('2024');
@@ -22,80 +24,7 @@ export default function MemberConclaveHistory({ loggedInMember }) {
   const [showDrawer, setShowDrawer] = useState(false);
   const [selectedConclave, setSelectedConclave] = useState(null);
 
-  // Conclaves mock data
-  const conclaves = [
-    {
-      id: 1,
-      title: "Annual Global Summit 2024",
-      status: "Completed",
-      location: "Grand Hyatt, Dubai",
-      date: "Oct 12, 2024",
-      year: "2024",
-      rounds: "6/6 Rounds",
-      icon: "event_available",
-      details: {
-        subtitle: "Global Summit 2024",
-        rounds: [
-          { name: "Round 1 (9:00 AM)", table: "Table #14", captain: "Rohan Wagle", attendeesCount: 5 },
-          { name: "Round 2 (10:30 AM)", table: "Table #08", captain: "Ekta Ramachandran", attendeesCount: 5 },
-          { name: "Round 3 (12:00 PM)", table: "Networking Lunch", type: "Lunch" }
-        ],
-        contacts: 34,
-        referrals: 12,
-        recommendation: "Significant interest from the Logistics sector in Round 2. Follow-up recommended with Rohan Wagle."
-      }
-    },
-    {
-      id: 2,
-      title: "Regional Directors Meet",
-      status: "Completed",
-      location: "Convention Centre, Mumbai",
-      date: "Aug 24, 2024",
-      year: "2024",
-      rounds: "4/4 Rounds",
-      icon: "corporate_fare",
-      details: {
-        subtitle: "Regional Directors Meet",
-        rounds: [
-          { name: "Round 1 (10:00 AM)", table: "Table #02", captain: "Sanjay Joshi", attendeesCount: 4 },
-          { name: "Round 2 (11:30 AM)", table: "Table #05", captain: "Manish Tiwari", attendeesCount: 4 }
-        ],
-        contacts: 21,
-        referrals: 8,
-        recommendation: "Strong synergy with Manish Tiwari regarding real estate leads. Schedule one-to-one."
-      }
-    },
-    {
-      id: 3,
-      title: "Quarterly Synergy 2024 Q2",
-      status: "Cancelled",
-      location: "Virtual Event",
-      date: "May 15, 2024",
-      year: "2024",
-      rounds: "0/4 Rounds",
-      icon: "event_busy"
-    },
-    {
-      id: 4,
-      title: "National Business Conclave 2023",
-      status: "Completed",
-      location: "Taj Palace, New Delhi",
-      date: "Dec 05, 2023",
-      year: "2023",
-      rounds: "6/6 Rounds",
-      icon: "event_available",
-      details: {
-        subtitle: "National Conclave 2023",
-        rounds: [
-          { name: "Round 1 (9:00 AM)", table: "Table #11", captain: "Deepak Chawla", attendeesCount: 6 },
-          { name: "Round 2 (10:30 AM)", table: "Table #03", captain: "Meera Gupta", attendeesCount: 6 }
-        ],
-        contacts: 28,
-        referrals: 15,
-        recommendation: "Deepak Chawla expressed interest in digital marketing collaboration."
-      }
-    }
-  ];
+  const conclaves = conclavesHistory;
 
   // Filtered conclaves list
   const filteredConclaves = conclaves.filter(conclave => {

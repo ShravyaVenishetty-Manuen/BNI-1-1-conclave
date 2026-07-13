@@ -1,19 +1,12 @@
 import React, { useState } from 'react';
-import { 
-  CheckCircle, 
-  LayoutDashboard, 
-  Calendar, 
-  Clock, 
-  History, 
-  LogOut, 
-  Edit2, 
-  MapPin, 
-  LayoutGrid, 
-  User, 
-  Users,
-  Shield, 
-  LogIn, 
-  Save 
+import {
+  CheckCircle,
+  LogOut,
+  Edit2,
+  LayoutGrid,
+  Shield,
+  LogIn,
+  Save
 } from 'lucide-react';
 
 export default function MemberProfile({ loggedInMember, onTabChange, onLogout }) {
@@ -60,7 +53,7 @@ export default function MemberProfile({ loggedInMember, onTabChange, onLogout })
 
   return (
     <div className="space-y-8 animate-fade-in font-sans pb-16">
-      
+
       {/* Page Header */}
       <div>
         <h1 className="text-2xl md:text-3xl font-black text-zinc-955 tracking-tight">Profile &amp; Settings</h1>
@@ -70,7 +63,7 @@ export default function MemberProfile({ loggedInMember, onTabChange, onLogout })
       <div className="grid grid-cols-12 gap-6 items-start">
         {/* Left Column (35% -> col-span-4) */}
         <aside className="col-span-12 lg:col-span-4 space-y-6">
-          
+
           {/* Profile Hero Card */}
           <section className="bg-white border border-zinc-200 rounded-xl p-6 shadow-2xs">
             <div className="flex flex-col items-center text-center">
@@ -82,18 +75,18 @@ export default function MemberProfile({ loggedInMember, onTabChange, onLogout })
                   <CheckCircle className="w-3.5 h-3.5 fill-current text-white stroke-[2.5]" />
                 </span>
               </div>
-              
+
               <h2 className="text-lg font-black text-zinc-900 leading-tight">{profileData.name}</h2>
               <div className="flex items-center gap-2 mt-1.5">
                 <span className="px-2.5 py-0.5 bg-red-50 border border-red-100 text-brand-red text-[9px] font-black rounded-full uppercase tracking-wider">
                   Platinum Member
                 </span>
               </div>
-              
+
               <p className="text-[12px] text-zinc-500 font-semibold mt-2.5 leading-snug">
                 {profileData.category} at <strong className="text-zinc-800 font-bold">{profileData.company}</strong>
               </p>
-              
+
               <div className="grid grid-cols-2 gap-4 w-full mt-6 py-2">
                 <div>
                   <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">Member ID</p>
@@ -104,10 +97,10 @@ export default function MemberProfile({ loggedInMember, onTabChange, onLogout })
                   <p className="font-black text-zinc-800 text-[12.5px] mt-0.5">July 2021</p>
                 </div>
               </div>
-              
+
               <div className="flex gap-2.5 w-full mt-5">
                 {isEditing ? (
-                  <button 
+                  <button
                     onClick={handleSave}
                     className="flex-grow py-2 px-3 bg-brand-red hover:bg-red-750 text-white text-[10.5px] font-black uppercase tracking-wider rounded-lg transition-smooth flex items-center justify-center gap-1.5 cursor-pointer shadow-sm shadow-brand-red/10"
                   >
@@ -115,7 +108,7 @@ export default function MemberProfile({ loggedInMember, onTabChange, onLogout })
                     Save Changes
                   </button>
                 ) : (
-                  <button 
+                  <button
                     onClick={() => setIsEditing(true)}
                     className="flex-grow py-2 px-3 bg-brand-red hover:bg-red-750 text-white text-[10.5px] font-black uppercase tracking-wider rounded-lg transition-smooth flex items-center justify-center gap-1.5 cursor-pointer shadow-sm shadow-brand-red/10"
                   >
@@ -143,7 +136,7 @@ export default function MemberProfile({ loggedInMember, onTabChange, onLogout })
           </section>
 
           {/* Logout Card */}
-          <button 
+          <button
             onClick={() => onLogout && onLogout()}
             className="w-full flex items-center gap-3 p-4 bg-white border border-zinc-200 rounded-xl hover:bg-red-50/50 transition-colors text-brand-red text-[12px] font-black uppercase tracking-wider justify-center cursor-pointer shadow-2xs"
           >
@@ -154,13 +147,13 @@ export default function MemberProfile({ loggedInMember, onTabChange, onLogout })
 
         {/* Right Column (65% -> col-span-8) */}
         <div className="col-span-12 lg:col-span-8 space-y-6">
-          
+
           {/* Personal Information */}
           <section className="bg-white border border-zinc-200 rounded-xl shadow-2xs">
             <div className="p-4 flex justify-between items-center bg-zinc-50 rounded-t-xl">
               <h2 className="text-body-md font-black text-zinc-900 leading-tight">Personal Information</h2>
               {!isEditing && (
-                <button 
+                <button
                   onClick={() => setIsEditing(true)}
                   className="text-zinc-450 hover:text-brand-red transition-smooth cursor-pointer"
                 >
@@ -168,7 +161,7 @@ export default function MemberProfile({ loggedInMember, onTabChange, onLogout })
                 </button>
               )}
             </div>
-            
+
             <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
               {[
                 { label: "Full Name", key: "name", type: "text" },
@@ -183,7 +176,7 @@ export default function MemberProfile({ loggedInMember, onTabChange, onLogout })
                 <div key={field.key}>
                   <label className="block text-[9.5px] font-black text-zinc-400 uppercase tracking-wider mb-1.5">{field.label}</label>
                   {isEditing && !field.disabled ? (
-                    <input 
+                    <input
                       type={field.type}
                       value={profileData[field.key]}
                       onChange={(e) => handleInputChange(field.key, e.target.value)}
@@ -201,14 +194,14 @@ export default function MemberProfile({ loggedInMember, onTabChange, onLogout })
 
           {/* Two Column Settings & Activity */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
+
             {/* Account Settings */}
             <section className="bg-white border border-zinc-200 rounded-xl shadow-2xs flex flex-col justify-between">
               <div>
                 <div className="p-4 bg-zinc-50 rounded-t-xl">
                   <h2 className="text-body-sm font-black text-zinc-900 leading-tight">Account Preferences</h2>
                 </div>
-                
+
                 <div className="p-5 space-y-4.5">
                   <div className="flex items-center justify-between">
                     <div>
@@ -216,7 +209,7 @@ export default function MemberProfile({ loggedInMember, onTabChange, onLogout })
                       <p className="text-[10px] text-zinc-450 font-semibold mt-1">Summaries &amp; Updates</p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer select-none">
-                      <input 
+                      <input
                         type="checkbox"
                         checked={emailNotifications}
                         onChange={(e) => setEmailNotifications(e.target.checked)}
@@ -232,7 +225,7 @@ export default function MemberProfile({ loggedInMember, onTabChange, onLogout })
                       <p className="text-[10px] text-zinc-450 font-semibold mt-1">Real-time alerts</p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer select-none">
-                      <input 
+                      <input
                         type="checkbox"
                         checked={pushNotifications}
                         onChange={(e) => setPushNotifications(e.target.checked)}
@@ -245,7 +238,7 @@ export default function MemberProfile({ loggedInMember, onTabChange, onLogout })
                   <div className="grid grid-cols-2 gap-3 pt-2">
                     <div>
                       <label className="block text-[9.5px] font-black text-zinc-400 uppercase tracking-wider mb-1">Language</label>
-                      <select 
+                      <select
                         value={language}
                         onChange={(e) => setLanguage(e.target.value)}
                         className="w-full h-9 bg-zinc-50 border border-zinc-200 rounded px-2 text-[11px] font-semibold text-zinc-750 focus:ring-1 focus:ring-brand-red focus:border-brand-red outline-hidden"
@@ -257,7 +250,7 @@ export default function MemberProfile({ loggedInMember, onTabChange, onLogout })
                     </div>
                     <div>
                       <label className="block text-[9.5px] font-black text-zinc-400 uppercase tracking-wider mb-1">Time Format</label>
-                      <select 
+                      <select
                         value={timeFormat}
                         onChange={(e) => setTimeFormat(e.target.value)}
                         className="w-full h-9 bg-zinc-50 border border-zinc-200 rounded px-2 text-[11px] font-semibold text-zinc-755 focus:ring-1 focus:ring-brand-red focus:border-brand-red outline-hidden"
@@ -295,11 +288,11 @@ export default function MemberProfile({ loggedInMember, onTabChange, onLogout })
               <div className="p-4 bg-zinc-50 rounded-t-xl">
                 <h2 className="text-body-sm font-black text-zinc-900 leading-tight">Recent Activity</h2>
               </div>
-              
+
               <div className="p-5 flex-grow relative">
                 {/* Vertical timeline track line */}
                 <div className="absolute left-[27px] top-6 bottom-6 w-px bg-zinc-200 z-0"></div>
-                
+
                 <div className="space-y-5">
                   <div className="flex gap-3 relative z-10">
                     <div className="w-6.5 h-6.5 rounded-full bg-red-50 border-2 border-white text-brand-red flex items-center justify-center shadow-xs shrink-0 select-none">
@@ -334,7 +327,7 @@ export default function MemberProfile({ loggedInMember, onTabChange, onLogout })
                     </div>
                   </div>
                 </div>
-                
+
                 <button className="w-full mt-5 text-[10px] font-black text-brand-red uppercase tracking-wider hover:underline text-center">
                   View All Activity
                 </button>

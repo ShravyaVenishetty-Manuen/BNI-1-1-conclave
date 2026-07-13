@@ -8,6 +8,8 @@ import {
   Coffee,
 } from 'lucide-react';
 
+import { r3Participants } from '../../data/mockConclaveData';
+
 export default function MemberSchedule({ loggedInMember, onTabChange }) {
   // Countdown timer starting at 24:18 (1458 seconds)
   const [timeLeft, setTimeLeft] = useState(1458);
@@ -26,30 +28,6 @@ export default function MemberSchedule({ loggedInMember, onTabChange }) {
   };
 
   const memberName = loggedInMember?.name || 'Anjali Sharma';
-
-  // Table members array for Round 3 Seating Grid
-  const r3Participants = [
-    {
-      name: "Ananya S.",
-      category: "Digital Marketing",
-      initials: "AS"
-    },
-    {
-      name: "Vikram K.",
-      category: "Commercial Realty",
-      initials: "VK"
-    },
-    {
-      name: "Ganesh R. (Captain)",
-      category: "Financial Planning",
-      initials: "GR"
-    },
-    {
-      name: "Sanjay Joshi",
-      category: "IT Infrastructure",
-      initials: "SJ"
-    }
-  ];
 
   return (
     <div className="space-y-8 animate-fade-in font-sans pb-16">

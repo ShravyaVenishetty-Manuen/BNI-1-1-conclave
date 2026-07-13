@@ -6,6 +6,8 @@ import {
   Check,
 } from 'lucide-react';
 
+import { tableMembers, getAgendaSteps } from '../../data/mockConclaveData';
+
 export default function MemberCurrentRound({ loggedInMember, onTabChange }) {
   // Countdown timer starting at 08:38 (518 seconds)
   const [timeLeft, setTimeLeft] = useState(518);
@@ -32,42 +34,8 @@ export default function MemberCurrentRound({ loggedInMember, onTabChange }) {
 
   const memberName = loggedInMember?.name || 'Anjali Sharma';
 
-  // Table members array
-  const tableMembers = [
-    { name: "Sanjay Joshi", company: "Global Tech Solutions", category: "IT Infrastructure", chapter: "London Central", initials: "SJ" },
-    { name: "Manish Tiwari", company: "Thompson Realty Group", category: "Real Estate", chapter: "West End Elite", initials: "MT" },
-    { name: "Anita Rao", company: "Rao Growth Media", category: "Digital Marketing", chapter: "South Quay", initials: "AR" },
-    { name: "Deepak Chawla", company: "Logistics Plus Ltd", category: "Supply Chain", chapter: "City Circle", initials: "DC" },
-    { name: "Ekta Ramachandran", company: "Rodriguez & Associates", category: "Law & Legal", chapter: "Bridge Chapter", initials: "ER" }
-  ];
-
   // Agenda Steps showing what to do in the round
-  const agendaSteps = [
-    {
-      time: "00:00 - 05:00",
-      title: "Table Check-In & Greeting",
-      desc: "Introduce yourself to Table Captain Ganesh V. and exchange business cards with table members.",
-      completed: timeLeft < 300 // past 5 min mark
-    },
-    {
-      time: "05:00 - 25:00",
-      title: "2-Minute Elevator Pitch & Ask",
-      desc: "Deliver your 30-second introduction and state your target referral ask clearly. Listen to other members.",
-      completed: timeLeft < 150 // past 25 min mark
-    },
-    {
-      time: "25:00 - 40:00",
-      title: "1-to-1 Discussion & Referral Match",
-      desc: "Identify matching synergy categories and exchange contact details. Record potential referral leads.",
-      completed: false
-    },
-    {
-      time: "40:00 - 45:00",
-      title: "Round Wrap-Up & Feedback",
-      desc: "Confirm attendance check-in with your table captain and prepare for the next round transition.",
-      completed: false
-    }
-  ];
+  const agendaSteps = getAgendaSteps(timeLeft);
 
   return (
     <div className="space-y-8 animate-fade-in font-sans pb-16">

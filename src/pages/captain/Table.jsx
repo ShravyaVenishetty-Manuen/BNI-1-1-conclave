@@ -2,60 +2,13 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ArrowRight, Shield, X, Award } from 'lucide-react';
 
+import { captainRoundData } from '../../data/mockConclaveData';
+
 export default function CaptainTable({ loggedInCaptain, searchQuery }) {
   const [selectedRound, setSelectedRound] = useState(3);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
 
-  // Group members dynamically by round to make selectors functional!
-  const roundData = {
-    1: [
-      { id: 'm-107', name: 'Amit Patel', category: 'Retail', company: 'Patel Merchants Ltd', initials: 'AP', chapter: 'Vista Chapter', bniId: '#BNI-5112', bgClass: 'bg-emerald-50/50 text-emerald-700 border-emerald-100/50' },
-      { id: 'm-102', name: 'Rajesh Varma', category: 'Finance', company: 'Varma & Associates', initials: 'RV', chapter: 'South Phoenix', bniId: '#BNI-8842', bgClass: 'bg-amber-50/50 text-amber-700 border-amber-100/50' },
-      { id: 'm-108', name: 'Priya Singh', category: 'Marketing', company: 'Singh Advertisers Agency', initials: 'PS', chapter: 'Alpha Chapter', bniId: '#BNI-2031', bgClass: 'bg-blue-50/50 text-blue-700 border-blue-100/50' },
-      { id: 'm-109', name: 'Rahul Sharma', category: 'Software', company: 'Sharma Devs Studio', initials: 'RS', chapter: 'Alpha Chapter', bniId: '#BNI-1982', bgClass: 'bg-rose-50/50 text-rose-700 border-rose-100/50' },
-      { id: 'm-106', name: 'Jagdish Wagle', category: 'Software', company: 'CloudScale Systems Corp', initials: 'JW', chapter: 'Vista Chapter', bniId: '#BNI-3398', bgClass: 'bg-blue-50/50 text-blue-700 border-blue-100/50' },
-      { id: 'm-105', name: 'Meera Gupta', category: 'Manufacturing', company: 'Precision Parts Inc', initials: 'MG', chapter: 'Phoenix Chapter', bniId: '#BNI-1029', bgClass: 'bg-rose-50/50 text-rose-700 border-rose-100/50' }
-    ],
-    2: [
-      { id: 'm-103', name: 'Sanjay Joshi', category: 'Construction', company: 'BuildRight Solutions', initials: 'SJ', chapter: 'Phoenix Chapter', bniId: '#BNI-7731', bgClass: 'bg-emerald-50/50 text-emerald-700 border-emerald-100/50' },
-      { id: 'm-110', name: 'Vikram Mehta', category: 'Finance', company: 'Prudent Fin Advisors', initials: 'VM', chapter: 'Alpha Chapter', bniId: '#BNI-6610', bgClass: 'bg-amber-50/50 text-amber-700 border-amber-100/50' },
-      { id: 'm-111', name: 'Ananya Roy', category: 'Healthcare', company: 'HealthFirst Clinics', initials: 'AR', chapter: 'Unity Chapter', bniId: '#BNI-3301', bgClass: 'bg-purple-50/50 text-purple-700 border-purple-100/50' },
-      { id: 'm-101', name: 'Anita Sharma', category: 'Software', company: 'Blue Lotus Architecture', initials: 'AS', chapter: 'Phoenix Chapter', bniId: '#BNI-9921', bgClass: 'bg-blue-50/50 text-blue-700 border-blue-100/50' },
-      { id: 'm-102', name: 'Rajesh Varma', category: 'Finance', company: 'Varma & Associates', initials: 'RV', chapter: 'South Phoenix', bniId: '#BNI-8842', bgClass: 'bg-amber-50/50 text-amber-700 border-amber-100/50' },
-      { id: 'm-106', name: 'Jagdish Wagle', category: 'Software', company: 'CloudScale Systems Corp', initials: 'JW', chapter: 'Vista Chapter', bniId: '#BNI-3398', bgClass: 'bg-blue-50/50 text-blue-700 border-blue-100/50' }
-    ],
-    3: [
-      { id: 'm-101', name: 'Anita Sharma', category: 'Software', company: 'Blue Lotus Architecture', initials: 'AS', chapter: 'Phoenix Chapter', bniId: '#BNI-9921', bgClass: 'bg-blue-50/50 text-blue-700 border-blue-100/50' },
-      { id: 'm-102', name: 'Rajesh Varma', category: 'Finance', company: 'Varma & Associates', initials: 'RV', chapter: 'South Phoenix', bniId: '#BNI-8842', bgClass: 'bg-amber-50/50 text-amber-700 border-amber-100/50' },
-      { id: 'm-103', name: 'Sanjay Joshi', category: 'Construction', company: 'BuildRight Solutions', initials: 'SJ', chapter: 'Phoenix Chapter', bniId: '#BNI-7731', bgClass: 'bg-emerald-50/50 text-emerald-700 border-emerald-100/50' },
-      { id: 'm-104', name: 'Deepak Chawla', category: 'Healthcare', company: 'Apex Medical Group', initials: 'DC', chapter: 'Downtown Chapter', bniId: '#BNI-4412', bgClass: 'bg-purple-50/50 text-purple-700 border-purple-100/50' },
-      { id: 'm-105', name: 'Meera Gupta', category: 'Manufacturing', company: 'Precision Parts Inc', initials: 'MG', chapter: 'Phoenix Chapter', bniId: '#BNI-1029', bgClass: 'bg-rose-50/50 text-rose-700 border-rose-100/50' },
-      { id: 'm-106', name: 'Jagdish Wagle', category: 'Software', company: 'CloudScale Systems Corp', initials: 'JW', chapter: 'Vista Chapter', bniId: '#BNI-3398', bgClass: 'bg-blue-50/50 text-blue-700 border-blue-100/50' }
-    ],
-    4: [
-      { id: 'm-109', name: 'Rahul Sharma', category: 'Software', company: 'Sharma Devs Studio', initials: 'RS', chapter: 'Alpha Chapter', bniId: '#BNI-1982', bgClass: 'bg-rose-50/50 text-rose-700 border-rose-100/50' },
-      { id: 'm-103', name: 'Sanjay Joshi', category: 'Construction', company: 'BuildRight Solutions', initials: 'SJ', chapter: 'Phoenix Chapter', bniId: '#BNI-7731', bgClass: 'bg-emerald-50/50 text-emerald-700 border-emerald-100/50' },
-      { id: 'm-110', name: 'Vikram Mehta', category: 'Finance', company: 'Prudent Fin Advisors', initials: 'VM', chapter: 'Alpha Chapter', bniId: '#BNI-6610', bgClass: 'bg-amber-50/50 text-amber-700 border-amber-100/50' },
-      { id: 'm-111', name: 'Ananya Roy', category: 'Healthcare', company: 'HealthFirst Clinics', initials: 'AR', chapter: 'Unity Chapter', bniId: '#BNI-3301', bgClass: 'bg-purple-50/50 text-purple-700 border-purple-100/50' },
-      { id: 'm-104', name: 'Deepak Chawla', category: 'Healthcare', company: 'Apex Medical Group', initials: 'DC', chapter: 'Downtown Chapter', bniId: '#BNI-4412', bgClass: 'bg-purple-50/50 text-purple-700 border-purple-100/50' },
-      { id: 'm-108', name: 'Priya Singh', category: 'Marketing', company: 'Singh Advertisers Agency', initials: 'PS', chapter: 'Alpha Chapter', bniId: '#BNI-2031', bgClass: 'bg-blue-50/50 text-blue-700 border-blue-100/50' },
-      { id: 'm-107', name: 'Amit Patel', category: 'Retail', company: 'Patel Merchants Ltd', initials: 'AP', chapter: 'Vista Chapter', bniId: '#BNI-5112', bgClass: 'bg-emerald-50/50 text-emerald-700 border-emerald-100/50' }
-    ],
-    5: [
-      { id: 'm-101', name: 'Anita Sharma', category: 'Software', company: 'Blue Lotus Architecture', initials: 'AS', chapter: 'Phoenix Chapter', bniId: '#BNI-9921', bgClass: 'bg-blue-50/50 text-blue-700 border-blue-100/50' },
-      { id: 'm-104', name: 'Deepak Chawla', category: 'Healthcare', company: 'Apex Medical Group', initials: 'DC', chapter: 'Downtown Chapter', bniId: '#BNI-4412', bgClass: 'bg-purple-50/50 text-purple-700 border-purple-100/50' },
-      { id: 'm-105', name: 'Meera Gupta', category: 'Manufacturing', company: 'Precision Parts Inc', initials: 'MG', chapter: 'Phoenix Chapter', bniId: '#BNI-1029', bgClass: 'bg-rose-50/50 text-rose-700 border-rose-100/50' },
-      { id: 'm-109', name: 'Rahul Sharma', category: 'Software', company: 'Sharma Devs Studio', initials: 'RS', chapter: 'Alpha Chapter', bniId: '#BNI-1982', bgClass: 'bg-rose-50/50 text-rose-700 border-rose-100/50' },
-      { id: 'm-110', name: 'Vikram Mehta', category: 'Finance', company: 'Prudent Fin Advisors', initials: 'VM', chapter: 'Alpha Chapter', bniId: '#BNI-6610', bgClass: 'bg-amber-50/50 text-amber-700 border-amber-100/50' }
-    ],
-    6: [
-      { id: 'm-102', name: 'Rajesh Varma', category: 'Finance', company: 'Varma & Associates', initials: 'RV', chapter: 'South Phoenix', bniId: '#BNI-8842', bgClass: 'bg-amber-50/50 text-amber-700 border-amber-100/50' },
-      { id: 'm-103', name: 'Sanjay Joshi', category: 'Construction', company: 'BuildRight Solutions', initials: 'SJ', chapter: 'Phoenix Chapter', bniId: '#BNI-7731', bgClass: 'bg-emerald-50/50 text-emerald-700 border-emerald-100/50' },
-      { id: 'm-111', name: 'Ananya Roy', category: 'Healthcare', company: 'HealthFirst Clinics', initials: 'AR', chapter: 'Unity Chapter', bniId: '#BNI-3301', bgClass: 'bg-purple-50/50 text-purple-700 border-purple-100/50' },
-      { id: 'm-108', name: 'Priya Singh', category: 'Marketing', company: 'Singh Advertisers Agency', initials: 'PS', chapter: 'Alpha Chapter', bniId: '#BNI-2031', bgClass: 'bg-blue-50/50 text-blue-700 border-blue-100/50' },
-      { id: 'm-107', name: 'Amit Patel', category: 'Retail', company: 'Patel Merchants Ltd', initials: 'AP', chapter: 'Vista Chapter', bniId: '#BNI-5112', bgClass: 'bg-emerald-50/50 text-emerald-700 border-emerald-100/50' }
-    ]
-  };
+  const roundData = captainRoundData;
 
   const currentMembersList = roundData[selectedRound] || [];
 

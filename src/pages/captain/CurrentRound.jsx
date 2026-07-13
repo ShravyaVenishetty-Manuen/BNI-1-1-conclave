@@ -10,6 +10,8 @@ import {
   X
 } from 'lucide-react';
 
+import { captainParticipants, captainCategories } from '../../data/mockConclaveData';
+
 export default function CurrentRound({ loggedInCaptain }) {
   // Countdown timer starting at 08:42 (522 seconds)
   const [timeLeft, setTimeLeft] = useState(522);
@@ -28,16 +30,8 @@ export default function CurrentRound({ loggedInCaptain }) {
     return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   };
 
-  const participants = [
-    { name: "Rahul Sharma", company: "Apex Solutions", type: "Software", chapter: "Alpha", initials: "RS" },
-    { name: "Sanjay Joshi", company: "BuildRight Ltd", type: "Construction", chapter: "Summit", initials: "SJ" },
-    { name: "Vikram Mehta", company: "Prudent Fin", type: "Finance", chapter: "Alpha", initials: "VM" },
-    { name: "Ananya Roy", company: "HealthFirst", type: "Healthcare", chapter: "Unity", initials: "AR" },
-    { name: "Deepak Chawla", company: "Global Mfg", type: "Manufacturing", chapter: "Summit", initials: "DC" },
-    { name: "Priya Singh", company: "Design Pro", type: "Marketing", chapter: "Alpha", initials: "PS" }
-  ];
-
-  const categories = ["Software", "Construction", "Finance", "Healthcare", "Manufacturing"];
+  const participants = captainParticipants;
+  const categories = captainCategories;
 
   return (
     <div className="space-y-6 animate-fade-in font-sans">
