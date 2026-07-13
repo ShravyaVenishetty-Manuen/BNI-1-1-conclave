@@ -18,6 +18,7 @@ import Login from './pages/Login';
 import CaptainDashboard from './pages/captain/Dashboard';
 import MemberHeader from './components/MemberHeader';
 import MemberDashboard from './pages/member/Dashboard';
+import MemberSchedule from './pages/member/MySchedule';
 import { Sparkles } from 'lucide-react';
 
 export default function App() {
@@ -224,6 +225,11 @@ export default function App() {
         <main className="flex-1 overflow-y-auto p-6 md:p-8 max-w-7xl mx-auto w-full">
           {activeTab === 'dashboard' ? (
             <MemberDashboard
+              loggedInMember={loggedInMember}
+              onTabChange={handleTabChange}
+            />
+          ) : activeTab === 'my-schedule' ? (
+            <MemberSchedule
               loggedInMember={loggedInMember}
               onTabChange={handleTabChange}
             />
