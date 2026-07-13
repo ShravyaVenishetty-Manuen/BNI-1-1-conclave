@@ -278,46 +278,32 @@ export default function MemberConclaveHistory({ loggedInMember }) {
         {/* Right Column: Sidebar (4 cols) */}
         <aside className="col-span-12 lg:col-span-4 space-y-6">
           
-          {/* Networking Insights */}
-          <section className="bg-white border border-zinc-200 rounded-xl p-5 shadow-2xs space-y-6">
-            <h2 className="text-body-md font-black text-zinc-900">Networking Insights</h2>
+          {/* Industry Distribution */}
+          <section className="bg-white border border-zinc-200 rounded-xl p-5 shadow-2xs space-y-4">
+            <h2 className="text-body-md font-black text-zinc-900">Industry Distribution</h2>
+            <p className="text-[10px] text-zinc-450 font-semibold mt-0.5">Top industries connected in past seating rounds.</p>
             
-            <div className="space-y-6">
-              {/* Radial Progress */}
-              <div className="flex items-center gap-4">
-                <div className="relative w-16 h-16 flex items-center justify-center shrink-0">
-                  <svg className="w-full h-full transform -rotate-90">
-                    <circle className="text-zinc-100" cx="32" cy="32" fill="transparent" r="28" stroke="currentColor" strokeWidth="6"></circle>
-                    <circle className="text-brand-red" cx="32" cy="32" fill="transparent" r="28" stroke="currentColor" strokeDasharray="175.9" strokeDashoffset="52.8" strokeWidth="6" strokeLinecap="round"></circle>
-                  </svg>
-                  <span className="absolute font-black text-[12px] text-zinc-800">70%</span>
-                </div>
-                <div>
-                  <p className="text-[12px] font-black text-zinc-850">Business Coverage</p>
-                  <p className="text-[10px] text-zinc-450 font-semibold mt-0.5">48/68 key business categories met.</p>
-                </div>
-              </div>
-
-              {/* Attendance Mini Bar Chart */}
-              <div className="space-y-3">
-                <p className="text-[11px] font-black text-zinc-450 uppercase tracking-wider">Attendance by Year</p>
-                <div className="flex items-end gap-3.5 h-20 px-2 pt-4">
-                  <div className="flex-1 bg-red-100 hover:bg-red-200 rounded-t-md h-[33%] group relative transition-all duration-300">
-                    <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-zinc-900 text-white text-[8px] font-black px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-sm">4 Conclaves</div>
+            <div className="space-y-3.5 pt-2">
+              {[
+                { name: "Information Technology", percentage: 32, count: 23, color: "bg-brand-red" },
+                { name: "Real Estate & Construction", percentage: 24, count: 17, color: "bg-red-700" },
+                { name: "Financial Services", percentage: 18, count: 13, color: "bg-red-500" },
+                { name: "Marketing & Advertising", percentage: 15, count: 11, color: "bg-red-300" },
+                { name: "Healthcare & Pharmaceuticals", percentage: 11, count: 8, color: "bg-red-200" }
+              ].map((ind, idx) => (
+                <div key={idx} className="space-y-1">
+                  <div className="flex justify-between text-[11px] font-black text-zinc-755 leading-none">
+                    <span>{ind.name}</span>
+                    <span className="text-zinc-500 font-extrabold">{ind.count} met ({ind.percentage}%)</span>
                   </div>
-                  <div className="flex-1 bg-red-200 hover:bg-red-300 rounded-t-md h-[58%] group relative transition-all duration-300">
-                    <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-zinc-900 text-white text-[8px] font-black px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-sm">7 Conclaves</div>
-                  </div>
-                  <div className="flex-1 bg-brand-red rounded-t-md h-[100%] group relative transition-all duration-300">
-                    <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-zinc-900 text-white text-[8px] font-black px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-sm">12 Conclaves</div>
+                  <div className="w-full bg-zinc-100 rounded-full h-1.5 overflow-hidden">
+                    <div 
+                      className={`${ind.color} h-full rounded-full`}
+                      style={{ width: `${ind.percentage}%` }}
+                    />
                   </div>
                 </div>
-                <div className="flex justify-between text-[9px] font-black text-zinc-400 uppercase tracking-widest pt-1 border-t border-zinc-50">
-                  <span>2022</span>
-                  <span>2023</span>
-                  <span>2024</span>
-                </div>
-              </div>
+              ))}
             </div>
           </section>
 
@@ -342,9 +328,7 @@ export default function MemberConclaveHistory({ loggedInMember }) {
                     <p className="text-[12.5px] font-black text-zinc-850 group-hover:text-brand-red transition-smooth truncate leading-none">{person.name}</p>
                     <p className="text-[10px] text-zinc-450 font-semibold truncate leading-none mt-1">{person.title}</p>
                   </div>
-                  <button className="text-zinc-400 hover:text-brand-red hover:bg-red-50 p-1.5 rounded-full transition-smooth shrink-0 cursor-pointer">
-                    <MessageSquare className="w-4 h-4" />
-                  </button>
+
                 </div>
               ))}
             </div>
