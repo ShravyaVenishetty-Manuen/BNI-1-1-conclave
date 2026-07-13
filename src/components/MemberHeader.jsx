@@ -49,6 +49,7 @@ export default function MemberHeader({
     { id: 'dashboard', label: 'Dashboard' },
     { id: 'my-schedule', label: 'My Schedule' },
     { id: 'current-round', label: 'Current Round' },
+    { id: 'history', label: 'History' },
     { id: 'profile', label: 'Profile' }
   ];
 
