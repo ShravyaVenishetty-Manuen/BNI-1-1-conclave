@@ -198,10 +198,7 @@ export default function MemberConclaveHistory({ loggedInMember }) {
                 <option value="Cancelled">Cancelled</option>
               </select>
 
-              <button className="h-10 px-3.5 flex items-center gap-2 bg-white border border-zinc-250 rounded-lg text-[12px] font-black uppercase tracking-wider text-zinc-650 hover:bg-zinc-50 transition-colors shadow-2xs">
-                <ArrowUpDown className="w-3.5 h-3.5 text-zinc-400" />
-                Sort
-              </button>
+
             </div>
           </section>
 
