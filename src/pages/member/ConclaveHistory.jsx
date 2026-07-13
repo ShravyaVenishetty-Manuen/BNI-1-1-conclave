@@ -143,26 +143,7 @@ export default function MemberConclaveHistory({ loggedInMember }) {
             ))}
           </section>
 
-          {/* Achievement Badges */}
-          <section className="bg-white p-4.5 rounded-xl border border-zinc-200 shadow-2xs overflow-x-auto scrollbar-none">
-            <div className="flex items-center gap-4 min-w-[500px]">
-              <span className="text-[10px] font-black text-zinc-400 uppercase tracking-wider shrink-0">Achievements:</span>
-              <div className="flex gap-2.5">
-                <div className="flex items-center gap-2 bg-red-50 border border-red-100 text-brand-red px-3.5 py-1.5 rounded-full whitespace-nowrap">
-                  <Award className="w-3.5 h-3.5 shrink-0" />
-                  <span className="text-[10.5px] font-bold">100 Meetings</span>
-                </div>
-                <div className="flex items-center gap-2 bg-amber-50 border border-amber-100 text-amber-700 px-3.5 py-1.5 rounded-full whitespace-nowrap">
-                  <Star className="w-3.5 h-3.5 shrink-0" />
-                  <span className="text-[10.5px] font-bold">First Conclave</span>
-                </div>
-                <div className="flex items-center gap-2 bg-zinc-100 border border-zinc-200 text-zinc-700 px-3.5 py-1.5 rounded-full whitespace-nowrap">
-                  <Users className="w-3.5 h-3.5 shrink-0" />
-                  <span className="text-[10.5px] font-bold">Networking Pro</span>
-                </div>
-              </div>
-            </div>
-          </section>
+
 
           {/* Filter Bar */}
           <section className="flex flex-col sm:flex-row gap-3 items-center justify-between">
