@@ -48,7 +48,7 @@ export default function MemberHeader({
   const navItems = [
     { id: 'dashboard', label: 'Dashboard' },
     { id: 'my-schedule', label: 'My Schedule' },
-    { id: 'my-table', label: 'My Table' },
+    { id: 'current-round', label: 'Current Round' },
     { id: 'profile', label: 'Profile' }
   ];
 
