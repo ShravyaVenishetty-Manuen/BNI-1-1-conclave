@@ -48,10 +48,10 @@ export default function MemberDashboard({ loggedInMember, onTabChange }) {
 
   return (
     <div className="space-y-8 animate-fade-in font-sans pb-16">
-      
+
       {/* Hero Section */}
       <div className="grid grid-cols-12 gap-6">
-        
+
         {/* Left: Welcome & Status Card (Takes 8 cols on large screens, stacks on tablets/mobile) */}
         <div className="col-span-12 lg:col-span-8 bg-white p-6 md:p-8 rounded-xl shadow-2xs border border-zinc-200 relative overflow-hidden flex flex-col justify-between min-h-[300px]">
           <div className="absolute inset-0 opacity-[0.02] pointer-events-none bg-[radial-gradient(#af101a_1px,transparent_1px)] [background-size:16px_16px]"></div>
@@ -97,8 +97,8 @@ export default function MemberDashboard({ loggedInMember, onTabChange }) {
                 <span className="text-[9.5px] font-bold text-zinc-450">50% Completed</span>
               </div>
               <div className="w-full bg-zinc-100 rounded-full h-2 overflow-hidden border border-zinc-200/50">
-                <div 
-                  className="bg-brand-red h-full rounded-full transition-all duration-1000 ease-out shadow-inner" 
+                <div
+                  className="bg-brand-red h-full rounded-full transition-all duration-1000 ease-out shadow-inner"
                   style={{ width: `${(timeLeft / 1200) * 100}%` }}
                 ></div>
               </div>
@@ -106,14 +106,14 @@ export default function MemberDashboard({ loggedInMember, onTabChange }) {
           </div>
 
           <div className="flex flex-wrap gap-3 pt-6 border-t border-zinc-100 mt-6">
-            <button 
+            <button
               onClick={() => onTabChange && onTabChange('current-round')}
               className="bg-brand-red hover:bg-red-750 text-white text-[10px] font-black uppercase tracking-wider px-5 py-2.5 rounded-lg transition-smooth flex items-center gap-1.5 cursor-pointer shadow-sm shadow-brand-red/10"
             >
               View Current Round
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
-            <button 
+            <button
               onClick={() => onTabChange && onTabChange('my-schedule')}
               className="bg-white hover:bg-zinc-50 border border-zinc-250 text-zinc-700 text-[10px] font-black uppercase tracking-wider px-5 py-2.5 rounded-lg transition-smooth cursor-pointer"
             >
@@ -134,7 +134,7 @@ export default function MemberDashboard({ loggedInMember, onTabChange }) {
                 </div>
                 <span className="font-extrabold text-zinc-900 text-body-sm">6</span>
               </div>
-              
+
               <div className="flex items-center justify-between p-3 bg-zinc-50 border border-zinc-200/60 rounded-lg">
                 <div className="flex items-center gap-2.5">
                   <Layers className="w-4 h-4 text-brand-red" />
@@ -148,8 +148,8 @@ export default function MemberDashboard({ loggedInMember, onTabChange }) {
               <span className="text-[9px] font-black text-zinc-400 uppercase tracking-widest block mb-2.5">Networking In Progress</span>
               <div className="flex -space-x-2.5 overflow-hidden">
                 {tableMembers.map((m, idx) => (
-                  <div 
-                    key={idx} 
+                  <div
+                    key={idx}
                     className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-zinc-100 border-2 border-white font-bold text-[10.5px] text-zinc-550 shadow-inner select-none"
                     title={m.name}
                   >
@@ -176,7 +176,7 @@ export default function MemberDashboard({ loggedInMember, onTabChange }) {
       <section className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="font-black text-zinc-900 text-body-md">Today's Schedule</h2>
-          <span 
+          <span
             onClick={() => onTabChange && onTabChange('my-schedule')}
             className="text-brand-red font-black text-[10.5px] uppercase tracking-wider hover:underline cursor-pointer"
           >
@@ -251,44 +251,38 @@ export default function MemberDashboard({ loggedInMember, onTabChange }) {
 
       {/* Grid: Table Members & Sidebar Previews */}
       <div className="grid grid-cols-12 gap-6 items-start">
-        
+
         {/* Left Column: Current Table Members (Takes 8 cols) */}
         <div className="col-span-12 lg:col-span-8 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="font-black text-zinc-900 text-body-md">
               Current Table Members <span className="text-zinc-400 font-normal">(Table 5)</span>
             </h2>
-            <button className="text-brand-red flex items-center gap-1 font-black text-[10px] uppercase tracking-wider hover:underline cursor-pointer">
-              <Share2 className="w-3.5 h-3.5" />
-              Export Group
-            </button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {tableMembers.map((member) => (
-              <div 
-                key={member.name} 
-                className={`p-4 rounded-xl border transition-smooth group cursor-pointer ${
-                  member.isCaptain 
-                    ? 'bg-red-50/20 border-brand-red/30 shadow-2xs relative' 
+              <div
+                key={member.name}
+                className={`p-4 rounded-xl border transition-smooth group cursor-pointer ${member.isCaptain
+                    ? 'bg-red-50/20 border-brand-red/30 shadow-2xs relative'
                     : 'bg-white border-zinc-200 hover:border-brand-red/20 shadow-2xs hover:shadow-xs'
-                }`}
+                  }`}
               >
                 {member.isCaptain && (
                   <span className="absolute top-2 right-2 bg-brand-red text-white text-[7.5px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider">
                     Captain
                   </span>
                 )}
-                
+
                 <div className="flex items-start gap-3.5">
-                  <div className={`w-12 h-12 rounded-full overflow-hidden border-2 flex items-center justify-center font-bold text-xs shrink-0 select-none ${
-                    member.isCaptain 
-                      ? 'border-brand-red bg-red-100 text-brand-red' 
+                  <div className={`w-12 h-12 rounded-full overflow-hidden border-2 flex items-center justify-center font-bold text-xs shrink-0 select-none ${member.isCaptain
+                      ? 'border-brand-red bg-red-100 text-brand-red'
                       : 'border-zinc-200 bg-zinc-50 text-zinc-500 group-hover:border-brand-red/45 transition-colors'
-                  }`}>
+                    }`}>
                     {member.initials}
                   </div>
-                  
+
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-center">
                       <h4 className="text-[12.5px] font-black text-zinc-850 truncate group-hover:text-brand-red transition-smooth leading-tight">
@@ -314,9 +308,9 @@ export default function MemberDashboard({ loggedInMember, onTabChange }) {
 
         {/* Right Column: Previews & Announcements (Takes 4 cols) */}
         <div className="col-span-12 lg:col-span-4 space-y-6">
-          
+
           {/* Next Round Card */}
-          <div className="bg-white p-5 rounded-xl border border-zinc-200 border-l-4 border-l-brand-red shadow-2xs">
+          <div className="bg-white p-5 rounded-xl border border-zinc-200 shadow-2xs">
             <div className="flex items-center justify-between mb-3 text-zinc-450">
               <span className="text-[9px] font-black uppercase tracking-widest">Next Session Preview</span>
               <Calendar className="w-4 h-4 text-brand-red" />
