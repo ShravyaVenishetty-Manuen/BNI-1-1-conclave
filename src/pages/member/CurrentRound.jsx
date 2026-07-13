@@ -233,26 +233,31 @@ export default function MemberCurrentRound({ loggedInMember, onTabChange }) {
               </span>
             </div>
 
-            <div className="space-y-3.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
               {tableMembers.map((member) => (
                 <div 
                   key={member.name}
-                  className="flex items-center p-3.5 border border-zinc-200/80 rounded-lg hover:border-brand-red/30 transition-smooth group cursor-pointer hover:shadow-xs bg-white"
+                  className="p-4 border border-zinc-200/85 rounded-xl hover:border-brand-red/35 transition-smooth group cursor-pointer hover:shadow-xs bg-white flex flex-col justify-between"
                 >
-                  <div className="w-10 h-10 rounded-lg bg-zinc-50 border border-zinc-200 flex items-center justify-center font-bold text-xs text-zinc-500 mr-4 group-hover:border-brand-red/45 transition-colors select-none">
-                    {member.initials}
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-zinc-50 border border-zinc-200 flex items-center justify-center font-bold text-xs text-zinc-500 shrink-0 group-hover:border-brand-red/45 transition-colors select-none">
+                      {member.initials}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-[12.5px] font-black text-zinc-850 group-hover:text-brand-red transition-smooth truncate leading-tight">
+                        {member.name}
+                      </h3>
+                      <span className="inline-block px-1.5 py-0.5 bg-zinc-100 border border-zinc-200/50 text-zinc-500 text-[8.5px] font-black rounded uppercase tracking-wide mt-1.5">
+                        {member.category}
+                      </span>
+                      <p className="text-[11px] text-zinc-805 font-extrabold mt-2.5 truncate leading-tight">
+                        {member.company}
+                      </p>
+                      <p className="text-[10px] text-zinc-400 font-semibold truncate leading-none mt-1">
+                        {member.chapter}
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex-grow min-w-0">
-                    <h3 className="text-[12.5px] font-black text-zinc-850 group-hover:text-brand-red transition-smooth truncate leading-snug">
-                      {member.name}
-                    </h3>
-                    <p className="text-[11.5px] text-zinc-450 font-semibold truncate leading-none mt-0.5">
-                      {member.category} • <strong className="text-zinc-650 font-bold">{member.company}</strong>
-                    </p>
-                  </div>
-                  <span className="px-2 py-0.5 bg-red-50/50 border border-red-100/50 text-brand-red text-[8.5px] font-black rounded uppercase tracking-wider block shrink-0">
-                    {member.chapter}
-                  </span>
                 </div>
               ))}
             </div>
