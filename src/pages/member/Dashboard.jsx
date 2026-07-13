@@ -6,11 +6,8 @@ import {
   Info,
   Calendar,
   CheckCircle,
-  Share2,
   ArrowRight,
   ArrowUpRight,
-  Sparkles,
-  Bell,
   Activity
 } from 'lucide-react';
 
@@ -38,11 +35,11 @@ export default function MemberDashboard({ loggedInMember, onTabChange }) {
 
   // Static list of table members for Table 5 matching the design
   const tableMembers = [
-    { name: "Sarah Jenkins", company: "Zenith Systems", category: "IT INFRASTRUCTURE", chapter: "BNI Phoenix Chapter", initials: "SJ" },
-    { name: "Mark Thompson", company: "Prime Realty Group", category: "REAL ESTATE", chapter: "BNI Synergy Chapter", initials: "MT" },
+    { name: "Sanjay Joshi", company: "Zenith Systems", category: "IT INFRASTRUCTURE", chapter: "BNI Phoenix Chapter", initials: "SJ" },
+    { name: "Manish Tiwari", company: "Prime Realty Group", category: "REAL ESTATE", chapter: "BNI Synergy Chapter", initials: "MT" },
     { name: "Anita Rao", company: "Spark Media", category: "DIGITAL MARKETING", chapter: "BNI Global Chapter", initials: "AR" },
-    { name: "David Chen", company: "Logistics Pro", category: "SUPPLY CHAIN", chapter: "BNI Summit Chapter", initials: "DC" },
-    { name: "Elena Rodriguez", company: "Rodriguez Partners", category: "LAW & LEGAL", chapter: "BNI Elite Chapter", initials: "ER" },
+    { name: "Deepak Chawla", company: "Logistics Pro", category: "SUPPLY CHAIN", chapter: "BNI Summit Chapter", initials: "DC" },
+    { name: "Ekta Ramachandran", company: "Rodriguez Partners", category: "LAW & LEGAL", chapter: "BNI Elite Chapter", initials: "ER" },
     { name: "Ganesh V. (Captain)", company: "WealthWise Advisors", category: "FINANCIAL PLANNING", chapter: "BNI Prosperity Chapter", initials: "GV", isCaptain: true }
   ];
 
@@ -265,8 +262,8 @@ export default function MemberDashboard({ loggedInMember, onTabChange }) {
               <div
                 key={member.name}
                 className={`p-4 rounded-xl border transition-smooth group cursor-pointer ${member.isCaptain
-                    ? 'bg-red-50/20 border-brand-red/30 shadow-2xs relative'
-                    : 'bg-white border-zinc-200 hover:border-brand-red/20 shadow-2xs hover:shadow-xs'
+                  ? 'bg-red-50/20 border-brand-red/30 shadow-2xs relative'
+                  : 'bg-white border-zinc-200 hover:border-brand-red/20 shadow-2xs hover:shadow-xs'
                   }`}
               >
                 {member.isCaptain && (
@@ -277,8 +274,8 @@ export default function MemberDashboard({ loggedInMember, onTabChange }) {
 
                 <div className="flex items-start gap-3.5">
                   <div className={`w-12 h-12 rounded-full overflow-hidden border-2 flex items-center justify-center font-bold text-xs shrink-0 select-none ${member.isCaptain
-                      ? 'border-brand-red bg-red-100 text-brand-red'
-                      : 'border-zinc-200 bg-zinc-50 text-zinc-500 group-hover:border-brand-red/45 transition-colors'
+                    ? 'border-brand-red bg-red-100 text-brand-red'
+                    : 'border-zinc-200 bg-zinc-50 text-zinc-500 group-hover:border-brand-red/45 transition-colors'
                     }`}>
                     {member.initials}
                   </div>

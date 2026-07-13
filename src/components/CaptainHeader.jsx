@@ -14,7 +14,7 @@ export default function CaptainHeader({
     {
       id: 1,
       title: 'Member checked in',
-      desc: 'Sarah Jenkins is now present at Table 5.',
+      desc: 'Sanjay Joshi is now present at Table 5.',
       time: '3 mins ago',
       unread: true
     },

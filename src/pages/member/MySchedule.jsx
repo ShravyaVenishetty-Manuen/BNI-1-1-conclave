@@ -6,9 +6,6 @@ import {
   Clock,
   MapPin,
   Coffee,
-  CheckCircle,
-  Calendar,
-  Layers
 } from 'lucide-react';
 
 export default function MemberSchedule({ loggedInMember, onTabChange }) {
@@ -48,7 +45,7 @@ export default function MemberSchedule({ loggedInMember, onTabChange }) {
       initials: "GR"
     },
     {
-      name: "Sarah Jenkins",
+      name: "Sanjay Joshi",
       category: "IT Infrastructure",
       initials: "SJ"
     }
@@ -56,7 +53,7 @@ export default function MemberSchedule({ loggedInMember, onTabChange }) {
 
   return (
     <div className="space-y-8 animate-fade-in font-sans pb-16">
-      
+
       {/* Page Header */}
       <div>
         <h1 className="text-2xl md:text-3xl font-black text-zinc-955 tracking-tight">My Schedule</h1>
@@ -65,10 +62,10 @@ export default function MemberSchedule({ loggedInMember, onTabChange }) {
 
       {/* Bento Grid Layout */}
       <div className="grid grid-cols-12 gap-6 items-start">
-        
+
         {/* Left Column: Schedule Progress & Timeline (Col-Span 8) */}
         <div className="col-span-12 lg:col-span-8 space-y-6">
-          
+
           {/* Current Live Session Card */}
           <div className="bg-white rounded-xl border border-zinc-200 shadow-2xs p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
             <div>
@@ -78,7 +75,7 @@ export default function MemberSchedule({ loggedInMember, onTabChange }) {
                 </span>
                 <span className="text-body-sm font-black text-zinc-800">Round 3 of 6</span>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-x-8 gap-y-1.5 mt-3">
                 <div className="flex flex-col">
                   <span className="text-[9px] font-extrabold text-zinc-400 uppercase tracking-widest">Current Table</span>
@@ -98,7 +95,7 @@ export default function MemberSchedule({ loggedInMember, onTabChange }) {
                   {formatTime(timeLeft)}
                 </span>
               </div>
-              <button 
+              <button
                 onClick={() => onTabChange && onTabChange('dashboard')}
                 className="w-full md:w-auto px-4 py-2 bg-brand-red hover:bg-red-750 text-white text-[10px] font-black uppercase tracking-wider rounded-lg transition-smooth flex items-center justify-center gap-1.5 cursor-pointer shadow-sm shadow-brand-red/10"
               >
@@ -127,7 +124,7 @@ export default function MemberSchedule({ loggedInMember, onTabChange }) {
           {/* Timeline Stepper Container */}
           <div className="overflow-x-auto pb-2 scrollbar-none">
             <div className="min-w-[600px] flex items-center justify-between px-6 py-5 bg-white rounded-xl border border-zinc-200 shadow-2xs">
-              
+
               {/* Step 0 - Start */}
               <div className="flex flex-col items-center select-none">
                 <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center mb-1.5 shadow-sm shadow-emerald-500/10">
@@ -197,7 +194,7 @@ export default function MemberSchedule({ loggedInMember, onTabChange }) {
                 <div>
                   <span className="text-[9px] font-extrabold text-emerald-600 uppercase tracking-wider">COMPLETED</span>
                   <h3 className="text-body-md font-black text-zinc-800 mt-0.5">Round 1</h3>
-                  <p className="text-[11px] text-zinc-450 font-semibold">Table 12 • Captain Sarah M.</p>
+                  <p className="text-[11px] text-zinc-450 font-semibold">Table 12 • Captain Sandhya M.</p>
                 </div>
                 <span className="text-[11.5px] font-extrabold text-zinc-550 tabular-nums">09:00 AM - 09:45 AM</span>
               </div>
@@ -213,7 +210,7 @@ export default function MemberSchedule({ loggedInMember, onTabChange }) {
                 <div>
                   <span className="text-[9px] font-extrabold text-emerald-600 uppercase tracking-wider">COMPLETED</span>
                   <h3 className="text-body-md font-black text-zinc-800 mt-0.5">Round 2</h3>
-                  <p className="text-[11px] text-zinc-450 font-semibold">Table 4 • Captain David L.</p>
+                  <p className="text-[11px] text-zinc-450 font-semibold">Table 4 • Captain Deepak L.</p>
                 </div>
                 <span className="text-[11.5px] font-extrabold text-zinc-550 tabular-nums">10:15 AM - 11:00 AM</span>
               </div>
@@ -241,7 +238,7 @@ export default function MemberSchedule({ loggedInMember, onTabChange }) {
                 {/* Participant Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {r3Participants.map(participant => (
-                    <div 
+                    <div
                       key={participant.name}
                       className="p-3 bg-zinc-55 border border-zinc-200/80 rounded-lg flex items-center gap-3 transition-smooth hover:border-zinc-300"
                     >
@@ -295,13 +292,13 @@ export default function MemberSchedule({ loggedInMember, onTabChange }) {
 
         {/* Right Column: Next Round Preview & Logistics (Col-Span 4) */}
         <aside className="col-span-12 lg:col-span-4 space-y-6">
-          
+
           {/* Up Next Card */}
           <div className="bg-white rounded-xl border border-zinc-200 shadow-2xs overflow-hidden">
             <div className="bg-zinc-50 p-4 border-b border-zinc-200/80">
               <h3 className="font-black text-zinc-900 text-body-sm">Up Next</h3>
             </div>
-            
+
             <div className="p-4 space-y-4">
               <div className="flex justify-between items-center">
                 <div className="flex flex-col">
@@ -321,7 +318,7 @@ export default function MemberSchedule({ loggedInMember, onTabChange }) {
                 </div>
                 <div className="flex items-center gap-2 text-[11px] text-zinc-650 font-semibold">
                   <User className="w-3.5 h-3.5 text-zinc-400" />
-                  Captain: Jennifer Woods
+                  Captain: Jyoti Wagle
                 </div>
               </div>
 
@@ -336,7 +333,7 @@ export default function MemberSchedule({ loggedInMember, onTabChange }) {
           {/* Logistics Venue Info Card */}
           <div className="bg-white rounded-xl border border-zinc-200 shadow-2xs p-5 space-y-4">
             <h3 className="font-black text-zinc-900 text-body-sm">Venue Info</h3>
-            
+
             <div className="space-y-4">
               <div className="flex gap-3 items-start">
                 <MapPin className="w-4 h-4 text-brand-red shrink-0 mt-0.5" />

@@ -1,20 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Clock,
-  User,
-  Users,
   MapPin,
-  CheckCircle,
-  Calendar,
-  Layers,
-  ArrowRight,
   TrendingUp,
-  Map,
   Award,
-  Video,
-  BookOpen,
   Check,
-  ChevronRight
 } from 'lucide-react';
 
 export default function MemberCurrentRound({ loggedInMember, onTabChange }) {
@@ -45,11 +34,11 @@ export default function MemberCurrentRound({ loggedInMember, onTabChange }) {
 
   // Table members array
   const tableMembers = [
-    { name: "Sarah Jenkins", company: "Global Tech Solutions", category: "IT Infrastructure", chapter: "London Central", initials: "SJ" },
-    { name: "Mark Thompson", company: "Thompson Realty Group", category: "Real Estate", chapter: "West End Elite", initials: "MT" },
+    { name: "Sanjay Joshi", company: "Global Tech Solutions", category: "IT Infrastructure", chapter: "London Central", initials: "SJ" },
+    { name: "Manish Tiwari", company: "Thompson Realty Group", category: "Real Estate", chapter: "West End Elite", initials: "MT" },
     { name: "Anita Rao", company: "Rao Growth Media", category: "Digital Marketing", chapter: "South Quay", initials: "AR" },
-    { name: "David Chen", company: "Logistics Plus Ltd", category: "Supply Chain", chapter: "City Circle", initials: "DC" },
-    { name: "Elena Rodriguez", company: "Rodriguez & Associates", category: "Law & Legal", chapter: "Bridge Chapter", initials: "ER" }
+    { name: "Deepak Chawla", company: "Logistics Plus Ltd", category: "Supply Chain", chapter: "City Circle", initials: "DC" },
+    { name: "Ekta Ramachandran", company: "Rodriguez & Associates", category: "Law & Legal", chapter: "Bridge Chapter", initials: "ER" }
   ];
 
   // Agenda Steps showing what to do in the round
@@ -82,13 +71,13 @@ export default function MemberCurrentRound({ loggedInMember, onTabChange }) {
 
   return (
     <div className="space-y-8 animate-fade-in font-sans pb-16">
-      
+
       {/* Live Round Hero Section */}
       <section>
         <div className="bg-white border border-zinc-200 rounded-xl shadow-2xs overflow-hidden flex flex-col lg:flex-row">
-          
+
           {/* Hero Left Content Area */}
-          <div className="p-6 md:p-8 lg:w-2/3 border-r border-zinc-150 flex flex-col justify-between space-y-6">
+          <div className="p-6 md:p-8 lg:w-2/3 flex flex-col justify-between space-y-6">
             <div className="space-y-4">
               <div className="flex flex-wrap items-center gap-3">
                 <span className="px-3 py-1 bg-red-50 border border-red-100 text-brand-red font-black text-[9.5px] rounded-full flex items-center gap-1.5 animate-pulse">
@@ -99,8 +88,8 @@ export default function MemberCurrentRound({ loggedInMember, onTabChange }) {
                   Networking Conclave 2026
                 </span>
               </div>
-              <h1 className="text-2xl md:text-3xl font-black text-zinc-950 tracking-tight">Round 3 of 6</h1>
-              
+              <h1 className="text-2xl md:text-3xl font-black text-zinc-955 tracking-tight">Round 3 of 6</h1>
+
               {/* Stepper Progress Bar */}
               <div className="flex items-center w-full max-w-xl pt-2">
                 <div className="flex flex-col items-center flex-1">
@@ -110,7 +99,7 @@ export default function MemberCurrentRound({ loggedInMember, onTabChange }) {
                   <span className="text-[9.5px] font-extrabold text-zinc-400 mt-1 uppercase tracking-wide">R1</span>
                 </div>
                 <div className="h-0.5 bg-emerald-500 flex-1 mb-4"></div>
-                
+
                 <div className="flex flex-col items-center flex-1">
                   <div className="w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-[10.5px] shadow-sm select-none">
                     <Check className="w-3.5 h-3.5 stroke-[3]" />
@@ -118,7 +107,7 @@ export default function MemberCurrentRound({ loggedInMember, onTabChange }) {
                   <span className="text-[9.5px] font-extrabold text-zinc-400 mt-1 uppercase tracking-wide">R2</span>
                 </div>
                 <div className="h-0.5 bg-brand-red flex-1 mb-4"></div>
-                
+
                 <div className="flex flex-col items-center flex-1">
                   <div className="w-9 h-9 rounded-full bg-brand-red text-white flex items-center justify-center font-black text-[12px] shadow-md ring-4 ring-brand-red/10 select-none">
                     3
@@ -126,7 +115,7 @@ export default function MemberCurrentRound({ loggedInMember, onTabChange }) {
                   <span className="text-[10px] font-black text-brand-red mt-1 uppercase tracking-wide">Active</span>
                 </div>
                 <div className="h-0.5 bg-zinc-200 flex-1 mb-4"></div>
-                
+
                 <div className="flex flex-col items-center flex-1 opacity-45">
                   <div className="w-7 h-7 rounded-full border border-zinc-300 bg-zinc-50 text-zinc-450 flex items-center justify-center font-bold text-[11px] select-none">
                     4
@@ -145,7 +134,7 @@ export default function MemberCurrentRound({ loggedInMember, onTabChange }) {
             </div>
 
             {/* Session Stats grid footer */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-6 pt-6 border-t border-zinc-150">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-6 pt-4">
               <div>
                 <p className="text-[9.5px] font-black text-zinc-400 uppercase tracking-widest">Assigned Table</p>
                 <p className="font-black text-zinc-900 text-body-lg mt-0.5">Table 05</p>
@@ -168,29 +157,29 @@ export default function MemberCurrentRound({ loggedInMember, onTabChange }) {
           <div className="p-8 lg:w-1/3 bg-zinc-50 flex flex-col items-center justify-center text-center select-none">
             <div className="relative mb-6">
               <svg className="w-48 h-48">
-                <circle 
-                  className="text-zinc-200" 
-                  cx="96" 
-                  cy="96" 
-                  fill="transparent" 
-                  r={radius} 
-                  stroke="currentColor" 
+                <circle
+                  className="text-zinc-200"
+                  cx="96"
+                  cy="96"
+                  fill="transparent"
+                  r={radius}
+                  stroke="currentColor"
                   strokeWidth="8"
                 ></circle>
-                <circle 
-                  className="text-brand-red progress-ring__circle" 
-                  cx="96" 
-                  cy="96" 
-                  fill="transparent" 
-                  r={radius} 
-                  stroke="currentColor" 
-                  strokeDasharray={circumference} 
-                  strokeDashoffset={strokeDashoffset} 
-                  strokeLinecap="round" 
+                <circle
+                  className="text-brand-red progress-ring__circle"
+                  cx="96"
+                  cy="96"
+                  fill="transparent"
+                  r={radius}
+                  stroke="currentColor"
+                  strokeDasharray={circumference}
+                  strokeDashoffset={strokeDashoffset}
+                  strokeLinecap="round"
                   strokeWidth="8"
                 ></circle>
               </svg>
-              
+
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <span className="text-3xl font-black text-zinc-950 tracking-tighter leading-none">
                   {formatTime(timeLeft)}
@@ -217,10 +206,10 @@ export default function MemberCurrentRound({ loggedInMember, onTabChange }) {
 
       {/* Bento Grid Layout (Strategy Circle & Agenda) */}
       <div className="grid grid-cols-12 gap-6 items-start">
-        
+
         {/* Left Column: Group List & Agenda (Takes 8 cols) */}
         <div className="col-span-12 lg:col-span-8 space-y-6">
-          
+
           {/* Strategy Circle Members */}
           <div className="bg-white border border-zinc-200 rounded-xl shadow-2xs p-6 space-y-4">
             <div className="flex justify-between items-end border-b border-zinc-100 pb-3">
@@ -235,7 +224,7 @@ export default function MemberCurrentRound({ loggedInMember, onTabChange }) {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
               {tableMembers.map((member) => (
-                <div 
+                <div
                   key={member.name}
                   className="p-4 border border-zinc-200/85 rounded-xl hover:border-brand-red/35 transition-smooth group cursor-pointer hover:shadow-xs bg-white flex flex-col justify-between"
                 >
@@ -274,13 +263,12 @@ export default function MemberCurrentRound({ loggedInMember, onTabChange }) {
               {agendaSteps.map((step, idx) => (
                 <div key={idx} className="relative group">
                   {/* Bullet timeline circle */}
-                  <span className={`absolute -left-6.5 top-0.5 w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${
-                    step.completed 
-                      ? 'bg-emerald-500 border-emerald-500 text-white' 
+                  <span className={`absolute -left-6.5 top-0.5 w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${step.completed
+                      ? 'bg-emerald-500 border-emerald-500 text-white'
                       : idx === 2 // Active Match step
-                      ? 'bg-brand-red border-brand-red text-white'
-                      : 'bg-white border-zinc-300'
-                  }`}>
+                        ? 'bg-brand-red border-brand-red text-white'
+                        : 'bg-white border-zinc-300'
+                    }`}>
                     {step.completed ? (
                       <Check className="w-2.5 h-2.5 stroke-[3]" />
                     ) : (
@@ -290,13 +278,12 @@ export default function MemberCurrentRound({ loggedInMember, onTabChange }) {
 
                   <div className="space-y-0.5">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded leading-none ${
-                        step.completed
+                      <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded leading-none ${step.completed
                           ? 'bg-emerald-50 text-emerald-700'
                           : idx === 2
-                          ? 'bg-red-50 text-brand-red animate-pulse'
-                          : 'bg-zinc-100 text-zinc-450'
-                      }`}>
+                            ? 'bg-red-50 text-brand-red animate-pulse'
+                            : 'bg-zinc-100 text-zinc-450'
+                        }`}>
                         {step.time}
                       </span>
                       <h4 className="text-[12.5px] font-black text-zinc-800 leading-tight">
@@ -312,29 +299,13 @@ export default function MemberCurrentRound({ loggedInMember, onTabChange }) {
             </div>
           </div>
 
-          {/* Business Diversity Summary tags */}
-          <div className="bg-zinc-50 border border-zinc-200 rounded-xl p-5 space-y-3.5">
-            <h3 className="text-[9.5px] font-black text-zinc-450 uppercase tracking-widest block">
-              Table Business Diversity
-            </h3>
-            <div className="flex flex-wrap gap-2.5">
-              {["IT Infrastructure", "Real Estate", "Digital Marketing", "Supply Chain", "Law & Legal", "Financial Planning"].map((tag) => (
-                <span 
-                  key={tag}
-                  className="px-3 py-1.5 bg-white border border-zinc-200/80 rounded-full text-[10.5px] text-zinc-650 font-bold flex items-center gap-1.5 shadow-2xs"
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-brand-red"></span>
-                  {tag}
-                </span>
-              ))}
-            </div>
-          </div>
+
 
         </div>
 
         {/* Right Column: Captain detail & Wayfinding map (Takes 4 cols) */}
         <aside className="col-span-12 lg:col-span-4 space-y-6">
-          
+
           {/* Captain Detail Card */}
           <div className="bg-white border border-zinc-200 rounded-xl shadow-2xs overflow-hidden">
             <div className="p-5">
@@ -370,7 +341,7 @@ export default function MemberCurrentRound({ loggedInMember, onTabChange }) {
               <span className="text-[9px] font-black text-zinc-450 uppercase tracking-widest">UP NEXT</span>
               <span className="text-[9.5px] font-bold text-zinc-450 tracking-tight">Starts in 11:22</span>
             </div>
-            
+
             <div className="p-5">
               <div className="flex items-center gap-3.5 mb-4">
                 <div className="w-10 h-10 bg-red-50/50 rounded-full flex items-center justify-center text-brand-red border border-red-100 font-black text-body-sm shrink-0">
@@ -388,38 +359,31 @@ export default function MemberCurrentRound({ loggedInMember, onTabChange }) {
                 </div>
                 <div>
                   <p className="text-[8px] text-zinc-400 font-extrabold uppercase tracking-widest">Upcoming Captain</p>
-                  <p className="text-[12px] font-black text-zinc-900 mt-0.5 leading-none">Jennifer Woods</p>
+                  <p className="text-[12px] font-black text-zinc-900 mt-0.5 leading-none">Jyoti Wagle</p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Wayfinding Map Placement */}
-          <div className="bg-white border border-dashed border-zinc-250 rounded-xl p-5 text-center shadow-2xs space-y-4">
-            <div className="w-11 h-11 bg-zinc-50 border border-zinc-200 rounded-full flex items-center justify-center mx-auto shadow-inner">
-              <Map className="w-5 h-5 text-zinc-400" />
-            </div>
-            <div>
-              <h3 className="text-[11.5px] font-black text-zinc-800 uppercase tracking-wide">Wayfinding</h3>
-              <p className="text-[10px] text-zinc-450 font-semibold mt-0.5">Current: Hall Main Gate → Table 05</p>
-            </div>
-            
-            <div className="h-32 bg-zinc-50 rounded-lg border border-zinc-200 relative overflow-hidden flex items-center justify-center select-none">
-              <div 
-                className="absolute inset-0 opacity-20" 
-                style={{ 
-                  backgroundImage: `radial-gradient(#af101a 1.2px, transparent 1.2px)`, 
-                  backgroundSize: '12px 12px' 
-                }}
-              ></div>
-              
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-bounce">
-                <span className="px-3 py-1.5 bg-brand-red text-white text-[8px] font-black rounded-full shadow-md shadow-brand-red/20 uppercase tracking-wider border border-white">
-                  YOU ARE HERE
+          {/* Business Diversity Summary tags */}
+          <div className="bg-white border border-zinc-200 rounded-xl p-5 space-y-3.5 shadow-2xs">
+            <h3 className="text-[9.5px] font-black text-zinc-450 uppercase tracking-widest block">
+              Table Business Diversity
+            </h3>
+            <div className="flex flex-wrap gap-2.5">
+              {["IT Infrastructure", "Real Estate", "Digital Marketing", "Supply Chain", "Law & Legal", "Financial Planning"].map((tag) => (
+                <span
+                  key={tag}
+                  className="px-3 py-1.5 bg-white border border-zinc-200/80 rounded-full text-[10.5px] text-zinc-650 font-bold flex items-center gap-1.5 shadow-2xs hover:border-brand-red/35 transition-smooth"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-brand-red"></span>
+                  {tag}
                 </span>
-              </div>
+              ))}
             </div>
           </div>
+
+
 
         </aside>
       </div>

@@ -5,14 +5,8 @@ import {
   Users,
   Award,
   Info,
-  Calendar,
-  Bell,
-  ArrowRight,
   Check,
   Play,
-  RotateCcw,
-  Sparkles,
-  ArrowUpRight,
   X
 } from 'lucide-react';
 
@@ -36,10 +30,10 @@ export default function CurrentRound({ loggedInCaptain }) {
 
   const participants = [
     { name: "Rahul Sharma", company: "Apex Solutions", type: "Software", chapter: "Alpha", initials: "RS" },
-    { name: "Sarah Jenkins", company: "BuildRight Ltd", type: "Construction", chapter: "Summit", initials: "SJ" },
+    { name: "Sanjay Joshi", company: "BuildRight Ltd", type: "Construction", chapter: "Summit", initials: "SJ" },
     { name: "Vikram Mehta", company: "Prudent Fin", type: "Finance", chapter: "Alpha", initials: "VM" },
     { name: "Ananya Roy", company: "HealthFirst", type: "Healthcare", chapter: "Unity", initials: "AR" },
-    { name: "David Chen", company: "Global Mfg", type: "Manufacturing", chapter: "Summit", initials: "DC" },
+    { name: "Deepak Chawla", company: "Global Mfg", type: "Manufacturing", chapter: "Summit", initials: "DC" },
     { name: "Priya Singh", company: "Design Pro", type: "Marketing", chapter: "Alpha", initials: "PS" }
   ];
 
@@ -127,7 +121,7 @@ export default function CurrentRound({ loggedInCaptain }) {
 
             <div className="border-t border-zinc-100 pt-3.5 space-y-2.5">
               <span className="text-[9.5px] font-black text-zinc-450 uppercase tracking-wider block">Live Speaker Queue</span>
-              
+
               <div className="space-y-2">
                 <div className="flex items-center justify-between p-2 bg-zinc-50 border border-zinc-150 rounded-lg text-[11px] font-bold">
                   <div className="flex items-center gap-2">
@@ -140,7 +134,7 @@ export default function CurrentRound({ loggedInCaptain }) {
                 <div className="flex items-center justify-between p-2 bg-red-50/50 border border-red-100 rounded-lg text-[11px] font-bold animate-pulse">
                   <div className="flex items-center gap-2">
                     <span className="h-1.5 w-1.5 rounded-full bg-brand-red"></span>
-                    <span className="text-zinc-950 font-black">Sarah Jenkins (Construction)</span>
+                    <span className="text-zinc-955 font-black">Sanjay Joshi (Construction)</span>
                   </div>
                   <span className="text-[9px] font-black text-brand-red bg-red-50 border border-red-100 rounded px-1.5 py-0.5 uppercase tracking-wider leading-none">Speaking</span>
                 </div>
@@ -148,7 +142,7 @@ export default function CurrentRound({ loggedInCaptain }) {
                 <div className="flex items-center justify-between p-2 bg-zinc-50 border border-zinc-150 rounded-lg text-[11px] font-bold text-zinc-500">
                   <div className="flex items-center gap-2">
                     <span className="h-1.5 w-1.5 rounded-full bg-zinc-300"></span>
-                    <span>David Chen, Maria Gomez, James Wilson</span>
+                    <span>Deepak Chawla, Meera Gupta, Jagdish Wagle</span>
                   </div>
                   <span className="text-[9px] font-bold text-zinc-400 uppercase leading-none">Up Next</span>
                 </div>
@@ -252,7 +246,7 @@ export default function CurrentRound({ loggedInCaptain }) {
               </div>
             </div>
 
-            <button 
+            <button
               onClick={() => setShowDetailsModal(true)}
               className="w-full mt-4 py-2 bg-white/10 hover:bg-white/20 hover:text-white transition-smooth border border-white/10 rounded-lg text-[10px] font-black uppercase tracking-wider text-zinc-200 cursor-pointer"
             >
@@ -264,14 +258,14 @@ export default function CurrentRound({ loggedInCaptain }) {
         {/* Live Progress Timeline */}
         <div className="col-span-12 bg-white border border-zinc-200 rounded-xl p-6 shadow-2xs">
           <h3 className="font-black text-zinc-955 text-body-sm mb-6">Conclave Timeline</h3>
-          
+
           <div className="relative py-4 px-3">
             {/* Horizontal Track Background Line */}
             <div className="absolute top-[32px] left-6 right-6 h-0.5 bg-zinc-100 rounded-full z-0"></div>
-            
+
             {/* Horizontal Active Track Progress Line */}
             <div className="absolute top-[32px] left-6 w-[40%] h-0.5 bg-brand-red rounded-full z-0"></div>
-            
+
             {/* Steps Container */}
             <div className="relative flex justify-between items-start z-10">
               {/* Step 1 */}
@@ -295,7 +289,7 @@ export default function CurrentRound({ loggedInCaptain }) {
                 <div className="relative w-9 h-9 -mt-0.5 flex items-center justify-center">
                   {/* Pulsing active background indicator glow */}
                   <div className="absolute -inset-1 rounded-full bg-red-100/60 animate-pulse z-0"></div>
-                  
+
                   {/* Solid mask circle to completely block the background progress line */}
                   <div className="relative w-9 h-9 rounded-full bg-brand-red text-white flex items-center justify-center z-10 shadow-md shadow-brand-red/25 border-2 border-white">
                     <Play className="w-4 h-4 fill-current ml-0.5 animate-pulse" />
@@ -341,14 +335,14 @@ export default function CurrentRound({ loggedInCaptain }) {
                 <Award className="w-4 h-4 text-brand-red" />
                 <h3 className="font-black text-zinc-955 text-body-md">Round 3 Discussion Details</h3>
               </div>
-              <button 
+              <button
                 onClick={() => setShowDetailsModal(false)}
                 className="text-zinc-400 hover:text-zinc-700 p-1 rounded-lg hover:bg-zinc-200/50 transition-smooth cursor-pointer"
               >
                 <X className="w-4.5 h-4.5" />
               </button>
             </div>
-            
+
             <div className="p-5 overflow-y-auto space-y-4">
               <div className="bg-red-50/50 border border-red-100 p-4 rounded-lg space-y-2">
                 <span className="text-[10px] font-black text-brand-red uppercase tracking-wider block">Round Focus Topic</span>
@@ -359,7 +353,7 @@ export default function CurrentRound({ loggedInCaptain }) {
                   Members at this table represent Construction, Finance, Software, Manufacturing, and Healthcare. Locate matches where these industries share the same client base.
                 </p>
               </div>
-              
+
               <div className="space-y-2.5">
                 <span className="text-[9.5px] font-black text-zinc-450 uppercase tracking-wider block">Timeline & Format</span>
                 <div className="space-y-2 text-[11.5px] font-semibold text-zinc-650">
@@ -382,9 +376,9 @@ export default function CurrentRound({ loggedInCaptain }) {
                 </div>
               </div>
             </div>
-            
+
             <div className="p-4 border-t border-zinc-150 flex justify-end bg-zinc-50">
-              <button 
+              <button
                 onClick={() => setShowDetailsModal(false)}
                 className="px-4 py-2 bg-zinc-900 hover:bg-zinc-850 text-white rounded-lg text-[10.5px] font-black uppercase tracking-wider transition-smooth cursor-pointer"
               >

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ArrowRight, Check, Shield, X, Users, Award } from 'lucide-react';
+import { ArrowRight, Shield, X, Award } from 'lucide-react';
 
 export default function CaptainTable({ loggedInCaptain, searchQuery }) {
   const [selectedRound, setSelectedRound] = useState(3);
@@ -13,44 +13,44 @@ export default function CaptainTable({ loggedInCaptain, searchQuery }) {
       { id: 'm-102', name: 'Rajesh Varma', category: 'Finance', company: 'Varma & Associates', initials: 'RV', chapter: 'South Phoenix', bniId: '#BNI-8842', bgClass: 'bg-amber-50/50 text-amber-700 border-amber-100/50' },
       { id: 'm-108', name: 'Priya Singh', category: 'Marketing', company: 'Singh Advertisers Agency', initials: 'PS', chapter: 'Alpha Chapter', bniId: '#BNI-2031', bgClass: 'bg-blue-50/50 text-blue-700 border-blue-100/50' },
       { id: 'm-109', name: 'Rahul Sharma', category: 'Software', company: 'Sharma Devs Studio', initials: 'RS', chapter: 'Alpha Chapter', bniId: '#BNI-1982', bgClass: 'bg-rose-50/50 text-rose-700 border-rose-100/50' },
-      { id: 'm-106', name: 'James Wilson', category: 'Software', company: 'CloudScale Systems Corp', initials: 'JW', chapter: 'Vista Chapter', bniId: '#BNI-3398', bgClass: 'bg-blue-50/50 text-blue-700 border-blue-100/50' },
-      { id: 'm-105', name: 'Maria Gomez', category: 'Manufacturing', company: 'Precision Parts Inc', initials: 'MG', chapter: 'Phoenix Chapter', bniId: '#BNI-1029', bgClass: 'bg-rose-50/50 text-rose-700 border-rose-100/50' }
+      { id: 'm-106', name: 'Jagdish Wagle', category: 'Software', company: 'CloudScale Systems Corp', initials: 'JW', chapter: 'Vista Chapter', bniId: '#BNI-3398', bgClass: 'bg-blue-50/50 text-blue-700 border-blue-100/50' },
+      { id: 'm-105', name: 'Meera Gupta', category: 'Manufacturing', company: 'Precision Parts Inc', initials: 'MG', chapter: 'Phoenix Chapter', bniId: '#BNI-1029', bgClass: 'bg-rose-50/50 text-rose-700 border-rose-100/50' }
     ],
     2: [
-      { id: 'm-103', name: 'Sarah Jenkins', category: 'Construction', company: 'BuildRight Solutions', initials: 'SJ', chapter: 'Phoenix Chapter', bniId: '#BNI-7731', bgClass: 'bg-emerald-50/50 text-emerald-700 border-emerald-100/50' },
+      { id: 'm-103', name: 'Sanjay Joshi', category: 'Construction', company: 'BuildRight Solutions', initials: 'SJ', chapter: 'Phoenix Chapter', bniId: '#BNI-7731', bgClass: 'bg-emerald-50/50 text-emerald-700 border-emerald-100/50' },
       { id: 'm-110', name: 'Vikram Mehta', category: 'Finance', company: 'Prudent Fin Advisors', initials: 'VM', chapter: 'Alpha Chapter', bniId: '#BNI-6610', bgClass: 'bg-amber-50/50 text-amber-700 border-amber-100/50' },
       { id: 'm-111', name: 'Ananya Roy', category: 'Healthcare', company: 'HealthFirst Clinics', initials: 'AR', chapter: 'Unity Chapter', bniId: '#BNI-3301', bgClass: 'bg-purple-50/50 text-purple-700 border-purple-100/50' },
       { id: 'm-101', name: 'Anita Sharma', category: 'Software', company: 'Blue Lotus Architecture', initials: 'AS', chapter: 'Phoenix Chapter', bniId: '#BNI-9921', bgClass: 'bg-blue-50/50 text-blue-700 border-blue-100/50' },
       { id: 'm-102', name: 'Rajesh Varma', category: 'Finance', company: 'Varma & Associates', initials: 'RV', chapter: 'South Phoenix', bniId: '#BNI-8842', bgClass: 'bg-amber-50/50 text-amber-700 border-amber-100/50' },
-      { id: 'm-106', name: 'James Wilson', category: 'Software', company: 'CloudScale Systems Corp', initials: 'JW', chapter: 'Vista Chapter', bniId: '#BNI-3398', bgClass: 'bg-blue-50/50 text-blue-700 border-blue-100/50' }
+      { id: 'm-106', name: 'Jagdish Wagle', category: 'Software', company: 'CloudScale Systems Corp', initials: 'JW', chapter: 'Vista Chapter', bniId: '#BNI-3398', bgClass: 'bg-blue-50/50 text-blue-700 border-blue-100/50' }
     ],
     3: [
       { id: 'm-101', name: 'Anita Sharma', category: 'Software', company: 'Blue Lotus Architecture', initials: 'AS', chapter: 'Phoenix Chapter', bniId: '#BNI-9921', bgClass: 'bg-blue-50/50 text-blue-700 border-blue-100/50' },
       { id: 'm-102', name: 'Rajesh Varma', category: 'Finance', company: 'Varma & Associates', initials: 'RV', chapter: 'South Phoenix', bniId: '#BNI-8842', bgClass: 'bg-amber-50/50 text-amber-700 border-amber-100/50' },
-      { id: 'm-103', name: 'Sarah Jenkins', category: 'Construction', company: 'BuildRight Solutions', initials: 'SJ', chapter: 'Phoenix Chapter', bniId: '#BNI-7731', bgClass: 'bg-emerald-50/50 text-emerald-700 border-emerald-100/50' },
-      { id: 'm-104', name: 'David Chen', category: 'Healthcare', company: 'Apex Medical Group', initials: 'DC', chapter: 'Downtown Chapter', bniId: '#BNI-4412', bgClass: 'bg-purple-50/50 text-purple-700 border-purple-100/50' },
-      { id: 'm-105', name: 'Maria Gomez', category: 'Manufacturing', company: 'Precision Parts Inc', initials: 'MG', chapter: 'Phoenix Chapter', bniId: '#BNI-1029', bgClass: 'bg-rose-50/50 text-rose-700 border-rose-100/50' },
-      { id: 'm-106', name: 'James Wilson', category: 'Software', company: 'CloudScale Systems Corp', initials: 'JW', chapter: 'Vista Chapter', bniId: '#BNI-3398', bgClass: 'bg-blue-50/50 text-blue-700 border-blue-100/50' }
+      { id: 'm-103', name: 'Sanjay Joshi', category: 'Construction', company: 'BuildRight Solutions', initials: 'SJ', chapter: 'Phoenix Chapter', bniId: '#BNI-7731', bgClass: 'bg-emerald-50/50 text-emerald-700 border-emerald-100/50' },
+      { id: 'm-104', name: 'Deepak Chawla', category: 'Healthcare', company: 'Apex Medical Group', initials: 'DC', chapter: 'Downtown Chapter', bniId: '#BNI-4412', bgClass: 'bg-purple-50/50 text-purple-700 border-purple-100/50' },
+      { id: 'm-105', name: 'Meera Gupta', category: 'Manufacturing', company: 'Precision Parts Inc', initials: 'MG', chapter: 'Phoenix Chapter', bniId: '#BNI-1029', bgClass: 'bg-rose-50/50 text-rose-700 border-rose-100/50' },
+      { id: 'm-106', name: 'Jagdish Wagle', category: 'Software', company: 'CloudScale Systems Corp', initials: 'JW', chapter: 'Vista Chapter', bniId: '#BNI-3398', bgClass: 'bg-blue-50/50 text-blue-700 border-blue-100/50' }
     ],
     4: [
       { id: 'm-109', name: 'Rahul Sharma', category: 'Software', company: 'Sharma Devs Studio', initials: 'RS', chapter: 'Alpha Chapter', bniId: '#BNI-1982', bgClass: 'bg-rose-50/50 text-rose-700 border-rose-100/50' },
-      { id: 'm-103', name: 'Sarah Jenkins', category: 'Construction', company: 'BuildRight Solutions', initials: 'SJ', chapter: 'Phoenix Chapter', bniId: '#BNI-7731', bgClass: 'bg-emerald-50/50 text-emerald-700 border-emerald-100/50' },
+      { id: 'm-103', name: 'Sanjay Joshi', category: 'Construction', company: 'BuildRight Solutions', initials: 'SJ', chapter: 'Phoenix Chapter', bniId: '#BNI-7731', bgClass: 'bg-emerald-50/50 text-emerald-700 border-emerald-100/50' },
       { id: 'm-110', name: 'Vikram Mehta', category: 'Finance', company: 'Prudent Fin Advisors', initials: 'VM', chapter: 'Alpha Chapter', bniId: '#BNI-6610', bgClass: 'bg-amber-50/50 text-amber-700 border-amber-100/50' },
       { id: 'm-111', name: 'Ananya Roy', category: 'Healthcare', company: 'HealthFirst Clinics', initials: 'AR', chapter: 'Unity Chapter', bniId: '#BNI-3301', bgClass: 'bg-purple-50/50 text-purple-700 border-purple-100/50' },
-      { id: 'm-104', name: 'David Chen', category: 'Healthcare', company: 'Apex Medical Group', initials: 'DC', chapter: 'Downtown Chapter', bniId: '#BNI-4412', bgClass: 'bg-purple-50/50 text-purple-700 border-purple-100/50' },
+      { id: 'm-104', name: 'Deepak Chawla', category: 'Healthcare', company: 'Apex Medical Group', initials: 'DC', chapter: 'Downtown Chapter', bniId: '#BNI-4412', bgClass: 'bg-purple-50/50 text-purple-700 border-purple-100/50' },
       { id: 'm-108', name: 'Priya Singh', category: 'Marketing', company: 'Singh Advertisers Agency', initials: 'PS', chapter: 'Alpha Chapter', bniId: '#BNI-2031', bgClass: 'bg-blue-50/50 text-blue-700 border-blue-100/50' },
       { id: 'm-107', name: 'Amit Patel', category: 'Retail', company: 'Patel Merchants Ltd', initials: 'AP', chapter: 'Vista Chapter', bniId: '#BNI-5112', bgClass: 'bg-emerald-50/50 text-emerald-700 border-emerald-100/50' }
     ],
     5: [
       { id: 'm-101', name: 'Anita Sharma', category: 'Software', company: 'Blue Lotus Architecture', initials: 'AS', chapter: 'Phoenix Chapter', bniId: '#BNI-9921', bgClass: 'bg-blue-50/50 text-blue-700 border-blue-100/50' },
-      { id: 'm-104', name: 'David Chen', category: 'Healthcare', company: 'Apex Medical Group', initials: 'DC', chapter: 'Downtown Chapter', bniId: '#BNI-4412', bgClass: 'bg-purple-50/50 text-purple-700 border-purple-100/50' },
-      { id: 'm-105', name: 'Maria Gomez', category: 'Manufacturing', company: 'Precision Parts Inc', initials: 'MG', chapter: 'Phoenix Chapter', bniId: '#BNI-1029', bgClass: 'bg-rose-50/50 text-rose-700 border-rose-100/50' },
+      { id: 'm-104', name: 'Deepak Chawla', category: 'Healthcare', company: 'Apex Medical Group', initials: 'DC', chapter: 'Downtown Chapter', bniId: '#BNI-4412', bgClass: 'bg-purple-50/50 text-purple-700 border-purple-100/50' },
+      { id: 'm-105', name: 'Meera Gupta', category: 'Manufacturing', company: 'Precision Parts Inc', initials: 'MG', chapter: 'Phoenix Chapter', bniId: '#BNI-1029', bgClass: 'bg-rose-50/50 text-rose-700 border-rose-100/50' },
       { id: 'm-109', name: 'Rahul Sharma', category: 'Software', company: 'Sharma Devs Studio', initials: 'RS', chapter: 'Alpha Chapter', bniId: '#BNI-1982', bgClass: 'bg-rose-50/50 text-rose-700 border-rose-100/50' },
       { id: 'm-110', name: 'Vikram Mehta', category: 'Finance', company: 'Prudent Fin Advisors', initials: 'VM', chapter: 'Alpha Chapter', bniId: '#BNI-6610', bgClass: 'bg-amber-50/50 text-amber-700 border-amber-100/50' }
     ],
     6: [
       { id: 'm-102', name: 'Rajesh Varma', category: 'Finance', company: 'Varma & Associates', initials: 'RV', chapter: 'South Phoenix', bniId: '#BNI-8842', bgClass: 'bg-amber-50/50 text-amber-700 border-amber-100/50' },
-      { id: 'm-103', name: 'Sarah Jenkins', category: 'Construction', company: 'BuildRight Solutions', initials: 'SJ', chapter: 'Phoenix Chapter', bniId: '#BNI-7731', bgClass: 'bg-emerald-50/50 text-emerald-700 border-emerald-100/50' },
+      { id: 'm-103', name: 'Sanjay Joshi', category: 'Construction', company: 'BuildRight Solutions', initials: 'SJ', chapter: 'Phoenix Chapter', bniId: '#BNI-7731', bgClass: 'bg-emerald-50/50 text-emerald-700 border-emerald-100/50' },
       { id: 'm-111', name: 'Ananya Roy', category: 'Healthcare', company: 'HealthFirst Clinics', initials: 'AR', chapter: 'Unity Chapter', bniId: '#BNI-3301', bgClass: 'bg-purple-50/50 text-purple-700 border-purple-100/50' },
       { id: 'm-108', name: 'Priya Singh', category: 'Marketing', company: 'Singh Advertisers Agency', initials: 'PS', chapter: 'Alpha Chapter', bniId: '#BNI-2031', bgClass: 'bg-blue-50/50 text-blue-700 border-blue-100/50' },
       { id: 'm-107', name: 'Amit Patel', category: 'Retail', company: 'Patel Merchants Ltd', initials: 'AP', chapter: 'Vista Chapter', bniId: '#BNI-5112', bgClass: 'bg-emerald-50/50 text-emerald-700 border-emerald-100/50' }
@@ -80,7 +80,7 @@ export default function CaptainTable({ loggedInCaptain, searchQuery }) {
 
   return (
     <div className="space-y-6 animate-fade-in font-sans">
-      
+
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-zinc-200 pb-5">
         <div>
@@ -89,7 +89,7 @@ export default function CaptainTable({ loggedInCaptain, searchQuery }) {
             View your assigned table and participants for each networking round.
           </p>
         </div>
-        
+
         <div className="flex gap-2">
           <span className={`px-3 py-1 rounded-full text-[10px] font-black tracking-wider uppercase border shadow-2xs ${currentStatus.bg}`}>
             {currentStatus.text} (Round {selectedRound})
@@ -132,16 +132,15 @@ export default function CaptainTable({ loggedInCaptain, searchQuery }) {
           const roundNum = i + 1;
           const isCompleted = roundNum < 3;
           const isActive = roundNum === selectedRound;
-          
+
           return (
             <button
               key={r}
               onClick={() => setSelectedRound(roundNum)}
-              className={`flex-1 min-w-[100px] flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg text-[10.5px] font-black uppercase tracking-wider transition-smooth cursor-pointer ${
-                isActive
+              className={`flex-1 min-w-[100px] flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg text-[10.5px] font-black uppercase tracking-wider transition-smooth cursor-pointer ${isActive
                   ? 'bg-brand-red text-white shadow-md shadow-brand-red/10'
                   : 'text-zinc-555 hover:bg-zinc-200 hover:text-zinc-850 bg-white/50 border border-zinc-200/40'
-              }`}
+                }`}
             >
               {isCompleted && (
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
@@ -157,7 +156,7 @@ export default function CaptainTable({ loggedInCaptain, searchQuery }) {
 
       {/* Main Split Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        
+
         {/* Left Column (Occupancy & Cards) */}
         <div className="lg:col-span-9 space-y-6">
           {/* Table Capacity Card */}
@@ -174,14 +173,14 @@ export default function CaptainTable({ loggedInCaptain, searchQuery }) {
                 <p className="text-[10px] text-zinc-400 font-semibold leading-none mt-1">{filteredMembers.length} of 8 Seats</p>
               </div>
             </div>
-            
+
             <div className="w-full bg-zinc-50 rounded-full h-2.5 mb-3 overflow-hidden border border-zinc-150">
-              <div 
+              <div
                 className="bg-brand-red h-full rounded-full transition-all duration-700 ease-out shadow-inner"
                 style={{ width: `${(filteredMembers.length / 8) * 100}%` }}
               ></div>
             </div>
-            
+
             <div className="flex justify-between text-[9px] text-zinc-400 font-bold uppercase tracking-wider">
               <span>Optimal Seating: 8 Members Max</span>
               <span>Diversity Index: Excellent</span>
@@ -204,7 +203,7 @@ export default function CaptainTable({ loggedInCaptain, searchQuery }) {
                     <div className="w-11 h-11 rounded-lg bg-zinc-50 border border-zinc-200 flex items-center justify-center font-bold text-sm text-zinc-450 shrink-0 shadow-inner">
                       {member.initials}
                     </div>
-                    
+
                     <div className="min-w-0 flex-1 space-y-1">
                       <h4 className="text-[13px] font-black text-zinc-800 truncate leading-tight">{member.name}</h4>
                       <span className={`inline-block px-2 py-0.5 rounded-[4px] text-[8px] font-black uppercase border tracking-wider leading-none ${member.bgClass}`}>
@@ -214,7 +213,7 @@ export default function CaptainTable({ loggedInCaptain, searchQuery }) {
                       <p className="text-[10.5px] text-zinc-450 font-semibold truncate leading-normal mt-0.5">{member.company}</p>
                     </div>
                   </div>
-                  
+
                   <div className="pt-3 border-t border-zinc-100 flex justify-between items-center text-[10px]">
                     <span className="text-zinc-400 font-extrabold uppercase text-[9px] tracking-wide">{member.chapter}</span>
                     <span className="text-brand-red bg-red-50/50 border border-red-100 px-2 py-0.5 rounded font-mono font-bold leading-none">
@@ -256,9 +255,8 @@ export default function CaptainTable({ loggedInCaptain, searchQuery }) {
                   {step.active ? (
                     <div className="absolute -left-[23.5px] top-1 w-3 h-3 rounded-full bg-brand-red border-2 border-white ring-4 ring-red-100 animate-pulse z-10"></div>
                   ) : (
-                    <div className={`absolute -left-[22px] top-1.5 w-2 h-2 rounded-full border border-white z-10 ${
-                      step.done ? 'bg-emerald-500' : 'bg-zinc-200'
-                    }`}></div>
+                    <div className={`absolute -left-[22px] top-1.5 w-2 h-2 rounded-full border border-white z-10 ${step.done ? 'bg-emerald-500' : 'bg-zinc-200'
+                      }`}></div>
                   )}
                   <p className={`text-[11.5px] font-bold leading-none ${step.active ? 'text-brand-red font-black' : 'text-zinc-800'}`}>{step.label}</p>
                   <p className="text-[9.5px] text-zinc-400 font-semibold mt-1">{step.time}</p>
@@ -289,7 +287,7 @@ export default function CaptainTable({ loggedInCaptain, searchQuery }) {
             <p className="text-[10px] text-zinc-400 font-semibold leading-none">Start Time</p>
             <p className="font-black text-zinc-800 text-[12px] mt-1.5">10:45 AM</p>
           </div>
-          <button 
+          <button
             onClick={() => setShowPreviewModal(true)}
             className="bg-zinc-900 border border-zinc-800 text-white hover:bg-zinc-850 px-4.5 py-2.5 rounded-lg text-[10.5px] font-black uppercase tracking-wider transition-smooth shadow-sm cursor-pointer"
           >
@@ -307,20 +305,20 @@ export default function CaptainTable({ loggedInCaptain, searchQuery }) {
                 <Award className="w-4 h-4 text-brand-red" />
                 <h3 className="font-black text-zinc-955 text-body-md">Round 4 Table Seating Preview</h3>
               </div>
-              <button 
+              <button
                 onClick={() => setShowPreviewModal(false)}
                 className="text-zinc-400 hover:text-zinc-700 p-1 rounded-lg hover:bg-zinc-200/50 transition-smooth cursor-pointer"
               >
                 <X className="w-4.5 h-4.5" />
               </button>
             </div>
-            
+
             <div className="p-5 overflow-y-auto space-y-4">
               <div className="flex justify-between items-center bg-red-50/50 border border-red-100 p-3 rounded-lg text-[11.5px] font-semibold text-brand-red">
                 <span>Migration Target: Table 5</span>
                 <span>Expected Occupancy: 7 / 8 Seats</span>
               </div>
-              
+
               <div className="space-y-2.5">
                 <span className="text-[9.5px] font-black text-zinc-450 uppercase tracking-wider block">Incoming Members Grid</span>
                 <div className="space-y-2">
@@ -345,9 +343,9 @@ export default function CaptainTable({ loggedInCaptain, searchQuery }) {
                 </div>
               </div>
             </div>
-            
+
             <div className="p-4 border-t border-zinc-150 flex justify-end bg-zinc-50">
-              <button 
+              <button
                 onClick={() => setShowPreviewModal(false)}
                 className="px-4 py-2 bg-zinc-900 hover:bg-zinc-850 text-white rounded-lg text-[10.5px] font-black uppercase tracking-wider transition-smooth cursor-pointer"
               >
