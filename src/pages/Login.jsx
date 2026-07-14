@@ -97,7 +97,13 @@ export default function Login({ onLogin }) {
     setTimeout(() => {
       setIsLoading(false);
       
-      if (role === 'admin') {
+      if (role === 'superadmin') {
+        if (inputVal.toLowerCase() === 'superadmin@bni.com' && password === 'password') {
+          onLogin && onLogin('superadmin', null);
+        } else {
+          setError('Invalid superadministrator credentials.');
+        }
+      } else if (role === 'admin') {
         if (inputVal.toLowerCase() === 'admin@bni.com' && password === 'password') {
           onLogin && onLogin('admin', null);
         } else {
@@ -209,6 +215,21 @@ export default function Login({ onLogin }) {
 
           {/* Role Switcher Tabs */}
           <div className="flex border-b border-zinc-150">
+            <button
+              type="button"
+              onClick={() => {
+                setRole('superadmin');
+                setInputVal('superadmin@bni.com');
+                setError('');
+              }}
+              className={`flex-1 pb-3 text-[10px] font-black uppercase tracking-wider transition-smooth cursor-pointer ${
+                role === 'superadmin'
+                  ? 'border-b-2 border-brand-red text-brand-red font-black'
+                  : 'text-zinc-400 hover:text-zinc-755'
+              }`}
+            >
+              Superadmin
+            </button>
             <button
               type="button"
               onClick={() => {

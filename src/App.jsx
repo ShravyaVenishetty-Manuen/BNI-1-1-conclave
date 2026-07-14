@@ -23,6 +23,7 @@ import MemberCurrentRound from './pages/member/CurrentRound';
 import MemberConclaveHistory from './pages/member/ConclaveHistory';
 import MemberProfile from './pages/member/Profile';
 import { Sparkles } from 'lucide-react';
+import SuperadminLayout from './components/SuperadminLayout';
 
 export default function App() {
   // Read logged in status from localStorage
@@ -33,6 +34,7 @@ export default function App() {
   // Read logged in user's role from localStorage
   const [userRole, setUserRole] = useState(() => {
     const path = window.location.pathname.replace(/^\/|\/$/g, '');
+    if (path.startsWith('superadmin')) return 'superadmin';
     if (path.startsWith('captain')) return 'captain';
     if (path.startsWith('member')) return 'member';
     if (path.startsWith('admin')) return 'admin';
@@ -54,6 +56,7 @@ export default function App() {
   // Read active tab path directly from window URL pathname
   const [activeTab, setActiveTab] = useState(() => {
     const path = window.location.pathname.replace(/^\/|\/$/g, '');
+    if (path.startsWith('superadmin/')) return path.replace('superadmin/', '');
     if (path.startsWith('admin/')) return path.replace('admin/', '');
     if (path.startsWith('captain/')) return path.replace('captain/', '');
     if (path.startsWith('member/')) return path.replace('member/', '');
@@ -68,7 +71,9 @@ export default function App() {
   // Handle URL updates when switching tabs
   const handleTabChange = (tabId) => {
     setActiveTab(tabId);
-    if (userRole === 'admin') {
+    if (userRole === 'superadmin') {
+      window.history.pushState({}, '', `/superadmin/${tabId}`);
+    } else if (userRole === 'admin') {
       window.history.pushState({}, '', `/admin/${tabId}`);
     } else if (userRole === 'captain') {
       window.history.pushState({}, '', `/captain/${tabId}`);
@@ -81,7 +86,10 @@ export default function App() {
   useEffect(() => {
     const handlePopState = () => {
       const path = window.location.pathname.replace(/^\/|\/$/g, '');
-      if (path.startsWith('admin/')) {
+      if (path.startsWith('superadmin/')) {
+        setUserRole('superadmin');
+        setActiveTab(path.replace('superadmin/', ''));
+      } else if (path.startsWith('admin/')) {
         setUserRole('admin');
         setActiveTab(path.replace('admin/', ''));
       } else if (path.startsWith('captain/')) {
@@ -90,6 +98,9 @@ export default function App() {
       } else if (path.startsWith('member/')) {
         setUserRole('member');
         setActiveTab(path.replace('member/', ''));
+      } else if (path === 'superadmin') {
+        setUserRole('superadmin');
+        setActiveTab('dashboard');
       } else if (path === 'captain') {
         setUserRole('captain');
         setActiveTab('dashboard');
@@ -199,6 +210,21 @@ export default function App() {
   // If not logged in, render only the Login page
   if (!isLoggedIn) {
     return <Login onLogin={handleLogin} />;
+  }
+
+  // If logged in as a Superadmin, render the Superadmin portal layout directly
+  if (userRole === 'superadmin') {
+    return (
+      <SuperadminLayout
+        activeTab={activeTab}
+        setActiveTab={handleTabChangeResponsive}
+        onLogout={handleLogout}
+        isSidebarOpen={isSidebarOpen}
+        setIsSidebarOpen={setIsSidebarOpen}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+      />
+    );
   }
 
   // If logged in as a Captain, render the Captain Dashboard directly

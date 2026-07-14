@@ -237,3 +237,40 @@ export const captainScheduleItems = [
   }
 ];
 
+// 8. Superadmin mock datasets
+export const mockRegions = [
+  { id: "reg-1", name: "Guntur Region", membersCount: 142, conclavesCount: 5, status: "Active" },
+  { id: "reg-2", name: "Phoenix Chapter", membersCount: 220, conclavesCount: 3, status: "Active" },
+  { id: "reg-3", name: "London Central", membersCount: 310, conclavesCount: 4, status: "Active" },
+  { id: "reg-4", name: "Singapore Metro", membersCount: 170, conclavesCount: 2, status: "Active" }
+];
+
+export const mockAdmins = [
+  { id: "adm-1", name: "Sanjay Wagle", email: "guntur.admin@bni.com", mobile: "9876543220", region: "Guntur Region", status: "Active" },
+  { id: "adm-2", name: "Ananya Sen", email: "phoenix.admin@bni.com", mobile: "9876543221", region: "Phoenix Chapter", status: "Active" },
+  { id: "adm-3", name: "Vikram Reddy", email: "london.admin@bni.com", mobile: "9876543222", region: "London Central", status: "Active" },
+  { id: "adm-4", name: "Meera Nair", email: "singapore.admin@bni.com", mobile: "9876543223", region: "Singapore Metro", status: "Inactive" }
+];
+
+export const mockGlobalConclaves = [
+  { id: "c-101", title: "Annual Business Conclave 2026", region: "Guntur Region", creator: "Sanjay Wagle", venue: "V Convention, Guntur", date: "Jan 14, 2026", status: "Completed", tablesCount: 24, membersCount: 120 },
+  { id: "c-102", title: "Quarterly Synergy Q1", region: "Guntur Region", creator: "Sanjay Wagle", venue: "Grand Convention Hall, Guntur", date: "Jul 20, 2026", status: "Active", tablesCount: 12, membersCount: 68 },
+  { id: "c-103", title: "Regional Directors Meet 2026", region: "Phoenix Chapter", creator: "Ananya Sen", venue: "Hyatt Regency, Phoenix", date: "Feb 10, 2026", status: "Completed", tablesCount: 16, membersCount: 84 },
+  { id: "c-104", title: "National Conclave 2026", region: "London Central", creator: "Vikram Reddy", venue: "Grand Hyatt, London", date: "Oct 12, 2026", status: "Upcoming", tablesCount: 30, membersCount: 180 },
+  { id: "c-105", title: "Quarterly Synergy Q2", region: "London Central", creator: "Vikram Reddy", venue: "Convention Hall, London", date: "Apr 15, 2026", status: "Completed", tablesCount: 20, membersCount: 95 },
+  { id: "c-106", title: "Singapore Business Summit 2026", region: "Singapore Metro", creator: "Meera Nair", venue: "Marina Bay Sands, SG", date: "Nov 05, 2026", status: "Upcoming", tablesCount: 24, membersCount: 130 }
+];
+
+export const mockGlobalMembers = [
+  { id: "m-201", name: "Anjali Sharma", category: "IT Infrastructure", company: "Zenith Systems", chapter: "Apex Chapter", region: "Guntur Region" },
+  { id: "m-202", name: "Manish Tiwari", category: "Real Estate", company: "Prime Realty Group", chapter: "Apex Chapter", region: "Guntur Region" },
+  { id: "m-203", name: "Anita Rao", category: "Digital Marketing", company: "Spark Media", chapter: "Prosperity Chapter", region: "Guntur Region" },
+  { id: "m-204", name: "Deepak Chawla", category: "Supply Chain", company: "Logistics Pro", chapter: "Prosperity Chapter", region: "Guntur Region" },
+  { id: "m-205", name: "Ekta Ramachandran", category: "Law & Legal", company: "Rodriguez Partners", chapter: "Phoenix Central", region: "Phoenix Chapter" },
+  { id: "m-206", name: "Ganesh Viswanathan", category: "Financial Planning", company: "WealthWise Advisors", chapter: "Phoenix Central", region: "Phoenix Chapter" },
+  { id: "m-207", name: "Siddharth Mehta", category: "Commercial Realty", company: "Mehta Developers", chapter: "London Central Elite", region: "London Central" },
+  { id: "m-208", name: "Priya Nair", category: "Wealth Management", company: "Nair Finance", chapter: "London Central Elite", region: "London Central" },
+  { id: "m-209", name: "Kunal Shah", category: "Digital Marketing", company: "Shah Marketing Agency", chapter: "Singapore Prosperity", region: "Singapore Metro" },
+  { id: "m-210", name: "Sneha Reddy", category: "Logistics", company: "Reddy Shipping", chapter: "Singapore Prosperity", region: "Singapore Metro" }
+];
+
