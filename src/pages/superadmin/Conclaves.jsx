@@ -5,7 +5,10 @@ import {
   Layers,
   Users,
   Award,
-  Eye
+  Eye,
+  ArrowLeft,
+  User,
+  MapPin
 } from 'lucide-react';
 import { mockGlobalConclaves, mockRegions } from '../../data/mockConclaveData';
 
@@ -13,6 +16,15 @@ export default function SuperadminConclaves({ searchQuery }) {
   const [selectedStatus, setSelectedStatus] = useState('All');
   const [selectedRegion, setSelectedRegion] = useState('All');
   const [activeConclave, setActiveConclave] = useState(null);
+
+  if (activeConclave) {
+    return (
+      <ConclaveDetailView 
+        conclave={activeConclave}
+        onBack={() => setActiveConclave(null)}
+      />
+    );
+  }
 
   // Filter lists
   const filteredConclaves = mockGlobalConclaves.filter(conclave => {
@@ -27,7 +39,7 @@ export default function SuperadminConclaves({ searchQuery }) {
     <div className="space-y-6 animate-fade-in font-sans pb-16 relative">
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-zinc-200 pb-5">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4">
         <div className="space-y-1">
           <h1 className="text-2xl font-black text-zinc-955 tracking-tight">Global Conclaves</h1>
           <p className="text-xs text-zinc-500 font-semibold">Oversight of conclaves created across all regions and administrator hubs.</p>
@@ -130,104 +142,225 @@ export default function SuperadminConclaves({ searchQuery }) {
         </div>
       </section>
 
-      {/* Conclave detail drawer */}
-      {activeConclave && (
-        <>
-          <div
-            onClick={() => setActiveConclave(null)}
-            className="fixed inset-0 bg-black/50 z-[55] transition-opacity duration-300"
-          />
-          <div className="fixed inset-y-0 right-0 w-full max-w-lg bg-white shadow-xl z-[60] p-6 overflow-y-auto border-l border-zinc-200 animate-slide-in flex flex-col justify-between">
-            <div className="space-y-6">
-              <div className="flex justify-between items-center pb-4 border-b border-zinc-200">
-                <div>
-                  <h2 className="text-base font-black text-zinc-900 leading-tight">Conclave Event overview</h2>
-                  <p className="text-[10px] text-zinc-450 font-semibold mt-0.5">Conclave ID: {activeConclave.id}</p>
-                </div>
-                <button
-                  onClick={() => setActiveConclave(null)}
-                  className="p-1.5 rounded-full hover:bg-zinc-100 text-zinc-455"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
+    </div>
+  );
+}
 
-              <div className="space-y-5">
-                <div className="flex items-center gap-3.5 bg-zinc-50 p-4 rounded-xl border border-zinc-200">
-                  <div className="w-12 h-12 rounded-full bg-brand-red/10 text-brand-red flex items-center justify-center">
-                    <Calendar className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h3 className="text-[13.5px] font-black text-zinc-900 leading-none">{activeConclave.title}</h3>
-                    <p className="text-[10px] text-zinc-450 font-bold uppercase tracking-wider mt-1">{activeConclave.region}</p>
-                  </div>
-                </div>
+function ConclaveDetailView({ conclave, onBack }) {
+  // Mock table seating structure
+  const mockTableSeating = [
+    {
+      id: "tbl-1",
+      number: "01",
+      captain: "Rohan Wagle",
+      members: [
+        { name: "Anjali Sharma", category: "IT Infrastructure", company: "Zenith Systems", chapter: "Apex Chapter" },
+        { name: "Manish Tiwari", category: "Real Estate", company: "Prime Realty Group", chapter: "Apex Chapter" },
+        { name: "Anita Rao", category: "Digital Marketing", company: "Spark Media", chapter: "Prosperity Chapter" },
+        { name: "Deepak Chawla", category: "Supply Chain", company: "Logistics Pro", chapter: "Prosperity Chapter" }
+      ]
+    },
+    {
+      id: "tbl-2",
+      number: "02",
+      captain: "Sanjay Joshi",
+      members: [
+        { name: "Meera Nair", category: "Business Consultant", company: "Nair & Associates", chapter: "Apex Chapter" },
+        { name: "Suresh Pillai", category: "Financial Services", company: "Pillai Wealth", chapter: "Prosperity Chapter" },
+        { name: "Ramesh Kumar", category: "Legal Advisory", company: "Kumar Law", chapter: "Phoenix Central" },
+        { name: "Vikram Sen", category: "Retail Distribution", company: "Sen Retailers", chapter: "London Central Elite" }
+      ]
+    },
+    {
+      id: "tbl-3",
+      number: "03",
+      captain: "John Doe",
+      members: [
+        { name: "Ekta Ramachandran", category: "Law & Legal", company: "Rodriguez Partners", chapter: "Phoenix Central" },
+        { name: "Ganesh Viswanathan", category: "Financial Planning", company: "WealthWise Advisors", chapter: "Phoenix Central" },
+        { name: "Siddharth Mehta", category: "Commercial Realty", company: "Mehta Developers", chapter: "London Central Elite" },
+        { name: "Priya Nair", category: "Wealth Management", company: "Nair Finance", chapter: "London Central Elite" }
+      ]
+    },
+    {
+      id: "tbl-4",
+      number: "04",
+      captain: "Jane Smith",
+      members: [
+        { name: "Kunal Shah", category: "Digital Marketing", company: "Shah Marketing Agency", chapter: "Singapore Prosperity" },
+        { name: "Sneha Reddy", category: "Logistics", company: "Reddy Shipping", chapter: "Singapore Prosperity" },
+        { name: "Amit Patel", category: "Software Development", company: "Patel Solutions", chapter: "Apex Chapter" },
+        { name: "Neha Gupta", category: "Human Resources", company: "Gupta Consultants", chapter: "Prosperity Chapter" }
+      ]
+    }
+  ];
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-3.5 bg-white border border-zinc-200 rounded-xl shadow-2xs">
-                    <span className="text-[9px] font-black text-zinc-400 uppercase tracking-wider block">Venue Place</span>
-                    <span className="text-body-sm font-bold text-zinc-800 mt-1 block truncate">{activeConclave.venue}</span>
-                  </div>
-                  <div className="p-3.5 bg-white border border-zinc-200 rounded-xl shadow-2xs">
-                    <span className="text-[9px] font-black text-zinc-400 uppercase tracking-wider block">Creator Admin</span>
-                    <span className="text-body-sm font-bold text-zinc-800 mt-1 block truncate">{activeConclave.creator}</span>
-                  </div>
-                </div>
+  return (
+    <div className="space-y-6 animate-fade-in font-sans pb-16">
+      {/* Header with Back button */}
+      <div className="flex flex-col gap-4">
+        <button
+          onClick={onBack}
+          className="flex items-center gap-1.5 text-body-sm font-black text-brand-red uppercase tracking-wider hover:text-red-750 transition-smooth cursor-pointer self-start"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Conclaves
+        </button>
 
-                {/* Metrics */}
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="p-3.5 bg-zinc-50/50 border border-zinc-200 rounded-xl flex flex-col items-center justify-center text-center">
-                    <Layers className="w-4.5 h-4.5 text-brand-red shrink-0 mb-1" />
-                    <span className="text-[9px] font-black text-zinc-450 uppercase tracking-wider">Tables</span>
-                    <span className="text-[13px] font-black text-zinc-900 mt-0.5">{activeConclave.tablesCount} Assigned</span>
-                  </div>
-                  <div className="p-3.5 bg-zinc-50/50 border border-zinc-200 rounded-xl flex flex-col items-center justify-center text-center">
-                    <Users className="w-4.5 h-4.5 text-brand-red shrink-0 mb-1" />
-                    <span className="text-[9px] font-black text-zinc-450 uppercase tracking-wider">Checked In</span>
-                    <span className="text-[13px] font-black text-zinc-900 mt-0.5">{activeConclave.membersCount} Members</span>
-                  </div>
-                  <div className="p-3.5 bg-zinc-50/50 border border-zinc-200 rounded-xl flex flex-col items-center justify-center text-center">
-                    <Award className="w-4.5 h-4.5 text-brand-red shrink-0 mb-1" />
-                    <span className="text-[9px] font-black text-zinc-450 uppercase tracking-wider">Captains</span>
-                    <span className="text-[13px] font-black text-zinc-900 mt-0.5">8 Assigned</span>
-                  </div>
-                </div>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2.5">
+              <h1 className="text-2xl font-black text-zinc-955 tracking-tight">{conclave.title}</h1>
+              <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider whitespace-nowrap ${
+                conclave.status === 'Completed' 
+                  ? 'bg-zinc-150 text-zinc-550 border border-zinc-200' 
+                  : conclave.status === 'Active' 
+                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-150'
+                  : 'bg-red-50 text-brand-red border border-red-100'
+              }`}>
+                {conclave.status}
+              </span>
+            </div>
+            <p className="text-xs text-zinc-500 font-semibold flex items-center gap-1.5 flex-wrap">
+              <MapPin className="w-3.5 h-3.5 text-zinc-400" />
+              {conclave.venue}
+              <span className="text-zinc-300">•</span>
+              <span>Region: {conclave.region}</span>
+            </p>
+          </div>
 
-                {/* Schedule timeline outline */}
-                <div className="space-y-3">
-                  <h4 className="text-[11px] font-black text-zinc-400 uppercase tracking-widest px-0.5">Schedule &amp; Sessions</h4>
-                  <div className="border border-zinc-200 rounded-xl overflow-hidden divide-y divide-zinc-200">
-                    {[
-                      { name: "Round 1 (09:00 AM)", type: "Structured pairings 1-to-1 matching", status: "Active" },
-                      { name: "Round 2 (10:30 AM)", type: "Commercial realty niche focus session", status: "Active" },
-                      { name: "Round 3 (12:00 PM)", type: "Networking luncheon gathering", status: "Lunch" }
-                    ].map((round, idx) => (
-                      <div key={idx} className="p-3.5 flex justify-between items-center text-body-sm bg-white">
-                        <div>
-                          <p className="font-black text-zinc-800">{round.name}</p>
-                          <p className="text-[10px] text-zinc-450 font-semibold mt-0.5">{round.type}</p>
+          <div className="text-left sm:text-right">
+            <span className="text-[9px] font-black text-zinc-400 uppercase tracking-widest block">Created By</span>
+            <span className="text-body-sm font-black text-zinc-900 flex items-center sm:justify-end gap-1.5 mt-1">
+              <User className="w-4 h-4 text-zinc-400" />
+              {conclave.creator}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Stats Grid */}
+      <section className="grid grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="bg-white p-5 rounded-xl border border-zinc-200 shadow-2xs">
+          <span className="text-[9px] font-black text-zinc-400 uppercase tracking-wider block">Assigned Stations</span>
+          <span className="text-2xl font-black text-brand-red block mt-2">{conclave.tablesCount} Tables</span>
+          <span className="text-[10px] text-zinc-450 font-semibold block mt-1">Structured 1-to-1 rooms</span>
+        </div>
+        <div className="bg-white p-5 rounded-xl border border-zinc-200 shadow-2xs">
+          <span className="text-[9px] font-black text-zinc-400 uppercase tracking-wider block">Total Checked In</span>
+          <span className="text-2xl font-black text-brand-red block mt-2">{conclave.membersCount} Members</span>
+          <div className="w-full bg-zinc-150 h-1.5 rounded-full overflow-hidden mt-2">
+            <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${Math.min(100, (conclave.membersCount / (conclave.tablesCount * 4)) * 100)}%` }} />
+          </div>
+        </div>
+        <div className="bg-white p-5 rounded-xl border border-zinc-200 shadow-2xs">
+          <span className="text-[9px] font-black text-zinc-400 uppercase tracking-wider block">Table Captains</span>
+          <span className="text-2xl font-black text-brand-red block mt-2">8 Assigned</span>
+          <span className="text-[10px] text-zinc-450 font-semibold block mt-1">Monitoring active check-ins</span>
+        </div>
+        <div className="bg-white p-5 rounded-xl border border-zinc-200 shadow-2xs">
+          <span className="text-[9px] font-black text-zinc-400 uppercase tracking-wider block">Category Diversity</span>
+          <span className="text-2xl font-black text-brand-red block mt-2">12 Niches</span>
+          <span className="text-[10px] text-zinc-455 font-semibold block mt-1">Zero category collisions</span>
+        </div>
+      </section>
+
+      {/* Main Dashboard Layout Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        
+        {/* Left Column (2/3 width) - Tables Seating Map */}
+        <div className="lg:col-span-2 space-y-6">
+          <section className="bg-white border border-zinc-200 rounded-xl shadow-2xs p-5">
+            <div className="mb-4">
+              <h2 className="text-body-md font-black text-zinc-900 leading-tight">Active Seating Map</h2>
+              <p className="text-[10px] text-zinc-450 font-semibold mt-0.5">Round-by-round seat assignments and table captain details.</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {mockTableSeating.map((table) => (
+                <div key={table.id} className="border border-zinc-200 rounded-xl overflow-hidden shadow-3xs flex flex-col bg-zinc-50/20">
+                  <div className="bg-zinc-50 p-3 border-b border-zinc-200 flex justify-between items-center">
+                    <span className="text-xs font-black text-zinc-900">Station (Table {table.number})</span>
+                    <span className="text-[10px] font-bold text-zinc-550">Captain: <strong className="font-extrabold text-zinc-800">{table.captain}</strong></span>
+                  </div>
+                  
+                  <div className="p-3.5 divide-y divide-zinc-200 space-y-2.5">
+                    {table.members.map((member, mIdx) => (
+                      <div key={mIdx} className="pt-2.5 first:pt-0 flex justify-between items-start text-body-sm gap-2">
+                        <div className="min-w-0">
+                          <p className="font-bold text-zinc-800 leading-tight truncate">{member.name}</p>
+                          <p className="text-[9.5px] text-zinc-450 font-semibold leading-normal truncate">{member.company}</p>
                         </div>
-                        <span className="text-[9px] bg-zinc-50 border border-zinc-200 text-zinc-500 font-bold px-2.5 py-0.5 rounded-full">
-                          {round.status}
-                        </span>
+                        <div className="flex flex-col items-end gap-1 shrink-0">
+                          <span className="px-1.5 py-0.5 bg-red-50 text-brand-red rounded text-[8.5px] font-extrabold uppercase tracking-wide leading-none">{member.category}</span>
+                          <span className="text-[8.5px] text-zinc-400 font-bold">{member.chapter}</span>
+                        </div>
                       </div>
                     ))}
                   </div>
                 </div>
-              </div>
+              ))}
+            </div>
+          </section>
+        </div>
+
+        {/* Right Column (1/3 width) - Sessions & Action Logs */}
+        <div className="space-y-6">
+          {/* Conclave Schedule */}
+          <section className="bg-white border border-zinc-200 rounded-xl shadow-2xs p-5">
+            <div className="mb-4">
+              <h2 className="text-body-md font-black text-zinc-900 leading-tight">Schedule & Sessions</h2>
+              <p className="text-[10px] text-zinc-455 font-semibold mt-0.5">Timeline layout of rounds and agendas.</p>
             </div>
 
-            <div className="pt-6 border-t border-zinc-200">
-              <button
-                onClick={() => setActiveConclave(null)}
-                className="w-full py-2.5 bg-zinc-900 hover:bg-zinc-800 text-white text-[11px] font-black uppercase tracking-wider rounded-lg transition-smooth cursor-pointer"
-              >
-                Close View
-              </button>
+            <div className="border border-zinc-200 rounded-xl overflow-hidden divide-y divide-zinc-200">
+              {[
+                { name: "Round 1 (09:00 AM)", type: "Structured pairings 1-to-1 matching", status: "Active" },
+                { name: "Round 2 (10:30 AM)", type: "Commercial realty niche focus session", status: "Active" },
+                { name: "Round 3 (12:00 PM)", type: "Networking luncheon gathering", status: "Lunch" }
+              ].map((round, idx) => (
+                <div key={idx} className="p-3.5 flex justify-between items-center text-body-sm bg-white">
+                  <div>
+                    <p className="font-black text-zinc-800 leading-tight">{round.name}</p>
+                    <p className="text-[10px] text-zinc-450 font-semibold mt-0.5">{round.type}</p>
+                  </div>
+                  <span className="text-[9px] bg-zinc-50 border border-zinc-200 text-zinc-550 font-bold px-2.5 py-0.5 rounded-full">
+                    {round.status}
+                  </span>
+                </div>
+              ))}
             </div>
-          </div>
-        </>
-      )}
+          </section>
+
+          {/* System logs */}
+          <section className="bg-white border border-zinc-200 rounded-xl shadow-2xs p-5">
+            <div className="mb-4">
+              <h2 className="text-body-md font-black text-zinc-900 leading-tight">Conclave Operations Log</h2>
+              <p className="text-[10px] text-zinc-455 font-semibold mt-0.5">Audit log of system events for this conclave.</p>
+            </div>
+
+            <div className="space-y-3.5">
+              {[
+                { text: "Pairing matrix validated successfully", time: "09:00 AM", status: "success" },
+                { text: "Table 04 Captain Rohan Wagle triggered Round 1 timers", time: "09:05 AM", status: "info" },
+                { text: "Warning: Table 02 Captain Sanjay Joshi check-in delayed", time: "09:12 AM", status: "warning" },
+                { text: "Superadmin verified matching schedule", time: "Yesterday", status: "success" }
+              ].map((log, lIdx) => (
+                <div key={lIdx} className="flex gap-2.5 items-start text-body-sm">
+                  <div className={`w-2 h-2 rounded-full shrink-0 mt-1.5 ${
+                    log.status === 'success' ? 'bg-emerald-500' : log.status === 'warning' ? 'bg-amber-500' : 'bg-brand-red'
+                  }`} />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-zinc-800 leading-tight">{log.text}</p>
+                    <span className="text-[9.5px] text-zinc-400 font-semibold mt-0.5 block">{log.time}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+
+      </div>
 
     </div>
   );
