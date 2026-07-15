@@ -42,7 +42,7 @@ export default function SuperadminMembers({ searchQuery }) {
     <div className="space-y-6 animate-fade-in font-sans pb-16 relative">
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-zinc-200 pb-5">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4">
         <div className="space-y-1">
           <h1 className="text-2xl font-black text-zinc-955 tracking-tight">Global Members Directory</h1>
           <p className="text-xs text-zinc-500 font-semibold">Directory index of all registered BNI members across regional databases.</p>
