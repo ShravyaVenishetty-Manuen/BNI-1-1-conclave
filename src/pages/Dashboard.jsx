@@ -475,9 +475,9 @@ export default function Dashboard({ setActiveTab, selectedConclaveId, setSelecte
             <h4 className="text-title-lg text-zinc-950 font-semibold">Conclaves</h4>
             <button
               onClick={() => setActiveTab && setActiveTab('conclaves')}
-              className="text-label-sm font-bold text-brand-red hover:underline flex items-center gap-1 cursor-pointer bg-transparent border-0 outline-none"
+              className="text-[10px] font-extrabold text-brand-red uppercase tracking-wider hover:underline flex items-center gap-1 cursor-pointer bg-transparent border-0 outline-none"
             >
-              View More <ChevronRight className="w-4 h-4" />
+              View More <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
 
