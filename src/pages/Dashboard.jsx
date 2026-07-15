@@ -92,7 +92,7 @@ export default function Dashboard({ setActiveTab, selectedConclaveId, setSelecte
       }
       counts[r.fromMemberId].count++;
     });
-    return Object.values(counts).sort((a, b) => b.count - a.count).slice(0, 5);
+    return Object.values(counts).sort((a, b) => b.count - a.count).slice(0, 3);
   }, [filteredReferrals]);
 
   // Status badge styles
