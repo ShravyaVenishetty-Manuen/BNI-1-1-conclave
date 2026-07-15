@@ -56,11 +56,14 @@ export default function App() {
   // Read active tab path directly from window URL pathname
   const [activeTab, setActiveTab] = useState(() => {
     const path = window.location.pathname.replace(/^\/|\/$/g, '');
-    if (path.startsWith('superadmin/')) return path.replace('superadmin/', '');
-    if (path.startsWith('admin/')) return path.replace('admin/', '');
-    if (path.startsWith('captain/')) return path.replace('captain/', '');
-    if (path.startsWith('member/')) return path.replace('member/', '');
-    return 'dashboard';
+    const parts = path.split('/');
+    const lastPart = parts[parts.length - 1];
+    const validTabs = [
+      'dashboard', 'members', 'active-users', 'business-types', 'captains', 
+      'conclaves', 'snapshot', 'validation', 'schedule-gen', 'schedule-review', 
+      'lock-conclave', 'round-runner', 'reports', 'admins'
+    ];
+    return validTabs.includes(lastPart) ? lastPart : 'dashboard';
   });
   
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -86,34 +89,31 @@ export default function App() {
   useEffect(() => {
     const handlePopState = () => {
       const path = window.location.pathname.replace(/^\/|\/$/g, '');
-      if (path.startsWith('superadmin/')) {
+      const parts = path.split('/');
+      const lastPart = parts[parts.length - 1];
+      const validTabs = [
+        'dashboard', 'members', 'active-users', 'business-types', 'captains', 
+        'conclaves', 'snapshot', 'validation', 'schedule-gen', 'schedule-review', 
+        'lock-conclave', 'round-runner', 'reports', 'admins'
+      ];
+      const cleanTab = validTabs.includes(lastPart) ? lastPart : 'dashboard';
+
+      if (path.startsWith('superadmin/') || path.includes('/superadmin/')) {
         setUserRole('superadmin');
-        setActiveTab(path.replace('superadmin/', ''));
-      } else if (path.startsWith('admin/')) {
+        setActiveTab(cleanTab);
+      } else if (path.startsWith('admin/') || path.includes('/admin/')) {
         setUserRole('admin');
-        setActiveTab(path.replace('admin/', ''));
-      } else if (path.startsWith('captain/')) {
+        setActiveTab(cleanTab);
+      } else if (path.startsWith('captain/') || path.includes('/captain/')) {
         setUserRole('captain');
-        setActiveTab(path.replace('captain/', ''));
-      } else if (path.startsWith('member/')) {
+        setActiveTab(cleanTab);
+      } else if (path.startsWith('member/') || path.includes('/member/')) {
         setUserRole('member');
-        setActiveTab(path.replace('member/', ''));
-      } else if (path === 'superadmin') {
-        setUserRole('superadmin');
-        setActiveTab('dashboard');
-      } else if (path === 'captain') {
-        setUserRole('captain');
-        setActiveTab('dashboard');
-      } else if (path === 'member') {
-        setUserRole('member');
-        setActiveTab('dashboard');
-      } else if (path === 'admin') {
-        setUserRole('admin');
-        setActiveTab('dashboard');
+        setActiveTab(cleanTab);
       } else {
         const storedRole = localStorage.getItem('bni_user_role') || 'admin';
         setUserRole(storedRole);
-        setActiveTab('dashboard');
+        setActiveTab(cleanTab);
       }
       setIsSidebarOpen(false); // Close sidebar on nav
     };
@@ -142,6 +142,15 @@ export default function App() {
       setIsLoggedIn(true);
       setActiveTab('dashboard');
       window.history.pushState({}, '', `/member/dashboard`);
+    } else if (role === 'superadmin') {
+      localStorage.removeItem('bni_logged_captain');
+      localStorage.removeItem('bni_logged_member');
+      setLoggedInCaptain(null);
+      setLoggedInMember(null);
+      setIsLoggedIn(true);
+      const defaultTab = 'dashboard';
+      setActiveTab(defaultTab);
+      window.history.pushState({}, '', `/superadmin/${defaultTab}`);
     } else {
       localStorage.removeItem('bni_logged_captain');
       localStorage.removeItem('bni_logged_member');
@@ -182,20 +191,17 @@ export default function App() {
         if (currentPath !== expectedPath) {
           window.history.pushState({}, '', `/${expectedPath}`);
         }
-      } else {
-        // Admin URL check
-        if (currentPath.startsWith('admin/')) {
-          const tab = currentPath.replace('admin/', '');
-          if (tab !== activeTab) {
-            window.history.pushState({}, '', `/admin/${activeTab}`);
-          }
-        } else {
-          // If the URL is old/unprefixed (e.g. "dashboard", "members", "schedule-review")
-          const cleanPath = currentPath === 'login' ? '' : currentPath;
-          const targetTab = cleanPath || activeTab || 'dashboard';
-          const safeTab = targetTab.replace(/^(admin|captain|member)\//, '') || 'dashboard';
-          window.history.pushState({}, '', `/admin/${safeTab}`);
-          setActiveTab(safeTab);
+      } else if (userRole === 'superadmin') {
+        const targetTab = activeTab || 'dashboard';
+        const expectedPath = `superadmin/${targetTab}`;
+        if (currentPath !== expectedPath) {
+          window.history.pushState({}, '', `/${expectedPath}`);
+        }
+      } else if (userRole === 'admin') {
+        const targetTab = activeTab || 'dashboard';
+        const expectedPath = `admin/${targetTab}`;
+        if (currentPath !== expectedPath) {
+          window.history.pushState({}, '', `/${expectedPath}`);
         }
       }
     }
@@ -307,7 +313,7 @@ export default function App() {
       {isSidebarOpen && (
         <div
           onClick={() => setIsSidebarOpen(false)}
-          className="fixed inset-0 bg-zinc-955/40 z-45 lg:hidden transition-opacity duration-300 animate-fade-in"
+          className="fixed inset-0 bg-black/50 z-45 lg:hidden transition-opacity duration-300 animate-fade-in"
         />
       )}
 
