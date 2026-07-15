@@ -214,7 +214,7 @@ export default function Login({ onLogin }) {
           </div>
 
           {/* Role Switcher Tabs */}
-          <div className="flex border-b border-zinc-150">
+          <div className="flex border-b border-zinc-200">
             <button
               type="button"
               onClick={() => {
