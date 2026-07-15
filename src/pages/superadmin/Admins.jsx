@@ -13,7 +13,10 @@ import {
   Info,
   CalendarRange,
   Users,
-  Eye
+  Eye,
+  KeyRound,
+  Copy,
+  CheckCircle2
 } from 'lucide-react';
 import { 
   mockAdmins, 
@@ -52,6 +55,39 @@ export default function SuperadminAdmins({ searchQuery }) {
     conclavesCount: 0,
     status: 'Active'
   });
+
+  // Reset Password states
+  const [resetPasswordTarget, setResetPasswordTarget] = useState(null);
+  const [tempPassword, setTempPassword] = useState('');
+  const [isPasswordCopied, setIsPasswordCopied] = useState(false);
+  const [isPasswordResetDone, setIsPasswordResetDone] = useState(false);
+
+  const generateRandomPassword = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let randStr = '';
+    for (let i = 0; i < 6; i++) {
+      randStr += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return `BNI-R${randStr}`;
+  };
+
+  const handleOpenResetPassword = (admin) => {
+    setResetPasswordTarget(admin);
+    setTempPassword(generateRandomPassword());
+    setIsPasswordCopied(false);
+    setIsPasswordResetDone(false);
+  };
+
+  const handleCopyPassword = () => {
+    navigator.clipboard.writeText(tempPassword);
+    setIsPasswordCopied(true);
+    setTimeout(() => setIsPasswordCopied(false), 2000);
+  };
+
+  const handleConfirmReset = () => {
+    // In a real database we would update the password in db
+    setIsPasswordResetDone(true);
+  };
 
   // Filtered Lists
   const q = searchQuery ? searchQuery.toLowerCase() : '';
@@ -189,7 +225,7 @@ export default function SuperadminAdmins({ searchQuery }) {
       </div>
 
       {/* Navigation Sub-Tabs */}
-      <div className="flex gap-4 border-b border-zinc-150">
+      <div className="flex gap-4 border-b border-zinc-200">
         <button
           onClick={() => setSubTab('admins')}
           className={`pb-3 text-xs font-black uppercase tracking-wider transition-smooth cursor-pointer ${
@@ -218,7 +254,7 @@ export default function SuperadminAdmins({ searchQuery }) {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-zinc-50 border-b border-zinc-150 text-[10px] font-black text-zinc-450 uppercase tracking-wider">
+                <tr className="bg-zinc-50 border-b border-zinc-200 text-[10px] font-black text-zinc-450 uppercase tracking-wider">
                   <th className="p-4 pl-6">Admin Name</th>
                   <th className="p-4">Assigned Region</th>
                   <th className="p-4">Email</th>
@@ -227,13 +263,13 @@ export default function SuperadminAdmins({ searchQuery }) {
                   <th className="p-4 text-right pr-6">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-150 text-[12.5px] font-semibold text-zinc-700">
+              <tbody className="divide-y divide-zinc-200 text-[12.5px] font-semibold text-zinc-700">
                 {filteredAdmins.map((admin) => (
                   <tr key={admin.id} className="hover:bg-zinc-50/50 transition-colors">
                     <td className="p-4 pl-6">
                       <button 
                         onClick={() => setActiveAdmin(admin)}
-                        className="font-black text-zinc-900 hover:text-brand-red hover:underline text-left cursor-pointer"
+                        className="font-black text-zinc-900 hover:text-brand-red text-left cursor-pointer"
                       >
                         {admin.name}
                       </button>
@@ -271,6 +307,13 @@ export default function SuperadminAdmins({ searchQuery }) {
                           <Edit className="w-4 h-4" />
                         </button>
                         <button 
+                          onClick={() => handleOpenResetPassword(admin)}
+                          className="p-1.5 text-zinc-400 hover:text-brand-red transition-smooth cursor-pointer"
+                          title="Reset Password"
+                        >
+                          <KeyRound className="w-4 h-4" />
+                        </button>
+                        <button 
                           onClick={() => handleDeleteAdmin(admin.id)}
                           className="p-1.5 text-zinc-400 hover:text-brand-red transition-smooth cursor-pointer"
                           title="Delete"
@@ -290,7 +333,7 @@ export default function SuperadminAdmins({ searchQuery }) {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-zinc-50 border-b border-zinc-150 text-[10px] font-black text-zinc-450 uppercase tracking-wider">
+                <tr className="bg-zinc-50 border-b border-zinc-200 text-[10px] font-black text-zinc-450 uppercase tracking-wider">
                   <th className="p-4 pl-6">Region Name</th>
                   <th className="p-4 text-center">Conclaves Created</th>
                   <th className="p-4 text-center">Total Members</th>
@@ -298,7 +341,7 @@ export default function SuperadminAdmins({ searchQuery }) {
                   <th className="p-4 text-right pr-6">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-150 text-[12.5px] font-semibold text-zinc-700">
+              <tbody className="divide-y divide-zinc-200 text-[12.5px] font-semibold text-zinc-700">
                 {filteredRegions.map((region) => (
                   <tr key={region.id} className="hover:bg-zinc-50/50 transition-colors">
                     <td className="p-4 pl-6">
@@ -358,11 +401,11 @@ export default function SuperadminAdmins({ searchQuery }) {
         <>
           <div 
             onClick={() => setActiveAdmin(null)}
-            className="fixed inset-0 bg-zinc-950/40 backdrop-blur-xs z-40 transition-opacity duration-300"
+            className="fixed inset-0 bg-black/50 z-[55] transition-opacity duration-300"
           />
-          <div className="fixed inset-y-0 right-0 w-full max-w-lg bg-white shadow-xl z-50 p-6 overflow-y-auto border-l border-zinc-200 animate-slide-in flex flex-col justify-between">
+          <div className="fixed inset-y-0 right-0 w-full max-w-lg bg-white shadow-xl z-[60] p-6 overflow-y-auto border-l border-zinc-200 animate-slide-in flex flex-col justify-between">
             <div className="space-y-6">
-              <div className="flex justify-between items-center pb-4 border-b border-zinc-150">
+              <div className="flex justify-between items-center pb-4 border-b border-zinc-200">
                 <div>
                   <h2 className="text-base font-black text-zinc-900 leading-tight">Admin Profile details</h2>
                   <p className="text-[10px] text-zinc-450 font-semibold mt-0.5">Admin ID: {activeAdmin.id}</p>
@@ -425,7 +468,7 @@ export default function SuperadminAdmins({ searchQuery }) {
                 {/* Region Members List preview */}
                 <div className="space-y-3">
                   <h4 className="text-[11px] font-black text-zinc-400 uppercase tracking-widest px-0.5">Registered Members</h4>
-                  <div className="border border-zinc-200 rounded-xl overflow-hidden divide-y divide-zinc-150">
+                  <div className="border border-zinc-200 rounded-xl overflow-hidden divide-y divide-zinc-200">
                     {mockGlobalMembers.filter(m => m.region === activeAdmin.region).map(member => (
                       <div key={member.id} className="p-3 flex justify-between items-center text-body-sm bg-white hover:bg-zinc-50/50 transition-colors">
                         <div>
@@ -442,10 +485,20 @@ export default function SuperadminAdmins({ searchQuery }) {
               </div>
             </div>
 
-            <div className="pt-6 border-t border-zinc-150">
+            <div className="pt-6 border-t border-zinc-200 flex flex-col gap-2">
+              <button 
+                onClick={() => {
+                  setActiveAdmin(null);
+                  handleOpenResetPassword(activeAdmin);
+                }}
+                className="w-full py-2.5 bg-brand-red hover:bg-red-750 text-white text-[11px] font-black uppercase tracking-wider rounded-lg transition-smooth cursor-pointer flex items-center justify-center gap-2"
+              >
+                <KeyRound className="w-3.5 h-3.5" />
+                Reset Password
+              </button>
               <button 
                 onClick={() => setActiveAdmin(null)}
-                className="w-full py-2.5 bg-zinc-900 hover:bg-zinc-800 text-white text-[11px] font-black uppercase tracking-wider rounded-lg transition-smooth cursor-pointer"
+                className="w-full py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-[11px] font-black uppercase tracking-wider rounded-lg transition-smooth cursor-pointer"
               >
                 Close View
               </button>
@@ -459,11 +512,11 @@ export default function SuperadminAdmins({ searchQuery }) {
         <>
           <div 
             onClick={() => setActiveRegion(null)}
-            className="fixed inset-0 bg-zinc-950/40 backdrop-blur-xs z-40 transition-opacity duration-300"
+            className="fixed inset-0 bg-black/50 z-[55] transition-opacity duration-300"
           />
-          <div className="fixed inset-y-0 right-0 w-full max-w-lg bg-white shadow-xl z-50 p-6 overflow-y-auto border-l border-zinc-200 animate-slide-in flex flex-col justify-between">
+          <div className="fixed inset-y-0 right-0 w-full max-w-lg bg-white shadow-xl z-[60] p-6 overflow-y-auto border-l border-zinc-200 animate-slide-in flex flex-col justify-between">
             <div className="space-y-6">
-              <div className="flex justify-between items-center pb-4 border-b border-zinc-150">
+              <div className="flex justify-between items-center pb-4 border-b border-zinc-200">
                 <div>
                   <h2 className="text-base font-black text-zinc-900 leading-tight">Region Details Overview</h2>
                   <p className="text-[10px] text-zinc-450 font-semibold mt-0.5">Region ID: {activeRegion.id}</p>
@@ -508,7 +561,7 @@ export default function SuperadminAdmins({ searchQuery }) {
                 {/* Conclaves list under this region */}
                 <div className="space-y-3">
                   <h4 className="text-[11px] font-black text-zinc-400 uppercase tracking-widest px-0.5">Created Conclaves</h4>
-                  <div className="border border-zinc-200 rounded-xl overflow-hidden divide-y divide-zinc-150">
+                  <div className="border border-zinc-200 rounded-xl overflow-hidden divide-y divide-zinc-200">
                     {mockGlobalConclaves.filter(c => c.region === activeRegion.name).map(conclave => (
                       <div key={conclave.id} className="p-3 flex justify-between items-center text-body-sm bg-white hover:bg-zinc-50/50 transition-colors">
                         <div>
@@ -527,7 +580,7 @@ export default function SuperadminAdmins({ searchQuery }) {
               </div>
             </div>
 
-            <div className="pt-6 border-t border-zinc-150">
+            <div className="pt-6 border-t border-zinc-200">
               <button 
                 onClick={() => setActiveRegion(null)}
                 className="w-full py-2.5 bg-zinc-900 hover:bg-zinc-800 text-white text-[11px] font-black uppercase tracking-wider rounded-lg transition-smooth cursor-pointer"
@@ -544,10 +597,10 @@ export default function SuperadminAdmins({ searchQuery }) {
         <div className="fixed inset-0 z-55 flex items-center justify-center p-4">
           <div 
             onClick={() => setShowAdminModal(false)}
-            className="fixed inset-0 bg-zinc-955/45 backdrop-blur-xs transition-opacity duration-300"
+            className="fixed inset-0 bg-black/50 transition-opacity duration-300"
           />
           <div className="bg-white border border-zinc-250 rounded-xl shadow-xl w-full max-w-md relative z-10 overflow-hidden animate-fade-in">
-            <div className="p-4 border-b border-zinc-150 flex justify-between items-center bg-zinc-50">
+            <div className="p-4 border-b border-zinc-200 flex justify-between items-center bg-zinc-50">
               <h3 className="text-body-md font-black text-zinc-900 leading-tight">
                 {editingAdmin ? 'Edit Regional Admin' : 'Add Regional Admin'}
               </h3>
@@ -647,10 +700,10 @@ export default function SuperadminAdmins({ searchQuery }) {
         <div className="fixed inset-0 z-55 flex items-center justify-center p-4">
           <div 
             onClick={() => setShowRegionModal(false)}
-            className="fixed inset-0 bg-zinc-955/45 backdrop-blur-xs transition-opacity duration-300"
+            className="fixed inset-0 bg-black/50 transition-opacity duration-300"
           />
           <div className="bg-white border border-zinc-250 rounded-xl shadow-xl w-full max-w-md relative z-10 overflow-hidden animate-fade-in">
-            <div className="p-4 border-b border-zinc-150 flex justify-between items-center bg-zinc-50">
+            <div className="p-4 border-b border-zinc-200 flex justify-between items-center bg-zinc-50">
               <h3 className="text-body-md font-black text-zinc-900 leading-tight">
                 {editingRegion ? 'Edit BNI Region' : 'Add BNI Region'}
               </h3>
@@ -726,6 +779,117 @@ export default function SuperadminAdmins({ searchQuery }) {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Reset Password Modal */}
+      {resetPasswordTarget && (
+        <div className="fixed inset-0 z-55 flex items-center justify-center p-4">
+          <div 
+            onClick={() => setResetPasswordTarget(null)}
+            className="fixed inset-0 bg-black/50 transition-opacity duration-300"
+          />
+          <div className="bg-white border border-zinc-250 rounded-xl shadow-xl w-full max-w-md relative z-10 overflow-hidden animate-fade-in">
+            <div className="p-4 border-b border-zinc-200 flex justify-between items-center bg-zinc-50">
+              <h3 className="text-body-md font-black text-zinc-900 leading-tight">
+                {isPasswordResetDone ? 'Password Reset Successful' : 'Reset Administrator Password'}
+              </h3>
+              <button 
+                onClick={() => setResetPasswordTarget(null)}
+                className="p-1 rounded-full hover:bg-zinc-200 text-zinc-455"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            
+            {!isPasswordResetDone ? (
+              <div className="p-5 space-y-4">
+                <div className="bg-zinc-50 p-4 rounded-xl border border-zinc-200 space-y-1">
+                  <p className="text-caption font-bold text-zinc-400 uppercase tracking-wide">Administrator</p>
+                  <p className="text-[13px] font-black text-zinc-900 leading-none">{resetPasswordTarget.name}</p>
+                  <p className="text-[10px] text-zinc-505 font-bold mt-1">{resetPasswordTarget.email} • {resetPasswordTarget.region}</p>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="block text-[9.5px] font-black text-zinc-455 uppercase tracking-widest">Temporary Password</label>
+                  <div className="flex gap-2">
+                    <input 
+                      type="text"
+                      readOnly
+                      value={tempPassword}
+                      className="flex-1 h-10 px-3 border border-zinc-250 bg-zinc-50/50 rounded-lg text-body-sm font-extrabold text-zinc-900 select-all focus:outline-hidden"
+                    />
+                    <button 
+                      onClick={() => setTempPassword(generateRandomPassword())}
+                      className="px-3 h-10 border border-zinc-250 text-zinc-700 font-bold rounded-lg hover:bg-zinc-50 transition-smooth cursor-pointer text-body-sm"
+                      title="Generate new random password"
+                    >
+                      Regenerate
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-amber-50 text-amber-850 rounded-lg border border-amber-200 flex gap-2.5 items-start">
+                  <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                  <p className="text-[10px] font-semibold leading-normal">
+                    Confirming this action will replace the admin's login password. Be sure to copy and send this temporary credential.
+                  </p>
+                </div>
+
+                <div className="pt-2 flex gap-3">
+                  <button 
+                    type="button"
+                    onClick={() => setResetPasswordTarget(null)}
+                    className="flex-1 py-2 px-4 border border-zinc-250 text-zinc-700 font-bold rounded-lg hover:bg-zinc-50 transition-smooth cursor-pointer text-body-sm text-center"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={handleConfirmReset}
+                    className="flex-1 py-2 px-4 bg-brand-red hover:bg-red-750 text-white font-bold rounded-lg shadow-sm transition-smooth cursor-pointer text-body-sm text-center"
+                  >
+                    Confirm Reset
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="p-6 text-center space-y-5">
+                <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-sm">
+                  <CheckCircle2 className="w-6 h-6" />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-body-md font-black text-zinc-900">Password Reset Completed</p>
+                  <p className="text-[11px] text-zinc-500 font-semibold leading-relaxed">
+                    The temporary credential for <span className="font-extrabold">{resetPasswordTarget.name}</span> has been generated. Provide them this code to log in.
+                  </p>
+                </div>
+
+                <div className="bg-zinc-50 border border-zinc-200 rounded-xl p-4 flex items-center justify-between gap-3">
+                  <div className="text-left">
+                    <span className="text-[9px] font-black text-zinc-400 uppercase block tracking-wider">Access Token / Password</span>
+                    <span className="text-[14px] font-black text-brand-red font-mono leading-none select-all">{tempPassword}</span>
+                  </div>
+                  <button 
+                    onClick={handleCopyPassword}
+                    className={`py-1.5 px-3 rounded-lg text-body-sm font-bold border transition-smooth cursor-pointer ${
+                      isPasswordCopied 
+                        ? 'bg-emerald-50 border-emerald-200 text-emerald-700' 
+                        : 'bg-white border-zinc-250 text-zinc-700 hover:bg-zinc-50'
+                    }`}
+                  >
+                    {isPasswordCopied ? 'Copied!' : 'Copy Code'}
+                  </button>
+                </div>
+
+                <button 
+                  onClick={() => setResetPasswordTarget(null)}
+                  className="w-full py-2 bg-zinc-900 hover:bg-zinc-800 text-white font-bold rounded-lg text-body-sm transition-smooth cursor-pointer"
+                >
+                  Close & Done
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
