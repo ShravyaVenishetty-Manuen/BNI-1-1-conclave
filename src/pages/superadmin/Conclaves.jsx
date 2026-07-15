@@ -77,7 +77,7 @@ export default function SuperadminConclaves({ searchQuery }) {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-zinc-50 border-b border-zinc-150 text-[10px] font-black text-zinc-450 uppercase tracking-wider">
+              <tr className="bg-zinc-50 border-b border-zinc-200 text-[10px] font-black text-zinc-450 uppercase tracking-wider">
                 <th className="p-4 pl-6">Conclave Title</th>
                 <th className="p-4">Region</th>
                 <th className="p-4">Creator</th>
@@ -88,13 +88,13 @@ export default function SuperadminConclaves({ searchQuery }) {
                 <th className="p-4 text-right pr-6">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-150 text-[12.5px] font-semibold text-zinc-700">
+            <tbody className="divide-y divide-zinc-200 text-[12.5px] font-semibold text-zinc-700">
               {filteredConclaves.map((conclave) => (
                 <tr key={conclave.id} className="hover:bg-zinc-50/50 transition-colors">
                   <td className="p-4 pl-6">
                     <button 
                       onClick={() => setActiveConclave(conclave)}
-                      className="font-black text-zinc-900 hover:text-brand-red hover:underline text-left cursor-pointer"
+                      className="font-black text-zinc-900 hover:text-brand-red text-left cursor-pointer"
                     >
                       {conclave.title}
                     </button>
@@ -140,11 +140,11 @@ export default function SuperadminConclaves({ searchQuery }) {
         <>
           <div 
             onClick={() => setActiveConclave(null)}
-            className="fixed inset-0 bg-zinc-955/40 backdrop-blur-xs z-40 transition-opacity duration-300"
+            className="fixed inset-0 bg-black/50 z-[55] transition-opacity duration-300"
           />
-          <div className="fixed inset-y-0 right-0 w-full max-w-lg bg-white shadow-xl z-50 p-6 overflow-y-auto border-l border-zinc-200 animate-slide-in flex flex-col justify-between">
+          <div className="fixed inset-y-0 right-0 w-full max-w-lg bg-white shadow-xl z-[60] p-6 overflow-y-auto border-l border-zinc-200 animate-slide-in flex flex-col justify-between">
             <div className="space-y-6">
-              <div className="flex justify-between items-center pb-4 border-b border-zinc-150">
+              <div className="flex justify-between items-center pb-4 border-b border-zinc-200">
                 <div>
                   <h2 className="text-base font-black text-zinc-900 leading-tight">Conclave Event overview</h2>
                   <p className="text-[10px] text-zinc-450 font-semibold mt-0.5">Conclave ID: {activeConclave.id}</p>
@@ -201,7 +201,7 @@ export default function SuperadminConclaves({ searchQuery }) {
                 {/* Schedule timeline outline */}
                 <div className="space-y-3">
                   <h4 className="text-[11px] font-black text-zinc-400 uppercase tracking-widest px-0.5">Schedule &amp; Sessions</h4>
-                  <div className="border border-zinc-200 rounded-xl overflow-hidden divide-y divide-zinc-150">
+                  <div className="border border-zinc-200 rounded-xl overflow-hidden divide-y divide-zinc-200">
                     {[
                       { name: "Round 1 (09:00 AM)", type: "Structured pairings 1-to-1 matching", status: "Active" },
                       { name: "Round 2 (10:30 AM)", type: "Commercial realty niche focus session", status: "Active" },
@@ -222,7 +222,7 @@ export default function SuperadminConclaves({ searchQuery }) {
               </div>
             </div>
 
-            <div className="pt-6 border-t border-zinc-150">
+            <div className="pt-6 border-t border-zinc-200">
               <button 
                 onClick={() => setActiveConclave(null)}
                 className="w-full py-2.5 bg-zinc-900 hover:bg-zinc-800 text-white text-[11px] font-black uppercase tracking-wider rounded-lg transition-smooth cursor-pointer"
