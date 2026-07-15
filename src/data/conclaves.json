@@ -199,5 +199,29 @@
         "desc": "Draft space initialized by region."
       }
     ]
+  },
+  {
+    "id": "CON-2024-0019",
+    "name": "Central Chapter Synergy Meet",
+    "venue": "Grand V Convention, Guntur",
+    "venueShort": "Grand V Convention",
+    "dateRange": "Dec 10 - Dec 12, 2024",
+    "startDate": "2024-12-10",
+    "endDate": "2024-12-12",
+    "memberCount": 920,
+    "memberLimit": 1000,
+    "captainCount": 35,
+    "captainLimit": 40,
+    "status": "Running",
+    "progress": 40,
+    "region": "Guntur Central",
+    "businessTypes": 10,
+    "rounds": 4,
+    "coordinator": "Sanjay Wagle",
+    "coordinatorAvatar": "SW",
+    "description": "Mid-term synergy networking meet for Guntur Central chapter members to exchange premium referrals and pitch major projects.",
+    "timeline": [
+      { "event": "Conclave Launched", "date": "Nov 01, 2024 • 09:00 AM", "desc": "Started onboarding attendees." }
+    ]
   }
 ]
