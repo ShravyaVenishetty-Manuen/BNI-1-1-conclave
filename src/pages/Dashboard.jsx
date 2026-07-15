@@ -472,7 +472,7 @@ export default function Dashboard({ setActiveTab, selectedConclaveId, setSelecte
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 pb-8">
 
         {/* All conclaves list */}
-        <div className="lg:col-span-8 p-6 border border-zinc-200/80 rounded-xl bg-white flex flex-col shadow-sm hover:shadow-md transition-smooth">
+        <div className="lg:col-span-12 p-6 border border-zinc-200/80 rounded-xl bg-white flex flex-col shadow-sm hover:shadow-md transition-smooth">
           <div className="flex justify-between items-center mb-5">
             <h4 className="text-title-lg text-zinc-950 font-semibold">All Conclaves</h4>
           </div>
@@ -520,43 +520,6 @@ export default function Dashboard({ setActiveTab, selectedConclaveId, setSelecte
               </tbody>
             </table>
           </div>
-        </div>
-
-        {/* Timeline for selected conclave */}
-        <div className="lg:col-span-4 p-6 border border-zinc-200/80 rounded-xl bg-white shadow-sm hover:shadow-md transition-smooth flex flex-col justify-between">
-          <div>
-            <h4 className="text-title-lg text-zinc-950 font-semibold mb-6">Conclave Timeline</h4>
-
-            <div className="relative space-y-6 before:content-[''] before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[1px] before:bg-zinc-100">
-              {selectedConclave.timeline && selectedConclave.timeline.map((t, idx) => (
-                <div key={idx} className="relative pl-8">
-                  <div className={`absolute left-0 top-1 w-6 h-6 rounded-full bg-white flex items-center justify-center border-2 shadow-sm ${idx === 0 ? 'border-brand-red' : 'border-zinc-300'}`}>
-                    {idx === 0 ? (
-                      <Bolt className="w-3 h-3 text-brand-red" />
-                    ) : (
-                      <Clock className="w-3 h-3 text-zinc-400" />
-                    )}
-                  </div>
-                  <div>
-                    <p className="text-body-sm text-zinc-700">
-                      <span className="font-semibold text-zinc-900">{t.event}</span>
-                    </p>
-                    <p className="text-label-xs text-zinc-400 mt-1.5 uppercase font-bold flex items-center gap-1">
-                      <Clock className="w-3 h-3" /> {t.date}
-                    </p>
-                    {t.desc && <p className="text-[10px] text-zinc-400 font-semibold mt-0.5">{t.desc}</p>}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <button
-            onClick={() => setActiveTab && setActiveTab('conclaves')}
-            className="w-full mt-6 py-2.5 text-label-md font-bold text-zinc-500 border border-zinc-200 rounded-lg hover:bg-zinc-50 hover:text-zinc-800 transition-smooth cursor-pointer"
-          >
-            View Full Details
-          </button>
         </div>
       </section>
     </div>
