@@ -42,13 +42,13 @@ export default function SuperadminMembers({ searchQuery }) {
       </div>
 
       {/* Filter Row */}
-      <section className="flex justify-between items-center bg-white border border-zinc-200 rounded-xl p-4.5 shadow-2xs">
+      <section className="flex flex-col sm:flex-row gap-4 justify-between items-stretch sm:items-center bg-white border border-zinc-200 rounded-xl p-4.5 shadow-2xs">
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-black text-zinc-450 uppercase tracking-widest shrink-0">Filter Region:</span>
+          <span className="text-[10px] font-black text-zinc-455 uppercase tracking-widest shrink-0">Filter Region:</span>
           <select 
             value={selectedRegion}
             onChange={(e) => setSelectedRegion(e.target.value)}
-            className="h-9 px-2.5 bg-zinc-55 border border-zinc-200 rounded-lg text-body-sm font-bold text-zinc-700 focus:outline-hidden focus:ring-1 focus:ring-brand-red focus:border-brand-red cursor-pointer"
+            className="h-9 px-2.5 bg-zinc-50 border border-zinc-200 rounded-lg text-body-sm font-bold text-zinc-700 focus:outline-hidden focus:ring-1 focus:ring-brand-red focus:border-brand-red cursor-pointer"
           >
             <option value="All">All Regions</option>
             {mockRegions.map(reg => (
@@ -57,7 +57,7 @@ export default function SuperadminMembers({ searchQuery }) {
           </select>
         </div>
 
-        <span className="text-[11px] font-bold text-zinc-450">
+        <span className="text-[11px] font-bold text-zinc-455 text-right sm:text-left">
           Showing {filteredMembers.length} of {mockGlobalMembers.length} Members
         </span>
       </section>
