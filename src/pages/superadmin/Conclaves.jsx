@@ -102,7 +102,7 @@ export default function SuperadminConclaves({ searchQuery }) {
                   <td className="p-4 pl-6">
                     <button
                       onClick={() => setActiveConclave(conclave)}
-                      className="font-black text-zinc-900 hover:text-brand-red text-left cursor-pointer"
+                      className="font-black text-zinc-900 text-left cursor-pointer"
                     >
                       {conclave.title}
                     </button>
@@ -201,7 +201,7 @@ function ConclaveDetailView({ conclave, onBack }) {
       <div className="flex flex-col gap-4">
         <button
           onClick={onBack}
-          className="flex items-center gap-1.5 text-body-sm font-black text-brand-red uppercase tracking-wider hover:text-red-750 transition-smooth cursor-pointer self-start"
+          className="flex items-center gap-1.5 text-body-sm font-black text-zinc-500 uppercase tracking-wider hover:text-zinc-800 transition-smooth cursor-pointer self-start"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Conclaves

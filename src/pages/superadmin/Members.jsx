@@ -92,7 +92,7 @@ export default function SuperadminMembers({ searchQuery }) {
                   <td className="p-4 pl-6">
                     <button
                       onClick={() => setActiveMember(member)}
-                      className="font-black text-zinc-900 hover:text-brand-red text-left cursor-pointer"
+                      className="font-black text-zinc-900 text-left cursor-pointer"
                     >
                       {member.name}
                     </button>

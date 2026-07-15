@@ -261,7 +261,7 @@ export default function SuperadminAdmins({ searchQuery }) {
                     <td className="p-4 pl-6">
                       <button
                         onClick={() => setActiveAdmin(admin)}
-                        className="font-black text-zinc-900 hover:text-brand-red text-left cursor-pointer"
+                        className="font-black text-zinc-900 text-left cursor-pointer"
                       >
                         {admin.name}
                       </button>
@@ -292,21 +292,21 @@ export default function SuperadminAdmins({ searchQuery }) {
                         </button>
                         <button
                           onClick={() => handleOpenAdminModal(admin)}
-                          className="p-1.5 text-zinc-400 hover:text-brand-red transition-smooth cursor-pointer"
+                          className="p-1.5 text-zinc-400 hover:text-zinc-700 transition-smooth cursor-pointer"
                           title="Edit"
                         >
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleOpenResetPassword(admin)}
-                          className="p-1.5 text-zinc-400 hover:text-brand-red transition-smooth cursor-pointer"
+                          className="p-1.5 text-zinc-400 hover:text-zinc-700 transition-smooth cursor-pointer"
                           title="Reset Password"
                         >
                           <KeyRound className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDeleteAdmin(admin.id)}
-                          className="p-1.5 text-zinc-400 hover:text-brand-red transition-smooth cursor-pointer"
+                          className="p-1.5 text-zinc-400 hover:text-zinc-700 transition-smooth cursor-pointer"
                           title="Delete"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -338,7 +338,7 @@ export default function SuperadminAdmins({ searchQuery }) {
                     <td className="p-4 pl-6">
                       <button
                         onClick={() => setActiveRegion(region)}
-                        className="font-black text-zinc-900 hover:text-brand-red hover:underline text-left cursor-pointer"
+                        className="font-black text-zinc-900 text-left cursor-pointer"
                       >
                         {region.name}
                       </button>
@@ -364,14 +364,14 @@ export default function SuperadminAdmins({ searchQuery }) {
                         </button>
                         <button
                           onClick={() => handleOpenRegionModal(region)}
-                          className="p-1.5 text-zinc-400 hover:text-brand-red transition-smooth cursor-pointer"
+                          className="p-1.5 text-zinc-400 hover:text-zinc-700 transition-smooth cursor-pointer"
                           title="Edit"
                         >
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDeleteRegion(region.id)}
-                          className="p-1.5 text-zinc-400 hover:text-brand-red transition-smooth cursor-pointer"
+                          className="p-1.5 text-zinc-400 hover:text-zinc-700 transition-smooth cursor-pointer"
                           title="Delete"
                         >
                           <Trash2 className="w-4 h-4" />
