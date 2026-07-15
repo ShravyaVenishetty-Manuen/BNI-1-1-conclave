@@ -45,11 +45,11 @@ const getStatusDot = (status) => {
   }
 };
 
-export default function Sidebar({ activeTab, setActiveTab, onLogout, isOpen, onClose, selectedConclaveId, setSelectedConclaveId }) {
+export default function Sidebar({ activeTab, setActiveTab, onLogout, isOpen, onClose, selectedConclaveId, setSelectedConclaveId, loggedInAdmin }) {
   const [showConclaveDropdown, setShowConclaveDropdown] = useState(false);
   const dropdownRef = useRef(null);
 
-  const activeConclaves = conclavesData.filter(c => c.status === 'Running');
+  const activeConclaves = conclavesData.filter(c => c.status === 'Running' && c.coordinator === loggedInAdmin?.name);
   const selectedConclave = conclavesData.find(c => c.id === selectedConclaveId) || activeConclaves[0] || conclavesData[0];
 
   useEffect(() => {

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Award, Lock, Mail, Eye, EyeOff, ShieldCheck, Sparkles } from 'lucide-react';
+import { mockAdmins } from '../data/mockConclaveData';
 
 const MOCK_CAPTAINS = [
   {
@@ -104,8 +105,24 @@ export default function Login({ onLogin }) {
           setError('Invalid superadministrator credentials.');
         }
       } else if (role === 'admin') {
-        if (inputVal.toLowerCase() === 'admin@bni.com' && password === 'password') {
-          onLogin && onLogin('admin', null);
+        const emailLower = inputVal.toLowerCase();
+        const matchedMockAdmin = mockAdmins.find(a => a.email.toLowerCase() === emailLower);
+        
+        let payload = null;
+        if (emailLower === 'admin@bni.com') {
+          payload = { name: "Sanjay Wagle", email: "admin@bni.com", region: "Guntur Central" };
+        } else if (emailLower === 'gunturcentral.admin@bni.com') {
+          payload = { name: "Sanjay Wagle", email: emailLower, region: "Guntur Central" };
+        } else if (emailLower === 'gunturwest.admin@bni.com') {
+          payload = { name: "Anjali Sharma", email: emailLower, region: "Guntur West" };
+        } else if (emailLower === 'gunturnorth.admin@bni.com') {
+          payload = { name: "Rajesh Mehta", email: emailLower, region: "Guntur North" };
+        } else if (matchedMockAdmin) {
+          payload = matchedMockAdmin;
+        }
+
+        if (payload && password === 'password') {
+          onLogin && onLogin('admin', payload);
         } else {
           setError('Invalid administrator credentials.');
         }

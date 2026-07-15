@@ -23,7 +23,7 @@ import Pagination from '../components/Pagination';
 import { ResponsiveContainer, BarChart, Bar, XAxis } from 'recharts';
 import initialConclaves from '../data/conclaves.json';
 
-export default function Conclaves({ searchQuery, setActiveTab }) {
+export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) {
   const [conclaves, setConclaves] = useState(initialConclaves);
   const [searchTerm, setSearchTerm] = useState('');
   const searchVal = searchQuery !== undefined ? searchQuery : searchTerm;
@@ -118,10 +118,11 @@ export default function Conclaves({ searchQuery, setActiveTab }) {
   };
 
   const toggleSelectAll = () => {
-    if (selectedRows.size === filteredConclaves.length) {
+    const hisCreatedConclaves = filteredConclaves.filter(c => c.coordinator === loggedInAdmin?.name);
+    if (selectedRows.size === hisCreatedConclaves.length) {
       setSelectedRows(new Set());
     } else {
-      setSelectedRows(new Set(filteredConclaves.map(c => c.id)));
+      setSelectedRows(new Set(hisCreatedConclaves.map(c => c.id)));
     }
   };
 
@@ -478,130 +479,144 @@ export default function Conclaves({ searchQuery, setActiveTab }) {
                   </td>
                 </tr>
               ) : (
-                paginatedConclaves.map((conclave) => (
-                  <tr
-                    key={conclave.id}
-                    onClick={() => setSelectedConclave(conclave)}
-                    className="group cursor-pointer"
-                  >
-                    <td className="px-5 py-4 text-center" onClick={(e) => e.stopPropagation()}>
-                      <input
-                        checked={selectedRows.has(conclave.id)}
-                        onChange={(e) => toggleRow(conclave.id, e)}
-                        className="rounded border-zinc-300 text-brand-red focus:ring-brand-red cursor-pointer w-4 h-4"
-                        type="checkbox"
-                      />
-                    </td>
-                    <td className="px-5 py-4">
-                      <div className="flex flex-col">
-                        <span className="text-body-sm font-bold text-zinc-900 transition-smooth leading-tight">{conclave.name}</span>
-                        <span className="text-[9px] text-zinc-450 font-bold uppercase mt-0.5">ID: {conclave.id}</span>
-                      </div>
-                    </td>
-                    <td className="px-5 py-4">
-                      <span className="px-2 py-0.5 bg-zinc-50 border border-zinc-200 text-zinc-550 text-[10px] font-bold rounded-full whitespace-nowrap">
-                        {conclave.region || 'Guntur Region'}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-brand-red/10 text-brand-red font-bold text-[10px] flex items-center justify-center shrink-0">
-                          {conclave.coordinatorAvatar}
+                paginatedConclaves.map((conclave) => {
+                  const isHisCreated = conclave.coordinator === loggedInAdmin?.name;
+                  return (
+                    <tr
+                      key={conclave.id}
+                      onClick={() => setSelectedConclave(conclave)}
+                      className="group cursor-pointer"
+                    >
+                      <td className="px-5 py-4 text-center" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          checked={selectedRows.has(conclave.id)}
+                          onChange={(e) => toggleRow(conclave.id, e)}
+                          disabled={!isHisCreated}
+                          className={`rounded border-zinc-300 text-brand-red focus:ring-brand-red w-4 h-4 ${
+                            !isHisCreated ? 'cursor-not-allowed opacity-30 bg-zinc-100' : 'cursor-pointer'
+                          }`}
+                          type="checkbox"
+                        />
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="flex flex-col">
+                          <span className="text-body-sm font-bold text-zinc-900 transition-smooth leading-tight">{conclave.name}</span>
+                          <span className="text-[9px] text-zinc-455 font-bold uppercase mt-0.5">ID: {conclave.id}</span>
                         </div>
-                        <span className="font-semibold text-zinc-700">{conclave.coordinator}</span>
-                      </div>
-                    </td>
-                    <td className="px-5 py-4 font-semibold text-zinc-650">{conclave.dateRange}</td>
-                    <td className="px-5 py-4 text-zinc-650">{conclave.venueShort}</td>
-                    <td className="px-5 py-4 text-center font-bold text-zinc-800">
-                      {conclave.memberCount} <span className="text-zinc-400 font-normal text-xs">/ {conclave.memberLimit}</span>
-                    </td>
-                    <td className="px-5 py-4 text-center font-bold text-zinc-800">
-                      {conclave.captainCount} <span className="text-zinc-400 font-normal text-xs">/ {conclave.captainLimit}</span>
-                    </td>
-                    <td className="px-5 py-4">
-                      {conclave.status === 'Running' ? (
-                        <span className="inline-flex items-center gap-1 text-emerald-700 bg-emerald-50 border border-emerald-150 px-2 py-0.5 rounded text-[10px] font-bold uppercase">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Running
+                      </td>
+                      <td className="px-5 py-4">
+                        <span className="px-2 py-0.5 bg-zinc-50 border border-zinc-200 text-zinc-555 text-[10px] font-bold rounded-full whitespace-nowrap">
+                          {conclave.region || 'Guntur Region'}
                         </span>
-                      ) : conclave.status === 'Upcoming' ? (
-                        <span className="inline-flex items-center gap-1 text-brand-red bg-red-50 border border-red-100 px-2 py-0.5 rounded text-[10px] font-bold uppercase">
-                          <span className="w-1.5 h-1.5 rounded-full bg-brand-red"></span> Upcoming
-                        </span>
-                      ) : conclave.status === 'Draft' ? (
-                        <span className="inline-flex items-center gap-1 text-zinc-500 bg-zinc-50 border border-zinc-200 px-2 py-0.5 rounded text-[10px] font-semibold uppercase">
-                          <span className="w-1.5 h-1.5 rounded-full bg-zinc-400"></span> Draft
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 text-zinc-700 bg-zinc-100 border border-zinc-200 px-2 py-0.5 rounded text-[10px] font-bold uppercase">
-                          <span className="w-1.5 h-1.5 rounded-full bg-zinc-600"></span> Completed
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-5 py-4 w-32">
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 h-1.5 rounded-full overflow-hidden border border-zinc-200/10">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <BarChart layout="vertical" data={[{ value: conclave.progress }]} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-                              <XAxis type="number" domain={[0, 100]} hide />
-                              <Bar dataKey="value" fill={conclave.status === 'Completed' ? '#3f3f46' : conclave.status === 'Draft' ? '#a1a1aa' : '#af101a'} radius={[2, 2, 2, 2]} background={{ fill: '#f4f4f5' }} barSize={6} />
-                            </BarChart>
-                          </ResponsiveContainer>
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-full bg-brand-red/10 text-brand-red font-bold text-[10px] flex items-center justify-center shrink-0">
+                            {conclave.coordinatorAvatar}
+                          </div>
+                          <span className="font-semibold text-zinc-700">{conclave.coordinator}</span>
                         </div>
-                        <span className="text-[10px] font-bold text-zinc-600">{conclave.progress}%</span>
-                      </div>
-                    </td>
-                    <td className="px-5 py-4 text-right" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex items-center justify-end gap-1">
-                        <div className="relative inline-block" onClick={(e) => e.stopPropagation()}>
-                          <button
-                            onClick={() => setActiveDropdown(activeDropdown === conclave.id ? null : conclave.id)}
-                            className="p-1 hover:bg-zinc-100 rounded text-zinc-400 hover:text-brand-red transition-smooth cursor-pointer"
-                          >
-                            <MoreVertical className="w-4 h-4" />
-                          </button>
-                          {activeDropdown === conclave.id && (
-                            <>
-                              <div
-                                onClick={() => setActiveDropdown(null)}
-                                className="fixed inset-0 z-40 cursor-default"
-                              />
-                              <div className="absolute right-0 mt-1 w-36 bg-white border border-zinc-100 rounded-lg shadow-lg py-1 z-50 text-left animate-fade-in">
-                                <button
-                                  onClick={() => {
-                                    setSelectedConclave(conclave);
-                                    setActiveDropdown(null);
-                                  }}
-                                  className="w-full text-left px-3.5 py-2 hover:bg-zinc-50 text-[11px] font-bold text-zinc-700 transition-smooth"
-                                >
-                                  View Details
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    openEditModal(conclave);
-                                    setActiveDropdown(null);
-                                  }}
-                                  className="w-full text-left px-3.5 py-2 hover:bg-zinc-50 text-[11px] font-bold text-zinc-700 transition-smooth"
-                                >
-                                  Edit Profile
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setDeleteTarget(conclave);
-                                    setActiveDropdown(null);
-                                  }}
-                                  className="w-full text-left px-3.5 py-2 hover:bg-red-50 text-[11px] font-extrabold text-brand-red transition-smooth border-t border-zinc-100"
-                                >
-                                  Remove Conclave
-                                </button>
-                              </div>
-                            </>
-                          )}
+                      </td>
+                      <td className="px-5 py-4 font-semibold text-zinc-650">{conclave.dateRange}</td>
+                      <td className="px-5 py-4 text-zinc-650">{conclave.venueShort}</td>
+                      <td className="px-5 py-4 text-center font-bold text-zinc-800">
+                        {conclave.memberCount} <span className="text-zinc-400 font-normal text-xs">/ {conclave.memberLimit}</span>
+                      </td>
+                      <td className="px-5 py-4 text-center font-bold text-zinc-800">
+                        {conclave.captainCount} <span className="text-zinc-400 font-normal text-xs">/ {conclave.captainLimit}</span>
+                      </td>
+                      <td className="px-5 py-4">
+                        {conclave.status === 'Running' ? (
+                          <span className="inline-flex items-center gap-1 text-emerald-700 bg-emerald-50 border border-emerald-150 px-2 py-0.5 rounded text-[10px] font-bold uppercase">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Running
+                          </span>
+                        ) : conclave.status === 'Upcoming' ? (
+                          <span className="inline-flex items-center gap-1 text-brand-red bg-red-50 border border-red-100 px-2 py-0.5 rounded text-[10px] font-bold uppercase">
+                            <span className="w-1.5 h-1.5 rounded-full bg-brand-red"></span> Upcoming
+                          </span>
+                        ) : conclave.status === 'Draft' ? (
+                          <span className="inline-flex items-center gap-1 text-zinc-500 bg-zinc-50 border border-zinc-200 px-2 py-0.5 rounded text-[10px] font-semibold uppercase">
+                            <span className="w-1.5 h-1.5 rounded-full bg-zinc-400"></span> Draft
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-zinc-700 bg-zinc-100 border border-zinc-200 px-2 py-0.5 rounded text-[10px] font-bold uppercase">
+                            <span className="w-1.5 h-1.5 rounded-full bg-zinc-600"></span> Completed
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-5 py-4 w-32">
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 h-1.5 rounded-full overflow-hidden border border-zinc-200/10">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <BarChart layout="vertical" data={[{ value: conclave.progress }]} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                                <XAxis type="number" domain={[0, 100]} hide />
+                                <Bar dataKey="value" fill={conclave.status === 'Completed' ? '#3f3f46' : conclave.status === 'Draft' ? '#a1a1aa' : '#af101a'} radius={[2, 2, 2, 2]} background={{ fill: '#f4f4f5' }} barSize={6} />
+                              </BarChart>
+                            </ResponsiveContainer>
+                          </div>
+                          <span className="text-[10px] font-bold text-zinc-600">{conclave.progress}%</span>
                         </div>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                      <td className="px-5 py-4 text-right" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-end gap-1">
+                          <div className="relative inline-block" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              onClick={() => setActiveDropdown(activeDropdown === conclave.id ? null : conclave.id)}
+                              className="p-1 hover:bg-zinc-100 rounded text-zinc-400 hover:text-brand-red transition-smooth cursor-pointer"
+                            >
+                              <MoreVertical className="w-4 h-4" />
+                            </button>
+                            {activeDropdown === conclave.id && (
+                              <>
+                                <div
+                                  onClick={() => setActiveDropdown(null)}
+                                  className="fixed inset-0 z-40 cursor-default"
+                                />
+                                <div className="absolute right-0 mt-1 w-36 bg-white border border-zinc-100 rounded-lg shadow-lg py-1 z-50 text-left animate-fade-in">
+                                  <button
+                                    onClick={() => {
+                                      setSelectedConclave(conclave);
+                                      setActiveDropdown(null);
+                                    }}
+                                    className="w-full text-left px-3.5 py-2 hover:bg-zinc-50 text-[11px] font-bold text-zinc-700 transition-smooth"
+                                  >
+                                    View Details
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      if (!isHisCreated) return;
+                                      openEditModal(conclave);
+                                      setActiveDropdown(null);
+                                    }}
+                                    disabled={!isHisCreated}
+                                    className={`w-full text-left px-3.5 py-2 text-[11px] font-bold transition-smooth ${
+                                      !isHisCreated ? 'text-zinc-300 cursor-not-allowed opacity-40' : 'hover:bg-zinc-50 text-zinc-700'
+                                    }`}
+                                  >
+                                    Edit Profile
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      if (!isHisCreated) return;
+                                      setDeleteTarget(conclave);
+                                      setActiveDropdown(null);
+                                    }}
+                                    disabled={!isHisCreated}
+                                    className={`w-full text-left px-3.5 py-2 text-[11px] font-extrabold transition-smooth border-t border-zinc-100 ${
+                                      !isHisCreated ? 'text-zinc-300 cursor-not-allowed opacity-40' : 'hover:bg-red-50 text-brand-red'
+                                    }`}
+                                  >
+                                    Remove Conclave
+                                  </button>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -709,10 +724,17 @@ export default function Conclaves({ searchQuery, setActiveTab }) {
             <div className="p-4 border-t border-zinc-100 bg-zinc-50/50 flex gap-2 shrink-0">
               <button
                 onClick={() => {
+                  const isHisCreated = selectedConclave?.coordinator === loggedInAdmin?.name;
+                  if (!isHisCreated) return;
                   openEditModal(selectedConclave);
                   setSelectedConclave(null);
                 }}
-                className="flex-1 py-2.5 bg-white border border-zinc-100 text-zinc-655 hover:bg-zinc-50 rounded-lg text-button font-bold transition-smooth shadow-sm cursor-pointer"
+                disabled={selectedConclave && selectedConclave.coordinator !== loggedInAdmin?.name}
+                className={`flex-1 py-2.5 rounded-lg text-button font-bold transition-smooth shadow-sm ${
+                  selectedConclave && selectedConclave.coordinator !== loggedInAdmin?.name
+                    ? 'bg-zinc-100 text-zinc-355 cursor-not-allowed border border-zinc-200/60 opacity-40'
+                    : 'bg-white border border-zinc-100 text-zinc-655 hover:bg-zinc-50 cursor-pointer'
+                }`}
               >
                 Edit Conclave
               </button>

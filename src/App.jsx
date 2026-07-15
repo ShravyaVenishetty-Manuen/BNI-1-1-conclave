@@ -44,6 +44,12 @@ export default function App() {
     return localStorage.getItem('bni_user_role') || 'admin';
   });
 
+  // Read logged in admin info from localStorage
+  const [loggedInAdmin, setLoggedInAdmin] = useState(() => {
+    const data = localStorage.getItem('bni_logged_admin');
+    return data ? JSON.parse(data) : { name: "Sanjay Wagle", email: "admin@bni.com", region: "Guntur Central" };
+  });
+
   // Read logged in captain info from localStorage
   const [loggedInCaptain, setLoggedInCaptain] = useState(() => {
     const data = localStorage.getItem('bni_logged_captain');
@@ -145,6 +151,8 @@ export default function App() {
       setLoggedInCaptain(payload);
       localStorage.removeItem('bni_logged_member');
       setLoggedInMember(null);
+      localStorage.removeItem('bni_logged_admin');
+      setLoggedInAdmin(null);
       setIsLoggedIn(true);
       setActiveTab('dashboard');
       window.history.pushState({}, '', `/captain/dashboard`);
@@ -153,14 +161,18 @@ export default function App() {
       setLoggedInMember(payload);
       localStorage.removeItem('bni_logged_captain');
       setLoggedInCaptain(null);
+      localStorage.removeItem('bni_logged_admin');
+      setLoggedInAdmin(null);
       setIsLoggedIn(true);
       setActiveTab('dashboard');
       window.history.pushState({}, '', `/member/dashboard`);
     } else if (role === 'superadmin') {
       localStorage.removeItem('bni_logged_captain');
       localStorage.removeItem('bni_logged_member');
+      localStorage.removeItem('bni_logged_admin');
       setLoggedInCaptain(null);
       setLoggedInMember(null);
+      setLoggedInAdmin(null);
       setIsLoggedIn(true);
       const defaultTab = 'dashboard';
       setActiveTab(defaultTab);
@@ -168,6 +180,13 @@ export default function App() {
     } else {
       localStorage.removeItem('bni_logged_captain');
       localStorage.removeItem('bni_logged_member');
+      if (payload) {
+        localStorage.setItem('bni_logged_admin', JSON.stringify(payload));
+        setLoggedInAdmin(payload);
+      } else {
+        localStorage.removeItem('bni_logged_admin');
+        setLoggedInAdmin({ name: "Global Admin", email: "admin@bni.com", region: "Guntur West" });
+      }
       setLoggedInCaptain(null);
       setLoggedInMember(null);
       setIsLoggedIn(true);
@@ -182,8 +201,10 @@ export default function App() {
     localStorage.removeItem('bni_user_role');
     localStorage.removeItem('bni_logged_captain');
     localStorage.removeItem('bni_logged_member');
+    localStorage.removeItem('bni_logged_admin');
     setLoggedInCaptain(null);
     setLoggedInMember(null);
+    setLoggedInAdmin(null);
     setIsLoggedIn(false);
     setIsSidebarOpen(false);
   };
@@ -345,6 +366,7 @@ export default function App() {
         onClose={() => setIsSidebarOpen(false)}
         selectedConclaveId={selectedConclaveId}
         setSelectedConclaveId={setSelectedConclaveId}
+        loggedInAdmin={loggedInAdmin}
       />
 
       {/* Main content wrapper */}
@@ -361,7 +383,7 @@ export default function App() {
         {/* Workspace views router */}
         <main ref={mainRef} className="flex-1 overflow-y-auto bg-zinc-50">
           {activeTab === 'dashboard' ? (
-            <Dashboard setActiveTab={handleTabChange} selectedConclaveId={selectedConclaveId} setSelectedConclaveId={setSelectedConclaveId} />
+            <Dashboard setActiveTab={handleTabChange} selectedConclaveId={selectedConclaveId} setSelectedConclaveId={setSelectedConclaveId} loggedInAdmin={loggedInAdmin} />
           ) : activeTab === 'members' ? (
             <Members searchQuery={searchQuery} selectedConclaveId={selectedConclaveId} />
           ) : activeTab === 'active-users' ? (
@@ -371,7 +393,7 @@ export default function App() {
           ) : activeTab === 'captains' ? (
             <Captains searchQuery={searchQuery} selectedConclaveId={selectedConclaveId} />
           ) : activeTab === 'conclaves' ? (
-            <Conclaves />
+            <Conclaves loggedInAdmin={loggedInAdmin} />
           ) : activeTab === 'snapshot' ? (
             <Snapshot selectedConclaveId={selectedConclaveId} />
           ) : activeTab === 'validation' ? (

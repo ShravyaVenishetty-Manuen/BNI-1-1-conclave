@@ -25,7 +25,7 @@ import membersData from '../data/members.json';
 import captainsData from '../data/captains.json';
 import referralsJson from '../data/referrals.json';
 
-export default function Dashboard({ setActiveTab, selectedConclaveId, setSelectedConclaveId }) {
+export default function Dashboard({ setActiveTab, selectedConclaveId, setSelectedConclaveId, loggedInAdmin }) {
   // Referrals: merge static seed data with any localStorage referrals
   const [referrals, setReferrals] = useState(() => {
     const stored = localStorage.getItem('bni_referrals');
@@ -150,7 +150,7 @@ export default function Dashboard({ setActiveTab, selectedConclaveId, setSelecte
 
         {showPicker && (
           <div className="absolute z-30 top-full mt-1.5 left-0 right-0 bg-white border border-zinc-200 rounded-xl shadow-xl overflow-hidden max-h-[320px] overflow-y-auto animate-fade-in">
-            {conclavesData.filter(c => c.status === 'Running').map(c => (
+            {conclavesData.filter(c => c.status === 'Running' && c.coordinator === loggedInAdmin?.name).map(c => (
               <button
                 key={c.id}
                 onClick={() => { setSelectedConclaveId(c.id); setShowPicker(false); }}
