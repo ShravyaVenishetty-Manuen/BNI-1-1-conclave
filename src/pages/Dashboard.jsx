@@ -468,13 +468,17 @@ export default function Dashboard({ setActiveTab, selectedConclaveId, setSelecte
 
       </section>
 
-      {/* Data Table & Timeline */}
-      <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 pb-8">
-
-        {/* All conclaves list */}
-        <div className="lg:col-span-12 p-6 border border-zinc-200/80 rounded-xl bg-white flex flex-col shadow-sm hover:shadow-md transition-smooth">
+      {/* Conclaves list table with View More */}
+      <section className="pb-8">
+        <div className="p-6 border border-zinc-200/80 rounded-xl bg-white flex flex-col shadow-sm hover:shadow-md transition-smooth">
           <div className="flex justify-between items-center mb-5">
-            <h4 className="text-title-lg text-zinc-950 font-semibold">All Conclaves</h4>
+            <h4 className="text-title-lg text-zinc-950 font-semibold">Conclaves</h4>
+            <button
+              onClick={() => setActiveTab && setActiveTab('conclaves')}
+              className="text-label-sm font-bold text-brand-red hover:underline flex items-center gap-1 cursor-pointer bg-transparent border-0 outline-none"
+            >
+              View More <ChevronRight className="w-4 h-4" />
+            </button>
           </div>
 
           <div className="overflow-x-auto flex-1">
@@ -490,7 +494,7 @@ export default function Dashboard({ setActiveTab, selectedConclaveId, setSelecte
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100 text-table-text">
-                {conclavesData.map(c => (
+                {conclavesData.slice(0, 3).map(c => (
                   <tr
                     key={c.id}
                     className={`hover:bg-zinc-50/50 transition-colors group cursor-pointer ${c.id === selectedConclaveId ? 'bg-red-50/20' : ''}`}
@@ -511,7 +515,7 @@ export default function Dashboard({ setActiveTab, selectedConclaveId, setSelecte
                       </span>
                     </td>
                     <td className="px-4 py-4 text-right">
-                      <button className="p-1.5 hover:bg-zinc-100 rounded-lg text-zinc-400 hover:text-brand-red transition-smooth cursor-pointer flex items-center justify-center ml-auto">
+                      <button className="p-1.5 hover:bg-zinc-100 rounded-lg text-zinc-400 hover:text-brand-red transition-smooth cursor-pointer flex items-center justify-center ml-auto bg-transparent border-0">
                         <ChevronRight className="w-4 h-4" />
                       </button>
                     </td>
