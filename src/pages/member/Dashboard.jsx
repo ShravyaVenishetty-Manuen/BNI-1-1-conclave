@@ -258,7 +258,7 @@ export default function MemberDashboard({ loggedInMember, onTabChange }) {
                 key={member.name}
                 className={`p-4 rounded-xl border transition-smooth group ${member.isCaptain
                   ? 'bg-red-50/20 border-brand-red/30 shadow-2xs relative'
-                  : 'bg-white border-zinc-200 hover:border-brand-red/20 shadow-2xs hover:shadow-xs'
+                  : 'bg-white border-zinc-200 shadow-2xs'
                   }`}
               >
                 {member.isCaptain && (
@@ -270,14 +270,14 @@ export default function MemberDashboard({ loggedInMember, onTabChange }) {
                 <div className="flex items-start gap-3.5">
                   <div className={`w-12 h-12 rounded-full overflow-hidden border-2 flex items-center justify-center font-bold text-xs shrink-0 select-none ${member.isCaptain
                     ? 'border-brand-red bg-red-100 text-brand-red'
-                    : 'border-zinc-200 bg-zinc-50 text-zinc-500 group-hover:border-brand-red/45 transition-colors'
+                    : 'border-zinc-200 bg-zinc-50 text-zinc-500 transition-colors'
                     }`}>
                     {member.initials}
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-center">
-                      <h4 className="text-[12.5px] font-black text-zinc-850 truncate group-hover:text-brand-red transition-smooth leading-tight">
+                      <h4 className="text-[12.5px] font-black text-zinc-850 truncate transition-smooth leading-tight">
                         {member.name}
                       </h4>
                     </div>
