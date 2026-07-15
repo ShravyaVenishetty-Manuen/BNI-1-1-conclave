@@ -262,15 +262,15 @@ export const mockGlobalConclaves = [
 ];
 
 export const mockGlobalMembers = [
-  { id: "m-201", name: "Anjali Sharma", category: "IT Infrastructure", company: "Zenith Systems", chapter: "Apex Chapter", region: "Guntur Region" },
-  { id: "m-202", name: "Manish Tiwari", category: "Real Estate", company: "Prime Realty Group", chapter: "Apex Chapter", region: "Guntur Region" },
-  { id: "m-203", name: "Anita Rao", category: "Digital Marketing", company: "Spark Media", chapter: "Prosperity Chapter", region: "Guntur Region" },
-  { id: "m-204", name: "Deepak Chawla", category: "Supply Chain", company: "Logistics Pro", chapter: "Prosperity Chapter", region: "Guntur Region" },
-  { id: "m-205", name: "Ekta Ramachandran", category: "Law & Legal", company: "Rodriguez Partners", chapter: "Phoenix Central", region: "Phoenix Chapter" },
-  { id: "m-206", name: "Ganesh Viswanathan", category: "Financial Planning", company: "WealthWise Advisors", chapter: "Phoenix Central", region: "Phoenix Chapter" },
-  { id: "m-207", name: "Siddharth Mehta", category: "Commercial Realty", company: "Mehta Developers", chapter: "London Central Elite", region: "London Central" },
-  { id: "m-208", name: "Priya Nair", category: "Wealth Management", company: "Nair Finance", chapter: "London Central Elite", region: "London Central" },
-  { id: "m-209", name: "Kunal Shah", category: "Digital Marketing", company: "Shah Marketing Agency", chapter: "Singapore Prosperity", region: "Singapore Metro" },
-  { id: "m-210", name: "Sneha Reddy", category: "Logistics", company: "Reddy Shipping", chapter: "Singapore Prosperity", region: "Singapore Metro" }
+  { id: "m-201", name: "Anjali Sharma", category: "IT Infrastructure", company: "Zenith Systems", chapter: "Apex Chapter", region: "Guntur Region", email: "anjali@zenith.com", mobile: "+91 98765 43210" },
+  { id: "m-202", name: "Manish Tiwari", category: "Real Estate", company: "Prime Realty Group", chapter: "Apex Chapter", region: "Guntur Region", email: "manish@primerealty.com", mobile: "+91 98765 43211" },
+  { id: "m-203", name: "Anita Rao", category: "Digital Marketing", company: "Spark Media", chapter: "Prosperity Chapter", region: "Guntur Region", email: "anita@sparkmedia.in", mobile: "+91 98765 43212" },
+  { id: "m-204", name: "Deepak Chawla", category: "Supply Chain", company: "Logistics Pro", chapter: "Prosperity Chapter", region: "Guntur Region", email: "deepak@logisticspro.com", mobile: "+91 98765 43213" },
+  { id: "m-205", name: "Ekta Ramachandran", category: "Law & Legal", company: "Rodriguez Partners", chapter: "Phoenix Central", region: "Phoenix Chapter", email: "ekta@rodriguezlaw.com", mobile: "+1 480 555 0199" },
+  { id: "m-206", name: "Ganesh Viswanathan", category: "Financial Planning", company: "WealthWise Advisors", chapter: "Phoenix Central", region: "Phoenix Chapter", email: "ganesh@wealthwise.com", mobile: "+1 480 555 0198" },
+  { id: "m-207", name: "Siddharth Mehta", category: "Commercial Realty", company: "Mehta Developers", chapter: "London Central Elite", region: "London Central", email: "sid@mehtadevelopers.com", mobile: "+44 20 7946 0958" },
+  { id: "m-208", name: "Priya Nair", category: "Wealth Management", company: "Nair Finance", chapter: "London Central Elite", region: "London Central", email: "priya@nairfinance.co.uk", mobile: "+44 20 7946 0959" },
+  { id: "m-209", name: "Kunal Shah", category: "Digital Marketing", company: "Shah Marketing Agency", chapter: "Singapore Prosperity", region: "Singapore Metro", email: "kunal@shahmarketing.sg", mobile: "+65 6789 0123" },
+  { id: "m-210", name: "Sneha Reddy", category: "Logistics", company: "Reddy Shipping", chapter: "Singapore Prosperity", region: "Singapore Metro", email: "sneha@reddyshipping.com", mobile: "+65 6789 0124" }
 ];
 
