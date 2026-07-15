@@ -102,7 +102,7 @@ export default function Header({ searchQuery, setSearchQuery, activeTab, setActi
 
           {/* Notifications Dropdown Modal */}
           {showNotifications && (
-            <div className="absolute right-0 mt-2.5 w-80 bg-white border border-zinc-200 rounded-xl shadow-xl z-50 overflow-hidden text-zinc-800 flex flex-col max-h-[420px]">
+            <div className="absolute -right-16 sm:right-0 mt-2.5 w-80 max-w-[calc(100vw-2rem)] bg-white border border-zinc-200 rounded-xl shadow-xl z-50 overflow-hidden text-zinc-800 flex flex-col max-h-[420px]">
               {/* Dropdown Header */}
               <div className="p-3.5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/50">
                 <div className="flex items-center gap-2">
