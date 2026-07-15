@@ -145,41 +145,89 @@ export default function SuperadminDashboard({ setActiveTab }) {
 
       </div>
 
-      {/* Global Activity Feed Logs */}
-      <section className="bg-white border border-zinc-200 rounded-xl shadow-2xs p-5">
-        <div className="mb-4">
-          <h2 className="text-body-md font-black text-zinc-900 leading-tight">Recent Global Activity</h2>
-          <p className="text-[10px] text-zinc-450 font-semibold mt-0.5">Real-time status changes and regional conclave events log.</p>
-        </div>
+      {/* Bottom Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
         
-        <div className="space-y-4">
-          {[
-            { msg: "Regional Admin Meera Nair status set to Inactive", time: "2 hours ago", info: "Singapore Metro" },
-            { msg: "New Conclave 'Quarterly Synergy Q1' created by Sanjay Wagle", time: "Yesterday, 3:20 PM", info: "Guntur Region" },
-            { msg: "Schedule matching verified with 0 repeat collisions", time: "2 days ago", info: "Phoenix Chapter" }
-          ].map((activity, idx) => (
-            <div key={idx} className="flex gap-3 items-start text-body-sm">
-              <div className="p-1.5 bg-red-50 text-brand-red rounded-lg shrink-0">
-                <Activity className="w-3.5 h-3.5" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-bold text-zinc-800 leading-tight truncate">{activity.msg}</p>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-[10px] text-zinc-450 font-semibold flex items-center gap-1">
-                    <Clock className="w-3 h-3 text-zinc-400" />
-                    {activity.time}
-                  </span>
-                  <span className="text-zinc-300">•</span>
-                  <span className="text-[10px] text-brand-red font-black uppercase tracking-wider flex items-center gap-0.5">
-                    <MapPin className="w-3 h-3 shrink-0" />
-                    {activity.info}
+        {/* Active Conclaves List */}
+        <section className="lg:col-span-7 bg-white border border-zinc-200 rounded-xl shadow-2xs p-5 flex flex-col justify-between">
+          <div className="space-y-4">
+            <div>
+              <h2 className="text-body-md font-black text-zinc-900 leading-tight">Active Conclaves</h2>
+              <p className="text-[10px] text-zinc-450 font-semibold mt-0.5">Conclaves currently running or scheduled for today.</p>
+            </div>
+
+            <div className="divide-y divide-zinc-200 border border-zinc-200 rounded-xl overflow-hidden">
+              {mockGlobalConclaves.filter(c => c.status === 'Active').map(conclave => (
+                <div key={conclave.id} className="p-3.5 bg-white hover:bg-zinc-50/50 transition-colors flex justify-between items-center text-body-sm">
+                  <div className="space-y-1">
+                    <p className="font-black text-zinc-800 leading-none">{conclave.title}</p>
+                    <div className="flex gap-2 items-center text-[10px] text-zinc-450 font-semibold mt-1">
+                      <span>{conclave.region}</span>
+                      <span>•</span>
+                      <span>{conclave.tablesCount} tables</span>
+                      <span>•</span>
+                      <span>{conclave.membersCount} checked in</span>
+                    </div>
+                  </div>
+                  <span className="px-2 py-0.5 rounded-full text-[8.5px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-150 whitespace-nowrap">
+                    {conclave.status}
                   </span>
                 </div>
-              </div>
+              ))}
+              {mockGlobalConclaves.filter(c => c.status === 'Active').length === 0 && (
+                <p className="text-[11.5px] text-zinc-500 font-semibold p-4 text-center">No active conclaves currently running.</p>
+              )}
             </div>
-          ))}
-        </div>
-      </section>
+          </div>
+
+          <button 
+            onClick={() => setActiveTab && setActiveTab('conclaves')}
+            className="w-full text-center text-[10px] font-black text-brand-red uppercase tracking-wider hover:underline pt-4 mt-3 border-t border-zinc-100 flex items-center justify-center gap-1 cursor-pointer"
+          >
+            <span>View All Conclaves</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </section>
+
+        {/* Global Activity Feed Logs */}
+        <section className="lg:col-span-5 bg-white border border-zinc-200 rounded-xl shadow-2xs p-5 flex flex-col justify-between">
+          <div>
+            <div className="mb-4">
+              <h2 className="text-body-md font-black text-zinc-900 leading-tight">Recent Activity</h2>
+              <p className="text-[10px] text-zinc-450 font-semibold mt-0.5">Real-time status changes and log.</p>
+            </div>
+            
+            <div className="space-y-4">
+              {[
+                { msg: "Regional Admin Meera Nair status set to Inactive", time: "2 hours ago", info: "Singapore Metro" },
+                { msg: "New Conclave 'Quarterly Synergy Q1' created by Sanjay Wagle", time: "Yesterday, 3:20 PM", info: "Guntur Region" },
+                { msg: "Schedule matching verified with 0 repeat collisions", time: "2 days ago", info: "Phoenix Chapter" }
+              ].map((activity, idx) => (
+                <div key={idx} className="flex gap-3 items-start text-body-sm">
+                  <div className="p-1.5 bg-red-50 text-brand-red rounded-lg shrink-0">
+                    <Activity className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-zinc-800 leading-tight truncate">{activity.msg}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-[10px] text-zinc-450 font-semibold flex items-center gap-1">
+                        <Clock className="w-3 h-3 text-zinc-400" />
+                        {activity.time}
+                      </span>
+                      <span className="text-zinc-300">•</span>
+                      <span className="text-[10px] text-brand-red font-black uppercase tracking-wider flex items-center gap-0.5">
+                        <MapPin className="w-3 h-3 shrink-0" />
+                        {activity.info}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+      </div>
 
     </div>
   );
