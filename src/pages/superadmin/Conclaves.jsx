@@ -1,13 +1,10 @@
 import React, { useState } from 'react';
-import { 
-  X, 
-  MapPin, 
-  Calendar, 
-  Layers, 
-  Users, 
-  Award, 
-  SlidersHorizontal,
-  ChevronRight,
+import {
+  X,
+  Calendar,
+  Layers,
+  Users,
+  Award,
   Eye
 } from 'lucide-react';
 import { mockGlobalConclaves, mockRegions } from '../../data/mockConclaveData';
@@ -28,7 +25,7 @@ export default function SuperadminConclaves({ searchQuery }) {
 
   return (
     <div className="space-y-6 animate-fade-in font-sans pb-16 relative">
-      
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-zinc-200 pb-5">
         <div className="space-y-1">
@@ -45,11 +42,10 @@ export default function SuperadminConclaves({ searchQuery }) {
             <button
               key={status}
               onClick={() => setSelectedStatus(status)}
-              className={`px-3.5 py-1.5 rounded-lg text-[10.5px] font-black uppercase tracking-wider transition-smooth cursor-pointer ${
-                selectedStatus === status 
-                  ? 'bg-brand-red text-white' 
+              className={`px-3.5 py-1.5 rounded-lg text-[10.5px] font-black uppercase tracking-wider transition-smooth cursor-pointer ${selectedStatus === status
+                  ? 'bg-brand-red text-white'
                   : 'bg-zinc-50 border border-zinc-200 text-zinc-500 hover:text-zinc-800'
-              }`}
+                }`}
             >
               {status}
             </button>
@@ -59,7 +55,7 @@ export default function SuperadminConclaves({ searchQuery }) {
         {/* Region Filter */}
         <div className="flex items-center gap-2">
           <span className="text-[10px] font-black text-zinc-450 uppercase tracking-widest shrink-0">Filter Region:</span>
-          <select 
+          <select
             value={selectedRegion}
             onChange={(e) => setSelectedRegion(e.target.value)}
             className="h-9 px-2.5 bg-zinc-50 border border-zinc-200 rounded-lg text-body-sm font-bold text-zinc-700 focus:outline-hidden focus:ring-1 focus:ring-brand-red focus:border-brand-red cursor-pointer"
@@ -92,7 +88,7 @@ export default function SuperadminConclaves({ searchQuery }) {
               {filteredConclaves.map((conclave) => (
                 <tr key={conclave.id} className="hover:bg-zinc-50/50 transition-colors">
                   <td className="p-4 pl-6">
-                    <button 
+                    <button
                       onClick={() => setActiveConclave(conclave)}
                       className="font-black text-zinc-900 hover:text-brand-red text-left cursor-pointer"
                     >
@@ -100,7 +96,7 @@ export default function SuperadminConclaves({ searchQuery }) {
                     </button>
                   </td>
                   <td className="p-4">
-                    <span className="px-2.5 py-0.5 bg-zinc-50 border border-zinc-200 text-zinc-550 text-[10px] font-bold rounded-full">
+                    <span className="px-2.5 py-0.5 bg-zinc-50 border border-zinc-200 text-zinc-550 text-[10px] font-bold rounded-full whitespace-nowrap">
                       {conclave.region}
                     </span>
                   </td>
@@ -109,18 +105,17 @@ export default function SuperadminConclaves({ searchQuery }) {
                   <td className="p-4 text-center font-bold text-zinc-800">{conclave.tablesCount} tables</td>
                   <td className="p-4 text-center font-bold text-zinc-800">{conclave.membersCount} members</td>
                   <td className="p-4 text-center">
-                    <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
-                      conclave.status === 'Completed' 
-                        ? 'bg-zinc-100 text-zinc-550 border border-zinc-200' 
-                        : conclave.status === 'Active' 
-                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-150'
-                        : 'bg-red-50 text-brand-red border border-red-100'
-                    }`}>
+                    <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${conclave.status === 'Completed'
+                        ? 'bg-zinc-100 text-zinc-550 border border-zinc-200'
+                        : conclave.status === 'Active'
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-150'
+                          : 'bg-red-50 text-brand-red border border-red-100'
+                      }`}>
                       {conclave.status}
                     </span>
                   </td>
                   <td className="p-4 text-right pr-6">
-                    <button 
+                    <button
                       onClick={() => setActiveConclave(conclave)}
                       className="p-1.5 text-zinc-400 hover:text-zinc-700 transition-smooth cursor-pointer"
                       title="View Details"
@@ -138,7 +133,7 @@ export default function SuperadminConclaves({ searchQuery }) {
       {/* Conclave detail drawer */}
       {activeConclave && (
         <>
-          <div 
+          <div
             onClick={() => setActiveConclave(null)}
             className="fixed inset-0 bg-black/50 z-[55] transition-opacity duration-300"
           />
@@ -149,7 +144,7 @@ export default function SuperadminConclaves({ searchQuery }) {
                   <h2 className="text-base font-black text-zinc-900 leading-tight">Conclave Event overview</h2>
                   <p className="text-[10px] text-zinc-450 font-semibold mt-0.5">Conclave ID: {activeConclave.id}</p>
                 </div>
-                <button 
+                <button
                   onClick={() => setActiveConclave(null)}
                   className="p-1.5 rounded-full hover:bg-zinc-100 text-zinc-455"
                 >
@@ -223,7 +218,7 @@ export default function SuperadminConclaves({ searchQuery }) {
             </div>
 
             <div className="pt-6 border-t border-zinc-200">
-              <button 
+              <button
                 onClick={() => setActiveConclave(null)}
                 className="w-full py-2.5 bg-zinc-900 hover:bg-zinc-800 text-white text-[11px] font-black uppercase tracking-wider rounded-lg transition-smooth cursor-pointer"
               >

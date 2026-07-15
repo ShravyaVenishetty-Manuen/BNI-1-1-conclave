@@ -1,37 +1,31 @@
 import React, { useState } from 'react';
-import { 
-  Plus, 
-  Edit, 
-  Trash2, 
-  X, 
-  Mail, 
-  Phone, 
-  Globe, 
-  SlidersHorizontal,
-  ChevronRight,
-  Sparkles,
+import {
+  Plus,
+  Edit,
+  Trash2,
+  X,
+  Globe,
   Info,
   CalendarRange,
   Users,
   Eye,
   KeyRound,
-  Copy,
   CheckCircle2
 } from 'lucide-react';
-import { 
-  mockAdmins, 
-  mockRegions, 
-  mockGlobalConclaves, 
-  mockGlobalMembers 
+import {
+  mockAdmins,
+  mockRegions,
+  mockGlobalConclaves,
+  mockGlobalMembers
 } from '../../data/mockConclaveData';
 
 export default function SuperadminAdmins({ searchQuery }) {
   const [subTab, setSubTab] = useState('admins'); // 'admins' or 'regions'
-  
+
   // Local state for interactive CRUD
   const [admins, setAdmins] = useState(mockAdmins);
   const [regions, setRegions] = useState(mockRegions);
-  
+
   // Drawer states
   const [activeAdmin, setActiveAdmin] = useState(null);
   const [activeRegion, setActiveRegion] = useState(null);
@@ -91,13 +85,13 @@ export default function SuperadminAdmins({ searchQuery }) {
 
   // Filtered Lists
   const q = searchQuery ? searchQuery.toLowerCase() : '';
-  const filteredAdmins = admins.filter(admin => 
+  const filteredAdmins = admins.filter(admin =>
     admin.name.toLowerCase().includes(q) ||
     admin.email.toLowerCase().includes(q) ||
     admin.region.toLowerCase().includes(q)
   );
 
-  const filteredRegions = regions.filter(region => 
+  const filteredRegions = regions.filter(region =>
     region.name.toLowerCase().includes(q)
   );
 
@@ -195,17 +189,17 @@ export default function SuperadminAdmins({ searchQuery }) {
 
   return (
     <div className="space-y-6 animate-fade-in font-sans pb-16 relative">
-      
+
       {/* Header tabs */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-zinc-200 pb-5">
         <div className="space-y-1">
           <h1 className="text-2xl font-black text-zinc-955 tracking-tight">Admins &amp; BNI Regions</h1>
           <p className="text-xs text-zinc-500 font-semibold">Manage regional administrator accounts and BNI regional network nodes.</p>
         </div>
-        
+
         <div className="flex gap-2">
           {subTab === 'admins' ? (
-            <button 
+            <button
               onClick={() => handleOpenAdminModal()}
               className="py-2 px-4 bg-brand-red hover:bg-red-750 text-white text-[11px] font-black uppercase tracking-wider rounded-lg transition-smooth flex items-center gap-1.5 cursor-pointer shadow-sm shadow-brand-red/10"
             >
@@ -213,7 +207,7 @@ export default function SuperadminAdmins({ searchQuery }) {
               Add Admin
             </button>
           ) : (
-            <button 
+            <button
               onClick={() => handleOpenRegionModal()}
               className="py-2 px-4 bg-brand-red hover:bg-red-750 text-white text-[11px] font-black uppercase tracking-wider rounded-lg transition-smooth flex items-center gap-1.5 cursor-pointer shadow-sm shadow-brand-red/10"
             >
@@ -228,21 +222,19 @@ export default function SuperadminAdmins({ searchQuery }) {
       <div className="flex gap-4 border-b border-zinc-200">
         <button
           onClick={() => setSubTab('admins')}
-          className={`pb-3 text-xs font-black uppercase tracking-wider transition-smooth cursor-pointer ${
-            subTab === 'admins'
-              ? 'border-b-2 border-brand-red text-brand-red font-black'
-              : 'text-zinc-450 hover:text-zinc-700'
-          }`}
+          className={`pb-3 text-xs font-black uppercase tracking-wider transition-smooth cursor-pointer ${subTab === 'admins'
+            ? 'border-b-2 border-brand-red text-brand-red font-black'
+            : 'text-zinc-450 hover:text-zinc-700'
+            }`}
         >
           Admins ({admins.length})
         </button>
         <button
           onClick={() => setSubTab('regions')}
-          className={`pb-3 text-xs font-black uppercase tracking-wider transition-smooth cursor-pointer ${
-            subTab === 'regions'
-              ? 'border-b-2 border-brand-red text-brand-red font-black'
-              : 'text-zinc-450 hover:text-zinc-700'
-          }`}
+          className={`pb-3 text-xs font-black uppercase tracking-wider transition-smooth cursor-pointer ${subTab === 'regions'
+            ? 'border-b-2 border-brand-red text-brand-red font-black'
+            : 'text-zinc-450 hover:text-zinc-700'
+            }`}
         >
           BNI Regions ({regions.length})
         </button>
@@ -267,7 +259,7 @@ export default function SuperadminAdmins({ searchQuery }) {
                 {filteredAdmins.map((admin) => (
                   <tr key={admin.id} className="hover:bg-zinc-50/50 transition-colors">
                     <td className="p-4 pl-6">
-                      <button 
+                      <button
                         onClick={() => setActiveAdmin(admin)}
                         className="font-black text-zinc-900 hover:text-brand-red text-left cursor-pointer"
                       >
@@ -275,45 +267,44 @@ export default function SuperadminAdmins({ searchQuery }) {
                       </button>
                     </td>
                     <td className="p-4">
-                      <span className="px-2.5 py-0.5 bg-zinc-50 border border-zinc-200 text-zinc-550 text-[10px] font-bold rounded-full">
+                      <span className="px-2.5 py-0.5 bg-zinc-50 border border-zinc-200 text-zinc-550 text-[10px] font-bold rounded-full whitespace-nowrap">
                         {admin.region}
                       </span>
                     </td>
                     <td className="p-4 text-zinc-500">{admin.email}</td>
                     <td className="p-4 text-zinc-500">{admin.mobile}</td>
                     <td className="p-4 text-center">
-                      <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
-                        admin.status === 'Active' 
-                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-150' 
-                          : 'bg-zinc-50 text-zinc-450 border border-zinc-200'
-                      }`}>
+                      <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${admin.status === 'Active'
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-150'
+                        : 'bg-zinc-50 text-zinc-450 border border-zinc-200'
+                        }`}>
                         {admin.status}
                       </span>
                     </td>
                     <td className="p-4 text-right pr-6">
                       <div className="flex justify-end gap-2.5">
-                        <button 
+                        <button
                           onClick={() => setActiveAdmin(admin)}
                           className="p-1.5 text-zinc-400 hover:text-zinc-700 transition-smooth cursor-pointer"
                           title="View Details"
                         >
                           <Eye className="w-4 h-4" />
                         </button>
-                        <button 
+                        <button
                           onClick={() => handleOpenAdminModal(admin)}
                           className="p-1.5 text-zinc-400 hover:text-brand-red transition-smooth cursor-pointer"
                           title="Edit"
                         >
                           <Edit className="w-4 h-4" />
                         </button>
-                        <button 
+                        <button
                           onClick={() => handleOpenResetPassword(admin)}
                           className="p-1.5 text-zinc-400 hover:text-brand-red transition-smooth cursor-pointer"
                           title="Reset Password"
                         >
                           <KeyRound className="w-4 h-4" />
                         </button>
-                        <button 
+                        <button
                           onClick={() => handleDeleteAdmin(admin.id)}
                           className="p-1.5 text-zinc-400 hover:text-brand-red transition-smooth cursor-pointer"
                           title="Delete"
@@ -345,7 +336,7 @@ export default function SuperadminAdmins({ searchQuery }) {
                 {filteredRegions.map((region) => (
                   <tr key={region.id} className="hover:bg-zinc-50/50 transition-colors">
                     <td className="p-4 pl-6">
-                      <button 
+                      <button
                         onClick={() => setActiveRegion(region)}
                         className="font-black text-zinc-900 hover:text-brand-red hover:underline text-left cursor-pointer"
                       >
@@ -355,31 +346,30 @@ export default function SuperadminAdmins({ searchQuery }) {
                     <td className="p-4 text-center font-bold text-zinc-800">{region.conclavesCount} conclaves</td>
                     <td className="p-4 text-center font-bold text-zinc-800">{region.membersCount} members</td>
                     <td className="p-4 text-center">
-                      <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
-                        region.status === 'Active' 
-                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-150' 
-                          : 'bg-zinc-50 text-zinc-450 border border-zinc-200'
-                      }`}>
+                      <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${region.status === 'Active'
+                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-150'
+                        : 'bg-zinc-50 text-zinc-450 border border-zinc-200'
+                        }`}>
                         {region.status}
                       </span>
                     </td>
                     <td className="p-4 text-right pr-6">
                       <div className="flex justify-end gap-2.5">
-                        <button 
+                        <button
                           onClick={() => setActiveRegion(region)}
                           className="p-1.5 text-zinc-400 hover:text-zinc-700 transition-smooth cursor-pointer"
                           title="View Details"
                         >
                           <Eye className="w-4 h-4" />
                         </button>
-                        <button 
+                        <button
                           onClick={() => handleOpenRegionModal(region)}
                           className="p-1.5 text-zinc-400 hover:text-brand-red transition-smooth cursor-pointer"
                           title="Edit"
                         >
                           <Edit className="w-4 h-4" />
                         </button>
-                        <button 
+                        <button
                           onClick={() => handleDeleteRegion(region.id)}
                           className="p-1.5 text-zinc-400 hover:text-brand-red transition-smooth cursor-pointer"
                           title="Delete"
@@ -399,7 +389,7 @@ export default function SuperadminAdmins({ searchQuery }) {
       {/* Admin detail drawer */}
       {activeAdmin && (
         <>
-          <div 
+          <div
             onClick={() => setActiveAdmin(null)}
             className="fixed inset-0 bg-black/50 z-[55] transition-opacity duration-300"
           />
@@ -410,7 +400,7 @@ export default function SuperadminAdmins({ searchQuery }) {
                   <h2 className="text-base font-black text-zinc-900 leading-tight">Admin Profile details</h2>
                   <p className="text-[10px] text-zinc-450 font-semibold mt-0.5">Admin ID: {activeAdmin.id}</p>
                 </div>
-                <button 
+                <button
                   onClick={() => setActiveAdmin(null)}
                   className="p-1.5 rounded-full hover:bg-zinc-100 text-zinc-450"
                 >
@@ -421,7 +411,7 @@ export default function SuperadminAdmins({ searchQuery }) {
               <div className="space-y-5">
                 <div className="flex items-center gap-3.5 bg-zinc-50 p-4 rounded-xl border border-zinc-200">
                   <div className="w-12 h-12 rounded-full bg-brand-red/10 text-brand-red flex items-center justify-center font-black text-[13px]">
-                    {activeAdmin.name.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase()}
+                    {activeAdmin.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
                   </div>
                   <div>
                     <h3 className="text-[13.5px] font-black text-zinc-900 leading-none">{activeAdmin.name}</h3>
@@ -486,7 +476,7 @@ export default function SuperadminAdmins({ searchQuery }) {
             </div>
 
             <div className="pt-6 border-t border-zinc-200 flex flex-col gap-2">
-              <button 
+              <button
                 onClick={() => {
                   setActiveAdmin(null);
                   handleOpenResetPassword(activeAdmin);
@@ -496,7 +486,7 @@ export default function SuperadminAdmins({ searchQuery }) {
                 <KeyRound className="w-3.5 h-3.5" />
                 Reset Password
               </button>
-              <button 
+              <button
                 onClick={() => setActiveAdmin(null)}
                 className="w-full py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-[11px] font-black uppercase tracking-wider rounded-lg transition-smooth cursor-pointer"
               >
@@ -510,7 +500,7 @@ export default function SuperadminAdmins({ searchQuery }) {
       {/* Region detail drawer */}
       {activeRegion && (
         <>
-          <div 
+          <div
             onClick={() => setActiveRegion(null)}
             className="fixed inset-0 bg-black/50 z-[55] transition-opacity duration-300"
           />
@@ -521,7 +511,7 @@ export default function SuperadminAdmins({ searchQuery }) {
                   <h2 className="text-base font-black text-zinc-900 leading-tight">Region Details Overview</h2>
                   <p className="text-[10px] text-zinc-450 font-semibold mt-0.5">Region ID: {activeRegion.id}</p>
                 </div>
-                <button 
+                <button
                   onClick={() => setActiveRegion(null)}
                   className="p-1.5 rounded-full hover:bg-zinc-100 text-zinc-450"
                 >
@@ -568,9 +558,8 @@ export default function SuperadminAdmins({ searchQuery }) {
                           <p className="font-black text-zinc-800">{conclave.title}</p>
                           <p className="text-[10px] text-zinc-450 font-semibold mt-0.5">{conclave.venue} • {conclave.date}</p>
                         </div>
-                        <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider ${
-                          conclave.status === 'Completed' ? 'bg-zinc-100 text-zinc-650' : 'bg-emerald-50 text-emerald-700'
-                        }`}>
+                        <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider ${conclave.status === 'Completed' ? 'bg-zinc-100 text-zinc-650' : 'bg-emerald-50 text-emerald-700'
+                          }`}>
                           {conclave.status}
                         </span>
                       </div>
@@ -581,7 +570,7 @@ export default function SuperadminAdmins({ searchQuery }) {
             </div>
 
             <div className="pt-6 border-t border-zinc-200">
-              <button 
+              <button
                 onClick={() => setActiveRegion(null)}
                 className="w-full py-2.5 bg-zinc-900 hover:bg-zinc-800 text-white text-[11px] font-black uppercase tracking-wider rounded-lg transition-smooth cursor-pointer"
               >
@@ -595,7 +584,7 @@ export default function SuperadminAdmins({ searchQuery }) {
       {/* Admin Form Modal */}
       {showAdminModal && (
         <div className="fixed inset-0 z-55 flex items-center justify-center p-4">
-          <div 
+          <div
             onClick={() => setShowAdminModal(false)}
             className="fixed inset-0 bg-black/50 transition-opacity duration-300"
           />
@@ -604,18 +593,18 @@ export default function SuperadminAdmins({ searchQuery }) {
               <h3 className="text-body-md font-black text-zinc-900 leading-tight">
                 {editingAdmin ? 'Edit Regional Admin' : 'Add Regional Admin'}
               </h3>
-              <button 
+              <button
                 onClick={() => setShowAdminModal(false)}
                 className="p-1 rounded-full hover:bg-zinc-200 text-zinc-455"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
-            
+
             <form onSubmit={handleSaveAdmin} className="p-5 space-y-4">
               <div className="space-y-1.5">
                 <label className="block text-[9.5px] font-black text-zinc-450 uppercase tracking-widest">Full Name</label>
-                <input 
+                <input
                   type="text"
                   required
                   value={adminForm.name}
@@ -627,7 +616,7 @@ export default function SuperadminAdmins({ searchQuery }) {
 
               <div className="space-y-1.5">
                 <label className="block text-[9.5px] font-black text-zinc-450 uppercase tracking-widest">Email Address</label>
-                <input 
+                <input
                   type="email"
                   required
                   value={adminForm.email}
@@ -639,7 +628,7 @@ export default function SuperadminAdmins({ searchQuery }) {
 
               <div className="space-y-1.5">
                 <label className="block text-[9.5px] font-black text-zinc-450 uppercase tracking-widest">Mobile Number</label>
-                <input 
+                <input
                   type="text"
                   required
                   value={adminForm.mobile}
@@ -652,7 +641,7 @@ export default function SuperadminAdmins({ searchQuery }) {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <label className="block text-[9.5px] font-black text-zinc-450 uppercase tracking-widest">BNI Region</label>
-                  <select 
+                  <select
                     value={adminForm.region}
                     onChange={(e) => setAdminForm(prev => ({ ...prev, region: e.target.value }))}
                     className="w-full h-10 px-2.5 border border-zinc-250 rounded-lg text-body-sm font-semibold text-zinc-800 focus:ring-1 focus:ring-brand-red focus:border-brand-red focus:outline-hidden"
@@ -664,7 +653,7 @@ export default function SuperadminAdmins({ searchQuery }) {
                 </div>
                 <div className="space-y-1.5">
                   <label className="block text-[9.5px] font-black text-zinc-450 uppercase tracking-widest">Status</label>
-                  <select 
+                  <select
                     value={adminForm.status}
                     onChange={(e) => setAdminForm(prev => ({ ...prev, status: e.target.value }))}
                     className="w-full h-10 px-2.5 border border-zinc-250 rounded-lg text-body-sm font-semibold text-zinc-800 focus:ring-1 focus:ring-brand-red focus:border-brand-red focus:outline-hidden"
@@ -676,14 +665,14 @@ export default function SuperadminAdmins({ searchQuery }) {
               </div>
 
               <div className="pt-3 flex gap-3">
-                <button 
+                <button
                   type="button"
                   onClick={() => setShowAdminModal(false)}
                   className="flex-1 py-2 px-4 border border-zinc-250 text-zinc-700 font-bold rounded-lg hover:bg-zinc-50 transition-smooth cursor-pointer text-body-sm text-center"
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   type="submit"
                   className="flex-1 py-2 px-4 bg-brand-red hover:bg-red-750 text-white font-bold rounded-lg shadow-sm transition-smooth cursor-pointer text-body-sm text-center"
                 >
@@ -698,7 +687,7 @@ export default function SuperadminAdmins({ searchQuery }) {
       {/* Region Form Modal */}
       {showRegionModal && (
         <div className="fixed inset-0 z-55 flex items-center justify-center p-4">
-          <div 
+          <div
             onClick={() => setShowRegionModal(false)}
             className="fixed inset-0 bg-black/50 transition-opacity duration-300"
           />
@@ -707,18 +696,18 @@ export default function SuperadminAdmins({ searchQuery }) {
               <h3 className="text-body-md font-black text-zinc-900 leading-tight">
                 {editingRegion ? 'Edit BNI Region' : 'Add BNI Region'}
               </h3>
-              <button 
+              <button
                 onClick={() => setShowRegionModal(false)}
                 className="p-1 rounded-full hover:bg-zinc-200 text-zinc-455"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
-            
+
             <form onSubmit={handleSaveRegion} className="p-5 space-y-4">
               <div className="space-y-1.5">
                 <label className="block text-[9.5px] font-black text-zinc-455 uppercase tracking-widest">Region Name</label>
-                <input 
+                <input
                   type="text"
                   required
                   value={regionForm.name}
@@ -731,7 +720,7 @@ export default function SuperadminAdmins({ searchQuery }) {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <label className="block text-[9.5px] font-black text-zinc-450 uppercase tracking-widest">Members Count</label>
-                  <input 
+                  <input
                     type="number"
                     required
                     value={regionForm.membersCount}
@@ -741,7 +730,7 @@ export default function SuperadminAdmins({ searchQuery }) {
                 </div>
                 <div className="space-y-1.5">
                   <label className="block text-[9.5px] font-black text-zinc-450 uppercase tracking-widest">Conclaves Count</label>
-                  <input 
+                  <input
                     type="number"
                     required
                     value={regionForm.conclavesCount}
@@ -753,7 +742,7 @@ export default function SuperadminAdmins({ searchQuery }) {
 
               <div className="space-y-1.5">
                 <label className="block text-[9.5px] font-black text-zinc-450 uppercase tracking-widest">Status</label>
-                <select 
+                <select
                   value={regionForm.status}
                   onChange={(e) => setRegionForm(prev => ({ ...prev, status: e.target.value }))}
                   className="w-full h-10 px-2.5 border border-zinc-250 rounded-lg text-body-sm font-semibold text-zinc-800 focus:ring-1 focus:ring-brand-red focus:border-brand-red focus:outline-hidden"
@@ -764,14 +753,14 @@ export default function SuperadminAdmins({ searchQuery }) {
               </div>
 
               <div className="pt-3 flex gap-3">
-                <button 
+                <button
                   type="button"
                   onClick={() => setShowRegionModal(false)}
                   className="flex-1 py-2 px-4 border border-zinc-250 text-zinc-700 font-bold rounded-lg hover:bg-zinc-50 transition-smooth cursor-pointer text-body-sm text-center"
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   type="submit"
                   className="flex-1 py-2 px-4 bg-brand-red hover:bg-red-750 text-white font-bold rounded-lg shadow-sm transition-smooth cursor-pointer text-body-sm text-center"
                 >
@@ -786,7 +775,7 @@ export default function SuperadminAdmins({ searchQuery }) {
       {/* Reset Password Modal */}
       {resetPasswordTarget && (
         <div className="fixed inset-0 z-55 flex items-center justify-center p-4">
-          <div 
+          <div
             onClick={() => setResetPasswordTarget(null)}
             className="fixed inset-0 bg-black/50 transition-opacity duration-300"
           />
@@ -795,14 +784,14 @@ export default function SuperadminAdmins({ searchQuery }) {
               <h3 className="text-body-md font-black text-zinc-900 leading-tight">
                 {isPasswordResetDone ? 'Password Reset Successful' : 'Reset Administrator Password'}
               </h3>
-              <button 
+              <button
                 onClick={() => setResetPasswordTarget(null)}
                 className="p-1 rounded-full hover:bg-zinc-200 text-zinc-455"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
-            
+
             {!isPasswordResetDone ? (
               <div className="p-5 space-y-4">
                 <div className="bg-zinc-50 p-4 rounded-xl border border-zinc-200 space-y-1">
@@ -814,13 +803,13 @@ export default function SuperadminAdmins({ searchQuery }) {
                 <div className="space-y-1.5">
                   <label className="block text-[9.5px] font-black text-zinc-455 uppercase tracking-widest">Temporary Password</label>
                   <div className="flex gap-2">
-                    <input 
+                    <input
                       type="text"
                       readOnly
                       value={tempPassword}
                       className="flex-1 h-10 px-3 border border-zinc-250 bg-zinc-50/50 rounded-lg text-body-sm font-extrabold text-zinc-900 select-all focus:outline-hidden"
                     />
-                    <button 
+                    <button
                       onClick={() => setTempPassword(generateRandomPassword())}
                       className="px-3 h-10 border border-zinc-250 text-zinc-700 font-bold rounded-lg hover:bg-zinc-50 transition-smooth cursor-pointer text-body-sm"
                       title="Generate new random password"
@@ -838,14 +827,14 @@ export default function SuperadminAdmins({ searchQuery }) {
                 </div>
 
                 <div className="pt-2 flex gap-3">
-                  <button 
+                  <button
                     type="button"
                     onClick={() => setResetPasswordTarget(null)}
                     className="flex-1 py-2 px-4 border border-zinc-250 text-zinc-700 font-bold rounded-lg hover:bg-zinc-50 transition-smooth cursor-pointer text-body-sm text-center"
                   >
                     Cancel
                   </button>
-                  <button 
+                  <button
                     onClick={handleConfirmReset}
                     className="flex-1 py-2 px-4 bg-brand-red hover:bg-red-750 text-white font-bold rounded-lg shadow-sm transition-smooth cursor-pointer text-body-sm text-center"
                   >
@@ -870,19 +859,18 @@ export default function SuperadminAdmins({ searchQuery }) {
                     <span className="text-[9px] font-black text-zinc-400 uppercase block tracking-wider">Access Token / Password</span>
                     <span className="text-[14px] font-black text-brand-red font-mono leading-none select-all">{tempPassword}</span>
                   </div>
-                  <button 
+                  <button
                     onClick={handleCopyPassword}
-                    className={`py-1.5 px-3 rounded-lg text-body-sm font-bold border transition-smooth cursor-pointer ${
-                      isPasswordCopied 
-                        ? 'bg-emerald-50 border-emerald-200 text-emerald-700' 
-                        : 'bg-white border-zinc-250 text-zinc-700 hover:bg-zinc-50'
-                    }`}
+                    className={`py-1.5 px-3 rounded-lg text-body-sm font-bold border transition-smooth cursor-pointer ${isPasswordCopied
+                      ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                      : 'bg-white border-zinc-250 text-zinc-700 hover:bg-zinc-50'
+                      }`}
                   >
                     {isPasswordCopied ? 'Copied!' : 'Copy Code'}
                   </button>
                 </div>
 
-                <button 
+                <button
                   onClick={() => setResetPasswordTarget(null)}
                   className="w-full py-2 bg-zinc-900 hover:bg-zinc-800 text-white font-bold rounded-lg text-body-sm transition-smooth cursor-pointer"
                 >
