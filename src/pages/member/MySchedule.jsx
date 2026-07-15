@@ -120,8 +120,8 @@ export default function MemberSchedule({ loggedInMember, onTabChange }) {
       {/* Bento Grid Layout */}
       <div className="grid grid-cols-12 gap-6 items-start">
 
-        {/* Left Column: Schedule Progress & Timeline (Col-Span 8) */}
-        <div className="col-span-12 lg:col-span-8 space-y-6">
+        {/* Left Column: Schedule Progress & Timeline (Col-Span 12) */}
+        <div className="col-span-12 space-y-6">
 
           {/* Current Live Session Card */}
           <div className="bg-white rounded-xl border border-zinc-200 shadow-2xs p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
@@ -302,8 +302,8 @@ export default function MemberSchedule({ loggedInMember, onTabChange }) {
           </div>
         </div>
 
-        {/* Right Column: Next Round Preview & Logistics (Col-Span 4) */}
-        <aside className="col-span-12 lg:col-span-4 space-y-6">
+        {/* Right Column: Next Round Preview & Logistics (Col-Span 12, grid side-by-side) */}
+        <aside className="col-span-12 grid grid-cols-1 md:grid-cols-2 gap-6">
 
           {/* Up Next Card */}
           <div className="bg-white rounded-xl border border-zinc-200 shadow-2xs overflow-hidden">
