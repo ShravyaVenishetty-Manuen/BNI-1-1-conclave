@@ -20,9 +20,21 @@
     "coordinatorAvatar": "SW",
     "description": "A premier networking conclave focusing on cross-regional business collaboration and strategic B2B referrals. This session aims to connect high-performing entrepreneurs and business leaders across 12 diverse industries.",
     "timeline": [
-      { "event": "Snapshot Published", "date": "Oct 12, 2024 • 10:30 AM", "desc": "Published by Admin" },
-      { "event": "48 Captains Assigned", "date": "Oct 10, 2024 • 04:15 PM", "desc": "Assigned by Vikram M." },
-      { "event": "Registration Opened", "date": "Sep 25, 2024 • 09:00 AM", "desc": "Opened for all regional chapters" }
+      {
+        "event": "Snapshot Published",
+        "date": "Oct 12, 2024 • 10:30 AM",
+        "desc": "Published by Admin"
+      },
+      {
+        "event": "48 Captains Assigned",
+        "date": "Oct 10, 2024 • 04:15 PM",
+        "desc": "Assigned by Vikram M."
+      },
+      {
+        "event": "Registration Opened",
+        "date": "Sep 25, 2024 • 09:00 AM",
+        "desc": "Opened for all regional chapters"
+      }
     ]
   },
   {
@@ -46,8 +58,16 @@
     "coordinatorAvatar": "AS",
     "description": "Annual training and planning meeting for BNI regional leadership, captains, and area directors. Focuses on setting conclave schedules for the next quarter.",
     "timeline": [
-      { "event": "Session Started", "date": "Oct 20, 2024 • 08:00 AM", "desc": "Live matchmaking rounds running" },
-      { "event": "Captains Briefing", "date": "Oct 19, 2024 • 05:00 PM", "desc": "All 12 captains validated" }
+      {
+        "event": "Session Started",
+        "date": "Oct 20, 2024 • 08:00 AM",
+        "desc": "Live matchmaking rounds running"
+      },
+      {
+        "event": "Captains Briefing",
+        "date": "Oct 19, 2024 • 05:00 PM",
+        "desc": "All 12 captains validated"
+      }
     ]
   },
   {
@@ -69,7 +89,11 @@
     "coordinatorAvatar": "RM",
     "description": "Planning draft for the first national level business networking round table of 2025, targeting real estate and infrastructure startups.",
     "timeline": [
-      { "event": "Conclave Workspace Created", "date": "Sep 20, 2024 • 11:20 AM", "desc": "Created draft workspace" }
+      {
+        "event": "Conclave Workspace Created",
+        "date": "Sep 20, 2024 • 11:20 AM",
+        "desc": "Created draft workspace"
+      }
     ]
   },
   {
@@ -91,7 +115,11 @@
     "coordinatorAvatar": "SI",
     "description": "South India networking and business exhibition event.",
     "timeline": [
-      { "event": "Expo Closed", "date": "Aug 12, 2024 • 05:00 PM", "desc": "Closed business reported successfully" }
+      {
+        "event": "Expo Closed",
+        "date": "Aug 12, 2024 • 05:00 PM",
+        "desc": "Closed business reported successfully"
+      }
     ]
   },
   {
@@ -113,7 +141,11 @@
     "coordinatorAvatar": "AS",
     "description": "Annual training and strategic coordination seminar for directors and leadership teams across the Phoenix valley area.",
     "timeline": [
-      { "event": "Completed successfully", "date": "Feb 12, 2026", "desc": "Official report published." }
+      {
+        "event": "Completed successfully",
+        "date": "Feb 12, 2026",
+        "desc": "Official report published."
+      }
     ]
   },
   {
@@ -135,7 +167,11 @@
     "coordinatorAvatar": "VR",
     "description": "Premium business matching and structured referrals gathering for active London chapters.",
     "timeline": [
-      { "event": "Registration Opened", "date": "Jul 01, 2026", "desc": "Started onboarding attendees." }
+      {
+        "event": "Registration Opened",
+        "date": "Jul 01, 2026",
+        "desc": "Started onboarding attendees."
+      }
     ]
   },
   {
@@ -157,7 +193,11 @@
     "coordinatorAvatar": "MN",
     "description": "Cross-national collaborative forum connecting entrepreneurs across major APAC economies.",
     "timeline": [
-      { "event": "Summit Created", "date": "Jun 14, 2026", "desc": "Draft space initialized by region." }
+      {
+        "event": "Summit Created",
+        "date": "Jun 14, 2026",
+        "desc": "Draft space initialized by region."
+      }
     ]
   }
 ]

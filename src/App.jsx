@@ -68,22 +68,24 @@ export default function App() {
     const parts = path.split('/');
     const lastPart = parts[parts.length - 1];
     const validTabs = [
-      'dashboard', 'members', 'active-users', 'business-types', 'captains', 
-      'conclaves', 'snapshot', 'validation', 'schedule-gen', 'schedule-review', 
+      'dashboard', 'members', 'active-users', 'business-types', 'captains',
+      'conclaves', 'snapshot', 'validation', 'schedule-gen', 'schedule-review',
       'lock-conclave', 'round-runner', 'reports', 'admins', 'referrals'
     ];
     return validTabs.includes(lastPart) ? lastPart : 'dashboard';
   });
-  
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   // Global conclave selector for admin panel - default to current admin's active conclave
   const [selectedConclaveId, setSelectedConclaveId] = useState(() => {
     const adminData = localStorage.getItem('bni_logged_admin');
     const admin = adminData ? JSON.parse(adminData) : { name: "Sanjay Wagle", email: "admin@bni.com", region: "Guntur Central" };
     const myActiveConclave = conclavesData.find(c => c.status === 'Running' && c.coordinator === admin?.name);
-    return myActiveConclave?.id || conclavesData.find(c => c.status === 'Running')?.id || conclavesData[0]?.id || '';
+    if (myActiveConclave) return myActiveConclave.id;
+    const myAnyConclave = conclavesData.find(c => c.coordinator === admin?.name);
+    return myAnyConclave?.id || '';
   });
 
   const mainRef = useRef(null);
@@ -109,8 +111,8 @@ export default function App() {
       const parts = path.split('/');
       const lastPart = parts[parts.length - 1];
       const validTabs = [
-        'dashboard', 'members', 'active-users', 'business-types', 'captains', 
-        'conclaves', 'snapshot', 'validation', 'schedule-gen', 'schedule-review', 
+        'dashboard', 'members', 'active-users', 'business-types', 'captains',
+        'conclaves', 'snapshot', 'validation', 'schedule-gen', 'schedule-review',
         'lock-conclave', 'round-runner', 'reports', 'admins', 'referrals'
       ];
       const cleanTab = validTabs.includes(lastPart) ? lastPart : 'dashboard';
@@ -145,11 +147,17 @@ export default function App() {
     }
   }, []);
 
+  useEffect(() => {
+    if (mainRef.current) {
+      mainRef.current.scrollTop = 0;
+    }
+  }, [activeTab]);
+
   const handleLogin = (role, payload) => {
     localStorage.setItem('bni_logged_in', 'true');
     localStorage.setItem('bni_user_role', role);
     setUserRole(role);
-    
+
     if (role === 'captain') {
       localStorage.setItem('bni_logged_captain', JSON.stringify(payload));
       setLoggedInCaptain(payload);
@@ -190,6 +198,9 @@ export default function App() {
         const myActiveConclave = conclavesData.find(c => c.status === 'Running' && c.coordinator === payload.name);
         if (myActiveConclave) {
           setSelectedConclaveId(myActiveConclave.id);
+        } else {
+          const myAnyConclave = conclavesData.find(c => c.coordinator === payload.name);
+          setSelectedConclaveId(myAnyConclave?.id || '');
         }
       } else {
         localStorage.removeItem('bni_logged_admin');
@@ -197,6 +208,9 @@ export default function App() {
         const myActiveConclave = conclavesData.find(c => c.status === 'Running' && c.coordinator === "Sanjay Wagle");
         if (myActiveConclave) {
           setSelectedConclaveId(myActiveConclave.id);
+        } else {
+          const myAnyConclave = conclavesData.find(c => c.coordinator === "Sanjay Wagle");
+          setSelectedConclaveId(myAnyConclave?.id || '');
         }
       }
       setLoggedInCaptain(null);
@@ -345,7 +359,7 @@ export default function App() {
                 Hello {loggedInMember?.name}! This member page view is currently under construction.
               </p>
               <div className="pt-4 max-w-xs mx-auto">
-                <button 
+                <button
                   onClick={handleLogout}
                   className="w-full py-2 bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg text-[10.5px] font-black uppercase tracking-wider transition-smooth cursor-pointer"
                 >

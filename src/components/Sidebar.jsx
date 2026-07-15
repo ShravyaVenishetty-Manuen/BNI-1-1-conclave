@@ -50,7 +50,8 @@ export default function Sidebar({ activeTab, setActiveTab, onLogout, isOpen, onC
   const dropdownRef = useRef(null);
 
   const activeConclaves = conclavesData.filter(c => c.status === 'Running' && c.coordinator === loggedInAdmin?.name);
-  const selectedConclave = conclavesData.find(c => c.id === selectedConclaveId) || activeConclaves[0] || conclavesData[0];
+  const myConclaves = conclavesData.filter(c => c.coordinator === loggedInAdmin?.name);
+  const selectedConclave = conclavesData.find(c => c.id === selectedConclaveId && c.coordinator === loggedInAdmin?.name) || activeConclaves[0] || myConclaves[0] || null;
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -94,10 +95,14 @@ export default function Sidebar({ activeTab, setActiveTab, onLogout, isOpen, onC
           onClick={() => setShowConclaveDropdown(!showConclaveDropdown)}
           className="w-full flex items-center gap-2 px-2.5 py-2 bg-white border border-zinc-200 rounded-lg shadow-xs hover:shadow-sm transition-smooth cursor-pointer group"
         >
-          <div className={`w-2 h-2 rounded-full shrink-0 ${getStatusDot(selectedConclave.status)}`} />
+          <div className={`w-2 h-2 rounded-full shrink-0 ${selectedConclave ? getStatusDot(selectedConclave.status) : 'bg-zinc-300'}`} />
           <div className="flex-1 min-w-0 text-left">
-            <p className="text-[10px] font-black text-zinc-800 truncate leading-tight">{selectedConclave.name}</p>
-            <p className="text-[8px] text-zinc-400 font-bold uppercase tracking-wider mt-0.5">{selectedConclave.status} • {selectedConclave.region}</p>
+            <p className="text-[10px] font-black text-zinc-800 truncate leading-tight">
+              {selectedConclave ? selectedConclave.name : "No Active Conclave"}
+            </p>
+            <p className="text-[8px] text-zinc-400 font-bold uppercase tracking-wider mt-0.5">
+              {selectedConclave ? `${selectedConclave.status} • ${selectedConclave.region}` : "N/A • No Region"}
+            </p>
           </div>
           <ChevronDown className={`w-3 h-3 text-zinc-400 shrink-0 transition-transform ${showConclaveDropdown ? 'rotate-180' : ''}`} />
         </button>
@@ -107,9 +112,9 @@ export default function Sidebar({ activeTab, setActiveTab, onLogout, isOpen, onC
             <div className="px-3 py-2 border-b border-zinc-100">
               <p className="text-[8px] font-black text-zinc-400 uppercase tracking-widest">Active Conclaves</p>
             </div>
-            {activeConclaves.length === 0 ? (
-              <div className="px-3 py-3 text-[9px] text-zinc-400 font-semibold text-center">No active conclaves</div>
-            ) : activeConclaves.map(c => (
+            {(activeConclaves.length === 0 ? myConclaves : activeConclaves).length === 0 ? (
+              <div className="px-3 py-3 text-[9px] text-zinc-400 font-semibold text-center">No conclaves found</div>
+            ) : (activeConclaves.length > 0 ? activeConclaves : myConclaves).map(c => (
               <button
                 key={c.id}
                 onClick={() => { setSelectedConclaveId(c.id); setShowConclaveDropdown(false); }}

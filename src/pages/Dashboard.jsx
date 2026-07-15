@@ -56,8 +56,9 @@ export default function Dashboard({ setActiveTab, selectedConclaveId, setSelecte
 
   // Conclave selector — from props
   const [showPicker, setShowPicker] = useState(false);
-  const defaultConclave = conclavesData.find(c => c.status === 'Running') || conclavesData[0];
-  const selectedConclave = conclavesData.find(c => c.id === selectedConclaveId) || defaultConclave;
+  const myActiveConclaves = conclavesData.filter(c => c.status === 'Running' && c.coordinator === loggedInAdmin?.name);
+  const myConclaves = conclavesData.filter(c => c.coordinator === loggedInAdmin?.name);
+  const selectedConclave = conclavesData.find(c => c.id === selectedConclaveId && c.coordinator === loggedInAdmin?.name) || myActiveConclaves[0] || myConclaves[0] || null;
 
   // Filtered data based on selected conclave
   const filteredMembers = useMemo(() =>
@@ -112,6 +113,33 @@ export default function Dashboard({ setActiveTab, selectedConclaveId, setSelecte
     year: 'numeric'
   });
 
+  if (!selectedConclave) {
+    return (
+      <div className="space-y-6 sm:space-y-8 p-4 sm:p-8 max-w-[1600px] mx-auto w-full">
+        {/* Page Header */}
+        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-zinc-100 pb-6">
+          <div>
+            <h2 className="text-dashboard-title text-zinc-950 font-extrabold tracking-tight">Admin Dashboard</h2>
+            <p className="text-body-text text-zinc-500 mt-1">
+              Welcome back, {loggedInAdmin?.name || 'Admin'}.
+            </p>
+          </div>
+        </header>
+
+        {/* Empty State Card */}
+        <div className="bg-white rounded-xl border border-zinc-200/85 p-12 text-center shadow-xs">
+          <div className="w-16 h-16 bg-zinc-50 border border-zinc-200 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Calendar className="w-6 h-6 text-zinc-400" />
+          </div>
+          <h3 className="text-base font-bold text-zinc-800">No Active Conclave Assigned</h3>
+          <p className="text-xs text-zinc-500 mt-2 max-w-sm mx-auto font-semibold leading-relaxed">
+            There are currently no active conclaves assigned to your administration scope. Please contact the Superadmin to create a conclave or assign you as coordinator.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 sm:space-y-8 p-4 sm:p-8 max-w-[1600px] mx-auto w-full">
 
@@ -120,7 +148,7 @@ export default function Dashboard({ setActiveTab, selectedConclaveId, setSelecte
         <div>
           <h2 className="text-dashboard-title text-zinc-950 font-extrabold tracking-tight">Admin Dashboard</h2>
           <p className="text-body-text text-zinc-500 mt-1">
-            Welcome back, Admin.
+            Welcome back, {loggedInAdmin?.name || 'Admin'}.
           </p>
         </div>
       </header>
@@ -150,7 +178,7 @@ export default function Dashboard({ setActiveTab, selectedConclaveId, setSelecte
 
         {showPicker && (
           <div className="absolute z-30 top-full mt-1.5 left-0 right-0 bg-white border border-zinc-200 rounded-xl shadow-xl overflow-hidden max-h-[320px] overflow-y-auto animate-fade-in">
-            {conclavesData.filter(c => c.status === 'Running' && c.coordinator === loggedInAdmin?.name).map(c => (
+            {(myActiveConclaves.length > 0 ? myActiveConclaves : myConclaves).map(c => (
               <button
                 key={c.id}
                 onClick={() => { setSelectedConclaveId(c.id); setShowPicker(false); }}
