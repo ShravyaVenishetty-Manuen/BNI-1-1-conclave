@@ -1,13 +1,13 @@
 import React from 'react';
-import { 
-  Award, 
-  Layers, 
-  CalendarRange, 
-  Users, 
-  Activity, 
-  Clock, 
-  MapPin, 
-  ChevronRight 
+import {
+  Award,
+  Layers,
+  CalendarRange,
+  Users,
+  Clock,
+  ChevronRight,
+  ShieldAlert,
+  CheckCircle2
 } from 'lucide-react';
 import { mockAdmins, mockRegions, mockGlobalConclaves, mockGlobalMembers } from '../../data/mockConclaveData';
 
@@ -31,7 +31,7 @@ export default function SuperadminDashboard({ setActiveTab }) {
 
   return (
     <div className="space-y-8 animate-fade-in font-sans pb-16">
-      
+
       {/* Welcome Banner */}
       <div>
         <h1 className="text-2xl md:text-3xl font-black text-zinc-955 tracking-tight">Superadmin Dashboard</h1>
@@ -48,10 +48,10 @@ export default function SuperadminDashboard({ setActiveTab }) {
         ].map((kpi, idx) => {
           const Icon = kpi.Icon;
           return (
-            <div 
+            <div
               key={idx}
               onClick={() => setActiveTab && setActiveTab(kpi.tab)}
-              className="bg-white p-5 rounded-xl border border-zinc-200 shadow-2xs hover:shadow-md hover:border-brand-red/30 transition-smooth cursor-pointer flex flex-col justify-between min-h-[110px]"
+              className="bg-white p-5 rounded-xl border border-zinc-200 shadow-2xs hover:shadow-md hover:border-zinc-300 transition-smooth cursor-pointer flex flex-col justify-between min-h-[110px]"
             >
               <div className="flex justify-between items-start">
                 <span className="text-[9.5px] font-black text-zinc-400 uppercase tracking-wider">{kpi.label}</span>
@@ -68,7 +68,7 @@ export default function SuperadminDashboard({ setActiveTab }) {
 
       {/* Distributions & Lists Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-        
+
         {/* Conclaves distribution list */}
         <section className="lg:col-span-6 bg-white border border-zinc-200 rounded-xl shadow-2xs p-5 flex flex-col justify-between">
           <div className="space-y-4">
@@ -76,7 +76,7 @@ export default function SuperadminDashboard({ setActiveTab }) {
               <h2 className="text-body-md font-black text-zinc-900 leading-tight">Conclaves per Region</h2>
               <p className="text-[10px] text-zinc-450 font-semibold mt-0.5">Events count grouped by BNI region.</p>
             </div>
-            
+
             <div className="space-y-3.5 pt-2">
               {conclavesPerRegion.map((item, idx) => {
                 const percentage = totalConclavesCount > 0 ? (item.count / totalConclavesCount) * 100 : 0;
@@ -87,8 +87,8 @@ export default function SuperadminDashboard({ setActiveTab }) {
                       <span className="text-zinc-850 font-black shrink-0">{item.count} conclaves</span>
                     </div>
                     <div className="h-2 w-full bg-zinc-100 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-brand-red rounded-full transition-all duration-500" 
+                      <div
+                        className="h-full bg-brand-red rounded-full transition-all duration-500"
                         style={{ width: `${percentage}%` }}
                       />
                     </div>
@@ -97,9 +97,9 @@ export default function SuperadminDashboard({ setActiveTab }) {
               })}
             </div>
           </div>
-          <button 
+          <button
             onClick={() => setActiveTab && setActiveTab('conclaves')}
-            className="w-full text-center text-[10px] font-black text-brand-red uppercase tracking-wider hover:underline pt-5 mt-4 border-t border-zinc-100 flex items-center justify-center gap-1 cursor-pointer"
+            className="w-full text-center text-[10px] font-black text-zinc-500 uppercase tracking-wider hover:text-zinc-800 pt-5 mt-4 border-t border-zinc-100 flex items-center justify-center gap-1 cursor-pointer transition-colors"
           >
             <span>View All Conclaves</span>
             <ChevronRight className="w-3.5 h-3.5" />
@@ -113,7 +113,7 @@ export default function SuperadminDashboard({ setActiveTab }) {
               <h2 className="text-body-md font-black text-zinc-900 leading-tight">Admins per Region</h2>
               <p className="text-[10px] text-zinc-450 font-semibold mt-0.5">Number of administrative profiles assigned.</p>
             </div>
-            
+
             <div className="space-y-3.5 pt-2">
               {adminsPerRegion.map((item, idx) => {
                 const percentage = totalAdminsCount > 0 ? (item.count / totalAdminsCount) * 100 : 0;
@@ -124,8 +124,8 @@ export default function SuperadminDashboard({ setActiveTab }) {
                       <span className="text-zinc-850 font-black shrink-0">{item.count} admins</span>
                     </div>
                     <div className="h-2 w-full bg-zinc-100 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-brand-red rounded-full transition-all duration-500" 
+                      <div
+                        className="h-full bg-brand-red rounded-full transition-all duration-500"
                         style={{ width: `${percentage}%` }}
                       />
                     </div>
@@ -134,9 +134,9 @@ export default function SuperadminDashboard({ setActiveTab }) {
               })}
             </div>
           </div>
-          <button 
+          <button
             onClick={() => setActiveTab && setActiveTab('admins')}
-            className="w-full text-center text-[10px] font-black text-brand-red uppercase tracking-wider hover:underline pt-5 mt-4 border-t border-zinc-100 flex items-center justify-center gap-1 cursor-pointer"
+            className="w-full text-center text-[10px] font-black text-zinc-500 uppercase tracking-wider hover:text-zinc-800 pt-5 mt-4 border-t border-zinc-100 flex items-center justify-center gap-1 cursor-pointer transition-colors"
           >
             <span>Manage Admins &amp; Regions</span>
             <ChevronRight className="w-3.5 h-3.5" />
@@ -147,7 +147,7 @@ export default function SuperadminDashboard({ setActiveTab }) {
 
       {/* Bottom Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-        
+
         {/* Active Conclaves List */}
         <section className="lg:col-span-7 bg-white border border-zinc-200 rounded-xl shadow-2xs p-5 flex flex-col justify-between">
           <div className="space-y-4">
@@ -180,9 +180,9 @@ export default function SuperadminDashboard({ setActiveTab }) {
             </div>
           </div>
 
-          <button 
+          <button
             onClick={() => setActiveTab && setActiveTab('conclaves')}
-            className="w-full text-center text-[10px] font-black text-brand-red uppercase tracking-wider hover:underline pt-4 mt-3 border-t border-zinc-100 flex items-center justify-center gap-1 cursor-pointer"
+            className="w-full text-center text-[10px] font-black text-zinc-500 uppercase tracking-wider hover:text-zinc-800 pt-4 mt-3 border-t border-zinc-100 flex items-center justify-center gap-1 cursor-pointer transition-colors"
           >
             <span>View All Conclaves</span>
             <ChevronRight className="w-3.5 h-3.5" />
@@ -192,37 +192,66 @@ export default function SuperadminDashboard({ setActiveTab }) {
         {/* Global Activity Feed Logs */}
         <section className="lg:col-span-5 bg-white border border-zinc-200 rounded-xl shadow-2xs p-5 flex flex-col justify-between">
           <div>
-            <div className="mb-4">
+            <div className="mb-5">
               <h2 className="text-body-md font-black text-zinc-900 leading-tight">Recent Activity</h2>
               <p className="text-[10px] text-zinc-450 font-semibold mt-0.5">Real-time status changes and log.</p>
             </div>
-            
-            <div className="space-y-4">
+
+            <div className="relative pl-4 border-l border-zinc-155 space-y-3.5 ml-2 my-1">
               {[
-                { msg: "Regional Admin Meera Nair status set to Inactive", time: "2 hours ago", info: "Singapore Metro" },
-                { msg: "New Conclave 'Quarterly Synergy Q1' created by Sanjay Wagle", time: "Yesterday, 3:20 PM", info: "Guntur Region" },
-                { msg: "Schedule matching verified with 0 repeat collisions", time: "2 days ago", info: "Phoenix Chapter" }
-              ].map((activity, idx) => (
-                <div key={idx} className="flex gap-3 items-start text-body-sm">
-                  <div className="p-1.5 bg-red-50 text-brand-red rounded-lg shrink-0">
-                    <Activity className="w-3.5 h-3.5" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-zinc-800 leading-tight truncate">{activity.msg}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-[10px] text-zinc-450 font-semibold flex items-center gap-1">
-                        <Clock className="w-3 h-3 text-zinc-400" />
-                        {activity.time}
-                      </span>
-                      <span className="text-zinc-300">•</span>
-                      <span className="text-[10px] text-brand-red font-black uppercase tracking-wider flex items-center gap-0.5">
-                        <MapPin className="w-3 h-3 shrink-0" />
-                        {activity.info}
-                      </span>
+                {
+                  msg: "Regional Admin Meera Nair status set to Inactive",
+                  time: "2 hours ago",
+                  info: "Singapore Metro",
+                  bg: "bg-amber-50 border-amber-200 text-amber-600",
+                  Icon: ShieldAlert
+                },
+                {
+                  msg: "New Conclave 'Quarterly Synergy Q1' created by Sanjay Wagle",
+                  time: "Yesterday, 3:20 PM",
+                  info: "Guntur Region",
+                  bg: "bg-emerald-50 border-emerald-200 text-emerald-600",
+                  Icon: CalendarRange
+                },
+                {
+                  msg: "Schedule matching verified with 0 repeat collisions",
+                  time: "2 days ago",
+                  info: "Phoenix Chapter",
+                  bg: "bg-red-50 border-red-200 text-brand-red",
+                  Icon: CheckCircle2
+                }
+              ].map((activity, idx) => {
+                const Icon = activity.Icon;
+                return (
+                  <div key={idx} className="relative flex gap-2 items-start text-body-sm group hover:bg-zinc-50/50 p-1 -mx-1 rounded-lg transition-all duration-200">
+                    {/* Timeline bullet icon */}
+                    <div className="absolute -left-[25px] top-0.5 flex items-center justify-center">
+                      <div className={`w-5.5 h-5.5 rounded-full ${activity.bg} border flex items-center justify-center shadow-3xs bg-white`}>
+                        <Icon className="w-3 h-3" />
+                      </div>
+                    </div>
+
+                    <div className="flex-1 min-w-0 pl-2">
+                      <p className="font-bold text-zinc-800 leading-tight group-hover:text-zinc-955 transition-colors">{activity.msg}</p>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        <span className="text-[9.5px] text-zinc-400 font-semibold flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5 text-zinc-350" />
+                          {activity.time}
+                        </span>
+                        <span className="text-zinc-300">•</span>
+                        <span className={`px-1.5 py-0.5 rounded-md text-[8.5px] font-black uppercase tracking-wider ${activity.bg.includes("amber")
+                            ? "bg-amber-50 text-amber-700 border border-amber-100"
+                            : activity.bg.includes("emerald")
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
+                              : "bg-red-50 text-brand-red border border-red-100"
+                          }`}>
+                          {activity.info}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </section>
