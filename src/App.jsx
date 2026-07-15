@@ -78,9 +78,13 @@ export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Global conclave selector for admin panel
-  const defaultConclave = conclavesData.find(c => c.status === 'Running') || conclavesData[0];
-  const [selectedConclaveId, setSelectedConclaveId] = useState(defaultConclave?.id || '');
+  // Global conclave selector for admin panel - default to current admin's active conclave
+  const [selectedConclaveId, setSelectedConclaveId] = useState(() => {
+    const adminData = localStorage.getItem('bni_logged_admin');
+    const admin = adminData ? JSON.parse(adminData) : { name: "Sanjay Wagle", email: "admin@bni.com", region: "Guntur Central" };
+    const myActiveConclave = conclavesData.find(c => c.status === 'Running' && c.coordinator === admin?.name);
+    return myActiveConclave?.id || conclavesData.find(c => c.status === 'Running')?.id || conclavesData[0]?.id || '';
+  });
 
   const mainRef = useRef(null);
 
@@ -183,9 +187,17 @@ export default function App() {
       if (payload) {
         localStorage.setItem('bni_logged_admin', JSON.stringify(payload));
         setLoggedInAdmin(payload);
+        const myActiveConclave = conclavesData.find(c => c.status === 'Running' && c.coordinator === payload.name);
+        if (myActiveConclave) {
+          setSelectedConclaveId(myActiveConclave.id);
+        }
       } else {
         localStorage.removeItem('bni_logged_admin');
-        setLoggedInAdmin({ name: "Global Admin", email: "admin@bni.com", region: "Guntur West" });
+        setLoggedInAdmin({ name: "Sanjay Wagle", email: "admin@bni.com", region: "Guntur Central" });
+        const myActiveConclave = conclavesData.find(c => c.status === 'Running' && c.coordinator === "Sanjay Wagle");
+        if (myActiveConclave) {
+          setSelectedConclaveId(myActiveConclave.id);
+        }
       }
       setLoggedInCaptain(null);
       setLoggedInMember(null);
