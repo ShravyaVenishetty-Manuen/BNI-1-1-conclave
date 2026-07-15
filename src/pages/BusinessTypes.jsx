@@ -13,8 +13,9 @@ import {
 } from 'lucide-react';
 import Pagination from '../components/Pagination';
 import initialCategories from '../data/categories.json';
+import membersData from '../data/members.json';
 
-export default function BusinessTypes({ searchQuery }) {
+export default function BusinessTypes({ searchQuery, selectedConclaveId }) {
   const [categories, setCategories] = useState(initialCategories);
   const [searchTerm, setSearchTerm] = useState('');
   const searchVal = searchQuery !== undefined ? searchQuery : searchTerm;
@@ -73,17 +74,33 @@ export default function BusinessTypes({ searchQuery }) {
     setSelectedRows(new Set());
   };
 
-  // KPI Calculations
-  const totalTypes = categories.length;
-  const activeCount = categories.filter(c => c.status === 'Active').length;
-  const totalMembersCount = categories.reduce((sum, c) => sum + c.memberCount, 0);
-  const inactiveCount = categories.filter(c => c.status === 'Inactive').length;
+  // Conclave-specific members subset
+  const conclaveMembers = useMemo(() => {
+    return membersData.filter(m => m.conclaveIds && m.conclaveIds.includes(selectedConclaveId));
+  }, [selectedConclaveId]);
+
+  // Compute categories with dynamic conclave-based member counts
+  const categoriesWithCounts = useMemo(() => {
+    return categories.map(cat => {
+      const count = conclaveMembers.filter(m => m.category === cat.name).length;
+      return {
+        ...cat,
+        memberCount: count
+      };
+    });
+  }, [categories, conclaveMembers]);
+
+  // KPIs
+  const totalTypes = categoriesWithCounts.length;
+  const activeCount = categoriesWithCounts.filter(c => c.status === 'Active').length;
+  const totalMembersCount = categoriesWithCounts.reduce((sum, c) => sum + c.memberCount, 0);
+  const inactiveCount = categoriesWithCounts.filter(c => c.status === 'Inactive').length;
 
   // Filtered List
   const filteredCategories = useMemo(() => {
     setCurrentPage(1); // Reset to page 1 on filter changes
     setSelectedRows(new Set());
-    return categories.filter(cat => {
+    return categoriesWithCounts.filter(cat => {
       const matchesSearch =
         cat.name.toLowerCase().includes(searchVal.toLowerCase()) ||
         cat.id.toLowerCase().includes(searchVal.toLowerCase()) ||
@@ -93,7 +110,7 @@ export default function BusinessTypes({ searchQuery }) {
 
       return matchesSearch && matchesStatus;
     });
-  }, [categories, searchVal, statusFilter]);
+  }, [categoriesWithCounts, searchVal, statusFilter]);
 
   // Paginated List
   const paginatedCategories = useMemo(() => {

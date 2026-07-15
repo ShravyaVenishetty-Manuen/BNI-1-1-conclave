@@ -12,6 +12,7 @@
     "isCaptain": true,
     "status": "Active",
     "avatar": "RM",
+    "conclaveIds": ["CON-2024-0015", "CON-2024-0012", "CON-2024-0008"],
     "history": [
       { "event": "Q3 National Conclave", "date": "Oct 14, 2023", "role": "Attended as Captain" },
       { "event": "Regional Growth Seminar", "date": "Aug 05, 2023", "role": "Speaker" },
@@ -31,6 +32,7 @@
     "isCaptain": false,
     "status": "Active",
     "avatar": "AS",
+    "conclaveIds": ["CON-2024-0015", "CON-2024-0012"],
     "history": [
       { "event": "Q3 National Conclave", "date": "Oct 14, 2023", "role": "Attended" },
       { "event": "Business Expo Delhi", "date": "Sep 10, 2023", "role": "Exhibitor" }
@@ -49,6 +51,7 @@
     "isCaptain": true,
     "status": "Inactive",
     "avatar": "VM",
+    "conclaveIds": ["CON-2024-0012", "CON-2024-0008"],
     "history": [
       { "event": "Leadership Training Day", "date": "Jun 21, 2023", "role": "Trainer" },
       { "event": "Regional Finance Summit", "date": "May 14, 2023", "role": "Panelist" }
@@ -67,6 +70,7 @@
     "isCaptain": false,
     "status": "Active",
     "avatar": "PI",
+    "conclaveIds": ["CON-2024-0015", "CON-2024-0008"],
     "history": [
       { "event": "Q3 National Conclave", "date": "Oct 14, 2023", "role": "Attended" }
     ]
@@ -84,6 +88,7 @@
     "isCaptain": true,
     "status": "Active",
     "avatar": "AP",
+    "conclaveIds": ["CON-2024-0015", "CON-2024-0012"],
     "history": [
       { "event": "Q3 National Conclave", "date": "Oct 14, 2023", "role": "Attended as Captain" },
       { "event": "Tech Innovation Meet", "date": "Jul 22, 2023", "role": "Speaker" }
@@ -102,6 +107,7 @@
     "isCaptain": false,
     "status": "Active",
     "avatar": "SN",
+    "conclaveIds": ["CON-2024-0015"],
     "history": [
       { "event": "Regional Growth Seminar", "date": "Aug 05, 2023", "role": "Attended" }
     ]
@@ -119,6 +125,7 @@
     "isCaptain": true,
     "status": "Inactive",
     "avatar": "KD",
+    "conclaveIds": ["CON-2024-0008"],
     "history": [
       { "event": "Leadership Training Day", "date": "Jun 21, 2023", "role": "Attended" }
     ]
@@ -136,8 +143,77 @@
     "isCaptain": false,
     "status": "Active",
     "avatar": "SJ",
+    "conclaveIds": ["CON-2024-0015", "CON-2024-0012"],
     "history": [
       { "event": "Q3 National Conclave", "date": "Oct 14, 2023", "role": "Attended" }
     ]
+  },
+  {
+    "id": "BNI-00205",
+    "name": "Ekta Ramachandran",
+    "joinDate": "Jan 2024",
+    "category": "Law & Legal",
+    "email": "ekta@rodriguezlaw.com",
+    "phone": "+1 480 555 0199",
+    "address": "45 Scottsdale Rd, Phoenix, AZ",
+    "company": "Rodriguez Partners",
+    "chapter": "Phoenix Central",
+    "region": "Phoenix Chapter",
+    "isCaptain": false,
+    "status": "Active",
+    "avatar": "ER",
+    "conclaveIds": ["CON-2026-0033"],
+    "history": []
+  },
+  {
+    "id": "BNI-00209",
+    "name": "Kunal Shah",
+    "joinDate": "Jan 2025",
+    "category": "Digital Marketing",
+    "email": "kunal@shahmarketing.sg",
+    "phone": "+65 6789 0123",
+    "address": "Marina Boulevard, SG",
+    "company": "Shah Marketing Agency",
+    "chapter": "Singapore Prosperity",
+    "region": "Singapore Metro",
+    "isCaptain": true,
+    "status": "Active",
+    "avatar": "KS",
+    "conclaveIds": ["CON-2026-0055"],
+    "history": []
+  },
+  {
+    "id": "BNI-00208",
+    "name": "Priya Nair",
+    "joinDate": "May 2024",
+    "category": "Wealth Management",
+    "email": "priya@nairfinance.co.uk",
+    "phone": "+44 20 7946 0959",
+    "address": "Piccadilly Circus, London",
+    "company": "Nair Finance",
+    "chapter": "London Central Elite",
+    "region": "London Central",
+    "isCaptain": false,
+    "status": "Active",
+    "avatar": "PN",
+    "conclaveIds": ["CON-2026-0044"],
+    "history": []
+  },
+  {
+    "id": "BNI-00207",
+    "name": "Siddharth Mehta",
+    "joinDate": "Feb 2024",
+    "category": "Commercial Realty",
+    "email": "sid@mehtadevelopers.com",
+    "phone": "+44 20 7946 0958",
+    "address": "Covent Garden, London",
+    "company": "Mehta Developers",
+    "chapter": "London Central Elite",
+    "region": "London Central",
+    "isCaptain": false,
+    "status": "Active",
+    "avatar": "SM",
+    "conclaveIds": ["CON-2026-0044"],
+    "history": []
   }
 ]

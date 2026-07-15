@@ -1,11 +1,16 @@
 {
   "initialTables": [
-    { "id": 14, "captain": "Manoj Kumar", "seated": 8, "capacity": 8, "status": "Active" },
-    { "id": 15, "captain": "Shweta Iyer", "seated": 7, "capacity": 8, "status": "Active" },
-    { "id": 16, "captain": "Devendra Chawla", "seated": 8, "capacity": 8, "status": "Ready" },
-    { "id": 17, "captain": "Esha Rao", "seated": 8, "capacity": 8, "status": "Active" },
-    { "id": 18, "captain": "Rajesh Mehta", "seated": 6, "capacity": 8, "status": "Active" },
-    { "id": 19, "captain": "Jyoti Sharma", "seated": 8, "capacity": 8, "status": "Active" }
+    { "id": 14, "conclaveId": "CON-2024-0015", "captain": "Manoj Kumar", "seated": 8, "capacity": 8, "status": "Active" },
+    { "id": 15, "conclaveId": "CON-2024-0015", "captain": "Shweta Iyer", "seated": 7, "capacity": 8, "status": "Active" },
+    { "id": 16, "conclaveId": "CON-2024-0015", "captain": "Devendra Chawla", "seated": 8, "capacity": 8, "status": "Ready" },
+    { "id": 17, "conclaveId": "CON-2024-0015", "captain": "Esha Rao", "seated": 8, "capacity": 8, "status": "Active" },
+    { "id": 18, "conclaveId": "CON-2024-0015", "captain": "Rajesh Mehta", "seated": 6, "capacity": 8, "status": "Active" },
+    { "id": 19, "conclaveId": "CON-2024-0015", "captain": "Jyoti Sharma", "seated": 8, "capacity": 8, "status": "Active" },
+    { "id": 21, "conclaveId": "CON-2024-0012", "captain": "Vikram Malhotra", "seated": 8, "capacity": 8, "status": "Active" },
+    { "id": 22, "conclaveId": "CON-2024-0012", "captain": "Devika Menon", "seated": 7, "capacity": 8, "status": "Active" },
+    { "id": 23, "conclaveId": "CON-2024-0012", "captain": "Arjun Nair", "seated": 8, "capacity": 8, "status": "Ready" },
+    { "id": 31, "conclaveId": "CON-2026-0044", "captain": "Vikram Reddy", "seated": 8, "capacity": 8, "status": "Active" },
+    { "id": 32, "conclaveId": "CON-2026-0044", "captain": "Sophie Turner", "seated": 6, "capacity": 8, "status": "Active" }
   ],
   "mockRosters": {
     "14": [
@@ -26,6 +31,16 @@
       { "name": "Jyoti Sharma", "role": "Member", "category": "Insurance" },
       { "name": "Karan Johar", "role": "Member", "category": "Consulting" },
       { "name": "Lalita Iyer", "role": "Member", "category": "IT Services" }
+    ],
+    "21": [
+      { "name": "Vikram Malhotra", "role": "Captain", "category": "Finance" },
+      { "name": "Priya Reddy", "role": "Member", "category": "IT Consulting" },
+      { "name": "Suresh Babu", "role": "Member", "category": "Logistics" }
+    ],
+    "31": [
+      { "name": "Vikram Reddy", "role": "Captain", "category": "Marketing" },
+      { "name": "Sophie Turner", "role": "Member", "category": "Finance" },
+      { "name": "James Lin", "role": "Member", "category": "Tech" }
     ]
   }
 }

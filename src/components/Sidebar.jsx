@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   LayoutDashboard,
   Users,
@@ -14,8 +14,11 @@ import {
   Lock,
   Play,
   LogOut,
-  X
+  X,
+  ChevronDown
 } from 'lucide-react';
+
+import conclavesData from '../data/conclaves.json';
 
 const navItems = [
   { id: 'dashboard', label: 'Dashboard', Icon: LayoutDashboard },
@@ -33,12 +36,37 @@ const navItems = [
   { id: 'reports', label: 'Reports', Icon: BarChart3 },
 ];
 
-export default function Sidebar({ activeTab, setActiveTab, onLogout, isOpen, onClose }) {
+const getStatusDot = (status) => {
+  switch (status) {
+    case 'Running': return 'bg-emerald-500 animate-pulse';
+    case 'Upcoming': return 'bg-amber-400';
+    case 'Completed': return 'bg-zinc-300';
+    default: return 'bg-zinc-200';
+  }
+};
+
+export default function Sidebar({ activeTab, setActiveTab, onLogout, isOpen, onClose, selectedConclaveId, setSelectedConclaveId }) {
+  const [showConclaveDropdown, setShowConclaveDropdown] = useState(false);
+  const dropdownRef = useRef(null);
+
+  const activeConclaves = conclavesData.filter(c => c.status === 'Running');
+  const selectedConclave = conclavesData.find(c => c.id === selectedConclaveId) || activeConclaves[0] || conclavesData[0];
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowConclaveDropdown(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   return (
     <aside className={`fixed inset-y-0 left-0 z-50 w-[240px] h-screen flex flex-col py-6 bg-zinc-50 border-r border-red-100 text-sidebar font-medium shrink-0 transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 lg:w-[220px] ${isOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}`}>
 
       {/* Sticky Branding Header (Non-scrolling) */}
-      <div className="px-4 mb-6 shrink-0 flex items-center justify-between">
+      <div className="px-4 mb-4 shrink-0 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <img
             src="/BNI-Guntur-Logo.webp"
@@ -58,6 +86,44 @@ export default function Sidebar({ activeTab, setActiveTab, onLogout, isOpen, onC
         >
           <X className="w-[18px] h-[18px]" />
         </button>
+      </div>
+
+      {/* Conclave Selector */}
+      <div className="px-2.5 mb-3 shrink-0 relative" ref={dropdownRef}>
+        <button
+          onClick={() => setShowConclaveDropdown(!showConclaveDropdown)}
+          className="w-full flex items-center gap-2 px-2.5 py-2 bg-white border border-zinc-200 rounded-lg shadow-xs hover:shadow-sm transition-smooth cursor-pointer group"
+        >
+          <div className={`w-2 h-2 rounded-full shrink-0 ${getStatusDot(selectedConclave.status)}`} />
+          <div className="flex-1 min-w-0 text-left">
+            <p className="text-[10px] font-black text-zinc-800 truncate leading-tight">{selectedConclave.name}</p>
+            <p className="text-[8px] text-zinc-400 font-bold uppercase tracking-wider mt-0.5">{selectedConclave.status} • {selectedConclave.region}</p>
+          </div>
+          <ChevronDown className={`w-3 h-3 text-zinc-400 shrink-0 transition-transform ${showConclaveDropdown ? 'rotate-180' : ''}`} />
+        </button>
+
+        {showConclaveDropdown && (
+          <div className="absolute z-50 top-full mt-1 left-2.5 right-2.5 bg-white border border-zinc-200 rounded-lg shadow-xl overflow-hidden max-h-[260px] overflow-y-auto animate-fade-in">
+            <div className="px-3 py-2 border-b border-zinc-100">
+              <p className="text-[8px] font-black text-zinc-400 uppercase tracking-widest">Active Conclaves</p>
+            </div>
+            {activeConclaves.length === 0 ? (
+              <div className="px-3 py-3 text-[9px] text-zinc-400 font-semibold text-center">No active conclaves</div>
+            ) : activeConclaves.map(c => (
+              <button
+                key={c.id}
+                onClick={() => { setSelectedConclaveId(c.id); setShowConclaveDropdown(false); }}
+                className={`w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-zinc-50 transition-smooth cursor-pointer border-b border-zinc-50 last:border-0 ${c.id === selectedConclaveId ? 'bg-red-50/40' : ''}`}
+              >
+                <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${getStatusDot(c.status)}`} />
+                <div className="min-w-0 flex-1">
+                  <p className={`text-[9.5px] font-bold truncate ${c.id === selectedConclaveId ? 'text-brand-red' : 'text-zinc-700'}`}>{c.name}</p>
+                  <p className="text-[7.5px] text-zinc-400 font-semibold mt-0.5 truncate">{c.dateRange}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Scrollable Navigation List */}

@@ -11,9 +11,11 @@
     "memberLimit": 1500,
     "captainCount": 48,
     "captainLimit": 50,
-    "status": "Upcoming",
+    "status": "Running",
     "progress": 65,
     "region": "Guntur Central",
+    "businessTypes": 12,
+    "rounds": 6,
     "coordinator": "Vikram Malhotra",
     "coordinatorAvatar": "VM",
     "description": "A premier networking conclave focusing on cross-regional business collaboration and strategic B2B referrals. This session aims to connect high-performing entrepreneurs and business leaders across 12 diverse industries.",
@@ -38,6 +40,8 @@
     "status": "Running",
     "progress": 88,
     "region": "Guntur West",
+    "businessTypes": 8,
+    "rounds": 3,
     "coordinator": "Anjali Sharma",
     "coordinatorAvatar": "AS",
     "description": "Annual training and planning meeting for BNI regional leadership, captains, and area directors. Focuses on setting conclave schedules for the next quarter.",
@@ -88,6 +92,72 @@
     "description": "South India networking and business exhibition event.",
     "timeline": [
       { "event": "Expo Closed", "date": "Aug 12, 2024 • 05:00 PM", "desc": "Closed business reported successfully" }
+    ]
+  },
+  {
+    "id": "CON-2026-0033",
+    "name": "Regional Directors Meet 2026",
+    "venue": "Hyatt Regency, Phoenix",
+    "venueShort": "Hyatt Regency",
+    "dateRange": "Feb 10 - Feb 12, 2026",
+    "startDate": "2026-02-10",
+    "endDate": "2026-02-12",
+    "memberCount": 84,
+    "memberLimit": 100,
+    "captainCount": 16,
+    "captainLimit": 20,
+    "status": "Completed",
+    "progress": 100,
+    "region": "Phoenix Chapter",
+    "coordinator": "Ananya Sen",
+    "coordinatorAvatar": "AS",
+    "description": "Annual training and strategic coordination seminar for directors and leadership teams across the Phoenix valley area.",
+    "timeline": [
+      { "event": "Completed successfully", "date": "Feb 12, 2026", "desc": "Official report published." }
+    ]
+  },
+  {
+    "id": "CON-2026-0044",
+    "name": "London National Conclave 2026",
+    "venue": "Grand Hyatt, London",
+    "venueShort": "Grand Hyatt",
+    "dateRange": "Oct 12 - Oct 14, 2026",
+    "startDate": "2026-10-12",
+    "endDate": "2026-10-14",
+    "memberCount": 180,
+    "memberLimit": 200,
+    "captainCount": 30,
+    "captainLimit": 40,
+    "status": "Upcoming",
+    "progress": 20,
+    "region": "London Central",
+    "coordinator": "Vikram Reddy",
+    "coordinatorAvatar": "VR",
+    "description": "Premium business matching and structured referrals gathering for active London chapters.",
+    "timeline": [
+      { "event": "Registration Opened", "date": "Jul 01, 2026", "desc": "Started onboarding attendees." }
+    ]
+  },
+  {
+    "id": "CON-2026-0055",
+    "name": "Singapore Business Summit 2026",
+    "venue": "Marina Bay Sands, SG",
+    "venueShort": "Marina Bay Sands",
+    "dateRange": "Nov 05 - Nov 07, 2026",
+    "startDate": "2026-11-05",
+    "endDate": "2026-11-07",
+    "memberCount": 130,
+    "memberLimit": 150,
+    "captainCount": 24,
+    "captainLimit": 30,
+    "status": "Upcoming",
+    "progress": 10,
+    "region": "Singapore Metro",
+    "coordinator": "Meera Nair",
+    "coordinatorAvatar": "MN",
+    "description": "Cross-national collaborative forum connecting entrepreneurs across major APAC economies.",
+    "timeline": [
+      { "event": "Summit Created", "date": "Jun 14, 2026", "desc": "Draft space initialized by region." }
     ]
   }
 ]

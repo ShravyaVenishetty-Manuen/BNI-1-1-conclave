@@ -31,6 +31,7 @@ export default function Conclaves({ searchQuery, setActiveTab }) {
   const [venueFilter, setVenueFilter] = useState('All');
   const [sortBy, setSortBy] = useState('DateDesc');
   const [selectedConclave, setSelectedConclave] = useState(null);
+  const [viewScope, setViewScope] = useState('region'); // 'region' or 'global'
 
   // Checked rows
   const [selectedRows, setSelectedRows] = useState(new Set());
@@ -82,8 +83,9 @@ export default function Conclaves({ searchQuery, setActiveTab }) {
 
       const matchesStatus = statusFilter === 'All' || c.status === statusFilter;
       const matchesVenue = venueFilter === 'All' || c.venueShort === venueFilter;
+      const matchesViewScope = viewScope === 'global' || c.region?.toLowerCase().includes('guntur');
 
-      return matchesSearch && matchesStatus && matchesVenue;
+      return matchesSearch && matchesStatus && matchesVenue && matchesViewScope;
     });
 
     // Sorting logic
@@ -96,7 +98,7 @@ export default function Conclaves({ searchQuery, setActiveTab }) {
     }
 
     return result;
-  }, [conclaves, searchVal, statusFilter, venueFilter, sortBy]);
+  }, [conclaves, searchVal, statusFilter, venueFilter, sortBy, viewScope]);
 
   // Paginated list
   const paginatedConclaves = useMemo(() => {
@@ -302,9 +304,9 @@ export default function Conclaves({ searchQuery, setActiveTab }) {
     <div className="p-4 sm:p-6 max-w-[1600px] mx-auto w-full flex flex-col gap-6 animate-fade-in">
 
       {/* Breadcrumbs & Page Header */}
-      <div className="border-b border-zinc-100 pb-6 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
-          <h2 className="text-dashboard-title text-zinc-950 font-extrabold tracking-tight">Conclave Management</h2>
+          <h2 className="text-dashboard-title text-zinc-955 font-extrabold tracking-tight">Conclave Management</h2>
           <p className="text-body-text text-zinc-500 mt-2">
             Create and manage BNI conclave schedules and lifecycle events.
           </p>
@@ -325,6 +327,30 @@ export default function Conclaves({ searchQuery, setActiveTab }) {
             Create Conclave
           </button>
         </div>
+      </div>
+
+      {/* Scope Navigation Tabs */}
+      <div className="flex border-b border-zinc-200 -mt-2">
+        <button
+          onClick={() => setViewScope('region')}
+          className={`px-4 py-2 text-body-sm font-black uppercase tracking-wider border-b-2 transition-smooth cursor-pointer -mb-px ${
+            viewScope === 'region'
+              ? 'border-brand-red text-brand-red font-extrabold'
+              : 'border-transparent text-zinc-500 hover:text-zinc-800'
+          }`}
+        >
+          My Region
+        </button>
+        <button
+          onClick={() => setViewScope('global')}
+          className={`px-4 py-2 text-body-sm font-black uppercase tracking-wider border-b-2 transition-smooth cursor-pointer -mb-px ${
+            viewScope === 'global'
+              ? 'border-brand-red text-brand-red font-extrabold'
+              : 'border-transparent text-zinc-500 hover:text-zinc-800'
+          }`}
+        >
+          Global Network
+        </button>
       </div>
 
       {/* KPI Overview Grid */}
@@ -433,6 +459,7 @@ export default function Conclaves({ searchQuery, setActiveTab }) {
                   />
                 </th>
                 <th className="px-5 py-4">Conclave Name</th>
+                <th className="px-5 py-4">Region</th>
                 <th className="px-5 py-4">Coordinator</th>
                 <th className="px-5 py-4">Date Schedule</th>
                 <th className="px-5 py-4">Venue Location</th>
@@ -446,7 +473,7 @@ export default function Conclaves({ searchQuery, setActiveTab }) {
             <tbody className="divide-y divide-zinc-100 text-table-text">
               {filteredConclaves.length === 0 ? (
                 <tr>
-                  <td colSpan="10" className="p-8 text-center text-zinc-400 font-medium">
+                  <td colSpan="11" className="p-8 text-center text-zinc-400 font-medium">
                     No conclaves found matching the filter tags.
                   </td>
                 </tr>
@@ -470,6 +497,11 @@ export default function Conclaves({ searchQuery, setActiveTab }) {
                         <span className="text-body-sm font-bold text-zinc-900 transition-smooth leading-tight">{conclave.name}</span>
                         <span className="text-[9px] text-zinc-450 font-bold uppercase mt-0.5">ID: {conclave.id}</span>
                       </div>
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className="px-2 py-0.5 bg-zinc-50 border border-zinc-200 text-zinc-550 text-[10px] font-bold rounded-full whitespace-nowrap">
+                        {conclave.region || 'Guntur Region'}
+                      </span>
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-2">

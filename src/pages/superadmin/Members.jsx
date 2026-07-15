@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   X,
   MapPin,
@@ -9,6 +9,27 @@ import { mockGlobalMembers, mockRegions } from '../../data/mockConclaveData';
 export default function SuperadminMembers({ searchQuery }) {
   const [selectedRegion, setSelectedRegion] = useState('All');
   const [activeMember, setActiveMember] = useState(null);
+  
+  const [referrals, setReferrals] = useState(() => {
+    const stored = localStorage.getItem('bni_referrals');
+    return stored ? JSON.parse(stored) : [];
+  });
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const stored = localStorage.getItem('bni_referrals');
+      if (stored) {
+        setReferrals(JSON.parse(stored));
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    // Listen to local storage events as well
+    const interval = setInterval(handleStorageChange, 1000);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, []);
 
   // Members state for toggling captain/member role dynamically
   const [members, setMembers] = useState(() => {
@@ -83,6 +104,8 @@ export default function SuperadminMembers({ searchQuery }) {
                 <th className="p-4">Company</th>
                 <th className="p-4">BNI Chapter</th>
                 <th className="p-4">Region</th>
+                <th className="p-4 text-center">Given</th>
+                <th className="p-4 text-center">Taken</th>
                 <th className="p-4 text-right pr-6">Action</th>
               </tr>
             </thead>
@@ -133,6 +156,12 @@ export default function SuperadminMembers({ searchQuery }) {
                     <span className="px-2.5 py-0.5 bg-zinc-50 border border-zinc-200 text-zinc-550 text-[10px] font-bold rounded-full whitespace-nowrap">
                       {member.region}
                     </span>
+                  </td>
+                  <td className="p-4 text-center font-bold text-zinc-800">
+                    {referrals.filter(r => r.fromMemberId === member.id).length}
+                  </td>
+                  <td className="p-4 text-center font-bold text-zinc-800">
+                    {referrals.filter(r => r.toMemberId === member.id).length}
                   </td>
                   <td className="p-4 text-right pr-6">
                     <button
@@ -255,6 +284,40 @@ export default function SuperadminMembers({ searchQuery }) {
                         <p className="text-[10px] text-zinc-450 font-semibold mt-1">Seated at {history.table} (Captain: {history.captain})</p>
                       </div>
                     ))}
+                  </div>
+                </div>
+
+                {/* Referral history logs */}
+                <div className="space-y-3 pt-2">
+                  <h4 className="text-[11px] font-black text-zinc-400 uppercase tracking-widest px-0.5">Referral History</h4>
+                  <div className="border border-zinc-200 rounded-xl overflow-hidden divide-y divide-zinc-200">
+                    {referrals.filter(r => r.fromMemberId === activeMember.id || r.toMemberId === activeMember.id).length === 0 ? (
+                      <p className="p-4 text-center text-[10.5px] text-zinc-400 font-semibold bg-white">No referrals logged for this member.</p>
+                    ) : (
+                      referrals.filter(r => r.fromMemberId === activeMember.id || r.toMemberId === activeMember.id).map(ref => {
+                        const isGiven = ref.fromMemberId === activeMember.id;
+                        return (
+                          <div key={ref.id} className="p-3.5 bg-white hover:bg-zinc-50/50 transition-colors text-body-sm">
+                            <div className="flex justify-between items-start">
+                              <p className="font-black text-zinc-800">
+                                {isGiven ? `Given to: ${ref.toName}` : `Received from: ${ref.fromName}`}
+                              </p>
+                              <span className={`px-1.5 py-0.5 text-[8px] font-extrabold rounded border ${
+                                ref.status === 'Connected'
+                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-150'
+                                  : ref.status === 'Closed'
+                                  ? 'bg-zinc-150 text-zinc-650 border-zinc-250'
+                                  : 'bg-amber-50 text-amber-700 border-amber-150'
+                              }`}>
+                                {ref.status}
+                              </span>
+                            </div>
+                            <p className="text-[11px] font-semibold text-zinc-550 mt-1 italic">"{ref.description}"</p>
+                            <span className="text-[8px] text-zinc-455 font-extrabold uppercase mt-1 block">{ref.date}</span>
+                          </div>
+                        );
+                      })
+                    )}
                   </div>
                 </div>
               </div>

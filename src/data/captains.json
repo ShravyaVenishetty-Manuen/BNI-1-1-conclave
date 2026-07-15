@@ -8,6 +8,7 @@
     "table": "Unassigned",
     "joinDate": "Jan 14, 2021",
     "chapter": "Peak Performance",
+    "conclaveIds": ["CON-2024-0015", "CON-2024-0012", "CON-2024-0008"],
     "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuDdGurGA3ulV9ieUcjXHI96VRKzzg1u49flN6xoZclsAWXnuhfDmBWmFIpyuumMLc715g-0bde-xvEDYcPbo5Le_lhJs37haOYYJ09cObC34O_fhebluQX5E0EPdGmEAMGbtLP7CVDAsJ6miX00oGmngM49ERmD6yZfrZTHmWCDEVRrEG5r3SmGOUUEupFglkFWIfDdWVQqj7Bo-TML9qq6xMHgbM_1k_4x9cCfsEvkFmMGeyKzHzrK73rEHwt-MqeoW1D85O9cm5U",
     "drawerImage": "https://lh3.googleusercontent.com/aida-public/AB6AXuBD9RgLsLKNJjme7fStZB1zXB8i8PXuVdfv0xeg0LF935ZPsGZZ-A2NB2mFyjPTG1HZh9HCieFf1PWsHgmons8ZvRh5LJR1XnxVyfVJS0ZF_prH_y2xnAKWTIYmyYeFfia5-PVh8TVCdgKNhJcTeYNBfBNaFfUjP7Q_gPEf87kfJaLOiM1On4a4KcoPY2D8tsiJDitMu3mWVudXO9zCADxFsdZx5aDpxWaxWvuDWwA1uY78McgmqUZZCnos1LjMp4PtM9Yz6RT63dA",
     "history": [
@@ -29,6 +30,7 @@
     "table": "Table 04 (South Chapter)",
     "joinDate": "Mar 22, 2021",
     "chapter": "Apex Chapter",
+    "conclaveIds": ["CON-2024-0015", "CON-2024-0008"],
     "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuDDizJhD8bIRWT1DT0VnCLSYB_A_JuTKtI7_QYXDLxLkIvA0rP18fQlTKse9S8EoV_UN2dNR_gODJAf0FaDgTZstRGhKj2v90gZHjrHQ06oPreQnn3wF4BqfJvzKMBQpoKJcX4G3hJQ4JVA3vwT6z2k5qIrSc2utPuml2S8GVYxtOYL_PwrRqFvWtbmpfSBxXj7MrOMM9sFydWal9sHgu4o4Z8qTW6mPNAw7RBqNf069xKW8xrn69VelkbjTZEW0dSbS63nI_gRR3Y",
     "drawerImage": "https://lh3.googleusercontent.com/aida-public/AB6AXuDDizJhD8bIRWT1DT0VnCLSYB_A_JuTKtI7_QYXDLxLkIvA0rP18fQlTKse9S8EoV_UN2dNR_gODJAf0FaDgTZstRGhKj2v90gZHjrHQ06oPreQnn3wF4BqfJvzKMBQpoKJcX4G3hJQ4JVA3vwT6z2k5qIrSc2utPuml2S8GVYxtOYL_PwrRqFvWtbmpfSBxXj7MrOMM9sFydWal9sHgu4o4Z8qTW6mPNAw7RBqNf069xKW8xrn69VelkbjTZEW0dSbS63nI_gRR3Y",
     "history": [
@@ -48,6 +50,7 @@
     "table": "Unassigned",
     "joinDate": "Nov 08, 2022",
     "chapter": "Peak Performance",
+    "conclaveIds": ["CON-2024-0012"],
     "image": "https://lh3.googleusercontent.com/aida-public/AB6AXuC1r9ZwwkMbvsS197M3RxXmwFXJiIx5CSY9B3gZ3ed9tUbG_WdU9k0dy-CEyeGMtsOd3ScBPZTviacTOYFOZutH1K80ip_My5tri2DPjCC_wJoSVv_fzFae7UTpHUbAGmMeg7JIx_xMHWmxxsfKXEfJEpngVrdgeTM9Xr0IzzDPNFPG6de2EQHM_qLjvBmNc96RxiJUALcYAqCoFtIU027prTkX2O2zQLb_oj9z_G0JxDeOu5j0yvLmzv6t1F7hDemJcK9puv0er5Q",
     "drawerImage": "https://lh3.googleusercontent.com/aida-public/AB6AXuC1r9ZwwkMbvsS197M3RxXmwFXJiIx5CSY9B3gZ3ed9tUbG_WdU9k0dy-CEyeGMtsOd3ScBPZTviacTOYFOZutH1K80ip_My5tri2DPjCC_wJoSVv_fzFae7UTpHUbAGmMeg7JIx_xMHWmxxsfKXEfJEpngVrdgeTM9Xr0IzzDPNFPG6de2EQHM_qLjvBmNc96RxiJUALcYAqCoFtIU027prTkX2O2zQLb_oj9z_G0JxDeOu5j0yvLmzv6t1F7hDemJcK9puv0er5Q",
     "history": [
@@ -66,6 +69,7 @@
     "table": "Unassigned",
     "joinDate": "Jul 18, 2022",
     "chapter": "Capital Chapter",
+    "conclaveIds": ["CON-2024-0015"],
     "image": null,
     "drawerImage": null,
     "history": [],
@@ -82,6 +86,7 @@
     "table": "Table 12 (South Chapter)",
     "joinDate": "Jan 10, 2023",
     "chapter": "Peak Performance",
+    "conclaveIds": ["CON-2024-0015", "CON-2024-0008"],
     "image": null,
     "drawerImage": null,
     "history": [
@@ -89,6 +94,60 @@
     ],
     "timeline": [
       { "event": "Assigned to South Chapter Table 12", "date": "Sep 28, 2023", "note": "Active Captain" }
+    ]
+  },
+  {
+    "id": "BNI-2060-P",
+    "name": "Ganesh Viswanathan",
+    "status": "Available",
+    "category": "Financial Planning",
+    "email": "ganesh@wealthwise.com",
+    "table": "Unassigned",
+    "joinDate": "Mar 12, 2024",
+    "chapter": "Phoenix Central",
+    "region": "Phoenix Chapter",
+    "conclaveIds": ["CON-2026-0033"],
+    "image": null,
+    "drawerImage": null,
+    "history": [],
+    "timeline": [
+      { "event": "Onboarded in Phoenix", "date": "Mar 12, 2024", "note": "Assigned as Financial Captain" }
+    ]
+  },
+  {
+    "id": "BNI-2090-S",
+    "name": "Kunal Shah",
+    "status": "Available",
+    "category": "Digital Marketing",
+    "email": "kunal@shahmarketing.sg",
+    "table": "Unassigned",
+    "joinDate": "Jan 05, 2025",
+    "chapter": "Singapore Prosperity",
+    "region": "Singapore Metro",
+    "conclaveIds": ["CON-2026-0055"],
+    "image": null,
+    "drawerImage": null,
+    "history": [],
+    "timeline": [
+      { "event": "Onboarded in Singapore", "date": "Jan 05, 2025", "note": "Assigned as Marketing Captain" }
+    ]
+  },
+  {
+    "id": "BNI-2080-L",
+    "name": "Priya Nair",
+    "status": "Available",
+    "category": "Wealth Management",
+    "email": "priya@nairfinance.co.uk",
+    "table": "Unassigned",
+    "joinDate": "May 15, 2024",
+    "chapter": "London Central Elite",
+    "region": "London Central",
+    "conclaveIds": ["CON-2026-0044"],
+    "image": null,
+    "drawerImage": null,
+    "history": [],
+    "timeline": [
+      { "event": "Onboarded in London", "date": "May 15, 2024", "note": "Assigned as Wealth Management Captain" }
     ]
   }
 ]

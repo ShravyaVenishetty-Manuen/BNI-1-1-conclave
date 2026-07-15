@@ -16,9 +16,14 @@ import Pagination from '../components/Pagination';
 
 import initialConclaves from '../data/conclaves_snapshot.json';
 
-export default function Snapshot({ searchQuery }) {
+export default function Snapshot({ searchQuery, selectedConclaveId }) {
   const [conclaves, setConclaves] = useState(initialConclaves);
-  const [activeConclaveIndex, setActiveConclaveIndex] = useState(0);
+  
+  const activeConclaveIndex = useMemo(() => {
+    const idx = conclaves.findIndex(c => c.id === selectedConclaveId);
+    return idx !== -1 ? idx : 0;
+  }, [conclaves, selectedConclaveId]);
+
   const currentConclave = conclaves[activeConclaveIndex];
 
   // Filters

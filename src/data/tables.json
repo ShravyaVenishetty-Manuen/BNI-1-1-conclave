@@ -1,6 +1,7 @@
 [
   {
     "id": "Table 01",
+    "conclaveId": "CON-2024-0015",
     "status": "warning",
     "warningText": "Warning: Business Conflict",
     "capacity": "7/8",
@@ -17,6 +18,7 @@
   },
   {
     "id": "Table 02",
+    "conclaveId": "CON-2024-0015",
     "status": "validated",
     "capacity": "8/8",
     "captain": {
@@ -32,17 +34,79 @@
   },
   {
     "id": "Table 03",
+    "conclaveId": "CON-2024-0015",
     "status": "locked",
     "capacity": "8/8"
   },
   {
     "id": "Table 04",
+    "conclaveId": "CON-2024-0015",
     "status": "review",
     "capacity": "8/8"
   },
   {
     "id": "Table 05",
+    "conclaveId": "CON-2024-0015",
     "status": "validated",
+    "capacity": "8/8"
+  },
+  {
+    "id": "Table A1",
+    "conclaveId": "CON-2024-0012",
+    "status": "validated",
+    "capacity": "8/8",
+    "captain": {
+      "name": "Vikram Malhotra",
+      "role": "Table Captain",
+      "initials": "VM"
+    },
+    "members": [
+      { "id": "ma-1", "name": "Priya Reddy", "category": "IT Consulting" },
+      { "id": "ma-2", "name": "Suresh Babu", "category": "Logistics" },
+      { "id": "ma-3", "name": "Nalini Rao", "category": "Finance" }
+    ]
+  },
+  {
+    "id": "Table A2",
+    "conclaveId": "CON-2024-0012",
+    "status": "warning",
+    "warningText": "Warning: Capacity Underfill",
+    "capacity": "4/8",
+    "captain": {
+      "name": "Devika Menon",
+      "role": "Table Captain",
+      "initials": "DM"
+    },
+    "members": [
+      { "id": "ma-4", "name": "Arjun Nair", "category": "Real Estate" },
+      { "id": "ma-5", "name": "Kavitha Pillai", "category": "Healthcare" }
+    ]
+  },
+  {
+    "id": "Table A3",
+    "conclaveId": "CON-2024-0012",
+    "status": "review",
+    "capacity": "7/8"
+  },
+  {
+    "id": "Table B1",
+    "conclaveId": "CON-2026-0044",
+    "status": "validated",
+    "capacity": "8/8",
+    "captain": {
+      "name": "Vikram Reddy",
+      "role": "Table Captain",
+      "initials": "VR"
+    },
+    "members": [
+      { "id": "mb-1", "name": "Sophie Turner", "category": "Marketing" },
+      { "id": "mb-2", "name": "James Lin", "category": "Finance" }
+    ]
+  },
+  {
+    "id": "Table B2",
+    "conclaveId": "CON-2026-0044",
+    "status": "locked",
     "capacity": "8/8"
   }
 ]

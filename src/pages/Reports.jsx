@@ -31,8 +31,7 @@ import {
 import reportsSeed from '../data/reports_data.json';
 const { initialMembers, conclaveList } = reportsSeed;
 
-export default function Reports({ searchQuery: globalSearchQuery }) {
-  const [activeConclaveIndex, setActiveConclaveIndex] = useState(0);
+export default function Reports({ searchQuery: globalSearchQuery, selectedConclaveId }) {
   const [isConclaveSelectorOpen, setIsConclaveSelectorOpen] = useState(false);
   const [localSearchQuery, setLocalSearchQuery] = useState('');
   const searchVal = globalSearchQuery !== undefined ? globalSearchQuery : localSearchQuery;
@@ -43,6 +42,12 @@ export default function Reports({ searchQuery: globalSearchQuery }) {
     setToast({ title, desc });
     setTimeout(() => setToast(null), 3000);
   };
+
+  const activeConclaveIndex = useMemo(() => {
+    if (selectedConclaveId === 'CON-2024-0012') return 0;
+    if (selectedConclaveId === 'CON-2024-0015') return 1;
+    return 0;
+  }, [selectedConclaveId]);
 
   const selectedConclave = conclaveList[activeConclaveIndex];
 

@@ -15,16 +15,37 @@ import {
 } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 import confetti from 'canvas-confetti';
+import conclavesData from '../data/conclaves.json';
 
-export default function ScheduleGen() {
-  // Simulator State
-  const [progress, setProgress] = useState(85);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [elapsed, setElapsed] = useState(42);
-  const [processed, setProcessed] = useState(1054);
-  const [currentStep, setCurrentStep] = useState('Conflict Resolution');
-  const [round3Status, setRound3Status] = useState('IN PROGRESS (45%)');
-  const [activeStepIndex, setActiveStepIndex] = useState(4); // 0-indexed step 5: Resolution
+export default function ScheduleGen({ selectedConclaveId }) {
+  const selectedConclave = useMemo(() =>
+    conclavesData.find(c => c.id === selectedConclaveId),
+    [selectedConclaveId]
+  );
+  const conclaveName = selectedConclave?.name || 'Conclave';
+
+  // Per-conclave state stored in a Map keyed by conclaveId
+  const [perConclaveState, setPerConclaveState] = useState({});
+
+  const getState = () => perConclaveState[selectedConclaveId] || {
+    progress: 85, isGenerating: false, elapsed: 42, processed: 1054,
+    currentStep: 'Conflict Resolution', round3Status: 'IN PROGRESS (45%)', activeStepIndex: 4
+  };
+
+  const patchState = (patch) => setPerConclaveState(prev => ({
+    ...prev,
+    [selectedConclaveId]: { ...getState(), ...patch }
+  }));
+
+  const { progress, isGenerating, elapsed, processed, currentStep, round3Status, activeStepIndex } = getState();
+
+  const setProgress = (val) => patchState({ progress: typeof val === 'function' ? val(getState().progress) : val });
+  const setIsGenerating = (val) => patchState({ isGenerating: val });
+  const setElapsed = (val) => patchState({ elapsed: typeof val === 'function' ? val(getState().elapsed) : val });
+  const setProcessed = (val) => patchState({ processed: typeof val === 'function' ? val(getState().processed) : val });
+  const setCurrentStep = (val) => patchState({ currentStep: val });
+  const setRound3Status = (val) => patchState({ round3Status: val });
+  const setActiveStepIndex = (val) => patchState({ activeStepIndex: val });
 
   const [toast, setToast] = useState(null);
   const showToast = (title, desc) => {
@@ -136,7 +157,7 @@ export default function ScheduleGen() {
         <div>
           <h2 className="text-dashboard-title text-zinc-950 font-extrabold tracking-tight">Schedule Generation</h2>
           <p className="text-body-text text-zinc-500 mt-2">
-            Generate seating assignments based on conclave rules.
+            Generate seating assignments for <span className="font-bold text-brand-red">{conclaveName}</span>.
           </p>
         </div>
 
@@ -185,14 +206,14 @@ export default function ScheduleGen() {
               <Calendar className="w-5 h-5 text-brand-red" />
             </div>
             <div>
-              <h3 className="text-body-sm font-bold text-zinc-950">Annual Global Summit 2024</h3>
-              <p className="text-[10px] text-zinc-400 font-bold uppercase mt-0.5">V Convention, Guntur • Nov 12-14</p>
+              <h3 className="text-body-sm font-bold text-zinc-950">{selectedConclave?.name || 'Conclave'}</h3>
+              <p className="text-[10px] text-zinc-400 font-bold uppercase mt-0.5">{selectedConclave?.venueShort || ''} • {selectedConclave?.dateRange || ''}</p>
             </div>
           </div>
           <div className="flex items-center gap-8 px-2 sm:px-6">
             <div className="text-center">
               <div className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider">Validation Score</div>
-              <div className="text-section-heading font-extrabold text-brand-red mt-0.5">100%</div>
+              <div className="text-section-heading font-extrabold text-brand-red mt-0.5">{selectedConclave?.progress || 100}%</div>
             </div>
           </div>
         </div>
@@ -200,15 +221,15 @@ export default function ScheduleGen() {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 pt-1 font-semibold text-zinc-650">
           <div className="flex flex-col">
             <span className="text-[10px] text-zinc-400 font-bold uppercase">Members</span>
-            <span className="text-body-sm font-bold text-zinc-900 mt-0.5">1,240</span>
+            <span className="text-body-sm font-bold text-zinc-900 mt-0.5">{(selectedConclave?.memberCount || 0).toLocaleString()}</span>
           </div>
           <div className="flex flex-col">
             <span className="text-[10px] text-zinc-400 font-bold uppercase">Captains</span>
-            <span className="text-body-sm font-bold text-zinc-900 mt-0.5">48</span>
+            <span className="text-body-sm font-bold text-zinc-900 mt-0.5">{selectedConclave?.captainCount || 0}</span>
           </div>
           <div className="flex flex-col">
             <span className="text-[10px] text-zinc-400 font-bold uppercase">Business Types</span>
-            <span className="text-body-sm font-bold text-zinc-900 mt-0.5">12</span>
+            <span className="text-body-sm font-bold text-zinc-900 mt-0.5">{selectedConclave?.businessTypes || 0}</span>
           </div>
           <div className="flex flex-col">
             <span className="text-[10px] text-zinc-400 font-bold uppercase">Rounds</span>
@@ -216,12 +237,12 @@ export default function ScheduleGen() {
           </div>
           <div className="flex flex-col">
             <span className="text-[10px] text-zinc-400 font-bold uppercase">Tables</span>
-            <span className="text-body-sm font-bold text-zinc-900 mt-0.5">{Math.ceil(1240 / personsPerTable)}</span>
+            <span className="text-body-sm font-bold text-zinc-900 mt-0.5">{Math.ceil((selectedConclave?.memberCount || 0) / personsPerTable)}</span>
           </div>
           <div className="flex flex-col">
             <span className="text-[10px] text-zinc-400 font-bold uppercase">Status</span>
             <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-100 w-fit mt-1 uppercase tracking-wider">
-              VALIDATED
+              {selectedConclave?.status || 'Running'}
             </span>
           </div>
         </div>
@@ -417,7 +438,7 @@ export default function ScheduleGen() {
                   </div>
                   <div>
                     <label className="text-[10px] text-zinc-455 font-bold uppercase block mb-1">Processed</label>
-                    <span className="font-bold text-zinc-900">{processed.toLocaleString()} / 1,240</span>
+                    <span className="font-bold text-zinc-900">{processed.toLocaleString()} / {(selectedConclave?.memberCount || 0).toLocaleString()}</span>
                   </div>
                   <div>
                     <label className="text-[10px] text-zinc-455 font-bold uppercase block mb-1">Est. Completion</label>
@@ -457,7 +478,7 @@ export default function ScheduleGen() {
             <div className="flex justify-between items-start mb-3">
               <div>
                 <h5 className="font-bold text-zinc-800 text-body-sm">Round 1</h5>
-                <p className="text-[11px] text-zinc-400 font-semibold mt-0.5">155 Tables • 1,240 Members</p>
+                <p className="text-[11px] text-zinc-400 font-semibold mt-0.5">{Math.ceil((selectedConclave?.memberCount || 0) / personsPerTable)} Tables • {(selectedConclave?.memberCount || 0).toLocaleString()} Members</p>
               </div>
               <CheckCircle2 className="w-5 h-5 text-emerald-600" />
             </div>
@@ -470,7 +491,7 @@ export default function ScheduleGen() {
             <div className="flex justify-between items-start mb-3">
               <div>
                 <h5 className="font-bold text-zinc-800 text-body-sm">Round 2</h5>
-                <p className="text-[11px] text-zinc-400 font-semibold mt-0.5">155 Tables • 1,240 Members</p>
+                <p className="text-[11px] text-zinc-400 font-semibold mt-0.5">{Math.ceil((selectedConclave?.memberCount || 0) / personsPerTable)} Tables • {(selectedConclave?.memberCount || 0).toLocaleString()} Members</p>
               </div>
               <CheckCircle2 className="w-5 h-5 text-emerald-600" />
             </div>
@@ -484,7 +505,7 @@ export default function ScheduleGen() {
               <div>
                 <h5 className={`font-bold text-body-sm ${progress === 100 ? 'text-zinc-800' : 'text-brand-red'}`}>Round 3</h5>
                 <p className="text-[11px] text-zinc-400 font-semibold mt-0.5">
-                  {progress === 100 ? '155 Tables • 1,240 Members' : 'Allocating Members...'}
+                  {progress === 100 ? `${Math.ceil((selectedConclave?.memberCount || 0) / personsPerTable)} Tables • ${(selectedConclave?.memberCount || 0).toLocaleString()} Members` : 'Allocating Members...'}
                 </p>
               </div>
               {progress === 100 ? (

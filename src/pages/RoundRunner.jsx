@@ -18,12 +18,21 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
+import conclavesData from '../data/conclaves.json';
 
 import runnerData from '../data/tables_runner.json';
 const { initialTables, mockRosters } = runnerData;
 
-export default function RoundRunner() {
-  const [tables, setTables] = useState(initialTables);
+export default function RoundRunner({ selectedConclaveId }) {
+  const selectedConclave = conclavesData.find(c => c.id === selectedConclaveId);
+  const conclaveName = selectedConclave?.name || 'Conclave';
+
+  const [allTables, setAllTables] = useState(initialTables);
+  const tables = useMemo(() =>
+    allTables.filter(t => t.conclaveId === selectedConclaveId),
+    [allTables, selectedConclaveId]
+  );
+  const setTables = (updater) => setAllTables(updater);
   const [activeRound, setActiveRound] = useState(2);
 
 
@@ -102,7 +111,7 @@ export default function RoundRunner() {
         <div>
           <h2 className="text-dashboard-title text-zinc-950 font-extrabold tracking-tight">Round Runner</h2>
           <p className="text-body-text text-zinc-500 mt-2">
-            Monitor and control the live conclave in real time.
+            Live control for <span className="font-bold text-brand-red">{conclaveName}</span>.
           </p>
         </div>
 

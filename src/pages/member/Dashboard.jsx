@@ -12,8 +12,11 @@ import {
 } from 'lucide-react';
 
 import { tableMembers } from '../../data/mockConclaveData';
+import ReferModal from '../../components/ReferModal';
 
 export default function MemberDashboard({ loggedInMember, onTabChange }) {
+  const [referTarget, setReferTarget] = useState(null);
+  const [toast, setToast] = useState(null);
   // Countdown timer starting at 08:42 (522 seconds)
   const [timeLeft, setTimeLeft] = useState(522);
 
@@ -285,11 +288,21 @@ export default function MemberDashboard({ loggedInMember, onTabChange }) {
                     <p className="text-[11px] text-zinc-800 font-extrabold mt-2 truncate leading-tight">
                       {member.company}
                     </p>
-                    <p className="text-[10px] text-zinc-400 font-semibold truncate leading-none mt-1">
-                      {member.chapter}
-                    </p>
                   </div>
                 </div>
+
+                {/* Refer button */}
+                {member.name !== (loggedInMember?.name || 'Anjali Sharma') && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setReferTarget(member);
+                    }}
+                    className="mt-4 w-full py-1.5 border border-zinc-200 hover:border-brand-red text-zinc-650 hover:text-brand-red bg-zinc-50/50 hover:bg-red-50/5 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition-smooth cursor-pointer font-bold"
+                  >
+                    Send Referral
+                  </button>
+                )}
               </div>
             ))}
           </div>
@@ -335,6 +348,28 @@ export default function MemberDashboard({ loggedInMember, onTabChange }) {
 
         </div>
       </div>
+
+      {referTarget && (
+        <ReferModal
+          recipient={referTarget}
+          loggedInUser={loggedInMember || { name: 'Anjali Sharma' }}
+          onClose={() => setReferTarget(null)}
+          onSuccess={(msg) => {
+            setToast(msg);
+            setTimeout(() => setToast(null), 3000);
+          }}
+        />
+      )}
+
+      {toast && (
+        <div className="fixed bottom-5 right-5 z-[70] bg-zinc-900 text-white text-[11px] font-bold py-2.5 px-4 rounded-lg shadow-xl flex items-center gap-2 border border-zinc-800 animate-slide-up">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+          <div>
+            <p className="font-bold text-white">Success!</p>
+            <p className="text-zinc-400 mt-0.5">{toast}</p>
+          </div>
+        </div>
+      )}
 
     </div>
   );

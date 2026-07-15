@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Search,
   MapPin,
@@ -15,13 +15,33 @@ import Pagination from '../components/Pagination';
 
 import membersData from '../data/members.json';
 
-export default function Members({ searchQuery }) {
+export default function Members({ searchQuery, selectedConclaveId }) {
   const [members, setMembers] = useState(membersData);
+  const [referrals, setReferrals] = useState(() => {
+    const stored = localStorage.getItem('bni_referrals');
+    return stored ? JSON.parse(stored) : [];
+  });
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const stored = localStorage.getItem('bni_referrals');
+      if (stored) {
+        setReferrals(JSON.parse(stored));
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    const interval = setInterval(handleStorageChange, 1000);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, []);
   const [searchTerm, setSearchTerm] = useState('');
   const searchVal = searchQuery !== undefined ? searchQuery : searchTerm;
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [captainFilter, setCaptainFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [viewScope, setViewScope] = useState('region'); // 'region' or 'global'
   const [selectedMember, setSelectedMember] = useState(null);
   const [selectedRows, setSelectedRows] = useState(new Set());
   const [activeDropdown, setActiveDropdown] = useState(null);
@@ -37,6 +57,13 @@ export default function Members({ searchQuery }) {
     setTimeout(() => {
       setToast(null);
     }, 3000);
+  };
+
+  const getMemberRegion = (member) => {
+    if (member.region) return member.region;
+    if (member.chapter === 'Peak Performance' || member.chapter === 'Apex Chapter') return 'Guntur Region';
+    if (member.chapter === 'Capital Chapter') return 'Hyderabad Region';
+    return 'Guntur Region';
   };
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -121,7 +148,8 @@ export default function Members({ searchQuery }) {
         id: `BNI-00${Math.floor(100 + Math.random() * 900)}`,
         avatar: formData.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'M',
         joinDate: new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
-        history: [{ event: 'Created manually', date: new Date().toLocaleDateString(), role: formData.isCaptain ? 'Captain' : 'Member' }]
+        history: [{ event: 'Created manually', date: new Date().toLocaleDateString(), role: formData.isCaptain ? 'Captain' : 'Member' }],
+        conclaveIds: [selectedConclaveId]
       };
       setMembers(prev => [newMember, ...prev]);
     }
@@ -129,16 +157,21 @@ export default function Members({ searchQuery }) {
     setIsFormOpen(false);
   };
 
+  // Conclave-specific members subset
+  const conclaveMembers = useMemo(() => {
+    return members.filter(m => m.conclaveIds && m.conclaveIds.includes(selectedConclaveId));
+  }, [members, selectedConclaveId]);
+
   // Dynamic statistics calculations
-  const totalCount = members.length;
-  const activeCount = members.filter(m => m.status === 'Active').length;
+  const totalCount = conclaveMembers.length;
+  const activeCount = conclaveMembers.filter(m => m.status === 'Active').length;
   const activePercentage = totalCount > 0 ? ((activeCount / totalCount) * 100).toFixed(1) : '0';
-  const captainCount = members.filter(m => m.isCaptain).length;
-  const businessClassCount = new Set(members.map(m => m.category)).size;
+  const captainCount = conclaveMembers.filter(m => m.isCaptain).length;
+  const businessClassCount = new Set(conclaveMembers.map(m => m.category)).size;
 
   // Filtered members list
   const filteredMembers = useMemo(() => {
-    return members.filter(member => {
+    return conclaveMembers.filter(member => {
       const matchesSearch =
         member.name.toLowerCase().includes(searchVal.toLowerCase()) ||
         member.id.toLowerCase().includes(searchVal.toLowerCase()) ||
@@ -154,9 +187,13 @@ export default function Members({ searchQuery }) {
 
       const matchesStatus = statusFilter === 'All' || member.status === statusFilter;
 
-      return matchesSearch && matchesCategory && matchesCaptain && matchesStatus;
+      const matchesViewScope = viewScope === 'global' || 
+        member.chapter === 'Peak Performance' || 
+        member.chapter === 'Apex Chapter';
+
+      return matchesSearch && matchesCategory && matchesCaptain && matchesStatus && matchesViewScope;
     });
-  }, [members, searchVal, categoryFilter, captainFilter, statusFilter]);
+  }, [conclaveMembers, searchVal, categoryFilter, captainFilter, statusFilter, viewScope]);
 
   // Paginated members slice
   const paginatedMembers = useMemo(() => {
@@ -170,7 +207,7 @@ export default function Members({ searchQuery }) {
       showToast('No members found to export!', 'error');
       return;
     }
-    const headers = ['Member ID', 'Name', 'Category', 'Email', 'Phone', 'Role', 'Status', 'Join Date', 'Company', 'Chapter'];
+    const headers = ['Member ID', 'Name', 'Category', 'Email', 'Phone', 'Role', 'Status', 'Join Date', 'Company', 'Chapter', 'Region'];
     const rows = filteredMembers.map(m => [
       m.id,
       `"${m.name}"`,
@@ -181,7 +218,8 @@ export default function Members({ searchQuery }) {
       m.status,
       m.joinDate,
       `"${m.company}"`,
-      `"${m.chapter}"`
+      `"${m.chapter}"`,
+      `"${getMemberRegion(m)}"`
     ]);
 
     const csvContent = "data:text/csv;charset=utf-8,"
@@ -259,7 +297,8 @@ export default function Members({ searchQuery }) {
             company: company || 'Self Employed',
             chapter: chapter || 'Peak Performance',
             avatar: avatar,
-            history: [{ event: 'Imported via CSV', date: new Date().toLocaleDateString(), role: 'Active Member' }]
+            history: [{ event: 'Imported via CSV', date: new Date().toLocaleDateString(), role: 'Active Member' }],
+            conclaveIds: [selectedConclaveId]
           });
         }
       }
@@ -307,9 +346,9 @@ export default function Members({ searchQuery }) {
     <div className="p-4 sm:p-6 max-w-[1600px] mx-auto w-full flex flex-col gap-6 animate-fade-in">
 
       {/* Page Header & Actions */}
-      <div className="border-b border-zinc-100 pb-6 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
-          <h2 className="text-dashboard-title text-zinc-950 font-extrabold tracking-tight">Members Management</h2>
+          <h2 className="text-dashboard-title text-zinc-955 font-extrabold tracking-tight">Members Management</h2>
           <p className="text-body-text text-zinc-500 mt-2">
             Manage registered BNI members and chapter seating details.
           </p>
@@ -344,6 +383,30 @@ export default function Members({ searchQuery }) {
             Add Member
           </button>
         </div>
+      </div>
+
+      {/* Scope Navigation Tabs */}
+      <div className="flex border-b border-zinc-200 -mt-2">
+        <button
+          onClick={() => setViewScope('region')}
+          className={`px-4 py-2 text-body-sm font-black uppercase tracking-wider border-b-2 transition-smooth cursor-pointer -mb-px ${
+            viewScope === 'region'
+              ? 'border-brand-red text-brand-red font-extrabold'
+              : 'border-transparent text-zinc-500 hover:text-zinc-800'
+          }`}
+        >
+          My Region
+        </button>
+        <button
+          onClick={() => setViewScope('global')}
+          className={`px-4 py-2 text-body-sm font-black uppercase tracking-wider border-b-2 transition-smooth cursor-pointer -mb-px ${
+            viewScope === 'global'
+              ? 'border-brand-red text-brand-red font-extrabold'
+              : 'border-transparent text-zinc-500 hover:text-zinc-800'
+          }`}
+        >
+          Global Network
+        </button>
       </div>
 
       {/* Statistics KPI Grid */}
@@ -446,17 +509,20 @@ export default function Members({ searchQuery }) {
                 </th>
                 <th className="px-5 py-4">Member Name</th>
                 <th className="px-5 py-4">Member ID</th>
+                <th className="px-5 py-4">Region</th>
                 <th className="px-5 py-4">Classification</th>
                 <th className="px-5 py-4">Contact Info</th>
                 <th className="px-5 py-4">Chapter Role</th>
                 <th className="px-5 py-4">Status</th>
+                <th className="px-5 py-4 text-center">Given</th>
+                <th className="px-5 py-4 text-center">Taken</th>
                 <th className="px-5 py-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 text-table-text">
               {filteredMembers.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="p-8 text-center text-zinc-400 font-medium">
+                  <td colSpan="11" className="p-8 text-center text-zinc-400 font-medium">
                     No members match the active filters. Try resetting search queries.
                   </td>
                 </tr>
@@ -482,11 +548,16 @@ export default function Members({ searchQuery }) {
                         </div>
                         <div className="flex flex-col">
                           <span className="text-body-sm font-bold text-zinc-900 transition-smooth leading-tight">{member.name}</span>
-                          <span className="text-[10px] text-zinc-450 font-semibold uppercase mt-0.5">Member since {member.joinDate.split(' ')[1]}</span>
+                          <span className="text-[10px] text-zinc-455 font-semibold uppercase mt-0.5">Member since {member.joinDate.split(' ')[1] || member.joinDate}</span>
                         </div>
                       </div>
                     </td>
                     <td className="px-5 py-4 font-semibold text-zinc-700">{member.id}</td>
+                    <td className="px-5 py-4">
+                      <span className="px-2 py-0.5 bg-zinc-50 border border-zinc-200 text-zinc-550 text-[10px] font-bold rounded-full whitespace-nowrap">
+                        {getMemberRegion(member)}
+                      </span>
+                    </td>
                     <td className="px-5 py-4">
                       <span className="px-2 py-0.5 bg-zinc-100 text-zinc-600 rounded text-[10px] font-bold border border-zinc-200">
                         {member.category}
@@ -519,6 +590,12 @@ export default function Members({ searchQuery }) {
                           <span className="w-1.5 h-1.5 rounded-full bg-zinc-400"></span> Inactive
                         </span>
                       )}
+                    </td>
+                    <td className="px-5 py-4 text-center font-bold text-zinc-805">
+                      {referrals.filter(r => r.fromMemberId === member.id).length}
+                    </td>
+                    <td className="px-5 py-4 text-center font-bold text-zinc-805">
+                      {referrals.filter(r => r.toMemberId === member.id).length}
                     </td>
                     <td className="px-5 py-4 text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-1">
@@ -727,6 +804,40 @@ export default function Members({ searchQuery }) {
                       </div>
                     </div>
                   ))}
+                </div>
+              </section>
+
+              {/* Referral History */}
+              <section className="space-y-3.5">
+                <h5 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest border-b border-zinc-100 pb-1.5">Referral History</h5>
+                <div className="border border-zinc-200 rounded-xl overflow-hidden divide-y divide-zinc-200">
+                  {referrals.filter(r => r.fromMemberId === selectedMember.id || r.toMemberId === selectedMember.id).length === 0 ? (
+                    <p className="p-4 text-center text-[10.5px] text-zinc-400 font-semibold bg-white">No referrals logged for this member.</p>
+                  ) : (
+                    referrals.filter(r => r.fromMemberId === selectedMember.id || r.toMemberId === selectedMember.id).map(ref => {
+                      const isGiven = ref.fromMemberId === selectedMember.id;
+                      return (
+                        <div key={ref.id} className="p-3 bg-white hover:bg-zinc-50/50 transition-colors text-body-sm">
+                          <div className="flex justify-between items-start">
+                            <p className="font-black text-zinc-800 text-[11.5px]">
+                              {isGiven ? `Given to: ${ref.toName}` : `Received from: ${ref.fromName}`}
+                            </p>
+                            <span className={`px-1.5 py-0.5 text-[8px] font-extrabold rounded border ${
+                              ref.status === 'Connected'
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-150'
+                                : ref.status === 'Closed'
+                                ? 'bg-zinc-150 text-zinc-650 border-zinc-250'
+                                : 'bg-amber-50 text-amber-700 border-amber-150'
+                            }`}>
+                              {ref.status}
+                            </span>
+                          </div>
+                          <p className="text-[11px] font-semibold text-zinc-500 mt-1 italic">"{ref.description}"</p>
+                          <span className="text-[8px] text-zinc-400 font-extrabold uppercase mt-1 block">{ref.date}</span>
+                        </div>
+                      );
+                    })
+                  )}
                 </div>
               </section>
             </div>

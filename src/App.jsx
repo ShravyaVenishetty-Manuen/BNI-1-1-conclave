@@ -22,6 +22,9 @@ import MemberSchedule from './pages/member/MySchedule';
 import MemberCurrentRound from './pages/member/CurrentRound';
 import MemberConclaveHistory from './pages/member/ConclaveHistory';
 import MemberProfile from './pages/member/Profile';
+import Referrals from './pages/Referrals';
+import referralsData from './data/referrals.json';
+import conclavesData from './data/conclaves.json';
 import { Sparkles } from 'lucide-react';
 import SuperadminLayout from './components/SuperadminLayout';
 
@@ -61,7 +64,7 @@ export default function App() {
     const validTabs = [
       'dashboard', 'members', 'active-users', 'business-types', 'captains', 
       'conclaves', 'snapshot', 'validation', 'schedule-gen', 'schedule-review', 
-      'lock-conclave', 'round-runner', 'reports', 'admins'
+      'lock-conclave', 'round-runner', 'reports', 'admins', 'referrals'
     ];
     return validTabs.includes(lastPart) ? lastPart : 'dashboard';
   });
@@ -69,6 +72,10 @@ export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
+  // Global conclave selector for admin panel
+  const defaultConclave = conclavesData.find(c => c.status === 'Running') || conclavesData[0];
+  const [selectedConclaveId, setSelectedConclaveId] = useState(defaultConclave?.id || '');
+
   const mainRef = useRef(null);
 
   // Handle URL updates when switching tabs
@@ -94,7 +101,7 @@ export default function App() {
       const validTabs = [
         'dashboard', 'members', 'active-users', 'business-types', 'captains', 
         'conclaves', 'snapshot', 'validation', 'schedule-gen', 'schedule-review', 
-        'lock-conclave', 'round-runner', 'reports', 'admins'
+        'lock-conclave', 'round-runner', 'reports', 'admins', 'referrals'
       ];
       const cleanTab = validTabs.includes(lastPart) ? lastPart : 'dashboard';
 
@@ -120,6 +127,13 @@ export default function App() {
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, [userRole]);
+
+  // Initialize local storage referrals list
+  useEffect(() => {
+    if (!localStorage.getItem('bni_referrals')) {
+      localStorage.setItem('bni_referrals', JSON.stringify(referralsData));
+    }
+  }, []);
 
   const handleLogin = (role, payload) => {
     localStorage.setItem('bni_logged_in', 'true');
@@ -277,6 +291,11 @@ export default function App() {
             <MemberConclaveHistory
               loggedInMember={loggedInMember}
             />
+          ) : activeTab === 'referrals' ? (
+            <Referrals
+              loggedInUser={loggedInMember}
+              userType="member"
+            />
           ) : activeTab === 'profile' ? (
             <MemberProfile
               loggedInMember={loggedInMember}
@@ -324,6 +343,8 @@ export default function App() {
         onLogout={handleLogout}
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
+        selectedConclaveId={selectedConclaveId}
+        setSelectedConclaveId={setSelectedConclaveId}
       />
 
       {/* Main content wrapper */}
@@ -340,31 +361,31 @@ export default function App() {
         {/* Workspace views router */}
         <main ref={mainRef} className="flex-1 overflow-y-auto bg-zinc-50">
           {activeTab === 'dashboard' ? (
-            <Dashboard setActiveTab={handleTabChange} />
+            <Dashboard setActiveTab={handleTabChange} selectedConclaveId={selectedConclaveId} setSelectedConclaveId={setSelectedConclaveId} />
           ) : activeTab === 'members' ? (
-            <Members searchQuery={searchQuery} />
+            <Members searchQuery={searchQuery} selectedConclaveId={selectedConclaveId} />
           ) : activeTab === 'active-users' ? (
-            <ActiveUsers searchQuery={searchQuery} />
+            <ActiveUsers searchQuery={searchQuery} selectedConclaveId={selectedConclaveId} />
           ) : activeTab === 'business-types' ? (
-            <BusinessTypes searchQuery={searchQuery} />
+            <BusinessTypes searchQuery={searchQuery} selectedConclaveId={selectedConclaveId} />
           ) : activeTab === 'captains' ? (
-            <Captains searchQuery={searchQuery} />
+            <Captains searchQuery={searchQuery} selectedConclaveId={selectedConclaveId} />
           ) : activeTab === 'conclaves' ? (
             <Conclaves />
           ) : activeTab === 'snapshot' ? (
-            <Snapshot />
+            <Snapshot selectedConclaveId={selectedConclaveId} />
           ) : activeTab === 'validation' ? (
-            <Validation />
+            <Validation selectedConclaveId={selectedConclaveId} />
           ) : activeTab === 'schedule-gen' ? (
-            <ScheduleGen />
+            <ScheduleGen selectedConclaveId={selectedConclaveId} />
           ) : activeTab === 'schedule-review' ? (
-            <ScheduleReview />
+            <ScheduleReview setActiveTab={handleTabChange} selectedConclaveId={selectedConclaveId} />
           ) : activeTab === 'lock-conclave' ? (
-            <LockConclave />
+            <LockConclave selectedConclaveId={selectedConclaveId} />
           ) : activeTab === 'round-runner' ? (
-            <RoundRunner />
+            <RoundRunner selectedConclaveId={selectedConclaveId} />
           ) : activeTab === 'reports' ? (
-            <Reports />
+            <Reports selectedConclaveId={selectedConclaveId} />
           ) : (
             <div className="p-8 text-center text-zinc-400">View not found</div>
           )}

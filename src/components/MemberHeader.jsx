@@ -50,6 +50,7 @@ export default function MemberHeader({
     { id: 'my-schedule', label: 'My Schedule' },
     { id: 'current-round', label: 'Current Round' },
     { id: 'history', label: 'History' },
+    { id: 'referrals', label: 'Referrals' },
     { id: 'profile', label: 'Profile' }
   ];
 

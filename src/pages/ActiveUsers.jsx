@@ -28,8 +28,10 @@ import {
 } from 'recharts';
 
 import initialSessions from '../data/sessions.json';
+import membersData from '../data/members.json';
+import captainsData from '../data/captains.json';
 
-export default function ActiveUsers({ searchQuery }) {
+export default function ActiveUsers({ searchQuery, selectedConclaveId }) {
   const [sessions, setSessions] = useState(initialSessions);
   const [searchTerm, setSearchTerm] = useState('');
   const searchVal = searchQuery !== undefined ? searchQuery : searchTerm;
@@ -80,11 +82,22 @@ export default function ActiveUsers({ searchQuery }) {
     setTimeout(() => setToast(null), 3000);
   };
 
+  // Conclave-specific sessions subset
+  const conclaveSessions = useMemo(() => {
+    const conclaveMemberIds = new Set(
+      membersData.filter(m => m.conclaveIds && m.conclaveIds.includes(selectedConclaveId)).map(m => m.id)
+    );
+    const conclaveCaptainIds = new Set(
+      captainsData.filter(c => c.conclaveIds && c.conclaveIds.includes(selectedConclaveId)).map(c => c.id)
+    );
+    return sessions.filter(s => conclaveMemberIds.has(s.id) || conclaveCaptainIds.has(s.id));
+  }, [sessions, selectedConclaveId]);
+
   // Filtered Sessions
   const filteredSessions = useMemo(() => {
     setCurrentPage(1);
     setSelectedRows(new Set());
-    return sessions.filter(s => {
+    return conclaveSessions.filter(s => {
       const matchesSearch =
         s.name.toLowerCase().includes(searchVal.toLowerCase()) ||
         s.id.toLowerCase().includes(searchVal.toLowerCase()) ||
@@ -96,7 +109,7 @@ export default function ActiveUsers({ searchQuery }) {
 
       return matchesSearch && matchesStatus;
     });
-  }, [sessions, searchVal, statusFilter]);
+  }, [conclaveSessions, searchVal, statusFilter]);
 
   // Paginated Sessions
   const paginatedSessions = useMemo(() => {

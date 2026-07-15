@@ -15,12 +15,23 @@ import {
 } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 import confetti from 'canvas-confetti';
+import conclavesData from '../data/conclaves.json';
 
-export default function LockConclave() {
-  const [isLocked, setIsLocked] = useState(false);
+export default function LockConclave({ selectedConclaveId }) {
+  const selectedConclave = useMemo(() =>
+    conclavesData.find(c => c.id === selectedConclaveId),
+    [selectedConclaveId]
+  );
+  const conclaveName = selectedConclave?.name || 'Conclave';
+
+  // Per-conclave lock state
+  const [lockedConclaves, setLockedConclaves] = useState({});
+  const isLocked = !!lockedConclaves[selectedConclaveId];
+  const setIsLocked = (val) => setLockedConclaves(prev => ({ ...prev, [selectedConclaveId]: val }));
+
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Checkbox confirmation states
+  // Per-conclave checkbox states
   const [checkedQuality, setCheckedQuality] = useState(false);
   const [checkedEdits, setCheckedEdits] = useState(false);
 
@@ -41,7 +52,7 @@ export default function LockConclave() {
   const handleConfirmLock = () => {
     setIsLocked(true);
     setIsModalOpen(false);
-    showToast('Conclave Locked', 'Seating roster has been published to the mobile application.');
+    showToast('Conclave Locked', `${conclaveName} has been locked. Roster published to the mobile app.`);
 
     // Confetti drop
     confetti({
@@ -59,7 +70,7 @@ export default function LockConclave() {
         <div>
           <h2 className="text-dashboard-title text-zinc-950 font-extrabold tracking-tight">Lock Conclave</h2>
           <p className="text-body-text text-zinc-500 mt-2">
-            Perform administrative lock for the live conclave.
+            Finalise and lock <span className="font-bold text-brand-red">{conclaveName}</span>.
           </p>
         </div>
 
@@ -86,30 +97,30 @@ export default function LockConclave() {
           {/* Conclave Name */}
           <div className="flex items-center gap-2 border-r border-zinc-100 pr-6 last:border-0">
             <Layers className="w-4 h-4 text-brand-red shrink-0" />
-            <span className="text-body-sm font-extrabold text-zinc-900">Annual Global Summit 2024</span>
+            <span className="text-body-sm font-extrabold text-zinc-900">{selectedConclave?.name || 'Conclave'}</span>
           </div>
 
           {/* Date */}
           <div className="flex items-center gap-2 border-r border-zinc-100 pr-6 last:border-0">
             <Calendar className="w-4 h-4 text-zinc-400 shrink-0" />
-            <span className="text-body-sm font-bold text-zinc-600">Nov 12-14</span>
+            <span className="text-body-sm font-bold text-zinc-600">{selectedConclave?.dateRange || ''}</span>
           </div>
 
           {/* Venue */}
           <div className="flex items-center gap-2 border-r border-zinc-100 pr-6 last:border-0">
             <MapPin className="w-4 h-4 text-zinc-400 shrink-0" />
-            <span className="text-body-sm font-bold text-zinc-650">V Convention, Guntur</span>
+            <span className="text-body-sm font-bold text-zinc-650">{selectedConclave?.venue || ''}</span>
           </div>
 
           {/* Seating Counts */}
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <Users className="w-4 h-4 text-zinc-400 shrink-0" />
-              <span className="text-body-sm font-semibold text-zinc-600"><strong className="text-zinc-900 font-extrabold">1,240</strong> members</span>
+              <span className="text-body-sm font-semibold text-zinc-600"><strong className="text-zinc-900 font-extrabold">{(selectedConclave?.memberCount || 0).toLocaleString()}</strong> members</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-[10px] text-zinc-300 font-normal">|</span>
-              <span className="text-body-sm font-semibold text-zinc-600"><strong className="text-zinc-900 font-extrabold">48</strong> captains</span>
+              <span className="text-body-sm font-semibold text-zinc-600"><strong className="text-zinc-900 font-extrabold">{selectedConclave?.captainCount || 0}</strong> captains</span>
             </div>
           </div>
 
@@ -118,7 +129,7 @@ export default function LockConclave() {
         {/* Status and Version badges */}
         <div className="flex items-center gap-3 shrink-0">
           <span className="px-2 py-0.5 rounded bg-zinc-100 text-zinc-500 border border-zinc-200 text-[9px] font-extrabold uppercase tracking-wider">
-            v2.1.4
+            {selectedConclave?.status || 'Running'}
           </span>
           <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-extrabold border uppercase tracking-wider shadow-xs ${isLocked ? 'bg-zinc-50 text-zinc-500 border-zinc-200' : 'bg-emerald-50 text-emerald-800 border-emerald-100'}`}>
             <span className={`w-1.5 h-1.5 rounded-full ${isLocked ? 'bg-zinc-400' : 'bg-emerald-500 animate-pulse'}`} />
@@ -221,14 +232,14 @@ export default function LockConclave() {
                     <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
                     <span className="text-body-sm">Members Registered</span>
                   </div>
-                  <span className="text-[10px] text-zinc-450 font-bold uppercase">1,240 Validated</span>
+                  <span className="text-[10px] text-zinc-450 font-bold uppercase">{(selectedConclave?.memberCount || 0).toLocaleString()} Validated</span>
                 </li>
                 <li className="flex items-center justify-between p-3.5 border border-zinc-100 rounded-xl hover:bg-zinc-50/50 transition-smooth">
                   <div className="flex items-center gap-3">
                     <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
                     <span className="text-body-sm">Captains Assigned</span>
                   </div>
-                  <span className="text-[10px] text-zinc-450 font-bold uppercase">48 Active</span>
+                  <span className="text-[10px] text-zinc-450 font-bold uppercase">{selectedConclave?.captainCount || 0} Active</span>
                 </li>
                 <li className="flex items-center justify-between p-3.5 border border-zinc-100 rounded-xl hover:bg-zinc-50/50 transition-smooth">
                   <div className="flex items-center gap-3">
@@ -298,7 +309,7 @@ export default function LockConclave() {
               <div className="grid grid-cols-2 gap-y-4 text-body-sm font-semibold text-zinc-650">
                 <div>
                   <p className="text-[10px] text-zinc-400 font-bold uppercase">Total Tables</p>
-                  <p className="text-body-sm font-bold text-zinc-900 mt-1">155 Seated</p>
+                  <p className="text-body-sm font-bold text-zinc-900 mt-1">{Math.ceil((selectedConclave?.memberCount || 0) / 8)} Seated</p>
                 </div>
                 <div>
                   <p className="text-[10px] text-zinc-400 font-bold uppercase">Schedule Quality</p>
@@ -327,40 +338,14 @@ export default function LockConclave() {
               {/* timeline markers vertical line */}
               <div className="absolute left-[23px] top-8 bottom-8 w-0.5 bg-zinc-150" />
 
-              <div className="relative">
-                <div className="absolute -left-[30px] top-1.5 w-3 h-3 rounded-full border-2 border-white bg-emerald-600 shadow-sm" />
-                <p className="text-[9px] text-zinc-400 font-bold uppercase">OCT 24, 09:00 AM</p>
-                <h4 className="text-body-sm font-bold text-zinc-800 mt-0.5">Conclave Created</h4>
-                <p className="text-[10px] text-zinc-450 font-semibold">Initiated by SuperAdmin</p>
-              </div>
-
-              <div className="relative">
-                <div className="absolute -left-[30px] top-1.5 w-3 h-3 rounded-full border-2 border-white bg-emerald-600 shadow-sm" />
-                <p className="text-[9px] text-zinc-400 font-bold uppercase">NOV 01, 02:45 PM</p>
-                <h4 className="text-body-sm font-bold text-zinc-800 mt-0.5">Snapshot Taken</h4>
-                <p className="text-[10px] text-zinc-450 font-semibold">Data frozen for v2.1.4</p>
-              </div>
-
-              <div className="relative">
-                <div className="absolute -left-[30px] top-1.5 w-3 h-3 rounded-full border-2 border-white bg-emerald-600 shadow-sm" />
-                <p className="text-[9px] text-zinc-400 font-bold uppercase">NOV 05, 11:15 AM</p>
-                <h4 className="text-body-sm font-bold text-zinc-800 mt-0.5">Validation Completed</h4>
-                <p className="text-[10px] text-zinc-450 font-semibold">All business rules validated</p>
-              </div>
-
-              <div className="relative">
-                <div className="absolute -left-[30px] top-1.5 w-3 h-3 rounded-full border-2 border-white bg-emerald-600 shadow-sm" />
-                <p className="text-[9px] text-zinc-400 font-bold uppercase">NOV 06, 04:30 PM</p>
-                <h4 className="text-body-sm font-bold text-zinc-800 mt-0.5">Schedule Generated</h4>
-                <p className="text-[10px] text-zinc-450 font-semibold">Matrix optimized (v2.1.4)</p>
-              </div>
-
-              <div className="relative">
-                <div className="absolute -left-[30px] top-1.5 w-3 h-3 rounded-full border-2 border-white bg-emerald-600 shadow-sm" />
-                <p className="text-[9px] text-zinc-400 font-bold uppercase">YESTERDAY</p>
-                <h4 className="text-body-sm font-bold text-zinc-800 mt-0.5">Schedule Reviewed</h4>
-                <p className="text-[10px] text-zinc-450 font-semibold">Seating layout signed off</p>
-              </div>
+              {(selectedConclave?.timeline || []).map((item, i) => (
+                <div className="relative" key={i}>
+                  <div className="absolute -left-[30px] top-1.5 w-3 h-3 rounded-full border-2 border-white bg-emerald-600 shadow-sm" />
+                  <p className="text-[9px] text-zinc-400 font-bold uppercase">{item.date}</p>
+                  <h4 className="text-body-sm font-bold text-zinc-800 mt-0.5">{item.event}</h4>
+                  <p className="text-[10px] text-zinc-450 font-semibold">{item.desc}</p>
+                </div>
+              ))}
 
               <div className="relative">
                 <div className={`absolute -left-[30px] top-1.5 w-3 h-3 rounded-full border-2 border-white ${isLocked ? 'bg-zinc-400' : 'bg-brand-red animate-pulse'} shadow-sm`} />

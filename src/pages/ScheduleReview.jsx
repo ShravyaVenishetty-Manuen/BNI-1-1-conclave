@@ -20,9 +20,11 @@ import confetti from 'canvas-confetti';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 
 import initialTables from '../data/tables.json';
+import conclavesData from '../data/conclaves.json';
 
-export default function ScheduleReview({ setActiveTab, searchQuery: globalSearchQuery }) {
-  const [tables, setTables] = useState(initialTables);
+export default function ScheduleReview({ setActiveTab, searchQuery: globalSearchQuery, selectedConclaveId }) {
+  const allTables = initialTables;
+  const [localTables, setLocalTables] = useState(initialTables);
   const [activeRound, setActiveRound] = useState(1);
   const [localSearchQuery, setLocalSearchQuery] = useState('');
   const searchVal = globalSearchQuery !== undefined ? globalSearchQuery : localSearchQuery;
@@ -89,6 +91,17 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
     showToast('Conflict Resolved', 'Swapped Ananya Lal for Esha Wadhwa. Table 01 is now validated.');
   };
 
+  // Filtered tables by selected conclave, then search/status
+  const tables = useMemo(() =>
+    localTables.filter(t => t.conclaveId === selectedConclaveId),
+    [localTables, selectedConclaveId]
+  );
+
+  const setTables = (updater) => setLocalTables(updater);
+
+  const selectedConclave = conclavesData.find(c => c.id === selectedConclaveId);
+  const conclaveName = selectedConclave?.name || 'Conclave';
+
   // Filtered tables by search query & status filter
   const filteredTables = useMemo(() => {
     let result = tables;
@@ -154,7 +167,7 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
         <div>
           <h2 className="text-dashboard-title text-zinc-950 font-extrabold tracking-tight">Schedule Review</h2>
           <p className="text-body-text text-zinc-500 mt-2">
-            Review seating assignments and resolve warnings before locking conclave.
+            Review seating assignments for <span className="font-bold text-brand-red">{conclaveName}</span> — resolve warnings before locking.
           </p>
         </div>
 

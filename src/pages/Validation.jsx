@@ -20,9 +20,14 @@ import { ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 import initialConclaves from '../data/conclaves_validation.json';
 
-export default function Validation() {
+export default function Validation({ selectedConclaveId }) {
   const [conclaves, setConclaves] = useState(initialConclaves);
-  const [activeConclaveIndex, setActiveConclaveIndex] = useState(0);
+  
+  const activeConclaveIndex = useMemo(() => {
+    const idx = conclaves.findIndex(c => c.id === selectedConclaveId);
+    return idx !== -1 ? idx : 0;
+  }, [conclaves, selectedConclaveId]);
+
   const activeConclave = conclaves[activeConclaveIndex];
 
   // Accordion open states

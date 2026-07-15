@@ -16,6 +16,7 @@ import Table from './Table';
 import CurrentRound from './CurrentRound';
 import Schedule from './Schedule';
 import Profile from './Profile';
+import Referrals from '../Referrals';
 
 // Import tables to match seating data dynamically
 import initialTables from '../../data/tables.json';
@@ -412,6 +413,11 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
           {/* Sub-tab view: Schedule */}
           {activeTab === 'schedule' && (
             <Schedule loggedInCaptain={loggedInCaptain} />
+          )}
+
+          {/* Sub-tab view: Referrals Page */}
+          {activeTab === 'referrals' && (
+            <Referrals loggedInUser={loggedInCaptain} userType="captain" />
           )}
 
           {/* Sub-tab view: Profile Page */}

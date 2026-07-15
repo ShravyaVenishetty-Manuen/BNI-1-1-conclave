@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Search,
   ChevronRight,
@@ -22,12 +22,32 @@ import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recha
 
 import initialCaptains from '../data/captains.json';
 
-export default function Captains({ searchQuery }) {
+export default function Captains({ searchQuery, selectedConclaveId }) {
   const [captains, setCaptains] = useState(initialCaptains);
+  const [referrals, setReferrals] = useState(() => {
+    const stored = localStorage.getItem('bni_referrals');
+    return stored ? JSON.parse(stored) : [];
+  });
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const stored = localStorage.getItem('bni_referrals');
+      if (stored) {
+        setReferrals(JSON.parse(stored));
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    const interval = setInterval(handleStorageChange, 1000);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, []);
   const [searchTerm, setSearchTerm] = useState('');
   const searchVal = searchQuery !== undefined ? searchQuery : searchTerm;
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [viewScope, setViewScope] = useState('region'); // 'region' or 'global'
 
   // Selection states
   const [selectedRows, setSelectedRows] = useState(new Set());
@@ -65,17 +85,28 @@ export default function Captains({ searchQuery }) {
     setTimeout(() => setToast(null), 3000);
   };
 
+  const getCaptainRegion = (captain) => {
+    if (captain.region) return captain.region;
+    if (captain.chapter === 'Peak Performance' || captain.chapter === 'Apex Chapter') return 'Guntur Region';
+    return 'Guntur Region';
+  };
+
+  // Conclave-specific captains subset
+  const conclaveCaptains = useMemo(() => {
+    return captains.filter(c => c.conclaveIds && c.conclaveIds.includes(selectedConclaveId));
+  }, [captains, selectedConclaveId]);
+
   // KPIs
-  const totalCaptains = captains.length;
-  const availableCount = captains.filter(c => c.status === 'Available').length;
-  const assignedCount = captains.filter(c => c.status === 'Assigned').length;
-  const busyCount = captains.filter(c => c.status === 'Busy').length;
+  const totalCaptains = conclaveCaptains.length;
+  const availableCount = conclaveCaptains.filter(c => c.status === 'Available').length;
+  const assignedCount = conclaveCaptains.filter(c => c.status === 'Assigned').length;
+  const busyCount = conclaveCaptains.filter(c => c.status === 'Busy').length;
 
   // Filtered List
   const filteredCaptains = useMemo(() => {
     setCurrentPage(1);
     setSelectedRows(new Set());
-    return captains.filter(cap => {
+    return conclaveCaptains.filter(cap => {
       const matchesSearch =
         cap.name.toLowerCase().includes(searchVal.toLowerCase()) ||
         cap.id.toLowerCase().includes(searchVal.toLowerCase()) ||
@@ -83,10 +114,13 @@ export default function Captains({ searchQuery }) {
 
       const matchesCategory = categoryFilter === 'All' || cap.category === categoryFilter;
       const matchesStatus = statusFilter === 'All' || cap.status === statusFilter;
+      const matchesViewScope = viewScope === 'global' || 
+        cap.chapter === 'Peak Performance' || 
+        cap.chapter === 'Apex Chapter';
 
-      return matchesSearch && matchesCategory && matchesStatus;
+      return matchesSearch && matchesCategory && matchesStatus && matchesViewScope;
     });
-  }, [captains, searchVal, categoryFilter, statusFilter]);
+  }, [conclaveCaptains, searchVal, categoryFilter, statusFilter, viewScope]);
 
   // Paginated List
   const paginatedCaptains = useMemo(() => {
@@ -176,7 +210,8 @@ export default function Captains({ searchQuery }) {
         image: null,
         drawerImage: null,
         history: [],
-        timeline: [{ event: 'Created Captain assignment', date: new Date().toLocaleDateString(), note: 'Compliance check passed' }]
+        timeline: [{ event: 'Created Captain assignment', date: new Date().toLocaleDateString(), note: 'Compliance check passed' }],
+        conclaveIds: [selectedConclaveId]
       };
       setCaptains(prev => [newCap, ...prev]);
       showToast(`Assigned new captain "${formData.name}".`, 'success');
@@ -189,7 +224,7 @@ export default function Captains({ searchQuery }) {
       showToast('No captains list to export!', 'error');
       return;
     }
-    const headers = ['Captain ID', 'Name', 'Availability', 'Category', 'Email', 'Table Assignment', 'Join Date', 'Chapter'];
+    const headers = ['Captain ID', 'Name', 'Availability', 'Category', 'Email', 'Table Assignment', 'Join Date', 'Chapter', 'Region'];
     const rows = filteredCaptains.map(c => [
       c.id,
       `"${c.name}"`,
@@ -198,7 +233,8 @@ export default function Captains({ searchQuery }) {
       c.email,
       `"${c.table}"`,
       c.createdDate || c.joinDate,
-      `"${c.chapter}"`
+      `"${c.chapter}"`,
+      `"${getCaptainRegion(c)}"`
     ]);
 
     const csvContent = "data:text/csv;charset=utf-8,"
@@ -266,7 +302,8 @@ export default function Captains({ searchQuery }) {
             image: null,
             drawerImage: null,
             history: [],
-            timeline: [{ event: 'Imported via CSV file', date: new Date().toLocaleDateString(), note: 'Compliance check passed' }]
+            timeline: [{ event: 'Imported via CSV file', date: new Date().toLocaleDateString(), note: 'Compliance check passed' }],
+            conclaveIds: [selectedConclaveId]
           });
         }
       }
@@ -284,9 +321,9 @@ export default function Captains({ searchQuery }) {
     <div className="p-4 sm:p-6 max-w-[1600px] mx-auto w-full flex flex-col gap-6 animate-fade-in">
 
       {/* Page Header */}
-      <div className="border-b border-zinc-100 pb-6 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
-          <h2 className="text-dashboard-title text-zinc-950 font-extrabold tracking-tight">Captain Management</h2>
+          <h2 className="text-dashboard-title text-zinc-955 font-extrabold tracking-tight">Captain Management</h2>
           <p className="text-body-text text-zinc-500 mt-2">
             Manage table captain assignments and availability.
           </p>
@@ -301,7 +338,7 @@ export default function Captains({ searchQuery }) {
           />
           <button
             onClick={handleExport}
-            className="flex items-center justify-center gap-1.5 px-3.5 py-2 border border-zinc-200 bg-white text-zinc-700 font-bold text-button rounded-lg hover:bg-zinc-50 transition-smooth cursor-pointer shadow-sm"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 border border-zinc-200 bg-white text-zinc-700 font-bold text-button rounded-lg hover:bg-zinc-50 transition-smooth cursor-pointer shadow-sm"
           >
             <Upload className="w-4 h-4 text-zinc-400" />
             Export
@@ -321,6 +358,30 @@ export default function Captains({ searchQuery }) {
             Assign Captain
           </button>
         </div>
+      </div>
+
+      {/* Scope Navigation Tabs */}
+      <div className="flex border-b border-zinc-200 -mt-2">
+        <button
+          onClick={() => setViewScope('region')}
+          className={`px-4 py-2 text-body-sm font-black uppercase tracking-wider border-b-2 transition-smooth cursor-pointer -mb-px ${
+            viewScope === 'region'
+              ? 'border-brand-red text-brand-red font-extrabold'
+              : 'border-transparent text-zinc-500 hover:text-zinc-800'
+          }`}
+        >
+          My Region
+        </button>
+        <button
+          onClick={() => setViewScope('global')}
+          className={`px-4 py-2 text-body-sm font-black uppercase tracking-wider border-b-2 transition-smooth cursor-pointer -mb-px ${
+            viewScope === 'global'
+              ? 'border-brand-red text-brand-red font-extrabold'
+              : 'border-transparent text-zinc-500 hover:text-zinc-800'
+          }`}
+        >
+          Global Network
+        </button>
       </div>
 
       {/* Overview KPI Cards */}
@@ -478,17 +539,20 @@ export default function Captains({ searchQuery }) {
                     />
                   </th>
                   <th className="px-5 py-4">Captain</th>
+                  <th className="px-5 py-4">Region</th>
                   <th className="px-5 py-4">Classification</th>
                   <th className="px-5 py-4">Contact Info</th>
                   <th className="px-5 py-4">Current Assignment</th>
                   <th className="px-5 py-4">Status</th>
+                  <th className="px-5 py-4 text-center">Given</th>
+                  <th className="px-5 py-4 text-center">Taken</th>
                   <th className="px-5 py-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100 text-table-text">
                 {filteredCaptains.length === 0 ? (
                   <tr>
-                    <td colSpan="7" className="p-8 text-center text-zinc-400 font-medium">
+                    <td colSpan="10" className="p-8 text-center text-zinc-400 font-medium">
                       No captains match the active filters.
                     </td>
                   </tr>
@@ -525,6 +589,11 @@ export default function Captains({ searchQuery }) {
                         </div>
                       </td>
                       <td className="px-5 py-4">
+                        <span className="px-2 py-0.5 bg-zinc-50 border border-zinc-200 text-zinc-550 text-[10px] font-bold rounded-full whitespace-nowrap">
+                          {getCaptainRegion(cap)}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4">
                         <span className="px-2 py-0.5 bg-zinc-100 text-zinc-655 rounded text-[10px] font-bold border border-zinc-200">
                           {cap.category}
                         </span>
@@ -545,6 +614,12 @@ export default function Captains({ searchQuery }) {
                             <span className="w-1.5 h-1.5 rounded-full bg-zinc-450"></span> Busy
                           </span>
                         )}
+                      </td>
+                      <td className="px-5 py-4 text-center font-bold text-zinc-800">
+                        {referrals.filter(r => r.fromMemberId === cap.id).length}
+                      </td>
+                      <td className="px-5 py-4 text-center font-bold text-zinc-800">
+                        {referrals.filter(r => r.toMemberId === cap.id).length}
                       </td>
                       <td className="px-5 py-4 text-right" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-end gap-1">
@@ -851,6 +926,40 @@ export default function Captains({ searchQuery }) {
                   </div>
                 </section>
               )}
+
+              {/* Referral History */}
+              <section className="space-y-3.5">
+                <h5 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest border-b border-zinc-100 pb-1.5">Referral History</h5>
+                <div className="border border-zinc-200 rounded-xl overflow-hidden divide-y divide-zinc-200">
+                  {referrals.filter(r => r.fromMemberId === selectedCaptain.id || r.toMemberId === selectedCaptain.id).length === 0 ? (
+                    <p className="p-4 text-center text-[10.5px] text-zinc-400 font-semibold bg-white">No referrals logged for this captain.</p>
+                  ) : (
+                    referrals.filter(r => r.fromMemberId === selectedCaptain.id || r.toMemberId === selectedCaptain.id).map(ref => {
+                      const isGiven = ref.fromMemberId === selectedCaptain.id;
+                      return (
+                        <div key={ref.id} className="p-3 bg-white hover:bg-zinc-50/50 transition-colors text-body-sm">
+                          <div className="flex justify-between items-start">
+                            <p className="font-black text-zinc-800 text-[11.5px]">
+                              {isGiven ? `Given to: ${ref.toName}` : `Received from: ${ref.fromName}`}
+                            </p>
+                            <span className={`px-1.5 py-0.5 text-[8px] font-extrabold rounded border ${
+                              ref.status === 'Connected'
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-150'
+                                : ref.status === 'Closed'
+                                ? 'bg-zinc-150 text-zinc-650 border-zinc-250'
+                                : 'bg-amber-50 text-amber-700 border-amber-150'
+                            }`}>
+                              {ref.status}
+                            </span>
+                          </div>
+                          <p className="text-[11px] font-semibold text-zinc-555 mt-1 italic font-medium">"{ref.description}"</p>
+                          <span className="text-[8px] text-zinc-400 font-extrabold uppercase mt-1 block">{ref.date}</span>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </section>
             </div>
 
             {/* Drawer Footer Actions */}

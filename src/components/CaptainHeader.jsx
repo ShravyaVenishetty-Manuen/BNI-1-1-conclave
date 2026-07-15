@@ -56,7 +56,8 @@ export default function CaptainHeader({
     { id: 'dashboard', label: 'Dashboard' },
     { id: 'my-table', label: 'My Table' },
     { id: 'current-round', label: 'Current Round' },
-    { id: 'schedule', label: 'Schedule' }
+    { id: 'schedule', label: 'Schedule' },
+    { id: 'referrals', label: 'Referrals' }
   ];
 
   return (
