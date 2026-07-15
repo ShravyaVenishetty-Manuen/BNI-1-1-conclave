@@ -8,7 +8,86 @@ import {
   Coffee,
 } from 'lucide-react';
 
-import { r3Participants } from '../../data/mockConclaveData';
+const rounds = [
+  {
+    number: 1,
+    status: 'Completed',
+    table: 'Table 12',
+    captain: 'Sandhya M.',
+    time: '09:00 AM - 09:45 AM',
+    participants: [
+      { name: 'Rohan Sharma', category: 'Graphic Design', initials: 'RS' },
+      { name: 'Kavita Patel', category: 'Corporate Gifting', initials: 'KP' },
+      { name: 'Sandhya M. (Captain)', category: 'Legal Advisory', initials: 'SM' },
+      { name: 'Amit Verma', category: 'Architectural Services', initials: 'AV' }
+    ]
+  },
+  {
+    number: 2,
+    status: 'Completed',
+    table: 'Table 4',
+    captain: 'Deepak L.',
+    time: '10:15 AM - 11:00 AM',
+    participants: [
+      { name: 'Priya Sen', category: 'Interior Design', initials: 'PS' },
+      { name: 'Deepak L. (Captain)', category: 'Web Development', initials: 'DL' },
+      { name: 'Harish Rao', category: 'Event Management', initials: 'HR' },
+      { name: 'Neha Gupta', category: 'HR Consulting', initials: 'NG' }
+    ]
+  },
+  {
+    number: 3,
+    status: 'Active',
+    table: 'Table 5',
+    captain: 'Ganesh R.',
+    time: '11:30 AM - 12:15 PM',
+    participants: [
+      { name: 'Ananya S.', category: 'Digital Marketing', initials: 'AS' },
+      { name: 'Vikram K.', category: 'Commercial Realty', initials: 'VK' },
+      { name: 'Ganesh R. (Captain)', category: 'Financial Planning', initials: 'GR' },
+      { name: 'Sanjay Joshi', category: 'IT Infrastructure', initials: 'SJ' }
+    ]
+  },
+  {
+    number: 4,
+    status: 'Upcoming',
+    table: 'Table 12',
+    captain: 'Jyoti Wagle',
+    time: '12:45 PM - 01:30 PM',
+    participants: [
+      { name: 'Rahul Mehta', category: 'SEO Services', initials: 'RM' },
+      { name: 'Jyoti Wagle (Captain)', category: 'Corporate Training', initials: 'JW' },
+      { name: 'Siddharth Roy', category: 'Software Development', initials: 'SR' },
+      { name: 'Asha Nair', category: 'Travel & Tourism', initials: 'AN' }
+    ]
+  },
+  {
+    number: 5,
+    status: 'Upcoming',
+    table: 'Table 8',
+    captain: 'Nikhil Saxena',
+    time: '02:30 PM - 03:15 PM',
+    participants: [
+      { name: 'Aditya Birla', category: 'Investment Banking', initials: 'AB' },
+      { name: 'Nikhil Saxena (Captain)', category: 'Business Analytics', initials: 'NS' },
+      { name: 'Shweta K.', category: 'PR Services', initials: 'SK' },
+      { name: 'Manish Goel', category: 'Office Supplies', initials: 'MG' }
+    ]
+  },
+  {
+    number: 6,
+    status: 'Upcoming',
+    table: 'Table 15',
+    captain: 'Ritu Kapoor',
+    time: '03:45 PM - 04:30 PM',
+    participants: [
+      { name: 'Vivek Oberoi', category: 'Videography', initials: 'VO' },
+      { name: 'Ritu Kapoor (Captain)', category: 'Branding Advisory', initials: 'RK' },
+      { name: 'Divya Teja', category: 'Cloud Computing', initials: 'DT' },
+      { name: 'Karan Johar', category: 'Ad Agency', initials: 'KJ' }
+    ]
+  }
+];
 
 export default function MemberSchedule({ loggedInMember, onTabChange }) {
   // Countdown timer starting at 24:18 (1458 seconds)
@@ -158,111 +237,66 @@ export default function MemberSchedule({ loggedInMember, onTabChange }) {
             </div>
           </div>
 
-          {/* Full Schedule List */}
+          {/* Full Schedule Grid */}
           <div className="space-y-4">
             <h2 className="font-black text-zinc-900 text-body-md px-1">Full Schedule Timeline</h2>
 
-            {/* Round 1 (Completed) */}
-            <div className="flex gap-4">
-              <div className="flex flex-col items-center pt-1.5 select-none">
-                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
-                <div className="w-[1px] h-full bg-zinc-200 my-1"></div>
-              </div>
-              <div className="flex-1 bg-white rounded-xl border border-zinc-200 p-4 flex justify-between items-center opacity-60">
-                <div>
-                  <span className="text-[9px] font-extrabold text-emerald-600 uppercase tracking-wider">COMPLETED</span>
-                  <h3 className="text-body-md font-black text-zinc-800 mt-0.5">Round 1</h3>
-                  <p className="text-[11px] text-zinc-450 font-semibold">Table 12 • Captain Sandhya M.</p>
-                </div>
-                <span className="text-[11.5px] font-extrabold text-zinc-550 tabular-nums">09:00 AM - 09:45 AM</span>
-              </div>
-            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {rounds.map((rnd) => {
+                const isCompleted = rnd.status === 'Completed';
+                const isActive = rnd.status === 'Active';
+                const isUpcoming = rnd.status === 'Upcoming';
 
-            {/* Round 2 (Completed) */}
-            <div className="flex gap-4">
-              <div className="flex flex-col items-center pt-1.5 select-none">
-                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
-                <div className="w-[1px] h-full bg-zinc-200 my-1"></div>
-              </div>
-              <div className="flex-1 bg-white rounded-xl border border-zinc-200 p-4 flex justify-between items-center opacity-60">
-                <div>
-                  <span className="text-[9px] font-extrabold text-emerald-600 uppercase tracking-wider">COMPLETED</span>
-                  <h3 className="text-body-md font-black text-zinc-800 mt-0.5">Round 2</h3>
-                  <p className="text-[11px] text-zinc-450 font-semibold">Table 4 • Captain Deepak L.</p>
-                </div>
-                <span className="text-[11.5px] font-extrabold text-zinc-550 tabular-nums">10:15 AM - 11:00 AM</span>
-              </div>
-            </div>
-
-            {/* Round 3 Active Expansion */}
-            <div className="flex gap-4">
-              <div className="flex flex-col items-center pt-1.5 select-none">
-                <div className="w-2.5 h-2.5 rounded-full bg-brand-red ring-4 ring-brand-red/10"></div>
-                <div className="w-[1px] h-full bg-zinc-200 my-1"></div>
-              </div>
-              <div className="flex-1 bg-white rounded-xl border-2 border-brand-red p-5 shadow-2xs space-y-4">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <span className="text-[9px] font-extrabold text-brand-red uppercase tracking-wider">ACTIVE NOW</span>
-                    <h3 className="text-base font-black text-zinc-900 mt-0.5">Round 3</h3>
-                    <p className="text-[11px] text-zinc-450 font-semibold">Table 5 • 11:30 AM - 12:15 PM</p>
-                  </div>
-                  <span className="px-2 py-0.5 bg-zinc-50 border border-zinc-200 text-zinc-500 text-[9px] font-black rounded-full flex items-center gap-1">
-                    <User className="w-3 h-3 text-zinc-400" />
-                    4 Participants
-                  </span>
-                </div>
-
-                {/* Participant Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {r3Participants.map(participant => (
-                    <div
-                      key={participant.name}
-                      className="p-3 bg-zinc-55 border border-zinc-200/80 rounded-lg flex items-center gap-3 transition-smooth hover:border-zinc-300"
-                    >
-                      <div className="w-9 h-9 rounded-full bg-white border border-zinc-200 flex items-center justify-center font-bold text-[11px] text-zinc-650 shrink-0 shadow-inner select-none">
-                        {participant.initials}
+                return (
+                  <div
+                    key={rnd.number}
+                    className={`bg-white rounded-xl p-5 shadow-2xs space-y-4 border transition-all duration-300 hover:shadow-md ${
+                      isActive ? 'border-2 border-brand-red ring-4 ring-brand-red/5' : 'border-zinc-200'
+                    } ${isCompleted ? 'opacity-85 bg-zinc-50/10' : ''}`}
+                  >
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          {isCompleted && (
+                            <span className="px-1.5 py-0.5 bg-emerald-50 border border-emerald-100 text-emerald-600 text-[8px] font-black rounded uppercase tracking-wider">COMPLETED</span>
+                          )}
+                          {isActive && (
+                            <span className="px-1.5 py-0.5 bg-red-50 border border-red-100 text-brand-red text-[8px] font-black rounded uppercase tracking-wider animate-pulse">ACTIVE NOW</span>
+                          )}
+                          {isUpcoming && (
+                            <span className="px-1.5 py-0.5 bg-zinc-50 border border-zinc-200 text-zinc-400 text-[8px] font-black rounded uppercase tracking-wider">UPCOMING</span>
+                          )}
+                          <span className="text-[10px] text-zinc-450 font-bold uppercase tracking-wider">{rnd.time}</span>
+                        </div>
+                        <h3 className="text-[14.5px] font-black text-zinc-900 mt-1.5">Round {rnd.number} ({rnd.table})</h3>
+                        <p className="text-[11px] text-zinc-450 font-semibold mt-0.5">Captain: {rnd.captain}</p>
                       </div>
-                      <div className="min-w-0">
-                        <h4 className="text-[11.5px] font-black text-zinc-800 truncate leading-snug">{participant.name}</h4>
-                        <span className="text-[9.5px] text-zinc-450 font-semibold block truncate leading-none mt-0.5">{participant.category}</span>
-                      </div>
+                      <span className="px-2 py-0.5 bg-zinc-50 border border-zinc-200 text-zinc-550 text-[9px] font-black rounded-full flex items-center gap-1 shrink-0">
+                        <User className="w-3 h-3 text-zinc-450" />
+                        {rnd.participants.length} Members
+                      </span>
                     </div>
-                  ))}
-                </div>
-              </div>
-            </div>
 
-            {/* Skeleton Loaders for Future Rounds */}
-            <div className="flex gap-4 opacity-45">
-              <div className="flex flex-col items-center pt-1.5 select-none">
-                <div className="w-2.5 h-2.5 rounded-full bg-zinc-250"></div>
-                <div className="w-[1px] h-full bg-zinc-200 my-1"></div>
-              </div>
-              <div className="flex-1 bg-white rounded-xl border border-zinc-200 p-4">
-                <div className="flex justify-between items-center">
-                  <div className="space-y-1.5">
-                    <div className="h-3 w-20 bg-zinc-200 rounded animate-pulse"></div>
-                    <div className="h-2.5 w-36 bg-zinc-150 rounded animate-pulse"></div>
+                    {/* Participant Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1.5 border-t border-zinc-100">
+                      {rnd.participants.map(participant => (
+                        <div
+                          key={participant.name}
+                          className="p-2.5 bg-zinc-50/50 border border-zinc-200/80 rounded-lg flex items-center gap-2.5 transition-smooth hover:border-zinc-300"
+                        >
+                          <div className="w-8 h-8 rounded-full bg-white border border-zinc-200 flex items-center justify-center font-bold text-[10px] text-zinc-650 shrink-0 shadow-inner select-none">
+                            {participant.initials}
+                          </div>
+                          <div className="min-w-0">
+                            <h4 className="text-[11px] font-black text-zinc-800 truncate leading-snug">{participant.name}</h4>
+                            <span className="text-[9px] text-zinc-450 font-semibold block truncate leading-none mt-0.5">{participant.category}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div className="h-3.5 w-16 bg-zinc-150 rounded animate-pulse"></div>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex gap-4 opacity-45">
-              <div className="flex flex-col items-center pt-1.5 select-none">
-                <div className="w-2.5 h-2.5 rounded-full bg-zinc-250"></div>
-              </div>
-              <div className="flex-1 bg-white rounded-xl border border-zinc-200 p-4">
-                <div className="flex justify-between items-center">
-                  <div className="space-y-1.5">
-                    <div className="h-3 w-20 bg-zinc-200 rounded animate-pulse"></div>
-                    <div className="h-2.5 w-36 bg-zinc-150 rounded animate-pulse"></div>
-                  </div>
-                  <div className="h-3.5 w-16 bg-zinc-150 rounded animate-pulse"></div>
-                </div>
-              </div>
+                );
+              })}
             </div>
 
           </div>
