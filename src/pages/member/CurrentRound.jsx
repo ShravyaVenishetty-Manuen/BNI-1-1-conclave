@@ -197,7 +197,7 @@ export default function MemberCurrentRound({ loggedInMember, onTabChange }) {
               {tableMembers.map((member) => (
                 <div
                   key={member.name}
-                  className="p-4 border border-zinc-200/85 rounded-xl hover:border-brand-red/35 transition-smooth group cursor-pointer hover:shadow-xs bg-white flex flex-col justify-between"
+                  className="p-4 border border-zinc-200/85 rounded-xl hover:border-brand-red/35 transition-smooth group hover:shadow-xs bg-white flex flex-col justify-between"
                 >
                   <div className="flex items-start gap-3">
                     <div className="w-10 h-10 rounded-lg bg-zinc-50 border border-zinc-200 flex items-center justify-center font-bold text-xs text-zinc-500 shrink-0 group-hover:border-brand-red/45 transition-colors select-none">

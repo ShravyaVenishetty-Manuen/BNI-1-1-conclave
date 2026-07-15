@@ -256,7 +256,7 @@ export default function MemberDashboard({ loggedInMember, onTabChange }) {
             {tableMembers.map((member) => (
               <div
                 key={member.name}
-                className={`p-4 rounded-xl border transition-smooth group cursor-pointer ${member.isCaptain
+                className={`p-4 rounded-xl border transition-smooth group ${member.isCaptain
                   ? 'bg-red-50/20 border-brand-red/30 shadow-2xs relative'
                   : 'bg-white border-zinc-200 hover:border-brand-red/20 shadow-2xs hover:shadow-xs'
                   }`}
@@ -280,7 +280,6 @@ export default function MemberDashboard({ loggedInMember, onTabChange }) {
                       <h4 className="text-[12.5px] font-black text-zinc-850 truncate group-hover:text-brand-red transition-smooth leading-tight">
                         {member.name}
                       </h4>
-                      <ArrowUpRight className="w-3.5 h-3.5 text-zinc-350 opacity-0 group-hover:opacity-100 transition-smooth" />
                     </div>
                     <span className="inline-block px-1.5 py-0.5 bg-zinc-100 border border-zinc-200/50 text-zinc-500 text-[8.5px] font-black rounded uppercase tracking-wide mt-1.5">
                       {member.category}
