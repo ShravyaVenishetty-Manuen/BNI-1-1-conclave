@@ -34,11 +34,19 @@ export default function Referrals({ loggedInUser, userType }) {
     }
   }, []);
 
+  if (!loggedInUser) {
+    return (
+      <div className="p-8 text-center text-zinc-500 font-semibold bg-white rounded-xl border border-zinc-200">
+        Loading user session...
+      </div>
+    );
+  }
+
   // Filter members and captains as potential recipients
   const allPartners = [
     ...membersData.map(m => ({ ...m, isCaptain: false })),
     ...captainsData.map(c => ({ ...c, isCaptain: true }))
-  ].filter(p => p.id !== loggedInUser.id);
+  ].filter(p => p.id !== loggedInUser?.id);
 
   const filteredPartners = allPartners.filter(p =>
     p.name.toLowerCase().includes(recipientSearch.toLowerCase()) ||
@@ -46,10 +54,10 @@ export default function Referrals({ loggedInUser, userType }) {
   );
 
   // Calculate statistics
-  const givenReferrals = referrals.filter(r => r.fromMemberId === loggedInUser.id);
-  const receivedReferrals = referrals.filter(r => r.toMemberId === loggedInUser.id);
+  const givenReferrals = referrals.filter(r => r.fromMemberId === loggedInUser?.id);
+  const receivedReferrals = referrals.filter(r => r.toMemberId === loggedInUser?.id);
   const connectedCount = referrals.filter(
-    r => (r.fromMemberId === loggedInUser.id || r.toMemberId === loggedInUser.id) &&
+    r => (r.fromMemberId === loggedInUser?.id || r.toMemberId === loggedInUser?.id) &&
       (r.status === 'Connected' || r.status === 'Closed')
   ).length;
 
@@ -68,8 +76,8 @@ export default function Referrals({ loggedInUser, userType }) {
 
     const newReferral = {
       id: `REF-${Date.now()}`,
-      fromMemberId: loggedInUser.id,
-      fromName: loggedInUser.name,
+      fromMemberId: loggedInUser?.id,
+      fromName: loggedInUser?.name,
       toMemberId: selectedRecipient.id,
       toName: selectedRecipient.name,
       referralType: referralType,

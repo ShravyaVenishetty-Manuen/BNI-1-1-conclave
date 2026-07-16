@@ -59,6 +59,13 @@ export default function ScheduleGen({ selectedConclaveId }) {
   const [randomSeed, setRandomSeed] = useState(92843);
   const [manualOverride, setManualOverride] = useState(false);
 
+  // Expandable algorithm weights
+  const [showWeights, setShowWeights] = useState(false);
+  const [overlapWeight, setOverlapWeight] = useState(80);
+  const [chapterWeight, setChapterWeight] = useState(90);
+  const [diversityWeight, setDiversityWeight] = useState(70);
+  const [regionWeight, setRegionWeight] = useState(50);
+
   // Generation Simulator Loop
   useEffect(() => {
     let interval = null;
@@ -148,6 +155,10 @@ export default function ScheduleGen({ selectedConclaveId }) {
     URL.revokeObjectURL(url);
     showToast('Export Downloaded', `Schedule configuration exported (${progress}% complete).`);
   };
+
+  const uniqueMeetingsVal = Math.min(100, Math.round(90 + (overlapWeight * 0.1) - (progress === 100 ? 0 : 2.5)));
+  const diversityVal = Math.min(100, Math.round(85 + (diversityWeight * 0.1) - (progress === 100 ? 0 : 3.5)));
+  const repeatedPairingsVal = Math.max(0, Math.round(10 - (chapterWeight * 0.1)));
 
   return (
     <div className="p-4 sm:p-6 max-w-[1600px] mx-auto w-full flex flex-col gap-6 animate-fade-in">
@@ -315,8 +326,102 @@ export default function ScheduleGen({ selectedConclaveId }) {
               <div className="w-9 h-5 bg-zinc-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-red"></div>
             </label>
           </div>
+
+          <div className="w-px h-6 bg-zinc-150 hidden lg:block" />
+
+          {/* Algorithm weights toggle */}
+          <button
+            onClick={() => setShowWeights(!showWeights)}
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 border rounded-lg text-[10.5px] font-bold transition-smooth cursor-pointer ${
+              showWeights 
+                ? 'bg-red-50 text-brand-red border-brand-red/35 shadow-2xs' 
+                : 'bg-zinc-55 border-zinc-200 text-zinc-650 hover:bg-zinc-100 shadow-2xs'
+            }`}
+          >
+            <SettingsIcon className="w-3.5 h-3.5" />
+            {showWeights ? 'Hide Weights' : 'Tune Weights'}
+          </button>
         </div>
       </div>
+
+      {/* Expandable Algorithmic Weights Panel */}
+      {showWeights && (
+        <div className="bg-white border border-zinc-150 p-5 rounded-xl shadow-xs space-y-4 animate-fade-in mb-1">
+          <div className="flex items-center justify-between border-b border-zinc-100 pb-2">
+            <h4 className="font-extrabold text-zinc-950 text-body-sm">Algorithmic Matchmaking Constraints Tuning</h4>
+            <span className="text-[10px] text-zinc-400 font-semibold italic">Adjust priorities before triggering matching engine runs</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Slider 1 */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center text-[10px] font-bold uppercase text-zinc-500">
+                <span>Avoid Past Overlaps</span>
+                <span className="text-brand-red font-extrabold">{overlapWeight}%</span>
+              </div>
+              <input
+                type="range"
+                min="10"
+                max="100"
+                value={overlapWeight}
+                onChange={(e) => setOverlapWeight(parseInt(e.target.value))}
+                className="w-full h-1.5 bg-zinc-100 rounded-lg appearance-none cursor-pointer accent-brand-red"
+              />
+              <p className="text-[9.5px] text-zinc-450 font-medium leading-normal">Optimizes seating to prevent members from matching with prior round connections.</p>
+            </div>
+
+            {/* Slider 2 */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center text-[10px] font-bold uppercase text-zinc-500">
+                <span>Avoid Chapter Conflicts</span>
+                <span className="text-brand-red font-extrabold">{chapterWeight}%</span>
+              </div>
+              <input
+                type="range"
+                min="10"
+                max="100"
+                value={chapterWeight}
+                onChange={(e) => setChapterWeight(parseInt(e.target.value))}
+                className="w-full h-1.5 bg-zinc-100 rounded-lg appearance-none cursor-pointer accent-brand-red"
+              />
+              <p className="text-[9.5px] text-zinc-450 font-medium leading-normal">Prevents seating members from the same local chapter at the same tables.</p>
+            </div>
+
+            {/* Slider 3 */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center text-[10px] font-bold uppercase text-zinc-500">
+                <span>Business Niche Diversity</span>
+                <span className="text-brand-red font-extrabold">{diversityWeight}%</span>
+              </div>
+              <input
+                type="range"
+                min="10"
+                max="100"
+                value={diversityWeight}
+                onChange={(e) => setDiversityWeight(parseInt(e.target.value))}
+                className="w-full h-1.5 bg-zinc-100 rounded-lg appearance-none cursor-pointer accent-brand-red"
+              />
+              <p className="text-[9.5px] text-zinc-450 font-medium leading-normal">Maximizes trade diversity by ensuring unique business niches represent each table.</p>
+            </div>
+
+            {/* Slider 4 */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center text-[10px] font-bold uppercase text-zinc-500">
+                <span>Region Connectivity</span>
+                <span className="text-brand-red font-extrabold">{regionWeight}%</span>
+              </div>
+              <input
+                type="range"
+                min="10"
+                max="100"
+                value={regionWeight}
+                onChange={(e) => setRegionWeight(parseInt(e.target.value))}
+                className="w-full h-1.5 bg-zinc-100 rounded-lg appearance-none cursor-pointer accent-brand-red"
+              />
+              <p className="text-[9.5px] text-zinc-450 font-medium leading-normal">Favors seating members with participants from cross-regional BNI nodes.</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
@@ -334,11 +439,11 @@ export default function ScheduleGen({ selectedConclaveId }) {
               <div>
                 <div className="flex justify-between mb-1.5 font-bold text-[10px] text-zinc-500">
                   <span>Unique Meetings</span>
-                  <span className="text-brand-red">{progress === 100 ? '99.2%' : '98%'}</span>
+                  <span className="text-brand-red">{uniqueMeetingsVal}%</span>
                 </div>
                 <div className="w-full h-2 rounded-full overflow-hidden cursor-pointer">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart layout="vertical" data={[{ name: 'Unique Meetings', value: progress === 100 ? 99.2 : 98 }]} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                    <BarChart layout="vertical" data={[{ name: 'Unique Meetings', value: uniqueMeetingsVal }]} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
                       <XAxis type="number" domain={[0, 100]} hide />
                       <YAxis type="category" dataKey="name" hide />
                       <Tooltip formatter={(value) => `${value}%`} cursor={false} />
@@ -351,11 +456,11 @@ export default function ScheduleGen({ selectedConclaveId }) {
               <div>
                 <div className="flex justify-between mb-1.5 font-bold text-[10px] text-zinc-500">
                   <span>Repeated Pairings</span>
-                  <span className="text-zinc-900 font-extrabold">0</span>
+                  <span className="text-zinc-900 font-extrabold">{repeatedPairingsVal}</span>
                 </div>
                 <div className="w-full h-2 rounded-full overflow-hidden cursor-pointer">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart layout="vertical" data={[{ name: 'Repeated Pairings', value: 0 }]} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                    <BarChart layout="vertical" data={[{ name: 'Repeated Pairings', value: repeatedPairingsVal }]} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
                       <XAxis type="number" domain={[0, 100]} hide />
                       <YAxis type="category" dataKey="name" hide />
                       <Tooltip formatter={(value) => `${value}%`} cursor={false} />
@@ -368,11 +473,11 @@ export default function ScheduleGen({ selectedConclaveId }) {
               <div>
                 <div className="flex justify-between mb-1.5 font-bold text-[10px] text-zinc-500">
                   <span>Diversity Score</span>
-                  <span className="text-brand-red">High ({progress === 100 ? '95.6%' : '92%'})</span>
+                  <span className="text-brand-red">High ({diversityVal}%)</span>
                 </div>
                 <div className="w-full h-2 rounded-full overflow-hidden cursor-pointer">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart layout="vertical" data={[{ name: 'Diversity Score', value: progress === 100 ? 95.6 : 92 }]} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                    <BarChart layout="vertical" data={[{ name: 'Diversity Score', value: diversityVal }]} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
                       <XAxis type="number" domain={[0, 100]} hide />
                       <YAxis type="category" dataKey="name" hide />
                       <Tooltip formatter={(value) => `${value}%`} cursor={false} />

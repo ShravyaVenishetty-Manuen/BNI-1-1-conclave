@@ -8,7 +8,8 @@ import {
   Users,
   Bell,
   ArrowRight,
-  History
+  History,
+  TrendingUp
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import CaptainHeader from '../../components/CaptainHeader';
@@ -17,11 +18,41 @@ import CurrentRound from './CurrentRound';
 import Schedule from './Schedule';
 import Profile from './Profile';
 import Referrals from '../Referrals';
+import membersData from '../../data/members.json';
+import captainsData from '../../data/captains.json';
 
 // Import tables to match seating data dynamically
 import initialTables from '../../data/tables.json';
 
 export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboard', onTabChange, onLogout }) {
+  const [referrals, setReferrals] = useState(() => {
+    const stored = localStorage.getItem('bni_referrals');
+    return stored ? JSON.parse(stored) : [];
+  });
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const stored = localStorage.getItem('bni_referrals');
+      if (stored) {
+        setReferrals(JSON.parse(stored));
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    const interval = setInterval(handleStorageChange, 1000);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, []);
+
+  const getMemberReferralCount = (name) => {
+    const match = membersData.find(m => m.name.toLowerCase() === name.toLowerCase()) || 
+                  captainsData.find(c => c.name.toLowerCase() === name.toLowerCase());
+    if (!match) return { given: 0, received: 0 };
+    const given = referrals.filter(r => r.fromMemberId === match.id).length;
+    const received = referrals.filter(r => r.toMemberId === match.id).length;
+    return { given, received };
+  };
   const [tables, setTables] = useState(initialTables);
   const [attendance, setAttendance] = useState({});
   const [isLocked, setIsLocked] = useState(false);
@@ -171,9 +202,9 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
               </section>
 
               {/* KPI Section */}
-              <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <section className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                 <div className="bg-white p-4.5 rounded-xl border border-zinc-200 shadow-2xs flex flex-col justify-between h-24">
-                  <p className="text-[11px] font-bold text-zinc-450 uppercase tracking-wide">Current Round</p>
+                  <p className="text-[11px] font-bold text-zinc-455 uppercase tracking-wide">Current Round</p>
                   <div className="flex items-end justify-between mt-2">
                     <span className="text-lg font-black text-zinc-900 leading-none">
                       3 <span className="text-zinc-400 text-xs font-semibold">of 6</span>
@@ -182,7 +213,7 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
                   </div>
                 </div>
                 <div className="bg-white p-4.5 rounded-xl border border-zinc-200 shadow-2xs flex flex-col justify-between h-24">
-                  <p className="text-[11px] font-bold text-zinc-450 uppercase tracking-wide">Assigned Table</p>
+                  <p className="text-[11px] font-bold text-zinc-455 uppercase tracking-wide">Assigned Table</p>
                   <div className="flex items-end justify-between mt-2">
                     <span className="text-lg font-black text-zinc-900 leading-none">
                       {displayTable}
@@ -191,7 +222,7 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
                   </div>
                 </div>
                 <div className="bg-white p-4.5 rounded-xl border border-zinc-200 shadow-2xs flex flex-col justify-between h-24">
-                  <p className="text-[11px] font-bold text-zinc-450 uppercase tracking-wide">Total Members</p>
+                  <p className="text-[11px] font-bold text-zinc-455 uppercase tracking-wide">Total Members</p>
                   <div className="flex items-end justify-between mt-2">
                     <span className="text-lg font-black text-zinc-900 leading-none">
                       6 <span className="text-zinc-400 text-xs font-semibold">Active</span>
@@ -200,10 +231,21 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
                   </div>
                 </div>
                 <div className="bg-white p-4.5 rounded-xl border border-zinc-200 shadow-2xs flex flex-col justify-between h-24">
-                  <p className="text-[11px] font-bold text-zinc-450 uppercase tracking-wide">Time Remaining</p>
+                  <p className="text-[11px] font-bold text-zinc-455 uppercase tracking-wide">Time Remaining</p>
                   <div className="flex items-end justify-between mt-2">
                     <span className="text-lg font-black text-brand-red leading-none">{formatTimeSimple(secondsLeft)}</span>
                     <Clock className="w-5 h-5 text-brand-red shrink-0 animate-pulse" />
+                  </div>
+                </div>
+                <div className="bg-white p-4.5 rounded-xl border border-zinc-200 shadow-2xs flex flex-col justify-between h-24 col-span-2 md:col-span-1">
+                  <p className="text-[11px] font-bold text-zinc-455 uppercase tracking-wide">Referral Exchange</p>
+                  <div className="flex items-end justify-between mt-2">
+                    <span className="text-body-sm font-black text-zinc-900 leading-none flex items-center gap-1">
+                      <span className="text-emerald-700 font-extrabold">{referrals.filter(r => r.fromMemberId === loggedInCaptain.id).length} Given</span>
+                      <span className="text-zinc-300">•</span>
+                      <span className="text-blue-700 font-extrabold">{referrals.filter(r => r.toMemberId === loggedInCaptain.id).length} Taken</span>
+                    </span>
+                    <TrendingUp className="w-5 h-5 text-brand-red shrink-0" />
                   </div>
                 </div>
               </section>
@@ -317,9 +359,12 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
                           <div className="flex-1 space-y-1">
                             <h4 className="text-[13px] font-bold text-zinc-850 leading-tight">{member.name}</h4>
                             <p className="text-[11px] text-zinc-450 font-semibold leading-normal mt-0.5">{member.company}</p>
-                            <div className="pt-1.5">
+                            <div className="pt-1.5 flex flex-wrap items-center gap-1.5">
                               <span className="bg-zinc-100 text-zinc-650 text-[8px] font-black px-2 py-0.5 rounded border border-zinc-200/50 uppercase tracking-wide">
                                 {member.category}
+                              </span>
+                              <span className="text-[9px] font-bold text-zinc-400 whitespace-nowrap">
+                                Sent: <span className="text-zinc-700">{getMemberReferralCount(member.name).given}</span> • Recv: <span className="text-zinc-700">{getMemberReferralCount(member.name).received}</span>
                               </span>
                             </div>
                           </div>

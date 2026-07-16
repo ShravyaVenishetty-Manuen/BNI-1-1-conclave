@@ -67,30 +67,30 @@ export default function MemberHeader({
       <header className="w-full bg-white border-b border-zinc-200 sticky top-0 z-40 px-4 sm:px-6 h-16 flex items-center justify-between shadow-xs font-sans">
 
         {/* Left section: Official BNI Logo & Title */}
-        <div className="flex items-center gap-2.5 shrink-0">
+        <div className="flex items-center gap-2 border-b border-transparent shrink-0">
           <img
             src="/BNI-Guntur-Logo.webp"
             alt="BNI Logo"
-            className="h-8.5 w-auto object-contain shrink-0"
+            className="h-8 w-auto object-contain shrink-0"
           />
-          <div className="hidden sm:flex flex-col border-l border-zinc-200 pl-2.5">
-            <span className="text-[12px] font-black text-zinc-955 tracking-tight leading-none">Member Portal</span>
-            <span className="text-[7.5px] text-zinc-400 font-extrabold uppercase tracking-widest mt-0.5">
+          <div className="hidden lg:flex flex-col border-l border-zinc-200 pl-2.5">
+            <span className="text-[11.5px] font-black text-zinc-955 tracking-tight leading-none">Member Portal</span>
+            <span className="text-[7px] text-zinc-400 font-extrabold uppercase tracking-widest mt-0.5">
               BNI GUNTUR
             </span>
           </div>
         </div>
 
         {/* Middle section: Navigation Links (hidden on mobile, visible on desktop) */}
-        <div className="hidden md:flex items-center gap-6">
-          <nav className="flex items-center gap-5">
+        <div className="hidden md:flex items-center xl:gap-6 lg:gap-3 gap-2 shrink-0">
+          <nav className="flex items-center xl:gap-5 lg:gap-3 gap-2">
             {navItems.map(item => {
               const isActive = activeTab === item.id;
               return (
                 <button
                   key={item.id}
                   onClick={() => onTabChange && onTabChange(item.id)}
-                  className={`text-[13px] font-extrabold tracking-tight transition-smooth cursor-pointer h-16 relative flex items-center ${isActive
+                  className={`text-[11.5px] lg:text-[12.5px] xl:text-[13px] font-extrabold tracking-tight transition-smooth cursor-pointer h-16 relative flex items-center ${isActive
                       ? 'text-brand-red font-black border-b-2 border-brand-red mt-0.5'
                       : 'text-zinc-455 hover:text-zinc-800'
                     }`}
@@ -103,14 +103,14 @@ export default function MemberHeader({
         </div>
 
         {/* Right section: Search, Notifications & Avatar */}
-        <div className="flex items-center gap-3 sm:gap-4 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 shrink-0">
           {/* Search Input Box */}
-          <div className="relative w-full max-w-[125px] sm:max-w-xs">
-            <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400" />
+          <div className="relative w-24 sm:w-36 md:w-40 lg:w-48 xl:w-56">
+            <Search className="w-3 h-3 absolute left-2 top-1/2 -translate-y-1/2 text-zinc-400" />
             <input
               value={searchQuery || ''}
               onChange={(e) => setSearchQuery && setSearchQuery(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 bg-zinc-55 border border-zinc-200 rounded-lg text-[10.5px] placeholder-zinc-400 focus:outline-none focus:bg-white focus:border-brand-red/50 focus:ring-2 focus:ring-brand-red/10 transition-smooth font-semibold text-zinc-700"
+              className="w-full pl-7 pr-2.5 py-1 bg-zinc-55 border border-zinc-200 rounded-lg text-[10px] placeholder-zinc-400 focus:outline-none focus:bg-white focus:border-brand-red/50 focus:ring-2 focus:ring-brand-red/10 transition-smooth font-semibold text-zinc-700"
               placeholder="Search table..."
             />
           </div>
@@ -119,11 +119,11 @@ export default function MemberHeader({
           <div className="relative shrink-0" ref={dropdownRef}>
             <button
               onClick={() => setShowNotifications(!showNotifications)}
-              className="p-1.5 hover:bg-zinc-50 rounded-lg text-zinc-400 hover:text-zinc-800 transition-smooth cursor-pointer relative"
+              className="p-1 hover:bg-zinc-50 rounded-lg text-zinc-400 hover:text-zinc-800 transition-smooth cursor-pointer relative"
             >
-              <Bell className="w-4.5 h-4.5" />
+              <Bell className="w-4 h-4" />
               {unreadCount > 0 && (
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-brand-red rounded-full border border-white"></span>
+                <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-brand-red rounded-full border border-white"></span>
               )}
             </button>
 
@@ -162,7 +162,7 @@ export default function MemberHeader({
                         
                         <div className="flex-1 min-w-0">
                           <p className="text-[11px] font-bold text-zinc-800 leading-snug">{n.title}</p>
-                          <p className="text-[10px] text-zinc-450 font-semibold leading-normal mt-0.5">{n.desc}</p>
+                          <p className="text-[10px] text-zinc-455 font-semibold leading-normal mt-0.5">{n.desc}</p>
                           <span className="text-[8px] text-zinc-400 font-extrabold mt-1 block">{n.time}</span>
                         </div>
                       </div>
@@ -174,14 +174,14 @@ export default function MemberHeader({
           </div>
 
           {/* Member User Profile Avatar / Logout Dropdown */}
-          <div className="group relative flex items-center gap-2.5 cursor-pointer shrink-0">
-            <div className="w-8 h-8 rounded-full bg-brand-red text-white flex items-center justify-center font-bold text-[11px] border border-brand-red/10 shadow-sm">
+          <div className="group relative flex items-center gap-2 cursor-pointer shrink-0">
+            <div className="w-7.5 h-7.5 rounded-full bg-brand-red text-white flex items-center justify-center font-bold text-[10.5px] border border-brand-red/10 shadow-sm shrink-0">
               {displayInitials}
             </div>
 
-            <div className="hidden md:flex flex-col">
-              <span className="text-[12.5px] font-extrabold text-zinc-955 leading-none whitespace-nowrap">{displayName}</span>
-              <span className="text-[8.5px] text-zinc-450 font-bold uppercase tracking-wider mt-0.5">Member</span>
+            <div className="hidden lg:flex flex-col">
+              <span className="text-[11.5px] xl:text-[12.5px] font-extrabold text-zinc-955 leading-none whitespace-nowrap">{displayName}</span>
+              <span className="text-[8px] text-zinc-450 font-bold uppercase tracking-wider mt-0.5">Member</span>
             </div>
 
             {/* Hover dropdown list */}

@@ -840,6 +840,14 @@ export default function Captains({ searchQuery, selectedConclaveId }) {
                       </span>
                     )}
                   </div>
+                  <div className="flex gap-2.5 mt-3 justify-center border-t border-zinc-100 pt-2.5 w-full">
+                    <span className="px-2 py-1 bg-zinc-50 border border-zinc-200 rounded-lg text-[9.5px] font-bold text-zinc-650">
+                      Sent: {referrals.filter(r => r.fromMemberId === selectedCaptain.id).length}
+                    </span>
+                    <span className="px-2 py-1 bg-zinc-50 border border-zinc-200 rounded-lg text-[9.5px] font-bold text-zinc-650">
+                      Received: {referrals.filter(r => r.toMemberId === selectedCaptain.id).length}
+                    </span>
+                  </div>
                 </div>
               </div>
 

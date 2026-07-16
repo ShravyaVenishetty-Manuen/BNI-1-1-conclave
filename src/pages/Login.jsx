@@ -24,7 +24,7 @@ const MOCK_CAPTAINS = [
     category: "Marketing"
   },
   {
-    id: "BNI-CAPT-03",
+    id: "BNI-7729-X",
     name: "Manish Trivedi",
     email: "m.trivedi@alliance.com",
     mobile: "9876543212",
@@ -34,7 +34,7 @@ const MOCK_CAPTAINS = [
     category: "Financial Consultancy"
   },
   {
-    id: "BNI-CAPT-04",
+    id: "BNI-4412-M",
     name: "Esha Rao",
     email: "esha.rao@metrorealty.com",
     mobile: "9876543213",

@@ -206,10 +206,10 @@ export default function SuperadminMembers({ searchQuery }) {
                   <div className="w-12 h-12 rounded-full bg-brand-red/10 text-brand-red flex items-center justify-center font-black text-[13px] shrink-0">
                     {activeMember.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
                   </div>
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <h3 className="text-[13.5px] font-black text-zinc-900 leading-none truncate">{activeMember.name}</h3>
                     <p className="text-[10px] text-zinc-450 font-bold uppercase tracking-wider mt-1.5 truncate">{activeMember.company}</p>
-                    <div className="mt-2.5">
+                    <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
                       {activeMember.isCaptain ? (
                         <span className="px-2.5 py-0.5 border border-brand-red/35 text-brand-red bg-brand-red/5 font-extrabold rounded-md text-[9px] uppercase tracking-wide whitespace-nowrap">
                           Captain
@@ -219,6 +219,12 @@ export default function SuperadminMembers({ searchQuery }) {
                           Member
                         </span>
                       )}
+                      <span className="px-2 py-0.5 border border-zinc-200 text-zinc-500 bg-white font-semibold rounded-md text-[9px] uppercase tracking-wide whitespace-nowrap">
+                        Sent: {referrals.filter(r => r.fromMemberId === activeMember.id).length}
+                      </span>
+                      <span className="px-2 py-0.5 border border-zinc-200 text-zinc-500 bg-white font-semibold rounded-md text-[9px] uppercase tracking-wide whitespace-nowrap">
+                        Taken: {referrals.filter(r => r.toMemberId === activeMember.id).length}
+                      </span>
                     </div>
                   </div>
                 </div>

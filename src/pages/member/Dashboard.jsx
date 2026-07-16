@@ -13,12 +13,43 @@ import {
 
 import { tableMembers } from '../../data/mockConclaveData';
 import ReferModal from '../../components/ReferModal';
+import membersData from '../../data/members.json';
+import captainsData from '../../data/captains.json';
 
 export default function MemberDashboard({ loggedInMember, onTabChange }) {
   const [referTarget, setReferTarget] = useState(null);
   const [toast, setToast] = useState(null);
   // Countdown timer starting at 08:42 (522 seconds)
   const [timeLeft, setTimeLeft] = useState(522);
+
+  const [referrals, setReferrals] = useState(() => {
+    const stored = localStorage.getItem('bni_referrals');
+    return stored ? JSON.parse(stored) : [];
+  });
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const stored = localStorage.getItem('bni_referrals');
+      if (stored) {
+        setReferrals(JSON.parse(stored));
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    const interval = setInterval(handleStorageChange, 1000);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, []);
+
+  const getMemberReferralCount = (name) => {
+    const match = membersData.find(m => m.name.toLowerCase() === name.toLowerCase()) || 
+                  captainsData.find(c => c.name.toLowerCase() === name.toLowerCase());
+    if (!match) return { given: 0, received: 0 };
+    const given = referrals.filter(r => r.fromMemberId === match.id).length;
+    const received = referrals.filter(r => r.toMemberId === match.id).length;
+    return { given, received };
+  };
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -76,6 +107,18 @@ export default function MemberDashboard({ loggedInMember, onTabChange }) {
                 <span className="text-[9px] font-extrabold text-zinc-400 uppercase tracking-widest">Niche / Category</span>
                 <span className="px-2 py-0.5 bg-red-50 border border-red-100 text-brand-red text-[9px] font-black rounded uppercase mt-1">
                   {memberCategory}
+                </span>
+              </div>
+              <div className="w-px h-8 bg-zinc-200"></div>
+              <div className="flex flex-col">
+                <span className="text-[9px] font-extrabold text-zinc-400 uppercase tracking-widest">Referral Exchange</span>
+                <span className="text-body-sm font-extrabold text-zinc-850 mt-1 select-none flex items-center gap-1.5">
+                  <span className="px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded text-[9.5px] font-bold">
+                    {referrals.filter(r => r.fromMemberId === loggedInMember?.id).length} Sent
+                  </span>
+                  <span className="px-1.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-100 rounded text-[9.5px] font-bold">
+                    {referrals.filter(r => r.toMemberId === loggedInMember?.id).length} Recv
+                  </span>
                 </span>
               </div>
             </div>
@@ -287,6 +330,11 @@ export default function MemberDashboard({ loggedInMember, onTabChange }) {
                     <p className="text-[11px] text-zinc-800 font-extrabold mt-2 truncate leading-tight">
                       {member.company}
                     </p>
+                    <div className="flex gap-2 mt-2 pt-2 border-t border-zinc-100 text-[9px] font-bold text-zinc-400">
+                      <span>Sent: <span className="text-zinc-700">{getMemberReferralCount(member.name).given}</span></span>
+                      <span>•</span>
+                      <span>Recv: <span className="text-zinc-700">{getMemberReferralCount(member.name).received}</span></span>
+                    </div>
                   </div>
                 </div>
 

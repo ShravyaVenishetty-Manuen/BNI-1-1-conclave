@@ -422,7 +422,7 @@ export default function App() {
           ) : activeTab === 'captains' ? (
             <Captains searchQuery={searchQuery} selectedConclaveId={selectedConclaveId} />
           ) : activeTab === 'conclaves' ? (
-            <Conclaves loggedInAdmin={loggedInAdmin} />
+            <Conclaves loggedInAdmin={loggedInAdmin} setActiveTab={handleTabChange} />
           ) : activeTab === 'snapshot' ? (
             <Snapshot selectedConclaveId={selectedConclaveId} />
           ) : activeTab === 'validation' ? (

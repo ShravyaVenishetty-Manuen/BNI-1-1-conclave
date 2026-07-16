@@ -730,6 +730,14 @@ export default function Members({ searchQuery, selectedConclaveId }) {
                       </span>
                     )}
                   </div>
+                  <div className="flex gap-2.5 mt-3 justify-center border-t border-zinc-100 pt-2.5 w-full">
+                    <span className="px-2 py-1 bg-zinc-50 border border-zinc-150 rounded-lg text-[9.5px] font-bold text-zinc-600">
+                      Sent: {referrals.filter(r => r.fromMemberId === selectedMember.id).length}
+                    </span>
+                    <span className="px-2 py-1 bg-zinc-50 border border-zinc-150 rounded-lg text-[9.5px] font-bold text-zinc-600">
+                      Received: {referrals.filter(r => r.toMemberId === selectedMember.id).length}
+                    </span>
+                  </div>
                 </div>
               </div>
 

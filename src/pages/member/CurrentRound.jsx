@@ -8,6 +8,8 @@ import {
 
 import { tableMembers, getAgendaSteps } from '../../data/mockConclaveData';
 import ReferModal from '../../components/ReferModal';
+import membersData from '../../data/members.json';
+import captainsData from '../../data/captains.json';
 
 export default function MemberCurrentRound({ loggedInMember, onTabChange }) {
   const [referTarget, setReferTarget] = useState(null);
@@ -15,6 +17,35 @@ export default function MemberCurrentRound({ loggedInMember, onTabChange }) {
   // Countdown timer starting at 08:38 (518 seconds)
   const [timeLeft, setTimeLeft] = useState(518);
   const initialTime = 600; // 10 mins total round simulation
+
+  const [referrals, setReferrals] = useState(() => {
+    const stored = localStorage.getItem('bni_referrals');
+    return stored ? JSON.parse(stored) : [];
+  });
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const stored = localStorage.getItem('bni_referrals');
+      if (stored) {
+        setReferrals(JSON.parse(stored));
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    const interval = setInterval(handleStorageChange, 1000);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, []);
+
+  const getMemberReferralCount = (name) => {
+    const match = membersData.find(m => m.name.toLowerCase() === name.toLowerCase()) || 
+                  captainsData.find(c => c.name.toLowerCase() === name.toLowerCase());
+    if (!match) return { given: 0, received: 0 };
+    const given = referrals.filter(r => r.fromMemberId === match.id).length;
+    const received = referrals.filter(r => r.toMemberId === match.id).length;
+    return { given, received };
+  };
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -216,6 +247,11 @@ export default function MemberCurrentRound({ loggedInMember, onTabChange }) {
                       <p className="text-[10px] text-zinc-400 font-semibold truncate leading-none mt-1">
                         {member.chapter}
                       </p>
+                      <div className="flex gap-2 mt-2.5 pt-2 border-t border-zinc-100 text-[9px] font-bold text-zinc-400">
+                        <span>Sent: <span className="text-zinc-700">{getMemberReferralCount(member.name).given}</span></span>
+                        <span>•</span>
+                        <span>Recv: <span className="text-zinc-700">{getMemberReferralCount(member.name).received}</span></span>
+                      </div>
                     </div>
                   </div>
 
