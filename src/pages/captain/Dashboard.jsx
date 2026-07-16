@@ -422,7 +422,11 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
 
           {/* Sub-tab view: Profile Page */}
           {activeTab === 'profile' && (
-            <Profile loggedInCaptain={loggedInCaptain} />
+            <Profile 
+              loggedInCaptain={loggedInCaptain} 
+              onTabChange={onTabChange} 
+              onLogout={onLogout} 
+            />
           )}
 
         </div>
