@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {
   CheckCircle,
+  Check,
   LogOut,
   Edit2,
   LayoutGrid,
@@ -90,7 +91,7 @@ export default function AdminProfile({ loggedInAdmin, role = 'admin', onLogout }
       ];
 
   return (
-    <div className="space-y-8 animate-fade-in font-sans pb-16">
+    <div className="p-6 md:p-8 max-w-7xl mx-auto w-full space-y-8 animate-fade-in font-sans pb-16">
 
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-zinc-200 pb-5">
@@ -117,7 +118,7 @@ export default function AdminProfile({ loggedInAdmin, role = 'admin', onLogout }
                   {displayInitials}
                 </div>
                 <span className="absolute bottom-0 right-0 bg-brand-red text-white p-1 rounded-full border-2 border-white flex items-center justify-center">
-                  <CheckCircle className="w-3.5 h-3.5 fill-current text-white stroke-[2.5]" />
+                  <Check className="w-3 h-3 text-white stroke-[3.5]" />
                 </span>
               </div>
 

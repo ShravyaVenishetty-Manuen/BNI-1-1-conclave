@@ -71,7 +71,7 @@ export default function App() {
     const validTabs = [
       'dashboard', 'members', 'active-users', 'business-types', 'captains',
       'conclaves', 'snapshot', 'validation', 'schedule-gen', 'schedule-review',
-      'lock-conclave', 'round-runner', 'reports', 'admins', 'referrals'
+      'lock-conclave', 'round-runner', 'reports', 'admins', 'referrals', 'profile'
     ];
     return validTabs.includes(lastPart) ? lastPart : 'dashboard';
   });
@@ -114,7 +114,7 @@ export default function App() {
       const validTabs = [
         'dashboard', 'members', 'active-users', 'business-types', 'captains',
         'conclaves', 'snapshot', 'validation', 'schedule-gen', 'schedule-review',
-        'lock-conclave', 'round-runner', 'reports', 'admins', 'referrals'
+        'lock-conclave', 'round-runner', 'reports', 'admins', 'referrals', 'profile'
       ];
       const cleanTab = validTabs.includes(lastPart) ? lastPart : 'dashboard';
 
