@@ -94,7 +94,7 @@ export default function AdminProfile({ loggedInAdmin, role = 'admin', onLogout }
     <div className="p-6 md:p-8 max-w-7xl mx-auto w-full space-y-8 animate-fade-in font-sans pb-16">
 
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-zinc-200 pb-5">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-5">
         <div>
           <h1 className="text-2xl md:text-3xl font-black text-zinc-955 tracking-tight">System Profile &amp; Settings</h1>
           <p className="text-xs text-zinc-500 font-semibold mt-1">
