@@ -18,6 +18,7 @@ import SuperadminDashboard from '../pages/superadmin/Dashboard';
 import SuperadminAdmins from '../pages/superadmin/Admins';
 import SuperadminConclaves from '../pages/superadmin/Conclaves';
 import SuperadminMembers from '../pages/superadmin/Members';
+import AdminProfile from '../pages/admin/Profile';
 
 export default function SuperadminLayout({
   activeTab,
@@ -29,6 +30,8 @@ export default function SuperadminLayout({
   setSearchQuery
 }) {
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const profileDropdownRef = useRef(null);
   const [notifications, setNotifications] = useState([
     {
       id: 1,
@@ -63,6 +66,9 @@ export default function SuperadminLayout({
     function handleClickOutside(event) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowNotifications(false);
+      }
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target)) {
+        setShowProfileDropdown(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -297,14 +303,50 @@ export default function SuperadminLayout({
             
             <div className="h-8 w-px bg-zinc-200" />
             
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-zinc-900 flex items-center justify-center font-black text-[11px] text-white select-none">
-                SA
-              </div>
-              <div className="hidden md:block text-left">
-                <p className="text-[11.5px] font-black text-zinc-850 leading-tight">Superadmin</p>
-                <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider mt-0.5">BNI Global</p>
-              </div>
+            <div className="relative" ref={profileDropdownRef}>
+              <button
+                onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+              >
+                <div className="w-8 h-8 rounded-full bg-zinc-900 flex items-center justify-center font-black text-[11px] text-white select-none">
+                  SA
+                </div>
+                <div className="hidden md:block text-left">
+                  <p className="text-[11.5px] font-black text-zinc-850 leading-tight">Superadmin</p>
+                  <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider mt-0.5">BNI Global</p>
+                </div>
+              </button>
+
+              {showProfileDropdown && (
+                <div className="absolute right-0 mt-2 w-48 bg-white border border-zinc-200 rounded-xl shadow-xl z-50 py-1 text-zinc-700 animate-fade-in font-medium">
+                  <div className="px-4 py-2 border-b border-zinc-100">
+                    <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">Signed in as</p>
+                    <p className="text-body-sm font-extrabold text-zinc-800 truncate mt-0.5">Superadmin</p>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setShowProfileDropdown(false);
+                      setActiveTab && setActiveTab('profile');
+                    }}
+                    className="w-full text-left px-4 py-2 text-body-sm hover:bg-zinc-50 hover:text-zinc-955 font-semibold transition-colors flex items-center gap-2 cursor-pointer"
+                  >
+                    My Profile
+                  </button>
+
+                  <div className="border-t border-zinc-100 my-1"></div>
+
+                  <button
+                    onClick={() => {
+                      setShowProfileDropdown(false);
+                      onLogout && onLogout();
+                    }}
+                    className="w-full text-left px-4 py-2 text-body-sm text-brand-red hover:bg-red-50/50 font-bold transition-colors flex items-center gap-2 cursor-pointer"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </header>
@@ -319,6 +361,8 @@ export default function SuperadminLayout({
             <SuperadminConclaves searchQuery={searchQuery} />
           ) : activeTab === 'members' ? (
             <SuperadminMembers searchQuery={searchQuery} />
+          ) : activeTab === 'profile' ? (
+            <AdminProfile loggedInAdmin={null} role="superadmin" onLogout={onLogout} />
           ) : (
             <div className="p-8 text-center text-zinc-400">View not found</div>
           )}

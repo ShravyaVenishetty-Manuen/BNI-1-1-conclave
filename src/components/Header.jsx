@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Search, Bell, X, Check, AlertTriangle, AlertCircle, Sparkles, Menu } from 'lucide-react';
 
-export default function Header({ searchQuery, setSearchQuery, activeTab, setActiveTab, onMenuClick }) {
+export default function Header({ searchQuery, setSearchQuery, activeTab, setActiveTab, onMenuClick, loggedInAdmin, onLogout }) {
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const profileDropdownRef = useRef(null);
   const [notifications, setNotifications] = useState([
     {
       id: 1,
@@ -37,6 +39,9 @@ export default function Header({ searchQuery, setSearchQuery, activeTab, setActi
     function handleClickOutside(event) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowNotifications(false);
+      }
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target)) {
+        setShowProfileDropdown(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -191,9 +196,48 @@ export default function Header({ searchQuery, setSearchQuery, activeTab, setActi
           )}
         </div>
 
-        {/* Profile Avatar */}
-        <div className="w-8 h-8 rounded-full bg-brand-red text-white flex items-center justify-center font-bold text-[11px] border border-brand-red/10 shadow-sm cursor-pointer select-none">
-          AD
+        {/* Profile Avatar Dropdown */}
+        <div className="relative" ref={profileDropdownRef}>
+          <button
+            onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+            className="w-8.5 h-8.5 rounded-full bg-brand-red text-white flex items-center justify-center font-black text-xs border border-brand-red/10 shadow-sm cursor-pointer select-none hover:bg-red-750 transition-colors"
+          >
+            {(() => {
+              const name = loggedInAdmin?.name || 'Admin';
+              return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+            })()}
+          </button>
+
+          {showProfileDropdown && (
+            <div className="absolute right-0 mt-2 w-48 bg-white border border-zinc-200 rounded-xl shadow-xl z-50 py-1 text-zinc-700 animate-fade-in font-medium">
+              <div className="px-4 py-2 border-b border-zinc-100">
+                <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">Signed in as</p>
+                <p className="text-body-sm font-extrabold text-zinc-800 truncate mt-0.5">{loggedInAdmin?.name || 'Admin'}</p>
+              </div>
+
+              <button
+                onClick={() => {
+                  setShowProfileDropdown(false);
+                  setActiveTab && setActiveTab('profile');
+                }}
+                className="w-full text-left px-4 py-2 text-body-sm hover:bg-zinc-50 hover:text-zinc-955 font-semibold transition-colors flex items-center gap-2 cursor-pointer"
+              >
+                My Profile
+              </button>
+
+              <div className="border-t border-zinc-100 my-1"></div>
+
+              <button
+                onClick={() => {
+                  setShowProfileDropdown(false);
+                  onLogout && onLogout();
+                }}
+                className="w-full text-left px-4 py-2 text-body-sm text-brand-red hover:bg-red-50/50 font-bold transition-colors flex items-center gap-2 cursor-pointer"
+              >
+                Logout
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

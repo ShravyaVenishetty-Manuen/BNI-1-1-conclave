@@ -22,6 +22,7 @@ import MemberSchedule from './pages/member/MySchedule';
 import MemberCurrentRound from './pages/member/CurrentRound';
 import MemberConclaveHistory from './pages/member/ConclaveHistory';
 import MemberProfile from './pages/member/Profile';
+import AdminProfile from './pages/admin/Profile';
 import Referrals from './pages/Referrals';
 import referralsData from './data/referrals.json';
 import conclavesData from './data/conclaves.json';
@@ -402,8 +403,10 @@ export default function App() {
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           activeTab={activeTab}
-          setActiveTab={setActiveTab}
+          setActiveTab={handleTabChange}
           onMenuClick={() => setIsSidebarOpen(true)}
+          loggedInAdmin={loggedInAdmin}
+          onLogout={handleLogout}
         />
 
         {/* Workspace views router */}
@@ -434,6 +437,8 @@ export default function App() {
             <RoundRunner selectedConclaveId={selectedConclaveId} />
           ) : activeTab === 'reports' ? (
             <Reports selectedConclaveId={selectedConclaveId} />
+          ) : activeTab === 'profile' ? (
+            <AdminProfile loggedInAdmin={loggedInAdmin} role="admin" onLogout={handleLogout} />
           ) : (
             <div className="p-8 text-center text-zinc-400">View not found</div>
           )}
