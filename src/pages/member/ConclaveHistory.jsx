@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
-import { 
-  Search, 
-  Calendar, 
-  MapPin, 
-  RefreshCw, 
-  ArrowUpDown, 
-  MessageSquare, 
-  X, 
-  Award, 
-  Star, 
-  Users, 
-  Clock, 
-  Check, 
-  FileText 
+import {
+  Search,
+  Calendar,
+  MapPin,
+  RefreshCw,
+  ArrowUpDown,
+  MessageSquare,
+  X,
+  Award,
+  Star,
+  Users,
+  Clock,
+  Check,
+  FileText
 } from 'lucide-react';
 
 import { conclavesHistory } from '../../data/mockConclaveData';
@@ -29,7 +29,7 @@ export default function MemberConclaveHistory({ loggedInMember }) {
   // Filtered conclaves list
   const filteredConclaves = conclaves.filter(conclave => {
     const matchesSearch = conclave.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          conclave.location.toLowerCase().includes(searchQuery.toLowerCase());
+      conclave.location.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesYear = selectedYear === 'All' ? true : conclave.year === selectedYear;
     const matchesStatus = selectedStatus === 'All' ? true : conclave.status === selectedStatus;
     return matchesSearch && matchesYear && matchesStatus;
@@ -43,7 +43,7 @@ export default function MemberConclaveHistory({ loggedInMember }) {
 
   return (
     <div className="space-y-8 animate-fade-in font-sans pb-16">
-      
+
       {/* Page Header */}
       <div>
         <h1 className="text-2xl md:text-3xl font-black text-zinc-955 tracking-tight">Conclave History</h1>
@@ -53,7 +53,7 @@ export default function MemberConclaveHistory({ loggedInMember }) {
       <div className="grid grid-cols-12 gap-6 items-start">
         {/* Left Column: Content (8 cols) */}
         <div className="col-span-12 lg:col-span-8 space-y-6">
-          
+
           {/* KPI Summary Cards */}
           <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
@@ -62,8 +62,8 @@ export default function MemberConclaveHistory({ loggedInMember }) {
               { label: "People Met", value: 432 },
               { label: "Business Categories", value: 48 }
             ].map((kpi, idx) => (
-              <div 
-                key={idx} 
+              <div
+                key={idx}
                 className="bg-white p-5 rounded-xl border border-zinc-200 shadow-2xs flex flex-col items-center text-center justify-center min-h-[92px]"
               >
                 <span className="text-[9px] font-black text-zinc-400 uppercase tracking-widest block">{kpi.label}</span>
@@ -78,7 +78,7 @@ export default function MemberConclaveHistory({ loggedInMember }) {
           <section className="flex flex-col sm:flex-row gap-3 items-center justify-between">
             <div className="relative w-full sm:w-64">
               <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" />
-              <input 
+              <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -86,9 +86,9 @@ export default function MemberConclaveHistory({ loggedInMember }) {
                 className="w-full h-10 pl-10 pr-4 bg-white border border-zinc-250 rounded-lg text-[12.5px] font-semibold text-zinc-800 placeholder-zinc-400 focus:ring-1 focus:ring-brand-red focus:border-brand-red focus:outline-hidden"
               />
             </div>
-            
+
             <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
-              <select 
+              <select
                 value={selectedYear}
                 onChange={(e) => setSelectedYear(e.target.value)}
                 className="h-10 px-3.5 bg-white border border-zinc-250 rounded-lg text-[12px] font-black uppercase tracking-wider text-zinc-600 focus:ring-1 focus:ring-brand-red focus:outline-hidden"
@@ -98,12 +98,12 @@ export default function MemberConclaveHistory({ loggedInMember }) {
                 <option value="2023">Year: 2023</option>
               </select>
 
-              <select 
+              <select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
                 className="h-10 px-3.5 bg-white border border-zinc-250 rounded-lg text-[12px] font-black uppercase tracking-wider text-zinc-600 focus:ring-1 focus:ring-brand-red focus:outline-hidden"
               >
-                <option value="All">All Statuses</option>
+                <option value="All">All Status</option>
                 <option value="Completed">Completed</option>
                 <option value="Cancelled">Cancelled</option>
               </select>
@@ -116,11 +116,10 @@ export default function MemberConclaveHistory({ loggedInMember }) {
           <section className="space-y-4">
             {filteredConclaves.length > 0 ? (
               filteredConclaves.map((conclave) => (
-                <div 
-                  key={conclave.id} 
-                  className={`bg-white border border-zinc-200 rounded-xl shadow-2xs hover:shadow-xs transition-smooth group ${
-                    conclave.status === 'Cancelled' ? 'opacity-65' : ''
-                  }`}
+                <div
+                  key={conclave.id}
+                  className={`bg-white border border-zinc-200 rounded-xl shadow-2xs hover:shadow-xs transition-smooth group ${conclave.status === 'Cancelled' ? 'opacity-65' : ''
+                    }`}
                 >
                   <div className="p-5 flex flex-col md:flex-row md:items-center gap-5">
                     <div className="w-14 h-14 rounded-lg bg-zinc-50 border border-zinc-200 flex items-center justify-center shrink-0">
@@ -130,47 +129,45 @@ export default function MemberConclaveHistory({ loggedInMember }) {
                         <Check className="w-6 h-6 text-brand-red stroke-[2.5]" />
                       )}
                     </div>
-                    
+
                     <div className="flex-grow space-y-1.5">
                       <div className="flex items-center justify-between flex-wrap gap-2">
                         <h3 className="text-body-md font-black text-zinc-900 leading-tight group-hover:text-brand-red transition-smooth">
                           {conclave.title}
                         </h3>
-                        <span className={`px-2 py-0.5 text-[8.5px] font-black rounded uppercase tracking-wider ${
-                          conclave.status === 'Completed'
+                        <span className={`px-2 py-0.5 text-[8.5px] font-black rounded uppercase tracking-wider ${conclave.status === 'Completed'
                             ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
                             : 'bg-zinc-150 text-zinc-500 border border-zinc-200'
-                        }`}>
+                          }`}>
                           {conclave.status}
                         </span>
                       </div>
-                      
+
                       <div className="flex flex-wrap gap-x-4 gap-y-1 text-zinc-450 text-[11px] font-semibold leading-none">
                         <span className="flex items-center gap-1.5">
-                          <MapPin className="w-3.5 h-3.5 text-zinc-400" /> 
+                          <MapPin className="w-3.5 h-3.5 text-zinc-400" />
                           {conclave.location}
                         </span>
                         <span className="flex items-center gap-1.5">
-                          <Calendar className="w-3.5 h-3.5 text-zinc-400" /> 
+                          <Calendar className="w-3.5 h-3.5 text-zinc-400" />
                           {conclave.date}
                         </span>
                         {conclave.status !== 'Cancelled' && (
                           <span className="flex items-center gap-1.5 text-brand-red font-black">
-                            <RefreshCw className="w-3 h-3 animate-spin-slow" /> 
+                            <RefreshCw className="w-3 h-3 animate-spin-slow" />
                             {conclave.rounds}
                           </span>
                         )}
                       </div>
                     </div>
 
-                    <button 
+                    <button
                       onClick={() => handleOpenDrawer(conclave)}
                       disabled={conclave.status === 'Cancelled'}
-                      className={`shrink-0 h-10 px-4.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-smooth ${
-                        conclave.status === 'Cancelled'
+                      className={`shrink-0 h-10 px-4.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-smooth ${conclave.status === 'Cancelled'
                           ? 'bg-zinc-100 text-zinc-400 border border-zinc-200 cursor-not-allowed'
                           : 'bg-zinc-900 text-white hover:bg-zinc-800 shadow-2xs cursor-pointer'
-                      }`}
+                        }`}
                     >
                       {conclave.status === 'Cancelled' ? 'No Details' : 'View Details'}
                     </button>
@@ -187,12 +184,12 @@ export default function MemberConclaveHistory({ loggedInMember }) {
 
         {/* Right Column: Sidebar (4 cols) */}
         <aside className="col-span-12 lg:col-span-4 space-y-6">
-          
+
           {/* Industry Distribution */}
           <section className="bg-white border border-zinc-200 rounded-xl p-5 shadow-2xs space-y-4">
             <h2 className="text-body-md font-black text-zinc-900">Industry Distribution</h2>
             <p className="text-[10px] text-zinc-450 font-semibold mt-0.5">Top industries connected in past seating rounds.</p>
-            
+
             <div className="space-y-3.5 pt-2">
               {[
                 { name: "Information Technology", percentage: 32, count: 23, color: "bg-brand-red" },
@@ -207,7 +204,7 @@ export default function MemberConclaveHistory({ loggedInMember }) {
                     <span className="text-zinc-500 font-extrabold">{ind.count} met ({ind.percentage}%)</span>
                   </div>
                   <div className="w-full bg-zinc-100 rounded-full h-1.5 overflow-hidden">
-                    <div 
+                    <div
                       className={`${ind.color} h-full rounded-full`}
                       style={{ width: `${ind.percentage}%` }}
                     />
@@ -223,7 +220,7 @@ export default function MemberConclaveHistory({ loggedInMember }) {
               <h2 className="text-body-sm font-black text-zinc-900">Recent Connections</h2>
               <span className="text-brand-red font-black text-[9px] uppercase tracking-wider select-none">Top 3</span>
             </div>
-            
+
             <div className="space-y-4">
               {[
                 { name: "Shalini Sen", title: "Founder, Nexus Tech", initials: "SS" },
@@ -248,17 +245,16 @@ export default function MemberConclaveHistory({ loggedInMember }) {
 
       {/* Drawer Overlay */}
       {showDrawer && selectedConclave && (
-        <div 
+        <div
           onClick={() => setShowDrawer(false)}
           className="fixed inset-0 bg-zinc-950/45 backdrop-blur-xs z-50 transition-opacity duration-300 animate-fade-in"
         />
       )}
 
       {/* Detail Drawer Panel */}
-      <div 
-        className={`fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-2xl z-55 transition-transform duration-300 border-l border-zinc-200 flex flex-col ${
-          showDrawer && selectedConclave ? 'translate-x-0' : 'translate-x-full'
-        }`}
+      <div
+        className={`fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-2xl z-55 transition-transform duration-300 border-l border-zinc-200 flex flex-col ${showDrawer && selectedConclave ? 'translate-x-0' : 'translate-x-full'
+          }`}
       >
         {selectedConclave && (
           <>
@@ -267,25 +263,25 @@ export default function MemberConclaveHistory({ loggedInMember }) {
                 <h2 className="text-body-md font-black text-zinc-900 leading-tight">Conclave Details</h2>
                 <p className="text-[11px] text-zinc-450 font-semibold mt-0.5">{selectedConclave.details?.subtitle}</p>
               </div>
-              <button 
+              <button
                 onClick={() => setShowDrawer(false)}
                 className="text-zinc-400 hover:text-zinc-700 hover:bg-zinc-150 p-1.5 rounded-lg transition-smooth cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
+
             <div className="flex-grow overflow-y-auto p-6 space-y-6">
               {/* Round Timeline */}
               <div className="space-y-4">
                 <h3 className="text-body-sm font-black text-zinc-900 border-b border-zinc-100 pb-2">Round Timeline</h3>
                 <div className="space-y-6 relative pl-4 border-l border-zinc-200 ml-2 pt-1">
-                  
+
                   {selectedConclave.details?.rounds.map((rnd, rIdx) => (
                     <div key={rIdx} className="relative">
                       {/* Circle bullet */}
                       <span className="absolute -left-6 top-1.5 w-3 h-3 rounded-full border-2 border-brand-red bg-white"></span>
-                      
+
                       <div className="bg-zinc-50 border border-zinc-200/80 rounded-xl p-3.5 space-y-2.5">
                         <div className="flex justify-between items-start">
                           <span className="text-[11.5px] font-black text-zinc-800">{rnd.name}</span>
@@ -314,7 +310,7 @@ export default function MemberConclaveHistory({ loggedInMember }) {
                       </div>
                     </div>
                   ))}
-                  
+
                 </div>
               </div>
 
@@ -341,7 +337,7 @@ export default function MemberConclaveHistory({ loggedInMember }) {
                 )}
               </div>
             </div>
-            
+
             <div className="p-4 border-t border-zinc-200 bg-zinc-50">
               <button className="w-full h-11 bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg text-[10.5px] font-black uppercase tracking-wider transition-smooth cursor-pointer shadow-sm flex items-center justify-center gap-1.5">
                 <FileText className="w-4 h-4" />

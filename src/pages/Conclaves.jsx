@@ -25,11 +25,46 @@ import initialConclaves from '../data/conclaves.json';
 import SearchableDropdown from '../components/SearchableDropdown';
 
 export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) {
-  const [conclaves, setConclaves] = useState(initialConclaves);
+  const [conclaves, setConclaves] = useState(() => {
+    const stored = localStorage.getItem('bni_conclaves');
+    const rawList = stored ? JSON.parse(stored) : initialConclaves;
+    return rawList.map(c => {
+      let state = c.state;
+      let country = c.country;
+      if (!state || !country) {
+        const r = (c.region || "").toLowerCase();
+        if (r.includes("guntur")) {
+          state = "Andhra Pradesh";
+          country = "India";
+        } else if (r.includes("london")) {
+          state = "Greater London";
+          country = "United Kingdom";
+        } else if (r.includes("singapore")) {
+          state = "Central Region";
+          country = "Singapore";
+        } else if (r.includes("south")) {
+          state = "Tamil Nadu";
+          country = "India";
+        } else {
+          state = "Andhra Pradesh";
+          country = "India";
+        }
+      }
+      return { ...c, state, country };
+    });
+  });
+
+  React.useEffect(() => {
+    localStorage.setItem('bni_conclaves', JSON.stringify(conclaves));
+    window.dispatchEvent(new Event('storage'));
+  }, [conclaves]);
+
   const [searchTerm, setSearchTerm] = useState('');
   const searchVal = searchQuery !== undefined ? searchQuery : searchTerm;
   const [statusFilter, setStatusFilter] = useState('All');
   const [venueFilter, setVenueFilter] = useState('All');
+  const [stateFilter, setStateFilter] = useState('All');
+  const [countryFilter, setCountryFilter] = useState('All');
   const [sortBy, setSortBy] = useState('DateDesc');
   const [selectedConclave, setSelectedConclave] = useState(null);
   const [viewScope, setViewScope] = useState('region'); // 'region' or 'global'
@@ -59,7 +94,9 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
     status: 'Draft',
     region: '',
     coordinator: '',
-    description: ''
+    description: '',
+    state: '',
+    country: ''
   });
 
   const [toast, setToast] = useState(null);
@@ -71,6 +108,17 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+
+  // Get distinct states and countries
+  const statesList = useMemo(() => {
+    const list = new Set(conclaves.map(c => c.state).filter(Boolean));
+    return ['All', ...Array.from(list).sort()];
+  }, [conclaves]);
+
+  const countriesList = useMemo(() => {
+    const list = new Set(conclaves.map(c => c.country).filter(Boolean));
+    return ['All', ...Array.from(list).sort()];
+  }, [conclaves]);
 
   // Filtered & Sorted conclaves
   const filteredConclaves = useMemo(() => {
@@ -87,8 +135,10 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
       const matchesStatus = statusFilter === 'All' || c.status === statusFilter;
       const matchesVenue = venueFilter === 'All' || c.venueShort === venueFilter;
       const matchesViewScope = viewScope === 'global' || c.region?.toLowerCase().includes('guntur');
+      const matchesState = stateFilter === 'All' || c.state === stateFilter;
+      const matchesCountry = countryFilter === 'All' || c.country === countryFilter;
 
-      return matchesSearch && matchesStatus && matchesVenue && matchesViewScope;
+      return matchesSearch && matchesStatus && matchesVenue && matchesViewScope && matchesState && matchesCountry;
     });
 
     // Sorting logic
@@ -101,7 +151,7 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
     }
 
     return result;
-  }, [conclaves, searchVal, statusFilter, venueFilter, sortBy, viewScope]);
+  }, [conclaves, searchVal, statusFilter, venueFilter, stateFilter, countryFilter, sortBy, viewScope]);
 
   // Paginated list
   const paginatedConclaves = useMemo(() => {
@@ -133,6 +183,8 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
     setSearchTerm('');
     setStatusFilter('All');
     setVenueFilter('All');
+    setStateFilter('All');
+    setCountryFilter('All');
     setSortBy('DateDesc');
     setSelectedRows(new Set());
   };
@@ -420,7 +472,24 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
               placeholder="Search status..."
             />
 
+            <SearchableDropdown
+              label="State"
+              options={statesList}
+              value={stateFilter}
+              onChange={setStateFilter}
+              placeholder="Search state..."
+            />
 
+            <SearchableDropdown
+              label="Country"
+              options={countriesList}
+              value={countryFilter}
+              onChange={countryFilter === 'All' ? setCountryFilter : (val) => {
+                setCountryFilter(val);
+                // When selecting a country, reset state filter if it doesn't belong to it (optional check)
+              }}
+              placeholder="Search country..."
+            />
           </div>
         </div>
         <button
@@ -658,8 +727,8 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
                 <div className="space-y-2 border-l-2 border-brand-red pl-3 py-0.5">
                   <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block">Registration Period</span>
                   <span className="text-body-sm font-semibold text-zinc-755 block">
-                    {selectedConclave.regStartDate ? selectedConclave.regStartDate : 'Anytime'} 
-                    <span className="text-zinc-400 mx-2">to</span> 
+                    {selectedConclave.regStartDate ? selectedConclave.regStartDate : 'Anytime'}
+                    <span className="text-zinc-400 mx-2">to</span>
                     {selectedConclave.regEndDate ? selectedConclave.regEndDate : 'Anytime'}
                   </span>
                 </div>
@@ -890,7 +959,6 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
                     onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
                     className="w-full px-3 py-1.5 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-white font-semibold text-zinc-700 cursor-pointer"
                   >
-                    <option value="Draft">Draft</option>
                     <option value="Upcoming">Upcoming</option>
                     <option value="Running">Running</option>
                     <option value="Completed">Completed</option>
@@ -1063,7 +1131,6 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
                     onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
                     className="w-full px-3 py-1.5 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-white font-semibold text-zinc-700 cursor-pointer"
                   >
-                    <option value="Draft">Draft</option>
                     <option value="Upcoming">Upcoming</option>
                     <option value="Running">Running</option>
                     <option value="Completed">Completed</option>

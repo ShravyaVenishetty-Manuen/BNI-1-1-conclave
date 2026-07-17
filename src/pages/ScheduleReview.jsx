@@ -266,7 +266,7 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
               onChange={(e) => setStatusFilter(e.target.value)}
               className="appearance-none pl-9 pr-8 py-1.5 border border-zinc-200 bg-white text-body-sm font-semibold rounded-lg focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none transition-smooth cursor-pointer shadow-sm text-zinc-600"
             >
-              <option value="All">All Statuses</option>
+              <option value="All">All Status</option>
               <option value="warning">Warnings</option>
               <option value="review">Ready for Review</option>
               <option value="validated">Validated</option>
@@ -288,9 +288,8 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
           {filteredTables.map((table) => (
             <div
               key={table.id}
-              className={`bg-white rounded-xl overflow-hidden shadow-sm flex flex-col p-4 space-y-3.5 border ${
-                table.status === 'warning' ? 'border-red-200 bg-red-50/5' : 'border-zinc-200/80'
-              }`}
+              className={`bg-white rounded-xl overflow-hidden shadow-sm flex flex-col p-4 space-y-3.5 border ${table.status === 'warning' ? 'border-red-200 bg-red-50/5' : 'border-zinc-200/80'
+                }`}
             >
               {/* Header card info */}
               <div className="flex flex-col gap-1 flex-shrink-0">
@@ -377,7 +376,7 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
                           <div className={`w-5.5 h-5.5 rounded-full flex items-center justify-center text-[9px] font-extrabold shadow-xs shrink-0 ${member.conflict ? 'bg-red-50 text-brand-red border border-red-100' : 'bg-zinc-100 text-zinc-500'}`}>
                             {member.initials || member.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                           </div>
-                          
+
                           <div className="flex-1 flex items-center justify-between gap-2 min-w-0">
                             <div className="flex items-center gap-1.5 min-w-0">
                               <span className={`font-bold text-body-sm select-text ${member.conflict ? 'text-brand-red' : 'text-zinc-700'}`}>
@@ -689,11 +688,10 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
               }
 
               return (
-                <div className={`p-3 rounded-lg border text-[11px] font-semibold flex items-center gap-2 ${
-                  conflictDetected 
-                    ? 'bg-red-50/50 border-red-100 text-brand-red' 
+                <div className={`p-3 rounded-lg border text-[11px] font-semibold flex items-center gap-2 ${conflictDetected
+                    ? 'bg-red-50/50 border-red-100 text-brand-red'
                     : 'bg-emerald-50/50 border-emerald-100 text-emerald-800'
-                }`}>
+                  }`}>
                   {conflictDetected ? (
                     <span>{warningMsg}</span>
                   ) : (

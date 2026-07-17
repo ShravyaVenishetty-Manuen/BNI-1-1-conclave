@@ -17,7 +17,35 @@ import SearchableDropdown from '../components/SearchableDropdown';
 import membersData from '../data/members.json';
 
 export default function Members({ searchQuery, selectedConclaveId }) {
-  const [members, setMembers] = useState(membersData);
+  const [members, setMembers] = useState(() => {
+    return membersData.map(m => {
+      let state = m.state;
+      let country = m.country;
+      if (!state || !country) {
+        const addr = (m.address || "").toLowerCase();
+        if (addr.includes(", mh") || addr.includes("mumbai") || addr.includes("maharashtra")) {
+          state = "Maharashtra";
+          country = "India";
+        } else if (addr.includes(", ap") || addr.includes("guntur") || addr.includes("andhra")) {
+          state = "Andhra Pradesh";
+          country = "India";
+        } else if (addr.includes("london") || addr.includes("uk")) {
+          state = "Greater London";
+          country = "United Kingdom";
+        } else if (addr.includes("singapore")) {
+          state = "Central Region";
+          country = "Singapore";
+        } else if (addr.includes("phoenix") || addr.includes("az") || addr.includes("arizona") || addr.includes("usa")) {
+          state = "Arizona";
+          country = "United States";
+        } else {
+          state = "Andhra Pradesh";
+          country = "India";
+        }
+      }
+      return { ...m, state, country };
+    });
+  });
   const [referrals, setReferrals] = useState(() => {
     const stored = localStorage.getItem('bni_referrals');
     return stored ? JSON.parse(stored) : [];
@@ -42,6 +70,8 @@ export default function Members({ searchQuery, selectedConclaveId }) {
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [captainFilter, setCaptainFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [stateFilter, setStateFilter] = useState('All');
+  const [countryFilter, setCountryFilter] = useState('All');
   const [viewScope, setViewScope] = useState('region'); // 'region' or 'global'
   const [selectedMember, setSelectedMember] = useState(null);
   const [selectedRows, setSelectedRows] = useState(new Set());
@@ -170,6 +200,17 @@ export default function Members({ searchQuery, selectedConclaveId }) {
   const captainCount = conclaveMembers.filter(m => m.isCaptain).length;
   const businessClassCount = new Set(conclaveMembers.map(m => m.category)).size;
 
+  // Get distinct states and countries for members
+  const statesList = useMemo(() => {
+    const list = new Set(members.map(m => m.state).filter(Boolean));
+    return ['All', ...Array.from(list).sort()];
+  }, [members]);
+
+  const countriesList = useMemo(() => {
+    const list = new Set(members.map(m => m.country).filter(Boolean));
+    return ['All', ...Array.from(list).sort()];
+  }, [members]);
+
   // Filtered members list
   const filteredMembers = useMemo(() => {
     return conclaveMembers.filter(member => {
@@ -192,9 +233,12 @@ export default function Members({ searchQuery, selectedConclaveId }) {
         member.chapter === 'Peak Performance' || 
         member.chapter === 'Apex Chapter';
 
-      return matchesSearch && matchesCategory && matchesCaptain && matchesStatus && matchesViewScope;
+      const matchesState = stateFilter === 'All' || member.state === stateFilter;
+      const matchesCountry = countryFilter === 'All' || member.country === countryFilter;
+
+      return matchesSearch && matchesCategory && matchesCaptain && matchesStatus && matchesViewScope && matchesState && matchesCountry;
     });
-  }, [conclaveMembers, searchVal, categoryFilter, captainFilter, statusFilter, viewScope]);
+  }, [conclaveMembers, searchVal, categoryFilter, captainFilter, statusFilter, stateFilter, countryFilter, viewScope]);
 
   // Paginated members slice
   const paginatedMembers = useMemo(() => {
@@ -340,6 +384,8 @@ export default function Members({ searchQuery, selectedConclaveId }) {
     setCategoryFilter('All');
     setCaptainFilter('All');
     setStatusFilter('All');
+    setStateFilter('All');
+    setCountryFilter('All');
     setSelectedRows(new Set());
   };
 
@@ -471,6 +517,24 @@ export default function Members({ searchQuery, selectedConclaveId }) {
               value={statusFilter}
               onChange={setStatusFilter}
               placeholder="Search status..."
+            />
+
+            {/* State Filter */}
+            <SearchableDropdown
+              label="State"
+              options={statesList}
+              value={stateFilter}
+              onChange={setStateFilter}
+              placeholder="Search state..."
+            />
+
+            {/* Country Filter */}
+            <SearchableDropdown
+              label="Country"
+              options={countriesList}
+              value={countryFilter}
+              onChange={setCountryFilter}
+              placeholder="Search country..."
             />
           </div>
         </div>

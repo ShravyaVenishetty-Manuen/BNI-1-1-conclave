@@ -24,7 +24,26 @@ import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recha
 import initialCaptains from '../data/captains.json';
 
 export default function Captains({ searchQuery, selectedConclaveId }) {
-  const [captains, setCaptains] = useState(initialCaptains);
+  const [captains, setCaptains] = useState(() => {
+    return initialCaptains.map(c => {
+      let state = c.state;
+      let country = c.country;
+      if (!state || !country) {
+        const chap = (c.chapter || "").toLowerCase();
+        if (chap.includes("peak") || chap.includes("mumbai") || chap.includes("apex")) {
+          state = "Maharashtra";
+          country = "India";
+        } else if (chap.includes("guntur") || chap.includes("andhra") || chap.includes("central")) {
+          state = "Andhra Pradesh";
+          country = "India";
+        } else {
+          state = "Andhra Pradesh";
+          country = "India";
+        }
+      }
+      return { ...c, state, country };
+    });
+  });
   const [referrals, setReferrals] = useState(() => {
     const stored = localStorage.getItem('bni_referrals');
     return stored ? JSON.parse(stored) : [];
@@ -48,6 +67,8 @@ export default function Captains({ searchQuery, selectedConclaveId }) {
   const searchVal = searchQuery !== undefined ? searchQuery : searchTerm;
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [stateFilter, setStateFilter] = useState('All');
+  const [countryFilter, setCountryFilter] = useState('All');
   const [viewScope, setViewScope] = useState('region'); // 'region' or 'global'
 
   // Selection states
@@ -103,6 +124,17 @@ export default function Captains({ searchQuery, selectedConclaveId }) {
   const assignedCount = conclaveCaptains.filter(c => c.status === 'Assigned').length;
   const busyCount = conclaveCaptains.filter(c => c.status === 'Busy').length;
 
+  // Get distinct states and countries for captains
+  const statesList = useMemo(() => {
+    const list = new Set(captains.map(c => c.state).filter(Boolean));
+    return ['All', ...Array.from(list).sort()];
+  }, [captains]);
+
+  const countriesList = useMemo(() => {
+    const list = new Set(captains.map(c => c.country).filter(Boolean));
+    return ['All', ...Array.from(list).sort()];
+  }, [captains]);
+
   // Filtered List
   const filteredCaptains = useMemo(() => {
     setCurrentPage(1);
@@ -119,9 +151,12 @@ export default function Captains({ searchQuery, selectedConclaveId }) {
         cap.chapter === 'Peak Performance' || 
         cap.chapter === 'Apex Chapter';
 
-      return matchesSearch && matchesCategory && matchesStatus && matchesViewScope;
+      const matchesState = stateFilter === 'All' || cap.state === stateFilter;
+      const matchesCountry = countryFilter === 'All' || cap.country === countryFilter;
+
+      return matchesSearch && matchesCategory && matchesStatus && matchesViewScope && matchesState && matchesCountry;
     });
-  }, [conclaveCaptains, searchVal, categoryFilter, statusFilter, viewScope]);
+  }, [conclaveCaptains, searchVal, categoryFilter, statusFilter, stateFilter, countryFilter, viewScope]);
 
   // Paginated List
   const paginatedCaptains = useMemo(() => {
@@ -153,6 +188,8 @@ export default function Captains({ searchQuery, selectedConclaveId }) {
     setSearchTerm('');
     setCategoryFilter('All');
     setStatusFilter('All');
+    setStateFilter('All');
+    setCountryFilter('All');
     setSelectedRows(new Set());
   };
 
@@ -501,6 +538,20 @@ export default function Captains({ searchQuery, selectedConclaveId }) {
               value={statusFilter}
               onChange={setStatusFilter}
               placeholder="Search availability..."
+            />
+            <SearchableDropdown
+              label="State"
+              options={statesList}
+              value={stateFilter}
+              onChange={setStateFilter}
+              placeholder="Search state..."
+            />
+            <SearchableDropdown
+              label="Country"
+              options={countriesList}
+              value={countryFilter}
+              onChange={setCountryFilter}
+              placeholder="Search country..."
             />
           </div>
         </div>

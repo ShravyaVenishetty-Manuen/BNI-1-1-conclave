@@ -16,12 +16,28 @@ export default function SearchableDropdown({ label, options, value, onChange, pl
   }, []);
 
   const filteredOptions = useMemo(() => {
-    return options.filter(opt => 
+    return options.filter(opt =>
       opt.toLowerCase().includes(search.toLowerCase())
     );
   }, [options, search]);
 
-  const selectedLabel = value === 'All' ? `All ${label}s` : value;
+  const defaultAllLabel = useMemo(() => {
+    const l = label.toLowerCase();
+    if (l === 'status') return 'All Status';
+    if (l === 'category') return 'All Categories';
+    if (l === 'availability') return 'All Availabilities';
+    if (l === 'business type') return 'All Business Types';
+    if (l === 'role') return 'All Roles';
+    if (l.endsWith('s') || l.endsWith('x') || l.endsWith('z') || l.endsWith('ch') || l.endsWith('sh')) {
+      return `All ${label}es`;
+    }
+    if (l.endsWith('y')) {
+      return `All ${label.slice(0, -1)}ies`;
+    }
+    return `All ${label}s`;
+  }, [label]);
+
+  const selectedLabel = value === 'All' ? defaultAllLabel : value;
 
   return (
     <div className="relative inline-block text-left" ref={dropdownRef}>
@@ -65,11 +81,10 @@ export default function SearchableDropdown({ label, options, value, onChange, pl
                       onChange(opt);
                       setIsOpen(false);
                     }}
-                    className={`w-full text-left px-3 py-1.5 hover:bg-zinc-50 transition-smooth ${
-                      opt === value ? 'bg-red-50/40 text-brand-red font-extrabold' : ''
-                    }`}
+                    className={`w-full text-left px-3 py-1.5 hover:bg-zinc-50 transition-smooth ${opt === value ? 'bg-red-50/40 text-brand-red font-extrabold' : ''
+                      }`}
                   >
-                    {opt === 'All' ? `All ${label}s` : opt}
+                    {opt === 'All' ? defaultAllLabel : opt}
                   </button>
                 </li>
               ))

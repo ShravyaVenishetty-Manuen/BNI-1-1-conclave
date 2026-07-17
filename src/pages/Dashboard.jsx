@@ -493,66 +493,6 @@ export default function Dashboard({ setActiveTab, selectedConclaveId, setSelecte
             </div>
           </div>
         </div>
-
-      </section>
-
-      {/* Conclaves list table with View More */}
-      <section className="pb-8">
-        <div className="p-6 border border-zinc-200/80 rounded-xl bg-white flex flex-col shadow-sm hover:shadow-md transition-smooth">
-          <div className="flex justify-between items-center mb-5">
-            <h4 className="text-title-lg text-zinc-950 font-semibold">Conclaves</h4>
-            <button
-              onClick={() => setActiveTab && setActiveTab('conclaves')}
-              className="text-[10px] font-extrabold text-brand-red uppercase tracking-wider hover:underline flex items-center gap-1 cursor-pointer bg-transparent border-0 outline-none"
-            >
-              View More <ChevronRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          <div className="overflow-x-auto flex-1">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-white border-y border-zinc-200 text-label-xs font-bold text-zinc-400 uppercase tracking-wider">
-                  <th className="px-4 py-3.5">Conclave Name</th>
-                  <th className="px-4 py-3.5 text-center">Date</th>
-                  <th className="px-4 py-3.5 text-center">Members</th>
-                  <th className="px-4 py-3.5 text-center">Captains</th>
-                  <th className="px-4 py-3.5 text-center">Status</th>
-                  <th className="px-4 py-3.5 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-100 text-table-text">
-                {conclavesData.slice(0, 3).map(c => (
-                  <tr
-                    key={c.id}
-                    className={`hover:bg-zinc-50/50 transition-colors group cursor-pointer ${c.id === selectedConclaveId ? 'bg-red-50/20' : ''}`}
-                    onClick={() => { setSelectedConclaveId(c.id); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                  >
-                    <td className={`px-4 py-4 font-semibold ${c.id === selectedConclaveId ? 'text-brand-red' : 'text-zinc-900'}`}>{c.name}</td>
-                    <td className="px-4 py-4 text-center text-zinc-500 font-medium">{c.dateRange}</td>
-                    <td className="px-4 py-4 text-center text-zinc-800 font-semibold">{c.memberCount}</td>
-                    <td className="px-4 py-4 text-center text-zinc-800 font-semibold">{c.captainCount}</td>
-                    <td className="px-4 py-4 text-center">
-                      <span className={`px-3 py-1 rounded-full text-label-xs font-bold ${
-                        c.status === 'Running' ? 'border border-brand-red/20 text-brand-red bg-brand-red/5'
-                        : c.status === 'Completed' ? 'border border-emerald-200 text-emerald-800 bg-emerald-50'
-                        : c.status === 'Upcoming' ? 'border border-amber-200 text-amber-800 bg-amber-50'
-                        : 'border border-zinc-200 text-zinc-500 bg-zinc-50'
-                      }`}>
-                        {c.status.toUpperCase()}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 text-right">
-                      <button className="p-1.5 hover:bg-zinc-100 rounded-lg text-zinc-400 hover:text-brand-red transition-smooth cursor-pointer flex items-center justify-center ml-auto bg-transparent border-0">
-                        <ChevronRight className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
       </section>
     </div>
   );
