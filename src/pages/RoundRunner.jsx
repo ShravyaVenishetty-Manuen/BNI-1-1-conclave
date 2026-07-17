@@ -14,11 +14,13 @@ import {
   Play,
   Pause,
   RotateCcw,
-  RefreshCw
+  RefreshCw,
+  Send
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
+import { ResponsiveContainer, PieChart, Pie, BarChart, Bar, Cell, XAxis, YAxis, Tooltip } from 'recharts';
 import conclavesData from '../data/conclaves.json';
+import referralsJson from '../data/referrals.json';
 
 import runnerData from '../data/tables_runner.json';
 const { initialTables, mockRosters } = runnerData;
@@ -35,6 +37,45 @@ export default function RoundRunner({ selectedConclaveId }) {
   const setTables = (updater) => setAllTables(updater);
   const [activeRound, setActiveRound] = useState(2);
 
+  const [referrals, setReferrals] = useState(() => {
+    const stored = localStorage.getItem('bni_referrals');
+    const local = stored ? JSON.parse(stored) : [];
+    const merged = [...referralsJson];
+    local.forEach(r => {
+      if (!merged.find(m => m.id === r.id)) merged.push(r);
+    });
+    return merged;
+  });
+
+  useEffect(() => {
+    const sync = () => {
+      const s = localStorage.getItem('bni_referrals');
+      const local = s ? JSON.parse(s) : [];
+      setReferrals(() => {
+        const merged = [...referralsJson];
+        local.forEach(r => {
+          if (!merged.find(m => m.id === r.id)) merged.push(r);
+        });
+        return merged;
+      });
+    };
+    window.addEventListener('storage', sync);
+    const interval = setInterval(sync, 1000);
+    return () => {
+      window.removeEventListener('storage', sync);
+      clearInterval(interval);
+    };
+  }, []);
+
+  const filteredReferrals = useMemo(() =>
+    referrals.filter(r => r.conclaveId === selectedConclaveId || !r.conclaveId),
+    [referrals, selectedConclaveId]
+  );
+
+  const totalReferrals = filteredReferrals.length;
+  const connectedReferrals = filteredReferrals.filter(r => r.status === 'Connected').length;
+  const pendingReferrals = filteredReferrals.filter(r => r.status === 'Pending').length;
+  const closedReferrals = filteredReferrals.filter(r => r.status === 'Closed').length;
 
   // Timer States
   const [timeLeft, setTimeLeft] = useState(765); // 12:45 in seconds
@@ -177,8 +218,8 @@ export default function RoundRunner({ selectedConclaveId }) {
               </div>
             </div>
 
-            {/* KPI Overview row — 4 cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {/* KPI Overview row — 5 cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
               <div className="bg-white border border-zinc-200/80 p-4 rounded-xl shadow-sm flex flex-col justify-between">
                 <RefreshCw className="w-5 h-5 text-brand-red mb-2" />
                 <div>
@@ -208,6 +249,14 @@ export default function RoundRunner({ selectedConclaveId }) {
                 <div>
                   <p className="text-[10px] text-zinc-400 font-bold uppercase">Captains Active</p>
                   <h4 className="text-headline-md font-extrabold text-zinc-950 mt-1">32</h4>
+                </div>
+              </div>
+
+              <div className="bg-white border border-zinc-200/80 p-4 rounded-xl shadow-sm flex flex-col justify-between col-span-2 sm:col-span-1">
+                <Send className="w-5 h-5 text-brand-red mb-2" />
+                <div>
+                  <p className="text-[10px] text-zinc-400 font-bold uppercase">Total Referrals</p>
+                  <h4 className="text-headline-md font-extrabold text-zinc-950 mt-1">{totalReferrals}</h4>
                 </div>
               </div>
             </div>
@@ -254,12 +303,12 @@ export default function RoundRunner({ selectedConclaveId }) {
         </div>
       </div>
 
-      {/* Bottom Row: Referrals + Live Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Bottom Row: Referrals, Analytics & Live Activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Top 3 Referrals section */}
         <div className="bg-white border border-zinc-200/80 rounded-xl p-5 shadow-sm space-y-4 flex flex-col justify-between h-[300px]">
           <div className="flex justify-between items-center border-b border-zinc-100 pb-2.5 flex-shrink-0">
-            <h3 className="text-body-sm font-extrabold text-zinc-950 uppercase">Top 3 Referrals</h3>
+            <h3 className="text-body-sm font-extrabold text-zinc-955 uppercase">Top 3 Referrals</h3>
             <span className="px-2 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-100 rounded text-[9px] font-extrabold tracking-wider">
               ACTIVE ROUND
             </span>
@@ -273,7 +322,7 @@ export default function RoundRunner({ selectedConclaveId }) {
                   1
                 </div>
                 <div>
-                  <p className="text-body-sm font-extrabold text-zinc-800">Amit Patel</p>
+                  <p className="text-body-sm font-extrabold text-zinc-850">Amit Patel</p>
                   <p className="text-[9px] text-zinc-455 font-bold uppercase tracking-wider">Marketing</p>
                 </div>
               </div>
@@ -290,7 +339,7 @@ export default function RoundRunner({ selectedConclaveId }) {
                   2
                 </div>
                 <div>
-                  <p className="text-body-sm font-extrabold text-zinc-800">Shweta Iyer</p>
+                  <p className="text-body-sm font-extrabold text-zinc-855">Shweta Iyer</p>
                   <p className="text-[9px] text-zinc-455 font-bold uppercase tracking-wider">Real Estate</p>
                 </div>
               </div>
@@ -307,13 +356,67 @@ export default function RoundRunner({ selectedConclaveId }) {
                   3
                 </div>
                 <div>
-                  <p className="text-body-sm font-extrabold text-zinc-800">Manoj Kumar</p>
+                  <p className="text-body-sm font-extrabold text-zinc-855">Manoj Kumar</p>
                   <p className="text-[9px] text-zinc-455 font-bold uppercase tracking-wider">Legal</p>
                 </div>
               </div>
               <div className="text-right">
                 <span className="text-body-sm font-extrabold text-amber-700/85 leading-none">8</span>
                 <p className="text-[8px] text-zinc-400 font-bold uppercase mt-0.5">Referrals</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Referrals Analytics Pie Tracker — matching Dashboard layout */}
+        <div className="bg-white border border-zinc-200/80 rounded-xl p-5 shadow-sm space-y-4 flex flex-col justify-between h-[300px]">
+          <div className="flex justify-between items-center border-b border-zinc-100 pb-2.5 flex-shrink-0">
+            <h3 className="text-body-sm font-extrabold text-zinc-950 uppercase">Referrals Tracker</h3>
+            <span className="px-2 py-0.5 bg-blue-50 text-blue-800 border border-blue-100 rounded text-[9px] font-extrabold tracking-wider">
+              ANALYTICS
+            </span>
+          </div>
+
+          <div className="flex-1 flex flex-col sm:flex-row items-center gap-4 min-h-0">
+            <div className="relative w-28 h-28 flex items-center justify-center shrink-0">
+              <PieChart width={112} height={112}>
+                <Pie
+                  data={[
+                    { value: connectedReferrals + closedReferrals, fill: '#cf2e2e' },
+                    { value: Math.max(pendingReferrals, 1), fill: '#f4f4f5' }
+                  ]}
+                  dataKey="value"
+                  innerRadius={38}
+                  outerRadius={46}
+                  startAngle={90}
+                  endAngle={-270}
+                  stroke="none"
+                />
+              </PieChart>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-xl text-zinc-950 font-bold leading-none">{totalReferrals}</span>
+                <span className="text-[8px] text-zinc-400 font-bold uppercase tracking-wider mt-0.5">Total</span>
+              </div>
+            </div>
+
+            <div className="flex-1 w-full space-y-1.5 overflow-y-auto">
+              <div className="flex justify-between items-center p-1.5 bg-white rounded-lg border border-zinc-200/60 shadow-xs">
+                <span className="text-[10px] font-semibold text-zinc-500 flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 bg-brand-red rounded-full"></span> Connected
+                </span>
+                <span className="font-bold text-zinc-800 text-[11px]">{connectedReferrals}</span>
+              </div>
+              <div className="flex justify-between items-center p-1.5 bg-white rounded-lg border border-zinc-200/60 shadow-xs">
+                <span className="text-[10px] font-semibold text-zinc-500 flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 bg-amber-400 rounded-full"></span> Pending
+                </span>
+                <span className="font-bold text-zinc-800 text-[11px]">{pendingReferrals}</span>
+              </div>
+              <div className="flex justify-between items-center p-1.5 bg-white rounded-lg border border-zinc-200/60 shadow-xs">
+                <span className="text-[10px] font-semibold text-zinc-500 flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 bg-zinc-400 rounded-full"></span> Closed
+                </span>
+                <span className="font-bold text-zinc-800 text-[11px]">{closedReferrals}</span>
               </div>
             </div>
           </div>
