@@ -22,6 +22,7 @@ import {
 import Pagination from '../components/Pagination';
 import { ResponsiveContainer, BarChart, Bar, XAxis } from 'recharts';
 import initialConclaves from '../data/conclaves.json';
+import SearchableDropdown from '../components/SearchableDropdown';
 
 export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) {
   const [conclaves, setConclaves] = useState(initialConclaves);
@@ -411,16 +412,13 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
             />
           </div>
           <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-            <select
+            <SearchableDropdown
+              label="Status"
+              options={['All', 'Upcoming', 'Running', 'Completed']}
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="border border-zinc-200 rounded-lg px-3 py-2 text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-white font-medium text-zinc-700 transition-smooth cursor-pointer"
-            >
-              <option value="All">All Status</option>
-              <option value="Upcoming">Upcoming</option>
-              <option value="Running">Running</option>
-              <option value="Completed">Completed</option>
-            </select>
+              onChange={setStatusFilter}
+              placeholder="Search status..."
+            />
 
 
           </div>

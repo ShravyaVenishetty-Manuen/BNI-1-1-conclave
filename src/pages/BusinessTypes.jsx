@@ -12,6 +12,7 @@ import {
   MoreVertical
 } from 'lucide-react';
 import Pagination from '../components/Pagination';
+import SearchableDropdown from '../components/SearchableDropdown';
 import initialCategories from '../data/categories.json';
 import membersData from '../data/members.json';
 
@@ -350,15 +351,13 @@ export default function BusinessTypes({ searchQuery, selectedConclaveId }) {
             />
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto">
-            <select
+            <SearchableDropdown
+              label="Status"
+              options={['All', 'Active', 'Inactive']}
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="border border-zinc-200 rounded-lg px-3 py-2 text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-white font-medium text-zinc-700 transition-smooth cursor-pointer"
-            >
-              <option value="All">All Statuses</option>
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
-            </select>
+              onChange={setStatusFilter}
+              placeholder="Search status..."
+            />
           </div>
         </div>
         <button

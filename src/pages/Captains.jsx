@@ -18,6 +18,7 @@ import {
   Star
 } from 'lucide-react';
 import Pagination from '../components/Pagination';
+import SearchableDropdown from '../components/SearchableDropdown';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 
 import initialCaptains from '../data/captains.json';
@@ -487,27 +488,20 @@ export default function Captains({ searchQuery, selectedConclaveId }) {
             />
           </div>
           <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
-            <select
+            <SearchableDropdown
+              label="Business Type"
+              options={['All', 'Financial Consultancy', 'Real Estate', 'Legal Services', 'IT Services']}
               value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              className="border border-zinc-200 rounded-lg px-3 py-2 text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-white font-medium text-zinc-700 transition-smooth cursor-pointer"
-            >
-              <option value="All">All Business Types</option>
-              <option value="Financial Consultancy">Financial Consultancy</option>
-              <option value="Real Estate">Real Estate</option>
-              <option value="Legal Services">Legal Services</option>
-              <option value="IT Services">IT Services</option>
-            </select>
-            <select
+              onChange={setCategoryFilter}
+              placeholder="Search business type..."
+            />
+            <SearchableDropdown
+              label="Availability"
+              options={['All', 'Available', 'Assigned', 'Busy']}
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="border border-zinc-200 rounded-lg px-3 py-2 text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-white font-medium text-zinc-700 transition-smooth cursor-pointer"
-            >
-              <option value="All">All Availabilities</option>
-              <option value="Available">Available</option>
-              <option value="Assigned">Assigned</option>
-              <option value="Busy">Busy</option>
-            </select>
+              onChange={setStatusFilter}
+              placeholder="Search availability..."
+            />
           </div>
         </div>
 

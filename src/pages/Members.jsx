@@ -12,6 +12,7 @@ import {
   Upload,
 } from 'lucide-react';
 import Pagination from '../components/Pagination';
+import SearchableDropdown from '../components/SearchableDropdown';
 
 import membersData from '../data/members.json';
 
@@ -446,43 +447,31 @@ export default function Members({ searchQuery, selectedConclaveId }) {
           </div>
           <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
             {/* Category Filter */}
-            <select
+            <SearchableDropdown
+              label="Category"
+              options={['All', 'Real Estate', 'Marketing', 'Finance', 'Corporate Gifting', 'IT Services', 'HR Services', 'Legal Services', 'Graphic Design']}
               value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              className="border border-zinc-200 rounded-lg px-3 py-2 text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-white font-medium text-zinc-700 transition-smooth cursor-pointer"
-            >
-              <option value="All">All Categories</option>
-              <option value="Real Estate">Real Estate</option>
-              <option value="Marketing">Marketing</option>
-              <option value="Finance">Finance</option>
-              <option value="Corporate Gifting">Corporate Gifting</option>
-              <option value="IT Services">IT Services</option>
-              <option value="HR Services">HR Services</option>
-              <option value="Legal Services">Legal Services</option>
-              <option value="Graphic Design">Graphic Design</option>
-            </select>
+              onChange={setCategoryFilter}
+              placeholder="Search category..."
+            />
 
             {/* Captain Status */}
-            <select
+            <SearchableDropdown
+              label="Role"
+              options={['All', 'Captain', 'Member']}
               value={captainFilter}
-              onChange={(e) => setCaptainFilter(e.target.value)}
-              className="border border-zinc-200 rounded-lg px-3 py-2 text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-white font-medium text-zinc-700 transition-smooth cursor-pointer"
-            >
-              <option value="All">All Roles</option>
-              <option value="Captain">Captains</option>
-              <option value="Member">Regular Members</option>
-            </select>
+              onChange={setCaptainFilter}
+              placeholder="Search role..."
+            />
 
             {/* Status */}
-            <select
+            <SearchableDropdown
+              label="Status"
+              options={['All', 'Active', 'Inactive']}
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="border border-zinc-200 rounded-lg px-3 py-2 text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-white font-medium text-zinc-700 transition-smooth cursor-pointer"
-            >
-              <option value="All">All Statuses</option>
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
-            </select>
+              onChange={setStatusFilter}
+              placeholder="Search status..."
+            />
           </div>
         </div>
         <button
