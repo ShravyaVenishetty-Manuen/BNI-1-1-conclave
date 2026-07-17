@@ -7,6 +7,8 @@
     "dateRange": "Nov 12 - Nov 14, 2024",
     "startDate": "2024-11-12",
     "endDate": "2024-11-14",
+    "regStartDate": "2024-09-01",
+    "regEndDate": "2024-11-20",
     "memberCount": 1240,
     "memberLimit": 1500,
     "captainCount": 48,
@@ -45,6 +47,8 @@
     "dateRange": "Oct 20 - Oct 21, 2024",
     "startDate": "2024-10-20",
     "endDate": "2024-10-21",
+    "regStartDate": "2024-08-15",
+    "regEndDate": "2024-10-25",
     "memberCount": 320,
     "memberLimit": 350,
     "captainCount": 12,
@@ -78,6 +82,8 @@
     "dateRange": "TBD Jan 2025",
     "startDate": "2025-01-15",
     "endDate": "2025-01-16",
+    "regStartDate": "2024-12-01",
+    "regEndDate": "2025-01-10",
     "memberCount": 0,
     "memberLimit": 500,
     "captainCount": 0,
@@ -104,6 +110,8 @@
     "dateRange": "Aug 10 - Aug 12, 2024",
     "startDate": "2024-08-10",
     "endDate": "2024-08-12",
+    "regStartDate": "2024-06-01",
+    "regEndDate": "2024-08-05",
     "memberCount": 1480,
     "memberLimit": 1500,
     "captainCount": 50,
@@ -130,6 +138,8 @@
     "dateRange": "Feb 10 - Feb 12, 2026",
     "startDate": "2026-02-10",
     "endDate": "2026-02-12",
+    "regStartDate": "2026-01-01",
+    "regEndDate": "2026-02-05",
     "memberCount": 84,
     "memberLimit": 100,
     "captainCount": 16,
@@ -156,6 +166,8 @@
     "dateRange": "Oct 12 - Oct 14, 2026",
     "startDate": "2026-10-12",
     "endDate": "2026-10-14",
+    "regStartDate": "2026-07-01",
+    "regEndDate": "2026-10-01",
     "memberCount": 180,
     "memberLimit": 200,
     "captainCount": 30,
@@ -182,6 +194,8 @@
     "dateRange": "Nov 05 - Nov 07, 2026",
     "startDate": "2026-11-05",
     "endDate": "2026-11-07",
+    "regStartDate": "2026-08-01",
+    "regEndDate": "2026-10-25",
     "memberCount": 130,
     "memberLimit": 150,
     "captainCount": 24,
@@ -208,6 +222,8 @@
     "dateRange": "Dec 10 - Dec 12, 2024",
     "startDate": "2024-12-10",
     "endDate": "2024-12-12",
+    "regStartDate": "2024-10-01",
+    "regEndDate": "2024-12-05",
     "memberCount": 920,
     "memberLimit": 1000,
     "captainCount": 35,
@@ -221,7 +237,11 @@
     "coordinatorAvatar": "SW",
     "description": "Mid-term synergy networking meet for Guntur Central chapter members to exchange premium referrals and pitch major projects.",
     "timeline": [
-      { "event": "Conclave Launched", "date": "Nov 01, 2024 • 09:00 AM", "desc": "Started onboarding attendees." }
+      {
+        "event": "Conclave Launched",
+        "date": "Nov 01, 2024 • 09:00 AM",
+        "desc": "Started onboarding attendees."
+      }
     ]
   }
 ]

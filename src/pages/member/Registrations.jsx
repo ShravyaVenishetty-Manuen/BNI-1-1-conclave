@@ -1,0 +1,669 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import {
+  Search,
+  Calendar,
+  MapPin,
+  Users,
+  CheckCircle2,
+  XCircle,
+  Filter,
+  Check,
+  PlusCircle,
+  Sparkles,
+  Info,
+  CalendarRange
+} from 'lucide-react';
+import initialConclaves from '../../data/conclaves.json';
+
+export default function Registrations({ loggedInMember }) {
+  const [conclaves, setConclaves] = useState(() => {
+    const stored = localStorage.getItem('bni_conclaves');
+    return stored ? JSON.parse(stored) : initialConclaves;
+  });
+
+  const [member, setMember] = useState(() => {
+    const stored = localStorage.getItem('bni_logged_member');
+    return stored ? JSON.parse(stored) : loggedInMember;
+  });
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [regionFilter, setRegionFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [showRegisteredOnly, setShowRegisteredOnly] = useState(false);
+  const [toast, setToast] = useState(null);
+
+  const [isRegModalOpen, setIsRegModalOpen] = useState(false);
+  const [selectedConclaveForReg, setSelectedConclaveForReg] = useState(null);
+  const [regForm, setRegForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    company: '',
+    category: '',
+    chapter: '',
+    mealPreference: 'Veg',
+    tshirtSize: 'L',
+    needsAccommodation: 'No',
+    specialInstructions: ''
+  });
+
+  // Sync session and conclaves on storage events
+  useEffect(() => {
+    const syncData = () => {
+      const storedConclaves = localStorage.getItem('bni_conclaves');
+      if (storedConclaves) setConclaves(JSON.parse(storedConclaves));
+
+      const storedMember = localStorage.getItem('bni_logged_member');
+      if (storedMember) setMember(JSON.parse(storedMember));
+    };
+
+    window.addEventListener('storage', syncData);
+    const interval = setInterval(syncData, 1000);
+    return () => {
+      window.removeEventListener('storage', syncData);
+      clearInterval(interval);
+    };
+  }, []);
+
+  const showToastMessage = (message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  // Get distinct regions from conclaves list
+  const regions = useMemo(() => {
+    const list = new Set(conclaves.map(c => c.region).filter(Boolean));
+    return ['All', ...Array.from(list)];
+  }, [conclaves]);
+
+  // Handle registration action
+  const handleRegister = (conclave) => {
+    setSelectedConclaveForReg(conclave);
+    setRegForm({
+      name: member?.name || '',
+      email: member?.email || '',
+      phone: member?.phone || '',
+      company: member?.company || '',
+      category: member?.category || '',
+      chapter: member?.chapter || '',
+      mealPreference: 'Veg',
+      tshirtSize: 'L',
+      needsAccommodation: 'No',
+      specialInstructions: ''
+    });
+    setIsRegModalOpen(true);
+  };
+
+  const handleRegisterSubmit = (e) => {
+    e.preventDefault();
+    if (!selectedConclaveForReg) return;
+
+    const conclaveId = selectedConclaveForReg.id;
+    const conclaveName = selectedConclaveForReg.name;
+    const registeredIds = member?.conclaveIds || [];
+    if (registeredIds.includes(conclaveId)) return;
+
+    // 1. Update Member conclaveIds
+    const updatedMember = {
+      ...member,
+      conclaveIds: [...registeredIds, conclaveId]
+    };
+    setMember(updatedMember);
+    localStorage.setItem('bni_logged_member', JSON.stringify(updatedMember));
+
+    // 2. Increment conclave member count
+    const updatedConclaves = conclaves.map(c => {
+      if (c.id === conclaveId) {
+        return { ...c, memberCount: (c.memberCount || 0) + 1 };
+      }
+      return c;
+    });
+    setConclaves(updatedConclaves);
+    localStorage.setItem('bni_conclaves', JSON.stringify(updatedConclaves));
+
+    // 3. Store the actual registration form response in local storage
+    const allRegistrations = JSON.parse(localStorage.getItem('bni_conclave_registrations') || '[]');
+    allRegistrations.push({
+      conclaveId,
+      memberId: member?.email || 'unknown',
+      ...regForm,
+      registeredAt: new Date().toISOString()
+    });
+    localStorage.setItem('bni_conclave_registrations', JSON.stringify(allRegistrations));
+
+    // 4. Notify other tabs/components
+    window.dispatchEvent(new Event('storage'));
+    setIsRegModalOpen(false);
+    showToastMessage(`Successfully registered for ${conclaveName}!`);
+  };
+
+  // Handle deregistration action
+  const handleDeregister = (conclaveId, conclaveName) => {
+    const registeredIds = member?.conclaveIds || [];
+    if (!registeredIds.includes(conclaveId)) return;
+
+    // 1. Update Member conclaveIds
+    const updatedMember = {
+      ...member,
+      conclaveIds: registeredIds.filter(id => id !== conclaveId)
+    };
+    setMember(updatedMember);
+    localStorage.setItem('bni_logged_member', JSON.stringify(updatedMember));
+
+    // 2. Decrement conclave member count
+    const updatedConclaves = conclaves.map(c => {
+      if (c.id === conclaveId) {
+        return { ...c, memberCount: Math.max(0, (c.memberCount || 1) - 1) };
+      }
+      return c;
+    });
+    setConclaves(updatedConclaves);
+    localStorage.setItem('bni_conclaves', JSON.stringify(updatedConclaves));
+
+    // 3. Notify other tabs/components
+    window.dispatchEvent(new Event('storage'));
+    showToastMessage(`Cancelled registration for ${conclaveName}.`, 'warning');
+  };
+
+  // Filtered conclaves list
+  const filteredConclaves = useMemo(() => {
+    return conclaves.filter(c => {
+      const matchesSearch =
+        c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        c.venue.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        c.region.toLowerCase().includes(searchTerm.toLowerCase());
+
+      const matchesRegion = regionFilter === 'All' || c.region === regionFilter;
+      const matchesStatus = statusFilter === 'All' || c.status === statusFilter;
+      const matchesRegistered = !showRegisteredOnly || (member?.conclaveIds || []).includes(c.id);
+
+      return matchesSearch && matchesRegion && matchesStatus && matchesRegistered;
+    });
+  }, [conclaves, searchTerm, regionFilter, statusFilter, showRegisteredOnly, member]);
+
+  // Calculations for quick stats
+  const registeredCount = useMemo(() => {
+    return conclaves.filter(c => (member?.conclaveIds || []).includes(c.id)).length;
+  }, [conclaves, member]);
+
+  const upcomingCount = useMemo(() => {
+    return conclaves.filter(c => c.status === 'Running' || c.status === 'Upcoming').length;
+  }, [conclaves]);
+
+  return (
+    <div className="space-y-6 sm:space-y-8 font-sans pb-10">
+
+      {/* Toast feedback alerts */}
+      {toast && (
+        <div className={`fixed bottom-5 right-5 z-55 text-white text-[11px] font-bold py-2.5 px-4 rounded-lg shadow-xl flex items-center gap-2 border border-zinc-200 animate-slide-up ${toast.type === 'warning' ? 'bg-amber-655 border-amber-500' : 'bg-zinc-900 border-zinc-800'
+          }`}>
+          <span className={`w-1.5 h-1.5 rounded-full ${toast.type === 'warning' ? 'bg-white' : 'bg-brand-red'}`}></span>
+          <p>{toast.message}</p>
+        </div>
+      )}
+
+      {/* Header section */}
+      <div>
+        <h2 className="text-[20px] font-black text-zinc-955 leading-tight">Conclave Registrations</h2>
+        <p className="text-[11.5px] text-zinc-500 font-semibold mt-0.5">
+          Browse and register for networking conclaves
+        </p>
+      </div>
+
+      {/* Quick stats panel */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+        <div className="bg-white p-5 rounded-xl border border-zinc-200 shadow-2xs flex flex-col justify-between h-24">
+          <p className="text-[10px] font-bold text-zinc-450 uppercase tracking-wide">All Conclaves</p>
+          <div className="flex items-end justify-between mt-2">
+            <span className="text-2xl font-black text-zinc-900 leading-none">{conclaves.length}</span>
+            <span className="p-2 bg-red-50 text-brand-red rounded-lg border border-red-100">
+              <CalendarRange className="w-4 h-4" />
+            </span>
+          </div>
+        </div>
+
+        <div className="bg-white p-5 rounded-xl border border-zinc-200 shadow-2xs flex flex-col justify-between h-24">
+          <p className="text-[10px] font-bold text-zinc-455 uppercase tracking-wide">My Registrations</p>
+          <div className="flex items-end justify-between mt-2">
+            <span className="text-2xl font-black text-zinc-900 leading-none">
+              {registeredCount} <span className="text-zinc-400 text-xs font-semibold">Chapter Events</span>
+            </span>
+            <span className="p-2 bg-emerald-50 text-emerald-600 rounded-lg border border-emerald-100">
+              <CheckCircle2 className="w-4 h-4" />
+            </span>
+          </div>
+        </div>
+
+        <div className="bg-white p-5 rounded-xl border border-zinc-200 shadow-2xs flex flex-col justify-between h-24">
+          <p className="text-[10px] font-bold text-zinc-455 uppercase tracking-wide">Upcoming & Live</p>
+          <div className="flex items-end justify-between mt-2">
+            <span className="text-2xl font-black text-zinc-900 leading-none">{upcomingCount}</span>
+            <span className="p-2 bg-blue-50 text-blue-600 rounded-lg border border-blue-100">
+              <Sparkles className="w-4 h-4" />
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Filter and search bar controls */}
+      <div className="bg-white p-4 rounded-xl border border-zinc-200 shadow-3xs flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between">
+
+        {/* Search input field */}
+        <div className="relative flex-1">
+          <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+          <input
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-9 pr-4 py-2 bg-zinc-55 border border-zinc-200 rounded-lg text-[11px] placeholder-zinc-400 focus:outline-none focus:bg-white focus:border-brand-red/50 focus:ring-2 focus:ring-brand-red/10 transition-smooth font-semibold text-zinc-700"
+            placeholder="Search conclaves, venues, or regions..."
+          />
+        </div>
+
+        {/* Filters and toggle group */}
+        <div className="flex flex-wrap items-center gap-3">
+
+          {/* Region filter dropdown */}
+          <div className="flex items-center gap-1.5">
+            <Filter className="w-3 h-3 text-zinc-400" />
+            <select
+              value={regionFilter}
+              onChange={(e) => setRegionFilter(e.target.value)}
+              className="bg-zinc-55 border border-zinc-200 rounded-lg py-1.5 px-3 text-[11px] font-bold text-zinc-700 focus:outline-none cursor-pointer hover:bg-zinc-100 transition-smooth"
+            >
+              <option value="All">All Regions</option>
+              {regions.filter(r => r !== 'All').map(r => (
+                <option key={r} value={r}>{r}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Status filter dropdown */}
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="bg-zinc-55 border border-zinc-200 rounded-lg py-1.5 px-3 text-[11px] font-bold text-zinc-700 focus:outline-none cursor-pointer hover:bg-zinc-100 transition-smooth"
+          >
+            <option value="All">All Statuses</option>
+            <option value="Running">Running</option>
+            <option value="Upcoming">Upcoming</option>
+            <option value="Completed">Completed</option>
+            <option value="Draft">Draft</option>
+          </select>
+
+          {/* Registered checkbox toggle button */}
+          <button
+            onClick={() => setShowRegisteredOnly(!showRegisteredOnly)}
+            className={`py-1.5 px-3 rounded-lg border text-[11px] font-extrabold transition-smooth cursor-pointer ${showRegisteredOnly
+                ? 'bg-emerald-50 border-emerald-200 text-emerald-700 font-black shadow-2xs'
+                : 'bg-white border-zinc-200 text-zinc-650 hover:bg-zinc-50'
+              }`}
+          >
+            {showRegisteredOnly ? 'Showing Registered' : 'Show Registered Only'}
+          </button>
+        </div>
+      </div>
+
+      {/* Conclaves card grid listing */}
+      {filteredConclaves.length === 0 ? (
+        <div className="bg-white rounded-xl border border-zinc-200 p-12 text-center space-y-3">
+          <div className="w-12 h-12 bg-zinc-50 border border-zinc-200 rounded-full flex items-center justify-center mx-auto text-zinc-400">
+            <Info className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-[12.5px] font-black text-zinc-800">No conclaves match your filters</p>
+            <p className="text-[10.5px] text-zinc-455 font-semibold mt-1">
+              Try adjusting your search criteria or choosing a different region filter.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {filteredConclaves.map(c => {
+            const isRegistered = (member?.conclaveIds || []).includes(c.id);
+            const isFull = (c.memberCount || 0) >= (c.memberLimit || 500);
+            const isCompleted = c.status === 'Completed';
+            const isDraft = c.status === 'Draft';
+            const percentFilled = Math.min(100, Math.round(((c.memberCount || 0) / (c.memberLimit || 500)) * 100));
+
+            // Registration window dates logic
+            const todayStr = new Date().toISOString().split('T')[0];
+            const isBeforeReg = c.regStartDate && todayStr < c.regStartDate;
+            const isAfterReg = c.regEndDate && todayStr > c.regEndDate;
+
+            return (
+              <div
+                key={c.id}
+                className={`bg-white rounded-xl border transition-smooth p-5 flex flex-col justify-between shadow-2xs hover:shadow-sm ${isRegistered
+                    ? 'border-emerald-250 bg-emerald-50/10'
+                    : 'border-zinc-200'
+                  }`}
+              >
+                <div>
+
+                  {/* Top line tags: status & region */}
+                  <div className="flex justify-between items-start gap-3">
+                    <span className={`px-2 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wider ${c.status === 'Running'
+                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-100'
+                        : c.status === 'Upcoming'
+                          ? 'bg-amber-50 text-amber-800 border border-amber-100'
+                          : c.status === 'Completed'
+                            ? 'bg-zinc-100 text-zinc-650 border border-zinc-200'
+                            : 'bg-zinc-50 text-zinc-400 border border-zinc-200/50'
+                      }`}>
+                      {c.status}
+                    </span>
+
+                    <span className="px-2 py-0.5 bg-zinc-50 text-zinc-600 border border-zinc-200/80 rounded text-[9px] font-extrabold uppercase tracking-wide">
+                      {c.region}
+                    </span>
+                  </div>
+
+                  {/* Title and description */}
+                  <div className="mt-3.5">
+                    <h4 className="text-[14px] font-black text-zinc-955 tracking-tight leading-snug">{c.name}</h4>
+                    <p className="text-[10.5px] text-zinc-450 font-semibold mt-1 leading-relaxed line-clamp-2">
+                      {c.description}
+                    </p>
+                  </div>
+
+                  {/* Metadata fields: venue & dates */}
+                  <div className="mt-4 space-y-2 border-t border-b border-zinc-100 py-3 text-[10.5px] font-bold text-zinc-655">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                      <span>{c.dateRange || 'Dates to be announced'}</span>
+                    </div>
+                    {(c.regStartDate || c.regEndDate) && (
+                      <div className="flex items-center gap-2 text-zinc-500 font-semibold">
+                        <CalendarRange className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                        <span>Reg Period: {c.regStartDate || 'Open'} to {c.regEndDate || 'Close'}</span>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                      <span className="truncate">{c.venue}</span>
+                    </div>
+                  </div>
+
+                  </div>
+
+                {/* Call-to-action registration action button */}
+                <div className="mt-5 pt-3 border-t border-zinc-100/60 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-1.5">
+                    {isRegistered ? (
+                      <span className="text-[10px] font-extrabold text-emerald-600 flex items-center gap-1">
+                        <Check className="w-3 h-3 text-emerald-600" />
+                        You are registered
+                      </span>
+                    ) : isCompleted ? (
+                      <span className="text-[10px] font-extrabold text-zinc-400 flex items-center gap-1">
+                        <XCircle className="w-3.5 h-3.5" />
+                        Event Completed
+                      </span>
+                    ) : isBeforeReg ? (
+                      <span className="text-[10px] font-extrabold text-amber-600 flex items-center gap-1">
+                        <Info className="w-3.5 h-3.5 text-amber-500" />
+                        Opens {c.regStartDate}
+                      </span>
+                    ) : isAfterReg ? (
+                      <span className="text-[10px] font-extrabold text-zinc-400 flex items-center gap-1">
+                        <XCircle className="w-3.5 h-3.5 text-zinc-400" />
+                        Closed {c.regEndDate}
+                      </span>
+                    ) : isFull ? (
+                      <span className="text-[10px] font-extrabold text-brand-red flex items-center gap-1">
+                        <XCircle className="w-3.5 h-3.5 text-brand-red" />
+                        Fully Booked
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-extrabold text-zinc-400">
+                        Open for registrations
+                      </span>
+                    )}
+                  </div>
+
+                  <div>
+                    {isRegistered ? (
+                      <button
+                        onClick={() => handleDeregister(c.id, c.name)}
+                        className="py-1.5 px-3 border border-red-200 text-brand-red rounded-lg text-[10px] font-black uppercase tracking-wider hover:bg-red-50 transition-smooth cursor-pointer"
+                      >
+                        Cancel Seat
+                      </button>
+                    ) : isCompleted ? (
+                      <button
+                        disabled
+                        className="py-1.5 px-3 bg-zinc-100 text-zinc-350 border border-zinc-200 rounded-lg text-[10px] font-black uppercase tracking-wider cursor-not-allowed opacity-60"
+                      >
+                        Unavailable
+                      </button>
+                    ) : isBeforeReg ? (
+                      <button
+                        disabled
+                        className="py-1.5 px-3 bg-zinc-100 text-zinc-400 border border-zinc-200 rounded-lg text-[10px] font-black uppercase tracking-wider cursor-not-allowed opacity-60"
+                      >
+                        Soon
+                      </button>
+                    ) : isAfterReg ? (
+                      <button
+                        disabled
+                        className="py-1.5 px-3 bg-zinc-100 text-zinc-350 border border-zinc-200 rounded-lg text-[10px] font-black uppercase tracking-wider cursor-not-allowed opacity-60"
+                      >
+                        Closed
+                      </button>
+                    ) : isFull ? (
+                      <button
+                        disabled
+                        className="py-1.5 px-3 bg-zinc-100 text-zinc-350 border border-zinc-200 rounded-lg text-[10px] font-black uppercase tracking-wider cursor-not-allowed opacity-60"
+                      >
+                        No Seats
+                      </button>
+                    ) : isDraft ? (
+                      <button
+                        disabled
+                        className="py-1.5 px-3 bg-zinc-55 text-zinc-400 border border-zinc-200 rounded-lg text-[10px] font-black uppercase tracking-wider cursor-not-allowed opacity-60"
+                      >
+                        Closed
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleRegister(c)}
+                        className="py-1.5 px-4.5 bg-brand-red hover:bg-red-700 text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition-smooth cursor-pointer shadow-sm"
+                      >
+                        Register
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* MEMBER REGISTRATION FORM MODAL */}
+      {isRegModalOpen && selectedConclaveForReg && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
+          <form onSubmit={handleRegisterSubmit} className="w-full max-w-lg bg-white rounded-xl border border-zinc-100 shadow-2xl overflow-hidden animate-scale-up">
+            
+            {/* Modal Header */}
+            <div className="p-5 border-b border-zinc-100 bg-zinc-50 flex justify-between items-center">
+              <div>
+                <h3 className="font-black text-zinc-950 text-[13.5px]">Conclave Registration Form</h3>
+                <p className="text-[10px] text-zinc-500 font-bold uppercase mt-0.5">{selectedConclaveForReg.name}</p>
+              </div>
+              <button 
+                type="button" 
+                onClick={() => setIsRegModalOpen(false)} 
+                className="p-1.5 hover:bg-zinc-200 rounded text-zinc-400 hover:text-zinc-750 transition-smooth cursor-pointer border-0 bg-transparent"
+              >
+                <XCircle className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
+              
+              {/* Event Info Brief */}
+              <div className="bg-zinc-50 border border-zinc-150 p-3 rounded-lg flex flex-col gap-1 text-[11px] font-semibold text-zinc-650">
+                <div className="flex justify-between">
+                  <span className="text-zinc-400 uppercase font-extrabold text-[9px]">Venue Location</span>
+                  <span className="text-zinc-800 font-bold text-right truncate max-w-[250px]">{selectedConclaveForReg.venue}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-zinc-400 uppercase font-extrabold text-[9px]">Date Schedule</span>
+                  <span className="text-zinc-800 font-bold">{selectedConclaveForReg.dateRange}</span>
+                </div>
+              </div>
+
+              <div className="text-[10px] font-black text-brand-red uppercase tracking-wider border-b border-zinc-100 pb-1 mt-1">
+                Attendee Information
+              </div>
+
+              {/* Grid 1: Basic Info */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[9.5px] font-bold uppercase text-zinc-450 block mb-1">Full Name *</label>
+                  <input
+                    value={regForm.name}
+                    onChange={(e) => setRegForm(prev => ({ ...prev, name: e.target.value }))}
+                    className="w-full px-3 py-1.5 border border-zinc-200 rounded-lg text-[11.5px] focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-zinc-50/20 font-medium text-zinc-800"
+                    type="text"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="text-[9.5px] font-bold uppercase text-zinc-450 block mb-1">Chapter Name *</label>
+                  <input
+                    value={regForm.chapter}
+                    onChange={(e) => setRegForm(prev => ({ ...prev, chapter: e.target.value }))}
+                    className="w-full px-3 py-1.5 border border-zinc-200 rounded-lg text-[11.5px] focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-zinc-50/20 font-medium text-zinc-800"
+                    type="text"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[9.5px] font-bold uppercase text-zinc-450 block mb-1">Email Address *</label>
+                  <input
+                    value={regForm.email}
+                    onChange={(e) => setRegForm(prev => ({ ...prev, email: e.target.value }))}
+                    className="w-full px-3 py-1.5 border border-zinc-200 rounded-lg text-[11.5px] focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-zinc-50/20 font-medium text-zinc-800"
+                    type="email"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="text-[9.5px] font-bold uppercase text-zinc-450 block mb-1">Phone Number *</label>
+                  <input
+                    value={regForm.phone}
+                    onChange={(e) => setRegForm(prev => ({ ...prev, phone: e.target.value }))}
+                    className="w-full px-3 py-1.5 border border-zinc-200 rounded-lg text-[11.5px] focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-zinc-50/20 font-medium text-zinc-800"
+                    type="text"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[9.5px] font-bold uppercase text-zinc-450 block mb-1">Company Name</label>
+                  <input
+                    value={regForm.company}
+                    onChange={(e) => setRegForm(prev => ({ ...prev, company: e.target.value }))}
+                    className="w-full px-3 py-1.5 border border-zinc-200 rounded-lg text-[11.5px] focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-zinc-50/20 font-medium text-zinc-800"
+                    type="text"
+                  />
+                </div>
+                <div>
+                  <label className="text-[9.5px] font-bold uppercase text-zinc-455 block mb-1">Category / Industry</label>
+                  <input
+                    value={regForm.category}
+                    onChange={(e) => setRegForm(prev => ({ ...prev, category: e.target.value }))}
+                    className="w-full px-3 py-1.5 border border-zinc-200 rounded-lg text-[11.5px] focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-zinc-50/20 font-medium text-zinc-800"
+                    type="text"
+                  />
+                </div>
+              </div>
+
+              <div className="text-[10px] font-black text-brand-red uppercase tracking-wider border-b border-zinc-100 pb-1 mt-3">
+                Conclave Preferences
+              </div>
+
+              {/* Grid 2: Preferences */}
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="text-[9.5px] font-bold uppercase text-zinc-450 block mb-1">Meal Preference</label>
+                  <select
+                    value={regForm.mealPreference}
+                    onChange={(e) => setRegForm(prev => ({ ...prev, mealPreference: e.target.value }))}
+                    className="w-full px-2.5 py-1.5 border border-zinc-200 rounded-lg text-[11.5px] focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-white font-semibold text-zinc-700 cursor-pointer"
+                  >
+                    <option value="Veg">Veg</option>
+                    <option value="Non-Veg">Non-Veg</option>
+                    <option value="Jain">Jain</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[9.5px] font-bold uppercase text-zinc-450 block mb-1">T-Shirt Size</label>
+                  <select
+                    value={regForm.tshirtSize}
+                    onChange={(e) => setRegForm(prev => ({ ...prev, tshirtSize: e.target.value }))}
+                    className="w-full px-2.5 py-1.5 border border-zinc-200 rounded-lg text-[11.5px] focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-white font-semibold text-zinc-700 cursor-pointer"
+                  >
+                    <option value="S">S</option>
+                    <option value="M">M</option>
+                    <option value="L">L</option>
+                    <option value="XL">XL</option>
+                    <option value="XXL">XXL</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[9.5px] font-bold uppercase text-zinc-450 block mb-1">Accommodation?</label>
+                  <select
+                    value={regForm.needsAccommodation}
+                    onChange={(e) => setRegForm(prev => ({ ...prev, needsAccommodation: e.target.value }))}
+                    className="w-full px-2.5 py-1.5 border border-zinc-200 rounded-lg text-[11.5px] focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-white font-semibold text-zinc-700 cursor-pointer"
+                  >
+                    <option value="No">No</option>
+                    <option value="Yes">Yes</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[9.5px] font-bold uppercase text-zinc-450 block mb-1">Special Requirements / Notes</label>
+                <textarea
+                  value={regForm.specialInstructions}
+                  onChange={(e) => setRegForm(prev => ({ ...prev, specialInstructions: e.target.value }))}
+                  className="w-full px-3 py-1.5 border border-zinc-200 rounded-lg text-[11.5px] focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-zinc-50/20 min-h-[60px] font-medium text-zinc-700"
+                  placeholder="Allergies, access needs, or pairing request notes..."
+                />
+              </div>
+            </div>
+
+            {/* Modal Footer Actions */}
+            <div className="p-4 border-t border-zinc-100 bg-zinc-50/50 flex justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={() => setIsRegModalOpen(false)}
+                className="px-4 py-2 border border-zinc-150 bg-white text-zinc-750 font-bold text-button rounded-lg hover:bg-zinc-50 transition-smooth cursor-pointer shadow-sm"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-5 py-2 bg-brand-red hover:bg-red-700 text-white font-bold text-button rounded-lg transition-smooth shadow-md cursor-pointer"
+              >
+                Confirm Registration
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+    </div>
+  );
+}

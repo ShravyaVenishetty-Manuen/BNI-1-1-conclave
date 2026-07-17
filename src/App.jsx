@@ -22,6 +22,7 @@ import MemberSchedule from './pages/member/MySchedule';
 import MemberCurrentRound from './pages/member/CurrentRound';
 import MemberConclaveHistory from './pages/member/ConclaveHistory';
 import MemberProfile from './pages/member/Profile';
+import MemberRegistrations from './pages/member/Registrations';
 import AdminProfile from './pages/admin/Profile';
 import Referrals from './pages/Referrals';
 import referralsData from './data/referrals.json';
@@ -71,7 +72,7 @@ export default function App() {
     const validTabs = [
       'dashboard', 'members', 'active-users', 'business-types', 'captains',
       'conclaves', 'snapshot', 'validation', 'schedule-gen', 'schedule-review',
-      'lock-conclave', 'round-runner', 'reports', 'admins', 'referrals', 'profile'
+      'lock-conclave', 'round-runner', 'reports', 'admins', 'referrals', 'profile', 'registrations'
     ];
     return validTabs.includes(lastPart) ? lastPart : 'dashboard';
   });
@@ -114,7 +115,7 @@ export default function App() {
       const validTabs = [
         'dashboard', 'members', 'active-users', 'business-types', 'captains',
         'conclaves', 'snapshot', 'validation', 'schedule-gen', 'schedule-review',
-        'lock-conclave', 'round-runner', 'reports', 'admins', 'referrals', 'profile'
+        'lock-conclave', 'round-runner', 'reports', 'admins', 'referrals', 'profile', 'registrations'
       ];
       const cleanTab = validTabs.includes(lastPart) ? lastPart : 'dashboard';
 
@@ -141,11 +142,26 @@ export default function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, [userRole]);
 
-  // Initialize local storage referrals list
+  // Initialize local storage referrals & conclaves lists
   useEffect(() => {
     if (!localStorage.getItem('bni_referrals')) {
       localStorage.setItem('bni_referrals', JSON.stringify(referralsData));
     }
+    if (!localStorage.getItem('bni_conclaves')) {
+      localStorage.setItem('bni_conclaves', JSON.stringify(conclavesData));
+    }
+  }, []);
+
+  // Sync loggedInMember on storage updates
+  useEffect(() => {
+    const handleStorageSync = () => {
+      const storedMember = localStorage.getItem('bni_logged_member');
+      if (storedMember) {
+        setLoggedInMember(JSON.parse(storedMember));
+      }
+    };
+    window.addEventListener('storage', handleStorageSync);
+    return () => window.removeEventListener('storage', handleStorageSync);
   }, []);
 
   useEffect(() => {
@@ -324,6 +340,10 @@ export default function App() {
             <MemberDashboard
               loggedInMember={loggedInMember}
               onTabChange={handleTabChange}
+            />
+          ) : activeTab === 'registrations' ? (
+            <MemberRegistrations
+              loggedInMember={loggedInMember}
             />
           ) : activeTab === 'my-schedule' ? (
             <MemberSchedule

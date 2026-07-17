@@ -51,6 +51,8 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
     dateRange: '',
     startDate: '',
     endDate: '',
+    regStartDate: '',
+    regEndDate: '',
     memberLimit: 500,
     captainLimit: 20,
     status: 'Draft',
@@ -202,6 +204,8 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
       dateRange: '',
       startDate: '',
       endDate: '',
+      regStartDate: '',
+      regEndDate: '',
       memberLimit: 500,
       captainLimit: 20,
       status: 'Draft',
@@ -227,6 +231,8 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
       dateRange: formData.dateRange || 'TBD',
       startDate: formData.startDate || new Date().toISOString().slice(0, 10),
       endDate: formData.endDate || new Date().toISOString().slice(0, 10),
+      regStartDate: formData.regStartDate || '',
+      regEndDate: formData.regEndDate || '',
       memberCount: 0,
       memberLimit: Number(formData.memberLimit) || 500,
       captainCount: 0,
@@ -256,6 +262,8 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
       dateRange: c.dateRange,
       startDate: c.startDate,
       endDate: c.endDate,
+      regStartDate: c.regStartDate || '',
+      regEndDate: c.regEndDate || '',
       memberCount: c.memberCount,
       memberLimit: c.memberLimit,
       captainCount: c.captainCount,
@@ -280,6 +288,8 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
           dateRange: formData.dateRange,
           startDate: formData.startDate,
           endDate: formData.endDate,
+          regStartDate: formData.regStartDate,
+          regEndDate: formData.regEndDate,
           memberLimit: Number(formData.memberLimit),
           captainLimit: Number(formData.captainLimit),
           status: formData.status,
@@ -334,21 +344,19 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
       <div className="flex border-b border-zinc-200 -mt-2">
         <button
           onClick={() => setViewScope('region')}
-          className={`px-4 py-2 text-body-sm font-black uppercase tracking-wider border-b-2 transition-smooth cursor-pointer -mb-px ${
-            viewScope === 'region'
-              ? 'border-brand-red text-brand-red font-extrabold'
-              : 'border-transparent text-zinc-500 hover:text-zinc-800'
-          }`}
+          className={`px-4 py-2 text-body-sm font-black uppercase tracking-wider border-b-2 transition-smooth cursor-pointer -mb-px ${viewScope === 'region'
+            ? 'border-brand-red text-brand-red font-extrabold'
+            : 'border-transparent text-zinc-500 hover:text-zinc-800'
+            }`}
         >
           My Region
         </button>
         <button
           onClick={() => setViewScope('global')}
-          className={`px-4 py-2 text-body-sm font-black uppercase tracking-wider border-b-2 transition-smooth cursor-pointer -mb-px ${
-            viewScope === 'global'
-              ? 'border-brand-red text-brand-red font-extrabold'
-              : 'border-transparent text-zinc-500 hover:text-zinc-800'
-          }`}
+          className={`px-4 py-2 text-body-sm font-black uppercase tracking-wider border-b-2 transition-smooth cursor-pointer -mb-px ${viewScope === 'global'
+            ? 'border-brand-red text-brand-red font-extrabold'
+            : 'border-transparent text-zinc-500 hover:text-zinc-800'
+            }`}
         >
           Global Network
         </button>
@@ -408,33 +416,13 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
               onChange={(e) => setStatusFilter(e.target.value)}
               className="border border-zinc-200 rounded-lg px-3 py-2 text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-white font-medium text-zinc-700 transition-smooth cursor-pointer"
             >
-              <option value="All">All Statuses</option>
-              <option value="Draft">Draft</option>
+              <option value="All">All Status</option>
               <option value="Upcoming">Upcoming</option>
               <option value="Running">Running</option>
               <option value="Completed">Completed</option>
             </select>
 
-            <select
-              value={venueFilter}
-              onChange={(e) => setVenueFilter(e.target.value)}
-              className="border border-zinc-200 rounded-lg px-3 py-2 text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-white font-medium text-zinc-700 transition-smooth cursor-pointer"
-            >
-              <option value="All">All Venues</option>
-              <option value="V Convention">V Convention</option>
-              <option value="Guntur Club">Guntur Club</option>
-              <option value="Grand Guntur">Grand Guntur</option>
-            </select>
 
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="border border-zinc-200 rounded-lg px-3 py-2 text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-white font-medium text-zinc-700 transition-smooth cursor-pointer"
-            >
-              <option value="DateDesc">Sort by: Date Desc</option>
-              <option value="NameAsc">Sort by: Name A-Z</option>
-              <option value="Capacity">Sort by: Capacity</option>
-            </select>
           </div>
         </div>
         <button
@@ -492,9 +480,8 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
                           checked={selectedRows.has(conclave.id)}
                           onChange={(e) => toggleRow(conclave.id, e)}
                           disabled={!isHisCreated}
-                          className={`rounded border-zinc-300 text-brand-red focus:ring-brand-red w-4 h-4 ${
-                            !isHisCreated ? 'cursor-not-allowed opacity-30 bg-zinc-100' : 'cursor-pointer'
-                          }`}
+                          className={`rounded border-zinc-300 text-brand-red focus:ring-brand-red w-4 h-4 ${!isHisCreated ? 'cursor-not-allowed opacity-30 bg-zinc-100' : 'cursor-pointer'
+                            }`}
                           type="checkbox"
                         />
                       </td>
@@ -589,9 +576,8 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
                                       setActiveDropdown(null);
                                     }}
                                     disabled={!isHisCreated}
-                                    className={`w-full text-left px-3.5 py-2 text-[11px] font-bold transition-smooth ${
-                                      !isHisCreated ? 'text-zinc-300 cursor-not-allowed opacity-40' : 'hover:bg-zinc-50 text-zinc-700'
-                                    }`}
+                                    className={`w-full text-left px-3.5 py-2 text-[11px] font-bold transition-smooth ${!isHisCreated ? 'text-zinc-300 cursor-not-allowed opacity-40' : 'hover:bg-zinc-50 text-zinc-700'
+                                      }`}
                                   >
                                     Edit Profile
                                   </button>
@@ -602,9 +588,8 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
                                       setActiveDropdown(null);
                                     }}
                                     disabled={!isHisCreated}
-                                    className={`w-full text-left px-3.5 py-2 text-[11px] font-extrabold transition-smooth border-t border-zinc-100 ${
-                                      !isHisCreated ? 'text-zinc-300 cursor-not-allowed opacity-40' : 'hover:bg-red-50 text-brand-red'
-                                    }`}
+                                    className={`w-full text-left px-3.5 py-2 text-[11px] font-extrabold transition-smooth border-t border-zinc-100 ${!isHisCreated ? 'text-zinc-300 cursor-not-allowed opacity-40' : 'hover:bg-red-50 text-brand-red'
+                                      }`}
                                   >
                                     Remove Conclave
                                   </button>
@@ -670,6 +655,18 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
                 </p>
               </div>
 
+              {/* Registration Window Info */}
+              {(selectedConclave.regStartDate || selectedConclave.regEndDate) && (
+                <div className="space-y-2 border-l-2 border-brand-red pl-3 py-0.5">
+                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block">Registration Period</span>
+                  <span className="text-body-sm font-semibold text-zinc-755 block">
+                    {selectedConclave.regStartDate ? selectedConclave.regStartDate : 'Anytime'} 
+                    <span className="text-zinc-400 mx-2">to</span> 
+                    {selectedConclave.regEndDate ? selectedConclave.regEndDate : 'Anytime'}
+                  </span>
+                </div>
+              )}
+
               {/* Grid Metadata */}
               <div className="grid grid-cols-2 gap-3.5">
                 <div className="p-3.5 border border-zinc-100 bg-white rounded-lg shadow-sm">
@@ -730,11 +727,10 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
                   setSelectedConclave(null);
                 }}
                 disabled={selectedConclave && selectedConclave.coordinator !== loggedInAdmin?.name}
-                className={`flex-1 py-2.5 rounded-lg text-button font-bold transition-smooth shadow-sm ${
-                  selectedConclave && selectedConclave.coordinator !== loggedInAdmin?.name
-                    ? 'bg-zinc-100 text-zinc-355 cursor-not-allowed border border-zinc-200/60 opacity-40'
-                    : 'bg-white border border-zinc-100 text-zinc-655 hover:bg-zinc-50 cursor-pointer'
-                }`}
+                className={`flex-1 py-2.5 rounded-lg text-button font-bold transition-smooth shadow-sm ${selectedConclave && selectedConclave.coordinator !== loggedInAdmin?.name
+                  ? 'bg-zinc-100 text-zinc-355 cursor-not-allowed border border-zinc-200/60 opacity-40'
+                  : 'bg-white border border-zinc-100 text-zinc-655 hover:bg-zinc-50 cursor-pointer'
+                  }`}
               >
                 Edit Conclave
               </button>
@@ -820,7 +816,7 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="text-[10px] font-bold uppercase text-zinc-450 block mb-1">Date Schedule Text</label>
+                  <label className="text-[10px] font-bold uppercase text-zinc-455 block mb-1">Date Schedule Text</label>
                   <input
                     value={formData.dateRange}
                     onChange={(e) => setFormData(prev => ({ ...prev, dateRange: e.target.value }))}
@@ -830,7 +826,7 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold uppercase text-zinc-450 block mb-1">Start Date</label>
+                  <label className="text-[10px] font-bold uppercase text-zinc-455 block mb-1">Start Date</label>
                   <input
                     value={formData.startDate}
                     onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
@@ -839,10 +835,31 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold uppercase text-zinc-450 block mb-1">End Date</label>
+                  <label className="text-[10px] font-bold uppercase text-zinc-455 block mb-1">End Date</label>
                   <input
                     value={formData.endDate}
                     onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
+                    className="w-full px-3 py-1.5 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-zinc-50/20"
+                    type="date"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[10px] font-bold uppercase text-zinc-455 block mb-1">Registration Open Date</label>
+                  <input
+                    value={formData.regStartDate}
+                    onChange={(e) => setFormData(prev => ({ ...prev, regStartDate: e.target.value }))}
+                    className="w-full px-3 py-1.5 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-zinc-50/20"
+                    type="date"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold uppercase text-zinc-455 block mb-1">Registration Close Date</label>
+                  <input
+                    value={formData.regEndDate}
+                    onChange={(e) => setFormData(prev => ({ ...prev, regEndDate: e.target.value }))}
                     className="w-full px-3 py-1.5 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-zinc-50/20"
                     type="date"
                   />
@@ -973,7 +990,7 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="text-[10px] font-bold uppercase text-zinc-450 block mb-1">Date Schedule Text</label>
+                  <label className="text-[10px] font-bold uppercase text-zinc-455 block mb-1">Date Schedule Text</label>
                   <input
                     value={formData.dateRange}
                     onChange={(e) => setFormData(prev => ({ ...prev, dateRange: e.target.value }))}
@@ -982,7 +999,7 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold uppercase text-zinc-450 block mb-1">Start Date</label>
+                  <label className="text-[10px] font-bold uppercase text-zinc-455 block mb-1">Start Date</label>
                   <input
                     value={formData.startDate}
                     onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
@@ -991,10 +1008,31 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold uppercase text-zinc-450 block mb-1">End Date</label>
+                  <label className="text-[10px] font-bold uppercase text-zinc-455 block mb-1">End Date</label>
                   <input
                     value={formData.endDate}
                     onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
+                    className="w-full px-3 py-1.5 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-zinc-50/20"
+                    type="date"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[10px] font-bold uppercase text-zinc-455 block mb-1">Registration Open Date</label>
+                  <input
+                    value={formData.regStartDate}
+                    onChange={(e) => setFormData(prev => ({ ...prev, regStartDate: e.target.value }))}
+                    className="w-full px-3 py-1.5 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-zinc-50/20"
+                    type="date"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold uppercase text-zinc-455 block mb-1">Registration Close Date</label>
+                  <input
+                    value={formData.regEndDate}
+                    onChange={(e) => setFormData(prev => ({ ...prev, regEndDate: e.target.value }))}
                     className="w-full px-3 py-1.5 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-zinc-50/20"
                     type="date"
                   />
