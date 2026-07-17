@@ -29,6 +29,8 @@ export default function Registrations({ loggedInMember }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [regionFilter, setRegionFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [monthFilter, setMonthFilter] = useState('All');
+  const [yearFilter, setYearFilter] = useState('All');
   const [showRegisteredOnly, setShowRegisteredOnly] = useState(false);
   const [toast, setToast] = useState(null);
 
@@ -74,6 +76,25 @@ export default function Registrations({ loggedInMember }) {
   const regions = useMemo(() => {
     const list = new Set(conclaves.map(c => c.region).filter(Boolean));
     return ['All', ...Array.from(list)];
+  }, [conclaves]);
+
+  // All calendar months
+  const monthsList = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
+  // Get distinct years from conclaves list
+  const years = useMemo(() => {
+    const list = new Set();
+    conclaves.forEach(c => {
+      if (c.startDate) {
+        const date = new Date(c.startDate);
+        list.add(date.getFullYear().toString());
+      }
+    });
+    const sorted = Array.from(list).sort();
+    return ['All', ...sorted];
   }, [conclaves]);
 
   // Handle registration action
@@ -177,9 +198,22 @@ export default function Registrations({ loggedInMember }) {
       const matchesStatus = statusFilter === 'All' || c.status === statusFilter;
       const matchesRegistered = !showRegisteredOnly || (member?.conclaveIds || []).includes(c.id);
 
-      return matchesSearch && matchesRegion && matchesStatus && matchesRegistered;
+      const matchesMonth = monthFilter === 'All' || (() => {
+        if (!c.startDate) return false;
+        const date = new Date(c.startDate);
+        const monthName = date.toLocaleString('default', { month: 'long' });
+        return monthName === monthFilter;
+      })();
+
+      const matchesYear = yearFilter === 'All' || (() => {
+        if (!c.startDate) return false;
+        const date = new Date(c.startDate);
+        return date.getFullYear().toString() === yearFilter;
+      })();
+
+      return matchesSearch && matchesRegion && matchesStatus && matchesRegistered && matchesMonth && matchesYear;
     });
-  }, [conclaves, searchTerm, regionFilter, statusFilter, showRegisteredOnly, member]);
+  }, [conclaves, searchTerm, regionFilter, statusFilter, monthFilter, yearFilter, showRegisteredOnly, member]);
 
   // Calculations for quick stats
   const registeredCount = useMemo(() => {
@@ -277,25 +311,48 @@ export default function Registrations({ loggedInMember }) {
             </select>
           </div>
 
+          {/* Month filter dropdown */}
+          <select
+            value={monthFilter}
+            onChange={(e) => setMonthFilter(e.target.value)}
+            className="bg-zinc-55 border border-zinc-200 rounded-lg py-1.5 px-3 text-[11px] font-bold text-zinc-700 focus:outline-none cursor-pointer hover:bg-zinc-100 transition-smooth"
+          >
+            <option value="All">All Months</option>
+            {monthsList.map(m => (
+              <option key={m} value={m}>{m}</option>
+            ))}
+          </select>
+
+          {/* Year filter dropdown */}
+          <select
+            value={yearFilter}
+            onChange={(e) => setYearFilter(e.target.value)}
+            className="bg-zinc-55 border border-zinc-200 rounded-lg py-1.5 px-3 text-[11px] font-bold text-zinc-700 focus:outline-none cursor-pointer hover:bg-zinc-100 transition-smooth"
+          >
+            <option value="All">All Years</option>
+            {years.filter(y => y !== 'All').map(y => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </select>
+
           {/* Status filter dropdown */}
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
             className="bg-zinc-55 border border-zinc-200 rounded-lg py-1.5 px-3 text-[11px] font-bold text-zinc-700 focus:outline-none cursor-pointer hover:bg-zinc-100 transition-smooth"
           >
-            <option value="All">All Statuses</option>
+            <option value="All">All Status</option>
             <option value="Running">Running</option>
             <option value="Upcoming">Upcoming</option>
             <option value="Completed">Completed</option>
-            <option value="Draft">Draft</option>
           </select>
 
           {/* Registered checkbox toggle button */}
           <button
             onClick={() => setShowRegisteredOnly(!showRegisteredOnly)}
             className={`py-1.5 px-3 rounded-lg border text-[11px] font-extrabold transition-smooth cursor-pointer ${showRegisteredOnly
-                ? 'bg-emerald-50 border-emerald-200 text-emerald-700 font-black shadow-2xs'
-                : 'bg-white border-zinc-200 text-zinc-650 hover:bg-zinc-50'
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-700 font-black shadow-2xs'
+              : 'bg-white border-zinc-200 text-zinc-650 hover:bg-zinc-50'
               }`}
           >
             {showRegisteredOnly ? 'Showing Registered' : 'Show Registered Only'}
@@ -334,8 +391,8 @@ export default function Registrations({ loggedInMember }) {
               <div
                 key={c.id}
                 className={`bg-white rounded-xl border transition-smooth p-5 flex flex-col justify-between shadow-2xs hover:shadow-sm ${isRegistered
-                    ? 'border-emerald-250 bg-emerald-50/10'
-                    : 'border-zinc-200'
+                  ? 'border-emerald-250 bg-emerald-50/10'
+                  : 'border-zinc-200'
                   }`}
               >
                 <div>
@@ -343,12 +400,12 @@ export default function Registrations({ loggedInMember }) {
                   {/* Top line tags: status & region */}
                   <div className="flex justify-between items-start gap-3">
                     <span className={`px-2 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wider ${c.status === 'Running'
-                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-100'
-                        : c.status === 'Upcoming'
-                          ? 'bg-amber-50 text-amber-800 border border-amber-100'
-                          : c.status === 'Completed'
-                            ? 'bg-zinc-100 text-zinc-650 border border-zinc-200'
-                            : 'bg-zinc-50 text-zinc-400 border border-zinc-200/50'
+                      ? 'bg-emerald-50 text-emerald-800 border border-emerald-100'
+                      : c.status === 'Upcoming'
+                        ? 'bg-amber-50 text-amber-800 border border-amber-100'
+                        : c.status === 'Completed'
+                          ? 'bg-zinc-100 text-zinc-650 border border-zinc-200'
+                          : 'bg-zinc-50 text-zinc-400 border border-zinc-200/50'
                       }`}>
                       {c.status}
                     </span>
@@ -384,7 +441,7 @@ export default function Registrations({ loggedInMember }) {
                     </div>
                   </div>
 
-                  </div>
+                </div>
 
                 {/* Call-to-action registration action button */}
                 <div className="mt-5 pt-3 border-t border-zinc-100/60 flex items-center justify-between gap-3">
@@ -485,16 +542,16 @@ export default function Registrations({ loggedInMember }) {
       {isRegModalOpen && selectedConclaveForReg && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
           <form onSubmit={handleRegisterSubmit} className="w-full max-w-lg bg-white rounded-xl border border-zinc-100 shadow-2xl overflow-hidden animate-scale-up">
-            
+
             {/* Modal Header */}
             <div className="p-5 border-b border-zinc-100 bg-zinc-50 flex justify-between items-center">
               <div>
                 <h3 className="font-black text-zinc-950 text-[13.5px]">Conclave Registration Form</h3>
                 <p className="text-[10px] text-zinc-500 font-bold uppercase mt-0.5">{selectedConclaveForReg.name}</p>
               </div>
-              <button 
-                type="button" 
-                onClick={() => setIsRegModalOpen(false)} 
+              <button
+                type="button"
+                onClick={() => setIsRegModalOpen(false)}
                 className="p-1.5 hover:bg-zinc-200 rounded text-zinc-400 hover:text-zinc-750 transition-smooth cursor-pointer border-0 bg-transparent"
               >
                 <XCircle className="w-4 h-4" />
@@ -503,7 +560,7 @@ export default function Registrations({ loggedInMember }) {
 
             {/* Modal Body */}
             <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
-              
+
               {/* Event Info Brief */}
               <div className="bg-zinc-50 border border-zinc-150 p-3 rounded-lg flex flex-col gap-1 text-[11px] font-semibold text-zinc-650">
                 <div className="flex justify-between">
