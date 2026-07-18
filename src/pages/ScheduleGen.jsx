@@ -12,17 +12,49 @@ import {
   PlayCircle,
   StopCircle,
   Flag,
+  Lock,
+  Layers,
+  Sparkles,
+  Info,
+  ShieldAlert,
+  TrendingUp,
+  Users,
+  MapPin,
 } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 import confetti from 'canvas-confetti';
 import conclavesData from '../data/conclaves.json';
 
 export default function ScheduleGen({ selectedConclaveId }) {
+  // Read locked state from local storage conclaves
+  const [conclaves, setConclaves] = useState(() => {
+    const stored = localStorage.getItem('bni_conclaves');
+    return stored ? JSON.parse(stored) : conclavesData;
+  });
+
+  // Sync state if localStorage changes
+  useEffect(() => {
+    const sync = () => {
+      const stored = localStorage.getItem('bni_conclaves');
+      if (stored) {
+        setConclaves(JSON.parse(stored));
+      }
+    };
+    window.addEventListener('storage', sync);
+    return () => window.removeEventListener('storage', sync);
+  }, []);
+
   const selectedConclave = useMemo(() =>
-    conclavesData.find(c => c.id === selectedConclaveId),
-    [selectedConclaveId]
+    conclaves.find(c => c.id === selectedConclaveId),
+    [conclaves, selectedConclaveId]
   );
   const conclaveName = selectedConclave?.name || 'Conclave';
+
+  const isLocked = selectedConclave?.status === 'Locked';
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [checkedQuality, setCheckedQuality] = useState(false);
+  const [checkedEdits, setCheckedEdits] = useState(false);
 
   // Per-conclave state stored in a Map keyed by conclaveId
   const [perConclaveState, setPerConclaveState] = useState({});
@@ -113,6 +145,28 @@ export default function ScheduleGen({ selectedConclaveId }) {
   const handleAbort = () => {
     setIsGenerating(false);
     showToast('Generation Paused', 'Task execution stopped by administrator.');
+  };
+
+  const handleConfirmLock = () => {
+    const updatedConclaves = conclaves.map(c => {
+      if (c.id === selectedConclaveId) {
+        return { ...c, status: 'Locked' };
+      }
+      return c;
+    });
+    setConclaves(updatedConclaves);
+    localStorage.setItem('bni_conclaves', JSON.stringify(updatedConclaves));
+    window.dispatchEvent(new Event('storage'));
+
+    setIsModalOpen(false);
+    showToast('Conclave Locked', `${conclaveName} has been locked. Roster published to the mobile app.`);
+
+    // Confetti drop
+    confetti({
+      particleCount: 120,
+      spread: 70,
+      origin: { y: 0.6 }
+    });
   };
 
   // Recharts Progress Gauge Data
@@ -559,6 +613,25 @@ export default function ScheduleGen({ selectedConclaveId }) {
                     >
                       <StopCircle className="w-4 h-4" /> Abort Generation Task
                     </button>
+                  ) : progress === 100 ? (
+                    <button
+                      onClick={() => {
+                        if (isLocked) {
+                          showToast('Already Locked', 'This conclave is already locked.');
+                          return;
+                        }
+                        setIsModalOpen(true);
+                      }}
+                      disabled={isLocked}
+                      className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-button font-bold transition-smooth shadow-md cursor-pointer uppercase tracking-wider text-[11px] ${
+                        isLocked 
+                          ? 'bg-zinc-250 text-zinc-450 border border-zinc-300/30 cursor-not-allowed shadow-none' 
+                          : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                      }`}
+                    >
+                      <Lock className="w-4 h-4" />
+                      {isLocked ? 'Conclave Locked' : 'Lock Conclave & Publish'}
+                    </button>
                   ) : (
                     <button
                       onClick={handleStartGeneration}
@@ -625,6 +698,220 @@ export default function ScheduleGen({ selectedConclaveId }) {
           </div>
         </div>
       </div>
+
+      {/* Lock Conclave Administrative Section */}
+      {progress === 100 && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-2">
+          {/* Left Column: Checklist & Guidelines */}
+          <div className="lg:col-span-8 flex flex-col gap-6">
+            <div className="bg-white border border-zinc-200/80 rounded-xl overflow-hidden shadow-sm">
+              <div className="p-5 border-b border-zinc-100 flex justify-between items-center bg-zinc-50">
+                <h3 className="text-body-sm font-extrabold uppercase tracking-widest text-zinc-955">Final Seating Checklist</h3>
+                <span className="text-[10px] bg-emerald-50 text-emerald-800 border border-emerald-100 px-3 py-1 rounded-full font-bold">
+                  Pre-flight check complete
+                </span>
+              </div>
+
+              <div className="p-5">
+                <ul className="space-y-2.5 font-semibold text-zinc-700">
+                  <li className="flex items-center justify-between p-3.5 border border-zinc-100 rounded-xl hover:bg-zinc-50/50 transition-smooth">
+                    <div className="flex items-center gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                      <span className="text-body-sm">Members Registered</span>
+                    </div>
+                    <span className="text-[10px] text-zinc-455 font-bold uppercase">{(selectedConclave?.memberCount || 0).toLocaleString()} Validated</span>
+                  </li>
+                  <li className="flex items-center justify-between p-3.5 border border-zinc-100 rounded-xl hover:bg-zinc-50/50 transition-smooth">
+                    <div className="flex items-center gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                      <span className="text-body-sm">Captains Assigned</span>
+                    </div>
+                    <span className="text-[10px] text-zinc-455 font-bold uppercase">{selectedConclave?.captainCount || 0} Active</span>
+                  </li>
+                  <li className="flex items-center justify-between p-3.5 border border-zinc-100 rounded-xl hover:bg-zinc-50/50 transition-smooth">
+                    <div className="flex items-center gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                      <span className="text-body-sm">Snapshot Status</span>
+                    </div>
+                    <span className="text-[10px] text-zinc-455 font-bold uppercase">Ver: SNAP_922</span>
+                  </li>
+                  <li className="flex items-center justify-between p-3.5 border border-zinc-100 rounded-xl hover:bg-zinc-50/50 transition-smooth">
+                    <div className="flex items-center gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                      <span className="text-body-sm">Validation Check</span>
+                    </div>
+                    <span className="text-[10px] text-zinc-455 font-bold uppercase">No Conflicts</span>
+                  </li>
+                  <li className="flex items-center justify-between p-3.5 border border-zinc-100 rounded-xl hover:bg-zinc-50/50 transition-smooth">
+                    <div className="flex items-center gap-3">
+                      <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                      <span className="text-body-sm">Schedule Engine Quality</span>
+                    </div>
+                    <span className="text-[10px] text-zinc-455 font-bold uppercase">3 Rounds Generated</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Impact guidelines */}
+              <div className="bg-white border border-zinc-200/80 rounded-xl p-5 shadow-sm space-y-4">
+                <h4 className="text-[10px] font-bold text-brand-red uppercase tracking-widest flex items-center gap-1.5">
+                  <Info className="w-4 h-4" /> Lock Impact Guidelines
+                </h4>
+                <div className="space-y-3.5 text-body-sm font-semibold text-zinc-650">
+                  <div className="flex gap-3">
+                    <Lock className="w-4 h-4 text-zinc-455 shrink-0 mt-0.5" />
+                    <p className="leading-relaxed text-[11.5px]">
+                      Members and Captain data become <span className="font-bold text-zinc-900">read-only</span> across the system admin controllers.
+                    </p>
+                  </div>
+                  <div className="flex gap-3">
+                    <Layers className="w-4 h-4 text-zinc-455 shrink-0 mt-0.5" />
+                    <p className="leading-relaxed text-[11.5px]">
+                      Table Seating assignments are <span className="font-bold text-zinc-900">frozen</span> for instant mobile app rosters sync.
+                    </p>
+                  </div>
+                  <div className="flex gap-3">
+                    <Sparkles className="w-4 h-4 text-brand-red shrink-0 mt-0.5" />
+                    <p className="leading-relaxed text-[11.5px] text-brand-red">
+                      Enables the <span className="font-extrabold underline cursor-help">Round Runner</span> dashboard controller for live tracking.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Seating quality parameters preview */}
+              <div className="bg-white border border-zinc-200/80 rounded-xl p-5 shadow-sm space-y-4">
+                <h4 className="text-[10px] font-bold text-zinc-955 uppercase tracking-widest flex items-center gap-1.5">
+                  <TrendingUp className="w-4 h-4 text-brand-red" /> Seating Analytics Preview
+                </h4>
+                <div className="grid grid-cols-2 gap-y-4 text-body-sm font-semibold text-zinc-655">
+                  <div>
+                    <p className="text-[10px] text-zinc-400 font-bold uppercase">Total Tables</p>
+                    <p className="text-body-sm font-bold text-zinc-900 mt-1">{Math.ceil((selectedConclave?.memberCount || 0) / personsPerTable)} Seated</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-zinc-400 font-bold uppercase">Schedule Quality</p>
+                    <p className="text-body-sm font-bold text-emerald-700 mt-1">98% Match Rate</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-zinc-400 font-bold uppercase">Repeat Pairs</p>
+                    <p className="text-body-sm font-bold text-zinc-900 mt-1">0 duplicates</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-zinc-400 font-bold uppercase">Validation Score</p>
+                    <p className="text-body-sm font-bold text-zinc-900 mt-1">100 / 100</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Timeline / Action log */}
+          <div className="lg:col-span-4">
+            <div className="bg-white border border-zinc-200/80 rounded-xl h-full flex flex-col shadow-sm">
+              <div className="p-5 border-b border-zinc-100">
+                <h3 className="text-body-sm font-extrabold text-zinc-955 uppercase">Activity Log Timeline</h3>
+              </div>
+              <div className="p-8 pl-12 space-y-8 relative flex-1">
+                {/* timeline markers vertical line */}
+                <div className="absolute left-[23px] top-8 bottom-8 w-0.5 bg-zinc-150" />
+
+                {(selectedConclave?.timeline || []).map((item, i) => (
+                  <div className="relative" key={i}>
+                    <div className="absolute -left-[30px] top-1.5 w-3 h-3 rounded-full border-2 border-white bg-emerald-600 shadow-sm" />
+                    <p className="text-[9px] text-zinc-400 font-bold uppercase">{item.date}</p>
+                    <h4 className="text-body-sm font-bold text-zinc-800 mt-0.5">{item.event}</h4>
+                    <p className="text-[10px] text-zinc-450 font-semibold">{item.desc}</p>
+                  </div>
+                ))}
+
+                <div className="relative">
+                  <div className={`absolute -left-[30px] top-1.5 w-3 h-3 rounded-full border-2 border-white ${isLocked ? 'bg-zinc-400' : 'bg-brand-red animate-pulse'} shadow-sm`} />
+                  <p className={`text-[9px] font-bold uppercase ${isLocked ? 'text-zinc-400' : 'text-brand-red'}`}>
+                    {isLocked ? 'COMPLETED' : 'NOW'}
+                  </p>
+                  <h4 className={`text-body-sm font-bold mt-0.5 ${isLocked ? 'text-zinc-650' : 'text-brand-red'}`}>
+                    {isLocked ? 'Event Seating Locked' : 'Ready to Lock'}
+                  </h4>
+                  <p className="text-[10px] text-zinc-450 font-semibold">
+                    {isLocked ? 'Roster is active and read-only.' : 'Pending administrative confirmation.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CONFIRM LOCK MODAL OVERLAY */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
+          <div className="w-full max-w-md bg-white rounded-xl border border-zinc-100 shadow-2xl overflow-hidden animate-scale-up">
+
+            <div className="p-5 border-b border-zinc-100 bg-zinc-50 flex items-center gap-2">
+              <ShieldAlert className="w-5 h-5 text-brand-red" />
+              <h3 className="font-extrabold text-zinc-955 text-body-sm">Confirm Administrative Lock</h3>
+            </div>
+
+            <div className="p-5 space-y-4 text-body-sm font-semibold text-zinc-655">
+              <p className="leading-relaxed text-[12.5px]">
+                You are about to lock Seating assignments for <strong className="text-zinc-955 font-extrabold">{conclaveName}</strong>.
+                This action is irreversible and disables manual seating overrides.
+              </p>
+
+              <div className="bg-red-50/20 border-l-4 border-brand-red p-3 text-[10px] text-zinc-700 italic">
+                "The schedule will be pushed to the mobile app and all captains will receive their final rosters."
+              </div>
+
+              <div className="space-y-3 pt-2">
+                <label className="flex items-center gap-3 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={checkedQuality}
+                    onChange={(e) => setCheckedQuality(e.target.checked)}
+                    className="w-4.5 h-4.5 text-brand-red border-zinc-200 rounded focus:ring-brand-red cursor-pointer"
+                  />
+                  <span className="text-[10px] text-zinc-500 font-bold">I have verified the schedule quality metrics (98%).</span>
+                </label>
+
+                <label className="flex items-center gap-3 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={checkedEdits}
+                    onChange={(e) => setCheckedEdits(e.target.checked)}
+                    className="w-4.5 h-4.5 text-brand-red border-zinc-200 rounded focus:ring-brand-red cursor-pointer"
+                  />
+                  <span className="text-[10px] text-zinc-500 font-bold">I understand this will disable manual table overrides.</span>
+                </label>
+              </div>
+            </div>
+
+            <div className="p-4 border-t border-zinc-100 bg-zinc-50/50 flex justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setCheckedQuality(false);
+                  setCheckedEdits(false);
+                }}
+                className="px-4 py-2 border border-zinc-100 bg-white text-zinc-700 text-button rounded-lg hover:bg-zinc-50 transition-smooth cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={!(checkedQuality && checkedEdits)}
+                onClick={handleConfirmLock}
+                className="px-5 py-2 bg-brand-red hover:bg-red-700 disabled:bg-zinc-200 disabled:text-zinc-400 disabled:cursor-not-allowed text-white text-button font-bold rounded-lg shadow-md transition-smooth cursor-pointer"
+              >
+                Confirm & Lock
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Toast Alert Feedback */}
       {toast && (

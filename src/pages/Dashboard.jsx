@@ -264,7 +264,10 @@ export default function Dashboard({ setActiveTab, selectedConclaveId, setSelecte
             </button>
 
             <button
-              onClick={() => setActiveTab && setActiveTab('validation')}
+              onClick={() => {
+                localStorage.setItem('schedule_review_tab', 'validation');
+                setActiveTab && setActiveTab('schedule-review');
+              }}
               className="w-full flex items-center justify-between px-4 py-3.5 border quick-action-btn text-zinc-850 rounded-lg transition-smooth cursor-pointer font-bold tracking-tight"
             >
               <span className="text-button">Run Validation</span>

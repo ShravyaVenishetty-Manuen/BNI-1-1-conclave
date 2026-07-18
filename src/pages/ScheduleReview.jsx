@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   RefreshCw,
   Download,
@@ -14,21 +14,109 @@ import {
   X,
   Clock,
   Save,
-  ShieldCheck
+  ShieldCheck,
+  XCircle,
+  Lightbulb,
+  ArrowRight,
+  ChevronDown,
+  Calendar,
+  MapPin,
+  Layers
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell } from 'recharts';
 
 import initialTables from '../data/tables.json';
 import conclavesData from '../data/conclaves.json';
+import initialConclavesValidation from '../data/conclaves_validation.json';
 
 export default function ScheduleReview({ setActiveTab, searchQuery: globalSearchQuery, selectedConclaveId }) {
   const allTables = initialTables;
   const [localTables, setLocalTables] = useState(initialTables);
-  const [activeRound, setActiveRound] = useState(1);
+  const [activeRound, setActiveRound] = useState(() => {
+    const marker = localStorage.getItem('schedule_review_tab');
+    if (marker === 'validation') {
+      localStorage.removeItem('schedule_review_tab');
+      return 'validation';
+    }
+    return 1;
+  });
   const [localSearchQuery, setLocalSearchQuery] = useState('');
   const searchVal = globalSearchQuery !== undefined ? globalSearchQuery : localSearchQuery;
   const [statusFilter, setStatusFilter] = useState('All');
+
+  // Validation States
+  const [validationConclaves, setValidationConclaves] = useState(initialConclavesValidation);
+  
+  const activeConclaveIndex = useMemo(() => {
+    const idx = validationConclaves.findIndex(c => c.id === selectedConclaveId);
+    return idx !== -1 ? idx : 0;
+  }, [validationConclaves, selectedConclaveId]);
+
+  const activeConclave = validationConclaves[activeConclaveIndex] || initialConclavesValidation[0];
+
+  const [expandedRules, setExpandedRules] = useState(new Set(['rule-2']));
+  const [isValidating, setIsValidating] = useState(false);
+
+  const toggleRule = (id) => {
+    const updated = new Set(expandedRules);
+    if (updated.has(id)) {
+      updated.delete(id);
+    } else {
+      updated.add(id);
+    }
+    setExpandedRules(updated);
+  };
+
+  const handleRunValidation = () => {
+    setIsValidating(true);
+    showToast('Running Verification', 'Re-executing conclave rules parameters...');
+    setTimeout(() => {
+      setIsValidating(false);
+      showToast('Validation Complete', 'All checks completed successfully.');
+    }, 1500);
+  };
+
+  const handleQuickFix = () => {
+    setValidationConclaves(prev => prev.map((c, idx) => {
+      if (idx === activeConclaveIndex) {
+        return {
+          ...c,
+          passedCount: c.passedCount + 1,
+          errorsCount: 0,
+          score: 96,
+          rules: c.rules.map(r => {
+            if (r.id === 'rule-2') {
+              return {
+                ...r,
+                status: 'Passed',
+                type: 'success',
+                desc: 'West Chapter captains assigned from standby list. Captain-to-member ratio: 1:15 (Goal reached).',
+                suggestion: null,
+                fixable: false
+              };
+            }
+            return r;
+          }),
+          timeline: [
+            { event: 'Captains Ratio Auto-Fixed', time: 'Just now', note: 'System re-assignment complete', active: true },
+            ...c.timeline
+          ]
+        };
+      }
+      return c;
+    }));
+    // Also auto-fix the issues count in the parent review component!
+    setIssuesCount(prev => Math.max(0, prev - 1));
+    showToast('Ratio Auto-Resolved', 'Standby captains successfully assigned to West Chapter.');
+  };
+
+  const validationChartData = useMemo(() => {
+    return [
+      { name: 'readiness', value: activeConclave?.score || 100 },
+      { name: 'remaining', value: 100 - (activeConclave?.score || 100) }
+    ];
+  }, [activeConclave?.score]);
 
   // Manual swap states
   const [swapTarget, setSwapTarget] = useState(null);
@@ -64,7 +152,7 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
   // Lock Conclave click redirector
   const handleLockConclave = () => {
     if (setActiveTab) {
-      setActiveTab('lock-conclave');
+      setActiveTab('schedule-gen');
       showToast('Review Complete', 'Navigating to the final conclave locking checklist.');
     }
   };
@@ -242,11 +330,18 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
             <button
               key={round}
               onClick={() => setActiveRound(round)}
-              className={`flex-1 md:flex-initial px-6 py-1.5 rounded-md font-bold text-label-md transition-smooth cursor-pointer ${round === activeRound ? 'bg-white text-brand-red shadow-sm' : 'text-zinc-550 hover:bg-zinc-50'}`}
+              className={`flex-1 md:flex-initial px-6 py-1.5 rounded-md font-bold text-label-md transition-smooth cursor-pointer ${round === activeRound ? 'bg-white text-brand-red shadow-sm' : 'text-zinc-555 hover:bg-zinc-50'}`}
             >
               Round {round}
             </button>
           ))}
+          <button
+            onClick={() => setActiveRound('validation')}
+            className={`flex-1 md:flex-initial px-4 py-1.5 rounded-md font-bold text-label-md transition-smooth cursor-pointer flex items-center justify-center gap-1.5 ${activeRound === 'validation' ? 'bg-white text-brand-red shadow-sm' : 'text-zinc-555 hover:bg-zinc-50'}`}
+          >
+            <ShieldCheck className="w-4 h-4 shrink-0" />
+            Validation Checks
+          </button>
         </div>
 
         <div className="flex items-center gap-3 w-full md:w-auto">
@@ -279,264 +374,438 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
         </div>
       </div>
 
-      {/* Seating Main Dashboard Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-
-        {/* Left Column Seating cards */}
-        <div className="lg:col-span-9 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-
-          {filteredTables.map((table) => (
-            <div
-              key={table.id}
-              className={`bg-white rounded-xl overflow-hidden shadow-sm flex flex-col p-4 space-y-3.5 border ${table.status === 'warning' ? 'border-red-200 bg-red-50/5' : 'border-zinc-200/80'
-                }`}
-            >
-              {/* Header card info */}
-              <div className="flex flex-col gap-1 flex-shrink-0">
-                <div className="flex justify-between items-center">
-                  <span className="font-extrabold text-zinc-950 text-body-sm">{table.id}</span>
-                  <div className="text-right flex items-center gap-1">
-                    <span className="text-body-sm font-extrabold text-zinc-950">{table.capacity}</span>
-                    <span className="text-[9px] text-zinc-400 font-bold uppercase">Capacity</span>
-                  </div>
-                </div>
-
-                {/* Status Indicator (Text Only, no box) */}
-                {table.status === 'warning' && (
-                  <div className="flex items-center gap-1.5 text-brand-red text-[10px] font-bold uppercase tracking-wider mt-0.5">
-                    <AlertTriangle className="w-3.5 h-3.5 animate-pulse shrink-0" />
-                    <span className="truncate">{table.warningText}</span>
-                  </div>
-                )}
-                {table.status === 'validated' && (
-                  <div className="flex items-center gap-1.5 text-emerald-600 text-[10px] font-bold uppercase tracking-wider mt-0.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                    <span>Validated</span>
-                  </div>
-                )}
-                {table.status === 'locked' && (
-                  <div className="flex items-center gap-1.5 text-zinc-450 text-[10px] font-bold uppercase tracking-wider mt-0.5">
-                    <Lock className="w-3.5 h-3.5 shrink-0" />
-                    <span>Locked</span>
-                  </div>
-                )}
-                {table.status === 'review' && (
-                  <div className="flex items-center gap-1.5 text-amber-600 text-[10px] font-bold uppercase tracking-wider mt-0.5">
-                    <Clock className="w-3.5 h-3.5 shrink-0" />
-                    <span>Ready for Review</span>
-                  </div>
-                )}
+      {/* Seating Main Dashboard Grid or Validation Checks View */}
+      {activeRound === 'validation' ? (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start animate-fade-in">
+          {/* Left Column: KPI counters & Rule Execution Details */}
+          <div className="lg:col-span-8 space-y-5">
+            {/* KPI Counters Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
+              <div className="bg-white border border-zinc-200/80 p-4 rounded-xl shadow-sm">
+                <p className="text-[10px] font-bold text-zinc-400 uppercase mb-1">Passed Rules</p>
+                <h4 className="text-headline-md font-extrabold text-emerald-700 mt-1">{activeConclave.passedCount}</h4>
               </div>
+              <div className="bg-white border border-zinc-200/80 p-4 rounded-xl shadow-sm">
+                <p className="text-[10px] font-bold text-zinc-400 uppercase mb-1">Warnings</p>
+                <h4 className="text-headline-md font-extrabold text-amber-500 mt-1">{activeConclave.warningsCount}</h4>
+              </div>
+              <div className="bg-white border border-zinc-200/80 p-4 rounded-xl shadow-sm">
+                <p className="text-[10px] font-bold text-zinc-400 uppercase mb-1">Errors</p>
+                <h4 className="text-headline-md font-extrabold text-brand-red mt-1">
+                  {activeConclave.errorsCount < 10 ? `0${activeConclave.errorsCount}` : activeConclave.errorsCount}
+                </h4>
+              </div>
+              <div className="bg-white border border-zinc-200/80 p-4 rounded-xl shadow-sm">
+                <p className="text-[10px] font-bold text-zinc-400 uppercase mb-1">Total Score</p>
+                <h4 className="text-headline-md font-extrabold text-zinc-900 mt-1">{activeConclave.score}%</h4>
+              </div>
+              <div className={`col-span-2 sm:col-span-1 border border-zinc-200/85 p-4 rounded-xl flex flex-col justify-center items-center ${activeConclave.errorsCount > 0 ? 'bg-red-50/10 border-red-100 text-brand-red' : 'bg-emerald-50/10 border-emerald-100 text-emerald-700'}`}>
+                <AlertTriangle className="w-5 h-5 animate-pulse" />
+                <p className="text-[9px] font-extrabold uppercase mt-1.5 text-center">
+                  {activeConclave.errorsCount > 0 ? 'Attention Needed' : 'Ready'}
+                </p>
+              </div>
+            </div>
 
-              {/* Card body Seating */}
-              {table.status === 'locked' ? (
-                <div className="py-6 flex flex-col items-center justify-center text-zinc-400 italic">
-                  <LockKeyhole className="w-8 h-8 mb-2 text-zinc-300" />
-                  <p className="text-body-sm font-semibold">Standard Seating Active</p>
-                </div>
-              ) : table.status === 'review' ? (
-                <div className="py-6 flex items-center justify-center border-t border-dashed border-zinc-100">
-                  <p className="text-zinc-400 font-semibold text-body-sm">Ready for Review</p>
-                </div>
-              ) : (
-                <div className="flex-1 space-y-3.5">
-                  {/* Table Captain block */}
-                  {table.captain && (
-                    <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg transition-smooth hover:bg-zinc-50/55 group/captain">
-                      <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                        {table.captain.image ? (
-                          <img className="w-5.5 h-5.5 rounded-full object-cover shadow-xs" src={table.captain.image} alt={table.captain.name} />
+            {/* Validation Rules List */}
+            <div className="space-y-3">
+              <h3 className="text-section-heading font-extrabold text-zinc-955 pb-1.5 border-b border-zinc-100">Rule Execution Details</h3>
+
+              {activeConclave.rules.map((rule) => {
+                const isOpen = expandedRules.has(rule.id);
+                return (
+                  <div
+                    key={rule.id}
+                    className={`bg-white border rounded-xl overflow-hidden shadow-sm transition-all duration-200 ${isOpen ? 'border-zinc-200' : 'border-zinc-200/80'}`}
+                  >
+                    {/* Rule Header */}
+                    <div
+                      onClick={() => toggleRule(rule.id)}
+                      className="p-4 flex items-center justify-between cursor-pointer hover:bg-zinc-50/40 select-none"
+                    >
+                      <div className="flex items-center gap-3">
+                        {rule.type === 'success' ? (
+                          <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                        ) : rule.type === 'error' ? (
+                          <XCircle className="w-5 h-5 text-brand-red shrink-0" />
                         ) : (
-                          <div className="w-5.5 h-5.5 rounded-full bg-brand-red text-white flex items-center justify-center font-bold text-[9px] shadow-sm shrink-0">
-                            {table.captain.initials}
-                          </div>
+                          <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
                         )}
-                        <div className="flex-1 flex items-center justify-between gap-2 min-w-0">
-                          <span className="font-extrabold text-zinc-800 text-body-sm">{table.captain.name}</span>
-                          <span className="px-2 py-0.5 rounded bg-brand-red/10 text-brand-red text-[8px] font-extrabold uppercase shrink-0">
-                            Captain
-                          </span>
-                        </div>
+                        <span className="font-bold text-zinc-800 text-body-sm">{rule.title}</span>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <span className={`text-[10px] font-extrabold uppercase ${rule.type === 'success' ? 'text-emerald-700' : rule.type === 'error' ? 'text-brand-red' : 'text-amber-600'}`}>
+                          {rule.status}
+                        </span>
+                        <ChevronDown className={`w-4 h-4 text-zinc-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
                       </div>
                     </div>
-                  )}
 
-                  {table.captain && table.members && table.members.length > 0 && (
-                    <div className="border-t border-zinc-150 my-1 mx-2.5" />
-                  )}
+                    {/* Expanded Content */}
+                    {isOpen && (
+                      <div className={`p-5 border-t border-zinc-100 bg-zinc-50/20 ${rule.type === 'error' ? 'bg-red-50/5' : rule.type === 'warning' ? 'bg-amber-50/5' : ''}`}>
+                        <p className="text-body-sm text-zinc-655 leading-relaxed font-medium select-text">
+                          {rule.desc}
+                        </p>
 
-                  {/* Members seated */}
-                  <div className="space-y-0.5">
-                    {table.members && table.members.map((member) => (
-                      <div
-                        key={member.id}
-                        className="flex items-center justify-between px-2.5 py-1.5 rounded-lg transition-smooth hover:bg-zinc-50/55 group/member"
-                      >
-                        <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                          <div className={`w-5.5 h-5.5 rounded-full flex items-center justify-center text-[9px] font-extrabold shadow-xs shrink-0 ${member.conflict ? 'bg-red-50 text-brand-red border border-red-100' : 'bg-zinc-100 text-zinc-500'}`}>
-                            {member.initials || member.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
-                          </div>
+                        {rule.suggestion && (
+                          <p className="text-[11px] text-zinc-450 font-semibold mt-2">
+                            Recommendation: {rule.suggestion}
+                          </p>
+                        )}
 
-                          <div className="flex-1 flex items-center justify-between gap-2 min-w-0">
-                            <div className="flex items-center gap-1.5 min-w-0">
-                              <span className={`font-bold text-body-sm select-text ${member.conflict ? 'text-brand-red' : 'text-zinc-700'}`}>
-                                {member.name}
-                              </span>
-                              {member.conflict && (
-                                <AlertTriangle className="w-3 h-3 text-brand-red shrink-0 animate-pulse" />
-                              )}
+                        {rule.tag && (
+                          <span className="inline-block mt-3 px-2 py-0.5 bg-zinc-100 text-zinc-500 text-[9px] font-bold rounded uppercase border border-zinc-200">
+                            {rule.tag}
+                          </span>
+                        )}
+
+                        {/* Action Fix trigger */}
+                        {rule.fixable && (
+                          <div className="bg-white border border-zinc-100 p-4 rounded-xl flex flex-col sm:flex-row gap-3 items-center justify-between shadow-xs mt-4">
+                            <div className="flex items-center gap-2">
+                              <Lightbulb className="w-4 h-4 text-brand-red" />
+                              <span className="text-body-sm font-semibold text-zinc-700">Auto-fix Captain shortage in West chapter</span>
                             </div>
-                            <span className={`px-2 py-0.5 rounded text-[8px] font-extrabold uppercase shrink-0 ${member.conflict ? 'bg-brand-red/10 text-brand-red' : 'bg-zinc-50 text-zinc-450 border border-zinc-100'}`}>
-                              {member.category}
-                            </span>
+                            <button
+                              onClick={handleQuickFix}
+                              className="w-full sm:w-auto bg-brand-red hover:bg-red-700 text-white px-3.5 py-1.5 rounded-lg font-bold text-label-md transition-smooth cursor-pointer shadow-sm text-button"
+                            >
+                              Fix Now
+                            </button>
                           </div>
-                        </div>
-
-                        <div className="flex gap-1.5 opacity-0 group-hover/member:opacity-100 transition-opacity ml-2 shrink-0">
-                          <button
-                            onClick={() => {
-                              setSwapTarget({ member, table });
-                            }}
-                            className="p-1 text-zinc-400 hover:text-brand-red transition-smooth cursor-pointer"
-                            title="Swap or Move Member"
-                          >
-                            <ArrowRightLeft className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
+                        )}
                       </div>
-                    ))}
+                    )}
                   </div>
-                </div>
-              )}
+                );
+              })}
             </div>
-          ))}
-
-          {/* Dotted border create new table button */}
-          <div
-            onClick={() => {
-              setTables(prev => [...prev, { id: `Table ${String(prev.length + 1).padStart(2, '0')}`, status: 'validated', capacity: '0/8', members: [] }]);
-              setHasUnsavedChanges(true);
-              showToast('Table Created', `Table ${String(tables.length + 1).padStart(2, '0')} allocated under standard parameters.`);
-            }}
-            className="border-2 border-zinc-200 border-dashed rounded-xl flex flex-col items-center justify-center p-8 text-zinc-400 cursor-pointer hover:bg-zinc-50 transition-smooth group"
-          >
-            <PlusCircle className="w-10 h-10 mb-2 text-zinc-300 group-hover:text-brand-red transition-colors" />
-            <p className="font-bold uppercase tracking-wider text-[10px] text-zinc-500">Create New Seating Table</p>
           </div>
 
-        </div>
+          {/* Right Column: Readiness & Event Timeline */}
+          <div className="lg:col-span-4 space-y-5">
+            {/* Circular Readiness Card */}
+            <div className="bg-white border border-zinc-200/80 rounded-xl p-5 shadow-sm text-center">
+              <h3 className="text-body-sm font-extrabold text-zinc-955 uppercase border-b border-zinc-100 pb-2.5">Conclave Readiness</h3>
 
-        {/* Right Column details panel */}
-        <div className="lg:col-span-3 space-y-6">
-
-          {/* Validation Engine summary */}
-          <div className="bg-white border border-zinc-200/80 rounded-xl overflow-hidden shadow-sm">
-            <div className="p-4 bg-zinc-900 text-white flex justify-between items-center">
-              <h3 className="font-bold text-[10px] uppercase tracking-wider text-zinc-350">Validation Engine</h3>
-              <ShieldCheck className="w-5 h-5 text-brand-red" />
-            </div>
-
-            <div className="p-4 space-y-4">
-              <div className="flex gap-2.5">
-                <div className="flex-1 p-2 bg-emerald-50/15 border border-emerald-100 rounded-lg text-center">
-                  <p className="text-[8px] text-zinc-400 font-bold uppercase">Passed</p>
-                  <p className="text-headline-md font-black text-emerald-700">10</p>
-                </div>
-                <div className="flex-1 p-2 bg-red-50/15 border border-red-100 rounded-lg text-center">
-                  <p className="text-[8px] text-zinc-400 font-bold uppercase">Warnings</p>
-                  <p className="text-headline-md font-black text-brand-red">{warningsCount}</p>
-                </div>
-                <div className="flex-1 p-2 bg-zinc-50 border border-zinc-100 rounded-lg text-center">
-                  <p className="text-[8px] text-zinc-400 font-bold uppercase">Errors</p>
-                  <p className="text-headline-md font-black text-zinc-700">0</p>
+              <div className="w-36 h-36 relative mx-auto flex items-center justify-center my-4">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={validationChartData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={54}
+                      outerRadius={64}
+                      startAngle={90}
+                      endAngle={-270}
+                      dataKey="value"
+                    >
+                      <Cell fill="#af101a" stroke="none" />
+                      <Cell fill="#f4f4f5" stroke="none" />
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="absolute flex flex-col items-center">
+                  <span className="text-3xl font-extrabold text-zinc-955 leading-none">{activeConclave?.score || 100}%</span>
+                  <span className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider mt-1.5">Verified</span>
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest border-b border-zinc-100 pb-1.5">Affected Tables</p>
+              <div className="mb-2">
+                {activeConclave?.errorsCount > 0 ? (
+                  <span className="inline-flex items-center px-3 py-1 bg-red-50 text-brand-red border border-red-100 rounded-full text-[10px] font-bold uppercase">
+                    Needs Attention
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-100 rounded-full text-[10px] font-bold uppercase">
+                    Ready for Scheduling
+                  </span>
+                )}
+              </div>
 
-                {affectedList.map((aff) => (
-                  <div key={aff.id} className="group border-l-4 border-l-brand-red pl-3 py-1 space-y-2">
-                    <h5 className="font-bold text-zinc-800 text-body-sm leading-snug">{aff.title}</h5>
-                    <p className="text-[11px] text-zinc-500 leading-relaxed font-semibold select-text">
-                      {aff.desc}
-                    </p>
-                    {aff.id === 'aff-1' && (
-                      <button
-                        onClick={handleAutoResolveConflict}
-                        className="text-[10px] font-bold text-brand-red hover:underline flex items-center gap-1 cursor-pointer"
-                      >
-                        Suggest Fix <Sparkles className="w-3.5 h-3.5" />
-                      </button>
-                    )}
+              <p className="text-[11px] text-zinc-500 font-medium px-4 leading-relaxed mt-3">
+                {activeConclave?.errorsCount > 0
+                  ? 'Resolve remaining critical issues to unlock the match scheduler engine.'
+                  : 'All critical checks parsed. The matching scheduler is unlocked.'}
+              </p>
+            </div>
+
+            {/* Event Timeline / Activity Log from Validation Screen */}
+            <div className="bg-white border border-zinc-200/80 rounded-xl h-full flex flex-col shadow-sm">
+              <div className="p-5 border-b border-zinc-100 bg-zinc-50">
+                <h3 className="text-body-sm font-extrabold text-zinc-955 uppercase">Validation Timeline</h3>
+              </div>
+              <div className="p-6 pl-10 space-y-6 relative flex-1">
+                {/* timeline markers vertical line */}
+                <div className="absolute left-[23px] top-6 bottom-6 w-0.5 bg-zinc-150" />
+
+                {(activeConclave?.timeline || []).map((item, i) => (
+                  <div className="relative" key={i}>
+                    <div className="absolute -left-[24px] top-1 w-2.5 h-2.5 rounded-full border-2 border-white bg-emerald-600 shadow-sm" />
+                    <p className="text-[8px] text-zinc-400 font-bold uppercase">{item.time}</p>
+                    <h4 className="text-body-xs font-bold text-zinc-800 mt-0.5">{item.event}</h4>
+                    <p className="text-[9.5px] text-zinc-450 font-semibold">{item.note}</p>
                   </div>
                 ))}
               </div>
             </div>
           </div>
-
-          {/* Seating Quality Metrics */}
-          <div className="bg-white border border-zinc-200/80 rounded-xl p-5 shadow-sm space-y-4">
-            <h3 className="text-body-sm font-extrabold text-zinc-950 uppercase border-b border-zinc-100 pb-2.5">Quality Metrics</h3>
-
-            <div className="space-y-4 font-semibold text-zinc-650">
-              <div>
-                <div className="flex justify-between items-center mb-1.5 text-[10px]">
-                  <span>Unique Meetings</span>
-                  <span className="font-bold text-brand-red">98%</span>
-                </div>
-                <div className="h-2 w-full rounded-full overflow-hidden cursor-pointer">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart layout="vertical" data={[{ name: 'Unique Meetings', value: 98 }]} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-                      <XAxis type="number" domain={[0, 100]} hide />
-                      <YAxis type="category" dataKey="name" hide />
-                      <Tooltip formatter={(value) => `${value}%`} cursor={false} />
-                      <Bar dataKey="value" fill="#af101a" radius={[4, 4, 4, 4]} background={{ fill: '#f4f4f5' }} barSize={8} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between items-center mb-1.5 text-[10px]">
-                  <span>Repeat Pairings</span>
-                  <span className="font-bold text-zinc-900">0%</span>
-                </div>
-                <div className="h-2 w-full rounded-full overflow-hidden cursor-pointer">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart layout="vertical" data={[{ name: 'Repeat Pairings', value: 0 }]} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-                      <XAxis type="number" domain={[0, 100]} hide />
-                      <YAxis type="category" dataKey="name" hide />
-                      <Tooltip formatter={(value) => `${value}%`} cursor={false} />
-                      <Bar dataKey="value" fill="#af101a" radius={[4, 4, 4, 4]} background={{ fill: '#f4f4f5' }} barSize={8} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-
-              <div className="pt-3.5 border-t border-zinc-100">
-                <div className="flex justify-between items-end">
-                  <div>
-                    <p className="text-[9px] text-zinc-400 font-bold uppercase">Overall Score</p>
-                    <p className="text-headline-md font-black text-zinc-950 leading-none mt-1">
-                      {overallScore}<span className="text-body-sm font-normal text-zinc-450">/100</span>
-                    </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* Left Column Seating cards */}
+          <div className="lg:col-span-9 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+            {filteredTables.map((table) => (
+              <div
+                key={table.id}
+                className={`bg-white rounded-xl overflow-hidden shadow-sm flex flex-col p-4 space-y-3.5 border ${table.status === 'warning' ? 'border-red-200 bg-red-50/5' : 'border-zinc-200/80'
+                  }`}
+              >
+                {/* Header card info */}
+                <div className="flex flex-col gap-1 flex-shrink-0">
+                  <div className="flex justify-between items-center">
+                    <span className="font-extrabold text-zinc-955 text-body-sm">{table.id}</span>
+                    <div className="text-right flex items-center gap-1">
+                      <span className="text-body-sm font-extrabold text-zinc-955">{table.capacity}</span>
+                      <span className="text-[9px] text-zinc-450 font-bold uppercase">Capacity</span>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-[9px] text-brand-red font-bold uppercase">Exceptional</p>
-                    <span className="inline-block w-4 h-4 bg-red-50 text-brand-red rounded-full text-center mt-1">
-                      ✓
-                    </span>
+
+                  {/* Status Indicator (Text Only, no box) */}
+                  {table.status === 'warning' && (
+                    <div className="flex items-center gap-1.5 text-brand-red text-[10px] font-bold uppercase tracking-wider mt-0.5">
+                      <AlertTriangle className="w-3.5 h-3.5 animate-pulse shrink-0" />
+                      <span className="truncate">{table.warningText}</span>
+                    </div>
+                  )}
+                  {table.status === 'validated' && (
+                    <div className="flex items-center gap-1.5 text-emerald-600 text-[10px] font-bold uppercase tracking-wider mt-0.5">
+                      <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                      <span>Validated</span>
+                    </div>
+                  )}
+                  {table.status === 'locked' && (
+                    <div className="flex items-center gap-1.5 text-zinc-450 text-[10px] font-bold uppercase tracking-wider mt-0.5">
+                      <Lock className="w-3.5 h-3.5 shrink-0" />
+                      <span>Locked</span>
+                    </div>
+                  )}
+                  {table.status === 'review' && (
+                    <div className="flex items-center gap-1.5 text-amber-600 text-[10px] font-bold uppercase tracking-wider mt-0.5">
+                      <Clock className="w-3.5 h-3.5 shrink-0" />
+                      <span>Ready for Review</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Card body Seating */}
+                {table.status === 'locked' ? (
+                  <div className="py-6 flex flex-col items-center justify-center text-zinc-400 italic">
+                    <LockKeyhole className="w-8 h-8 mb-2 text-zinc-300" />
+                    <p className="text-body-sm font-semibold">Standard Seating Active</p>
+                  </div>
+                ) : table.status === 'review' ? (
+                  <div className="py-6 flex items-center justify-center border-t border-dashed border-zinc-100">
+                    <p className="text-zinc-400 font-semibold text-body-sm">Ready for Review</p>
+                  </div>
+                ) : (
+                  <div className="flex-1 space-y-3.5">
+                    {/* Table Captain block */}
+                    {table.captain && (
+                      <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg transition-smooth hover:bg-zinc-50/55 group/captain">
+                        <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                          {table.captain.image ? (
+                            <img className="w-5.5 h-5.5 rounded-full object-cover shadow-xs" src={table.captain.image} alt={table.captain.name} />
+                          ) : (
+                            <div className="w-5.5 h-5.5 rounded-full bg-brand-red text-white flex items-center justify-center font-bold text-[9px] shadow-sm shrink-0">
+                              {table.captain.initials}
+                            </div>
+                          )}
+                          <div className="flex-1 flex items-center justify-between gap-2 min-w-0">
+                            <span className="font-extrabold text-zinc-800 text-body-sm">{table.captain.name}</span>
+                            <span className="px-2 py-0.5 rounded bg-brand-red/10 text-brand-red text-[8px] font-extrabold uppercase shrink-0">
+                              Captain
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {table.captain && table.members && table.members.length > 0 && (
+                      <div className="border-t border-zinc-150 my-1 mx-2.5" />
+                    )}
+
+                    {/* Members seated */}
+                    <div className="space-y-0.5">
+                      {table.members && table.members.map((member) => (
+                        <div
+                          key={member.id}
+                          className="flex items-center justify-between px-2.5 py-1.5 rounded-lg transition-smooth hover:bg-zinc-50/55 group/member"
+                        >
+                          <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                            <div className={`w-5.5 h-5.5 rounded-full flex items-center justify-center text-[9px] font-extrabold shadow-xs shrink-0 ${member.conflict ? 'bg-red-50 text-brand-red border border-red-100' : 'bg-zinc-100 text-zinc-500'}`}>
+                              {member.initials || member.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                            </div>
+
+                            <div className="flex-1 flex items-center justify-between gap-2 min-w-0">
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <span className={`font-bold text-body-sm select-text ${member.conflict ? 'text-brand-red' : 'text-zinc-700'}`}>
+                                  {member.name}
+                                </span>
+                                {member.conflict && (
+                                  <AlertTriangle className="w-3 h-3 text-brand-red shrink-0 animate-pulse" />
+                                )}
+                              </div>
+                              <span className={`px-2 py-0.5 rounded text-[8px] font-extrabold uppercase shrink-0 ${member.conflict ? 'bg-brand-red/10 text-brand-red' : 'bg-zinc-50 text-zinc-450 border border-zinc-100'}`}>
+                                {member.category}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex gap-1.5 opacity-0 group-hover/member:opacity-100 transition-opacity ml-2 shrink-0">
+                            <button
+                              onClick={() => {
+                                setSwapTarget({ member, table });
+                              }}
+                              className="p-1 text-zinc-400 hover:text-brand-red transition-smooth cursor-pointer"
+                              title="Swap or Move Member"
+                            >
+                              <ArrowRightLeft className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {/* Dotted border create new table button */}
+            <div
+              onClick={() => {
+                setTables(prev => [...prev, { id: `Table ${String(prev.length + 1).padStart(2, '0')}`, status: 'validated', capacity: '0/8', members: [] }]);
+                setHasUnsavedChanges(true);
+                showToast('Table Created', `Table ${String(tables.length + 1).padStart(2, '0')} allocated under standard parameters.`);
+              }}
+              className="border-2 border-zinc-200 border-dashed rounded-xl flex flex-col items-center justify-center p-8 text-zinc-400 cursor-pointer hover:bg-zinc-55 transition-smooth group"
+            >
+              <PlusCircle className="w-10 h-10 mb-2 text-zinc-300 group-hover:text-brand-red transition-colors" />
+              <p className="font-bold uppercase tracking-wider text-[10px] text-zinc-555">Create New Seating Table</p>
+            </div>
+          </div>
+
+          {/* Right Column details panel */}
+          <div className="lg:col-span-3 space-y-6">
+            {/* Validation Engine summary */}
+            <div className="bg-white border border-zinc-200/80 rounded-xl overflow-hidden shadow-sm">
+              <div className="p-4 bg-zinc-900 text-white flex justify-between items-center">
+                <h3 className="font-bold text-[10px] uppercase tracking-wider text-zinc-350">Validation Engine</h3>
+                <ShieldCheck className="w-5 h-5 text-brand-red" />
+              </div>
+
+              <div className="p-4 space-y-4">
+                <div className="flex gap-2.5">
+                  <div className="flex-1 p-2 bg-emerald-50/15 border border-emerald-100 rounded-lg text-center">
+                    <p className="text-[8px] text-zinc-400 font-bold uppercase">Passed</p>
+                    <p className="text-headline-md font-black text-emerald-700">10</p>
+                  </div>
+                  <div className="flex-1 p-2 bg-red-50/15 border border-red-100 rounded-lg text-center">
+                    <p className="text-[8px] text-zinc-400 font-bold uppercase">Warnings</p>
+                    <p className="text-headline-md font-black text-brand-red">{warningsCount}</p>
+                  </div>
+                  <div className="flex-1 p-2 bg-zinc-50 border border-zinc-100 rounded-lg text-center">
+                    <p className="text-[8px] text-zinc-400 font-bold uppercase">Errors</p>
+                    <p className="text-headline-md font-black text-zinc-700">0</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest border-b border-zinc-100 pb-1.5">Affected Tables</p>
+
+                  {affectedList.map((aff) => (
+                    <div key={aff.id} className="group border-l-4 border-l-brand-red pl-3 py-1 space-y-2">
+                      <h5 className="font-bold text-zinc-800 text-body-sm leading-snug">{aff.title}</h5>
+                      <p className="text-[11px] text-zinc-555 leading-relaxed font-semibold select-text">
+                        {aff.desc}
+                      </p>
+                      {aff.id === 'aff-1' && (
+                        <button
+                          onClick={handleAutoResolveConflict}
+                          className="text-[10px] font-bold text-brand-red hover:underline flex items-center gap-1 cursor-pointer"
+                        >
+                          Suggest Fix <Sparkles className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Seating Quality Metrics */}
+            <div className="bg-white border border-zinc-200/80 rounded-xl p-5 shadow-sm space-y-4">
+              <h3 className="text-body-sm font-extrabold text-zinc-955 uppercase border-b border-zinc-100 pb-2.5">Quality Metrics</h3>
+
+              <div className="space-y-4 font-semibold text-zinc-650">
+                <div>
+                  <div className="flex justify-between items-center mb-1.5 text-[10px]">
+                    <span>Unique Meetings</span>
+                    <span className="font-bold text-brand-red">98%</span>
+                  </div>
+                  <div className="h-2 w-full rounded-full overflow-hidden cursor-pointer">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart layout="vertical" data={[{ name: 'Unique Meetings', value: 98 }]} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                        <XAxis type="number" domain={[0, 100]} hide />
+                        <YAxis type="category" dataKey="name" hide />
+                        <Tooltip formatter={(value) => `${value}%`} cursor={false} />
+                        <Bar dataKey="value" fill="#af101a" radius={[4, 4, 4, 4]} background={{ fill: '#f4f4f5' }} barSize={8} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex justify-between items-center mb-1.5 text-[10px]">
+                    <span>Repeat Pairings</span>
+                    <span className="font-bold text-zinc-900">0%</span>
+                  </div>
+                  <div className="h-2 w-full rounded-full overflow-hidden cursor-pointer">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart layout="vertical" data={[{ name: 'Repeat Pairings', value: 0 }]} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                        <XAxis type="number" domain={[0, 100]} hide />
+                        <YAxis type="category" dataKey="name" hide />
+                        <Tooltip formatter={(value) => `${value}%`} cursor={false} />
+                        <Bar dataKey="value" fill="#af101a" radius={[4, 4, 4, 4]} background={{ fill: '#f4f4f5' }} barSize={8} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                <div className="pt-3.5 border-t border-zinc-100">
+                  <div className="flex justify-between items-end">
+                    <div>
+                      <p className="text-[9px] text-zinc-400 font-bold uppercase">Overall Score</p>
+                      <p className="text-headline-md font-black text-zinc-955 leading-none mt-1">
+                        {overallScore}<span className="text-body-sm font-normal text-zinc-450">/100</span>
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[9px] text-brand-red font-bold uppercase">Exceptional</p>
+                      <span className="inline-block w-4 h-4 bg-red-50 text-brand-red rounded-full text-center mt-1">
+                        ✓
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-
-
-
         </div>
-      </div>
+      )}
 
       {/* Sticky footer action overlay */}
       {hasUnsavedChanges && (

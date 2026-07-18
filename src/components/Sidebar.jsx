@@ -23,16 +23,14 @@ import conclavesData from '../data/conclaves.json';
 const navItems = [
   { id: 'dashboard', label: 'Dashboard', Icon: LayoutDashboard },
   { id: 'conclaves', label: 'Conclaves', Icon: CalendarRange },
-  { id: 'round-runner', label: 'Round Runner', Icon: Play },
-  { id: 'schedule-review', label: 'Schedule Review', Icon: SlidersHorizontal },
+  { id: 'snapshot', label: 'Snapshot', Icon: Camera },
   { id: 'schedule-gen', label: 'Schedule Generation', Icon: TrendingUp },
-  { id: 'lock-conclave', label: 'Lock Conclave', Icon: Lock },
+  { id: 'schedule-review', label: 'Schedule Review', Icon: SlidersHorizontal },
+  { id: 'round-runner', label: 'Round Runner', Icon: Play },
   { id: 'active-users', label: 'Active Users', Icon: Activity },
   { id: 'members', label: 'Members', Icon: Users },
   { id: 'captains', label: 'Captains', Icon: Award },
   { id: 'business-types', label: 'Business Types', Icon: Layers },
-  { id: 'validation', label: 'Validation', Icon: ShieldCheck },
-  { id: 'snapshot', label: 'Snapshot', Icon: Camera },
   { id: 'reports', label: 'Reports', Icon: BarChart3 },
 ];
 

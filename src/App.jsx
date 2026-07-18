@@ -8,10 +8,8 @@ import Captains from './pages/Captains';
 import ActiveUsers from './pages/ActiveUsers';
 import Conclaves from './pages/Conclaves';
 import Snapshot from './pages/Snapshot';
-import Validation from './pages/Validation';
 import ScheduleGen from './pages/ScheduleGen';
 import ScheduleReview from './pages/ScheduleReview';
-import LockConclave from './pages/LockConclave';
 import RoundRunner from './pages/RoundRunner';
 import Reports from './pages/Reports';
 import Login from './pages/Login';
@@ -71,8 +69,8 @@ export default function App() {
     const lastPart = parts[parts.length - 1];
     const validTabs = [
       'dashboard', 'members', 'active-users', 'business-types', 'captains',
-      'conclaves', 'snapshot', 'validation', 'schedule-gen', 'schedule-review',
-      'lock-conclave', 'round-runner', 'reports', 'admins', 'referrals', 'profile', 'registrations'
+      'conclaves', 'snapshot', 'schedule-gen', 'schedule-review',
+      'round-runner', 'reports', 'admins', 'referrals', 'profile', 'registrations'
     ];
     return validTabs.includes(lastPart) ? lastPart : 'dashboard';
   });
@@ -114,8 +112,8 @@ export default function App() {
       const lastPart = parts[parts.length - 1];
       const validTabs = [
         'dashboard', 'members', 'active-users', 'business-types', 'captains',
-        'conclaves', 'snapshot', 'validation', 'schedule-gen', 'schedule-review',
-        'lock-conclave', 'round-runner', 'reports', 'admins', 'referrals', 'profile', 'registrations'
+        'conclaves', 'snapshot', 'schedule-gen', 'schedule-review',
+        'round-runner', 'reports', 'admins', 'referrals', 'profile', 'registrations'
       ];
       const cleanTab = validTabs.includes(lastPart) ? lastPart : 'dashboard';
 
@@ -445,14 +443,10 @@ export default function App() {
             <Conclaves loggedInAdmin={loggedInAdmin} setActiveTab={handleTabChange} />
           ) : activeTab === 'snapshot' ? (
             <Snapshot selectedConclaveId={selectedConclaveId} />
-          ) : activeTab === 'validation' ? (
-            <Validation selectedConclaveId={selectedConclaveId} />
           ) : activeTab === 'schedule-gen' ? (
             <ScheduleGen selectedConclaveId={selectedConclaveId} />
           ) : activeTab === 'schedule-review' ? (
             <ScheduleReview setActiveTab={handleTabChange} selectedConclaveId={selectedConclaveId} />
-          ) : activeTab === 'lock-conclave' ? (
-            <LockConclave selectedConclaveId={selectedConclaveId} />
           ) : activeTab === 'round-runner' ? (
             <RoundRunner selectedConclaveId={selectedConclaveId} />
           ) : activeTab === 'reports' ? (
