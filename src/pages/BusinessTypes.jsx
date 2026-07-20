@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Search,
   ChevronRight,
@@ -13,11 +13,48 @@ import {
 } from 'lucide-react';
 import Pagination from '../components/Pagination';
 import SearchableDropdown from '../components/SearchableDropdown';
+import { api } from '../services/api';
 import initialCategories from '../data/categories.json';
 import membersData from '../data/members.json';
 
 export default function BusinessTypes({ searchQuery, selectedConclaveId }) {
   const [categories, setCategories] = useState(initialCategories);
+  const [members, setMembers] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (!selectedConclaveId) return;
+    async function loadRegistrations() {
+      setIsLoading(true);
+      try {
+        const data = await api.get(`/admin/conclaves/${selectedConclaveId}/registrations`);
+        const mapped = data.registrations.map(r => {
+          return {
+            id: r.uid,
+            name: r.name,
+            email: r.email,
+            phone: r.phone,
+            company: r.businessName,
+            category: r.businessCategory || 'Uncategorized',
+            address: r.location ? (typeof r.location === 'object' ? (r.location.place || '') : r.location) : '',
+            state: r.state || 'Andhra Pradesh',
+            country: r.country || 'India',
+            isCaptain: r.role === 'captain',
+            status: r.isActive ? 'Active' : 'Inactive',
+            joinDate: r.registeredAt ? new Date(r.registeredAt).toLocaleDateString([], { month: 'short', year: 'numeric' }) : 'N/A',
+            avatar: r.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'M',
+            conclaveIds: [selectedConclaveId],
+          };
+        });
+        setMembers(mapped);
+      } catch (err) {
+        console.error("Failed to load registrations for categories count:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadRegistrations();
+  }, [selectedConclaveId]);
   const [searchTerm, setSearchTerm] = useState('');
   const searchVal = searchQuery !== undefined ? searchQuery : searchTerm;
   const [statusFilter, setStatusFilter] = useState('All');
@@ -75,10 +112,8 @@ export default function BusinessTypes({ searchQuery, selectedConclaveId }) {
     setSelectedRows(new Set());
   };
 
-  // Conclave-specific members subset
-  const conclaveMembers = useMemo(() => {
-    return membersData.filter(m => m.conclaveIds && m.conclaveIds.includes(selectedConclaveId));
-  }, [selectedConclaveId]);
+  // Conclave-specific members subset (already fetched and filtered by selectedConclaveId)
+  const conclaveMembers = members;
 
   // Compute categories with dynamic conclave-based member counts
   const categoriesWithCounts = useMemo(() => {

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Search,
   ChevronRight,
@@ -23,40 +23,111 @@ import Pagination from '../components/Pagination';
 import { ResponsiveContainer, BarChart, Bar, XAxis } from 'recharts';
 import initialConclaves from '../data/conclaves.json';
 import SearchableDropdown from '../components/SearchableDropdown';
+import { api } from '../services/api';
 
 export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) {
-  const [conclaves, setConclaves] = useState(() => {
-    const stored = localStorage.getItem('bni_conclaves');
-    const rawList = stored ? JSON.parse(stored) : initialConclaves;
-    return rawList.map(c => {
-      let state = c.state;
-      let country = c.country;
-      if (!state || !country) {
-        const r = (c.region || "").toLowerCase();
-        if (r.includes("guntur")) {
-          state = "Andhra Pradesh";
-          country = "India";
-        } else if (r.includes("london")) {
-          state = "Greater London";
-          country = "United Kingdom";
-        } else if (r.includes("singapore")) {
-          state = "Central Region";
-          country = "Singapore";
-        } else if (r.includes("south")) {
-          state = "Tamil Nadu";
-          country = "India";
-        } else {
-          state = "Andhra Pradesh";
-          country = "India";
-        }
-      }
-      return { ...c, state, country };
-    });
-  });
+  const [conclaves, setConclaves] = useState([]);
+  const [isLoadingConclaves, setIsLoadingConclaves] = useState(false);
 
-  React.useEffect(() => {
-    localStorage.setItem('bni_conclaves', JSON.stringify(conclaves));
-    window.dispatchEvent(new Event('storage'));
+  useEffect(() => {
+    async function loadConclaves() {
+      setIsLoadingConclaves(true);
+      try {
+        const data = await api.get('/admin/conclaves');
+        setConclaves(data.map(c => {
+          let state = c.state;
+          let country = c.country;
+          if (!state || !country) {
+            const r = (c.region || "").toLowerCase();
+            if (r.includes("guntur")) {
+              state = "Andhra Pradesh";
+              country = "India";
+            } else if (r.includes("london")) {
+              state = "Greater London";
+              country = "United Kingdom";
+            } else if (r.includes("singapore")) {
+              state = "Central Region";
+              country = "Singapore";
+            } else if (r.includes("south")) {
+              state = "Tamil Nadu";
+              country = "India";
+            } else {
+              state = "Andhra Pradesh";
+              country = "India";
+            }
+          }
+
+          const venue = c.venueLocation || c.venue || 'N/A';
+          const venueShort = venue.split(',')[0] || 'N/A';
+          const startDate = c.date || c.startDate || '';
+          const dateRange = c.date ? new Date(c.date).toLocaleDateString([], { month: 'short', day: '2-digit', year: 'numeric' }) : (c.dateRange || 'N/A');
+          const coordinator = c.coordinator || 'Sanjay Wagle';
+          
+          let status = c.status;
+          const s = (c.status || '').toLowerCase();
+          if (s === 'registration_open') status = 'Upcoming';
+          else if (s === 'running') status = 'Running';
+          else if (s === 'completed') status = 'Completed';
+          else if (s === 'draft') status = 'Draft';
+          else if (s === 'cancelled') status = 'Cancelled';
+
+          return {
+            ...c,
+            state,
+            country,
+            venue,
+            venueShort,
+            startDate,
+            dateRange,
+            coordinator,
+            status,
+            memberCount: c.registrationCount || c.memberCount || 0,
+            memberLimit: c.memberLimit || 100,
+            captainCount: c.captainCount || 0,
+            captainLimit: c.captainLimit || 12,
+            progress: s === 'completed' ? 100 : s === 'running' ? 60 : 0
+          };
+        }));
+      } catch (err) {
+        console.error("API load failed, trying local storage fallback:", err);
+        const stored = localStorage.getItem('bni_conclaves');
+        const rawList = stored ? JSON.parse(stored) : initialConclaves;
+        setConclaves(rawList.map(c => {
+          let state = c.state;
+          let country = c.country;
+          if (!state || !country) {
+            const r = (c.region || "").toLowerCase();
+            if (r.includes("guntur")) {
+              state = "Andhra Pradesh";
+              country = "India";
+            } else if (r.includes("london")) {
+              state = "Greater London";
+              country = "United Kingdom";
+            } else if (r.includes("singapore")) {
+              state = "Central Region";
+              country = "Singapore";
+            } else if (r.includes("south")) {
+              state = "Tamil Nadu";
+              country = "India";
+            } else {
+              state = "Andhra Pradesh";
+              country = "India";
+            }
+          }
+          return { ...c, state, country };
+        }));
+      } finally {
+        setIsLoadingConclaves(false);
+      }
+    }
+    loadConclaves();
+  }, []);
+
+  useEffect(() => {
+    if (conclaves && conclaves.length > 0) {
+      localStorage.setItem('bni_conclaves', JSON.stringify(conclaves));
+      window.dispatchEvent(new Event('storage'));
+    }
   }, [conclaves]);
 
   const [searchTerm, setSearchTerm] = useState('');

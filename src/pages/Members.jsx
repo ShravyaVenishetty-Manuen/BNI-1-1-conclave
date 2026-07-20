@@ -13,39 +13,48 @@ import {
 } from 'lucide-react';
 import Pagination from '../components/Pagination';
 import SearchableDropdown from '../components/SearchableDropdown';
+import { api } from '../services/api';
 
 import membersData from '../data/members.json';
 
 export default function Members({ searchQuery, selectedConclaveId }) {
-  const [members, setMembers] = useState(() => {
-    return membersData.map(m => {
-      let state = m.state;
-      let country = m.country;
-      if (!state || !country) {
-        const addr = (m.address || "").toLowerCase();
-        if (addr.includes(", mh") || addr.includes("mumbai") || addr.includes("maharashtra")) {
-          state = "Maharashtra";
-          country = "India";
-        } else if (addr.includes(", ap") || addr.includes("guntur") || addr.includes("andhra")) {
-          state = "Andhra Pradesh";
-          country = "India";
-        } else if (addr.includes("london") || addr.includes("uk")) {
-          state = "Greater London";
-          country = "United Kingdom";
-        } else if (addr.includes("singapore")) {
-          state = "Central Region";
-          country = "Singapore";
-        } else if (addr.includes("phoenix") || addr.includes("az") || addr.includes("arizona") || addr.includes("usa")) {
-          state = "Arizona";
-          country = "United States";
-        } else {
-          state = "Andhra Pradesh";
-          country = "India";
-        }
+  const [members, setMembers] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (!selectedConclaveId) return;
+    async function loadRegistrations() {
+      setIsLoading(true);
+      try {
+        const data = await api.get(`/admin/conclaves/${selectedConclaveId}/registrations`);
+        const mapped = data.registrations.map(r => {
+          return {
+            id: r.uid,
+            name: r.name,
+            email: r.email,
+            phone: r.phone,
+            company: r.businessName,
+            category: r.businessCategory || 'Uncategorized',
+            address: r.location ? (typeof r.location === 'object' ? (r.location.place || '') : r.location) : '',
+            state: r.state || 'Andhra Pradesh',
+            country: r.country || 'India',
+            isCaptain: r.role === 'captain',
+            status: r.isActive ? 'Active' : 'Inactive',
+            joinDate: r.registeredAt ? new Date(r.registeredAt).toLocaleDateString([], { month: 'short', year: 'numeric' }) : 'N/A',
+            avatar: r.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'M',
+            conclaveIds: [selectedConclaveId],
+            history: [{ event: 'Registered', date: r.registeredAt ? new Date(r.registeredAt).toLocaleDateString() : 'N/A', role: r.role === 'captain' ? 'Captain' : 'Member' }]
+          };
+        });
+        setMembers(mapped);
+      } catch (err) {
+        console.error("Failed to load registrations from API:", err);
+      } finally {
+        setIsLoading(false);
       }
-      return { ...m, state, country };
-    });
-  });
+    }
+    loadRegistrations();
+  }, [selectedConclaveId]);
   const [referrals, setReferrals] = useState(() => {
     const stored = localStorage.getItem('bni_referrals');
     return stored ? JSON.parse(stored) : [];
@@ -161,6 +170,17 @@ export default function Members({ searchQuery, selectedConclaveId }) {
 
     if (editingMember) {
       // Edit mode
+      if (editingMember.isCaptain !== formData.isCaptain) {
+        api.post(`/admin/conclaves/${selectedConclaveId}/registrations/${editingMember.id}/role`, {
+          role: formData.isCaptain ? 'captain' : 'member'
+        }).then(() => {
+          showToast(`Role updated to ${formData.isCaptain ? 'Captain' : 'Member'} successfully.`);
+        }).catch(err => {
+          console.error("Failed to sync role to backend:", err);
+          showToast("Failed to update role on backend.", "error");
+        });
+      }
+
       setMembers(prev => prev.map(m => m.id === editingMember.id ? {
         ...m,
         ...formData,

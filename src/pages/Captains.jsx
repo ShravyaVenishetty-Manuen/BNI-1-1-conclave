@@ -21,29 +21,49 @@ import Pagination from '../components/Pagination';
 import SearchableDropdown from '../components/SearchableDropdown';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 
+import { api } from '../services/api';
+
 import initialCaptains from '../data/captains.json';
 
 export default function Captains({ searchQuery, selectedConclaveId }) {
-  const [captains, setCaptains] = useState(() => {
-    return initialCaptains.map(c => {
-      let state = c.state;
-      let country = c.country;
-      if (!state || !country) {
-        const chap = (c.chapter || "").toLowerCase();
-        if (chap.includes("peak") || chap.includes("mumbai") || chap.includes("apex")) {
-          state = "Maharashtra";
-          country = "India";
-        } else if (chap.includes("guntur") || chap.includes("andhra") || chap.includes("central")) {
-          state = "Andhra Pradesh";
-          country = "India";
-        } else {
-          state = "Andhra Pradesh";
-          country = "India";
-        }
+  const [captains, setCaptains] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (!selectedConclaveId) return;
+    async function loadRegistrations() {
+      setIsLoading(true);
+      try {
+        const data = await api.get(`/admin/conclaves/${selectedConclaveId}/registrations`);
+        const mapped = data.registrations.map(r => {
+          return {
+            id: r.uid,
+            name: r.name,
+            email: r.email,
+            phone: r.phone,
+            company: r.businessName,
+            category: r.businessCategory || 'Uncategorized',
+            address: r.location ? (typeof r.location === 'object' ? (r.location.place || '') : r.location) : '',
+            state: r.state || 'Andhra Pradesh',
+            country: r.country || 'India',
+            isCaptain: r.role === 'captain',
+            status: r.isActive ? 'Available' : 'Busy',
+            joinDate: r.registeredAt ? new Date(r.registeredAt).toLocaleDateString([], { month: 'short', year: 'numeric' }) : 'N/A',
+            avatar: r.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'TC',
+            conclaveIds: [selectedConclaveId],
+            history: [{ event: 'Registered', date: r.registeredAt ? new Date(r.registeredAt).toLocaleDateString() : 'N/A', role: r.role === 'captain' ? 'Captain' : 'Member' }]
+          };
+        });
+        // Captains page shows captains only
+        setCaptains(mapped.filter(m => m.isCaptain));
+      } catch (err) {
+        console.error("Failed to load registrations from API:", err);
+      } finally {
+        setIsLoading(false);
       }
-      return { ...c, state, country };
-    });
-  });
+    }
+    loadRegistrations();
+  }, [selectedConclaveId]);
   const [referrals, setReferrals] = useState(() => {
     const stored = localStorage.getItem('bni_referrals');
     return stored ? JSON.parse(stored) : [];

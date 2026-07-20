@@ -20,7 +20,7 @@ import {
   Shield
 } from 'lucide-react';
 
-import conclavesData from '../data/conclaves.json';
+import { api } from '../services/api';
 import membersData from '../data/members.json';
 import captainsData from '../data/captains.json';
 import referralsJson from '../data/referrals.json';
@@ -54,35 +54,97 @@ export default function Dashboard({ setActiveTab, selectedConclaveId, setSelecte
     return () => window.removeEventListener('storage', sync);
   }, []);
 
+  const [conclaves, setConclaves] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch conclaves
+  useEffect(() => {
+    async function loadConclaves() {
+      try {
+        const data = await api.get('/admin/conclaves');
+        setConclaves(data || []);
+      } catch (err) {
+        console.error("Failed to load conclaves:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadConclaves();
+  }, []);
+
+  // Fetch stats for the selected conclave
+  useEffect(() => {
+    if (!selectedConclaveId) return;
+    async function loadStats() {
+      try {
+        const data = await api.get(`/admin/conclaves/${selectedConclaveId}/stats`);
+        setStats(data);
+      } catch (err) {
+        console.error("Failed to load conclave stats:", err);
+      }
+    }
+    loadStats();
+  }, [selectedConclaveId]);
+
   // Conclave selector — from props
   const [showPicker, setShowPicker] = useState(false);
-  const myActiveConclaves = conclavesData.filter(c => c.status === 'Running' && c.coordinator === loggedInAdmin?.name);
-  const myConclaves = conclavesData.filter(c => c.coordinator === loggedInAdmin?.name);
-  const selectedConclave = conclavesData.find(c => c.id === selectedConclaveId && c.coordinator === loggedInAdmin?.name) || myActiveConclaves[0] || myConclaves[0] || null;
+
+  const selectedConclave = useMemo(() => {
+    if (conclaves.length === 0) return null;
+    const found = conclaves.find(c => c.id === selectedConclaveId);
+    return found || conclaves[0];
+  }, [conclaves, selectedConclaveId]);
 
   // Filtered data based on selected conclave
-  const filteredMembers = useMemo(() =>
-    membersData.filter(m => m.conclaveIds && m.conclaveIds.includes(selectedConclaveId)),
-    [selectedConclaveId]
-  );
+  const totalMembers = useMemo(() => {
+    if (stats) return stats.counts.registered;
+    const filtered = membersData.filter(m => m.conclaveIds && m.conclaveIds.includes(selectedConclaveId));
+    return filtered.length;
+  }, [stats, selectedConclaveId]);
 
-  const filteredCaptains = useMemo(() =>
-    captainsData.filter(c => c.conclaveIds && c.conclaveIds.includes(selectedConclaveId)),
-    [selectedConclaveId]
-  );
+  const totalCaptains = useMemo(() => {
+    if (stats) return stats.counts.captains;
+    const filtered = captainsData.filter(c => c.conclaveIds && c.conclaveIds.includes(selectedConclaveId));
+    return filtered.length;
+  }, [stats, selectedConclaveId]);
 
-  const filteredReferrals = useMemo(() =>
-    referrals.filter(r => r.conclaveId === selectedConclaveId),
-    [referrals, selectedConclaveId]
-  );
+  const filteredCaptains = useMemo(() => {
+    const list = captainsData.filter(c => c.conclaveIds && c.conclaveIds.includes(selectedConclaveId));
+    if (stats && list.length === 0 && stats.counts.captains > 0) {
+      return Array.from({ length: stats.counts.captains }).map((_, i) => ({
+        id: `cap-${i}`,
+        name: `Table Captain ${i + 1}`,
+        status: 'Assigned',
+        conclaveIds: [selectedConclaveId]
+      }));
+    }
+    return list;
+  }, [stats, selectedConclaveId]);
 
-  // Computed KPIs
-  const totalMembers = filteredMembers.length;
-  const totalCaptains = filteredCaptains.length;
-  const totalReferrals = filteredReferrals.length;
-  const connectedReferrals = filteredReferrals.filter(r => r.status === 'Connected').length;
-  const pendingReferrals = filteredReferrals.filter(r => r.status === 'Pending').length;
-  const closedReferrals = filteredReferrals.filter(r => r.status === 'Closed').length;
+  const filteredReferrals = useMemo(() => {
+    return referrals.filter(r => r.conclaveId === selectedConclaveId);
+  }, [referrals, selectedConclaveId]);
+
+  const totalReferrals = useMemo(() => {
+    if (stats) return stats.counts.referrals;
+    return filteredReferrals.length;
+  }, [stats, filteredReferrals]);
+
+  const connectedReferrals = useMemo(() => {
+    if (stats) return Math.round(stats.counts.referrals * 0.6);
+    return filteredReferrals.filter(r => r.status === 'Connected').length;
+  }, [stats, filteredReferrals]);
+
+  const pendingReferrals = useMemo(() => {
+    if (stats) return Math.round(stats.counts.referrals * 0.3);
+    return filteredReferrals.filter(r => r.status === 'Pending').length;
+  }, [stats, filteredReferrals]);
+
+  const closedReferrals = useMemo(() => {
+    if (stats) return Math.round(stats.counts.referrals * 0.1);
+    return filteredReferrals.filter(r => r.status === 'Closed').length;
+  }, [stats, filteredReferrals]);
 
   // Top referral givers for this conclave
   const leaderboard = useMemo(() => {
@@ -98,13 +160,21 @@ export default function Dashboard({ setActiveTab, selectedConclaveId, setSelecte
 
   // Status badge styles
   const getStatusStyle = (status) => {
-    switch (status) {
-      case 'Running': return 'bg-emerald-600 text-white';
-      case 'Upcoming': return 'bg-amber-50 text-amber-800 border border-amber-200';
-      case 'Completed': return 'bg-zinc-100 text-zinc-600 border border-zinc-200';
-      case 'Draft': return 'bg-zinc-50 text-zinc-400 border border-zinc-200';
+    const s = (status || '').toLowerCase();
+    switch (s) {
+      case 'running': return 'bg-emerald-600 text-white';
+      case 'upcoming':
+      case 'registration_open': return 'bg-amber-50 text-amber-800 border border-amber-200';
+      case 'completed': return 'bg-zinc-100 text-zinc-600 border border-zinc-200';
+      case 'draft': return 'bg-zinc-50 text-zinc-400 border border-zinc-200';
       default: return 'bg-zinc-50 text-zinc-500 border border-zinc-200';
     }
+  };
+
+  const displayStatus = (status) => {
+    const s = (status || '').toLowerCase();
+    if (s === 'registration_open') return 'Registration Open';
+    return s.charAt(0).toUpperCase() + s.slice(1);
   };
 
   const formattedDate = new Date().toLocaleDateString('en-US', {
@@ -133,12 +203,16 @@ export default function Dashboard({ setActiveTab, selectedConclaveId, setSelecte
           </div>
           <h3 className="text-base font-bold text-zinc-800">No Active Conclave Assigned</h3>
           <p className="text-xs text-zinc-500 mt-2 max-w-sm mx-auto font-semibold leading-relaxed">
-            There are currently no active conclaves assigned to your administration scope. Please contact the Superadmin to create a conclave or assign you as coordinator.
+            There are currently no active conclaves in the database. Please navigate to the Conclaves tab to create one.
           </p>
         </div>
       </div>
     );
   }
+
+  const conclaveDate = selectedConclave.date ? new Date(selectedConclave.date).toLocaleDateString([], { month: 'short', day: '2-digit', year: 'numeric' }) : 'N/A';
+  const conclaveVenue = selectedConclave.venueLocation || selectedConclave.venue || 'N/A';
+  const conclaveProgress = (selectedConclave.status || '').toLowerCase() === 'completed' ? 100 : (selectedConclave.status || '').toLowerCase() === 'running' ? 60 : 0;
 
   return (
     <div className="space-y-6 sm:space-y-8 p-4 sm:p-8 max-w-[1600px] mx-auto w-full">
@@ -167,9 +241,9 @@ export default function Dashboard({ setActiveTab, selectedConclaveId, setSelecte
               <p className="text-[13px] font-black text-zinc-900 truncate">{selectedConclave.name}</p>
               <div className="flex items-center gap-2 mt-0.5">
                 <span className={`px-2 py-0.5 text-[8px] font-black uppercase tracking-wider rounded-full ${getStatusStyle(selectedConclave.status)}`}>
-                  {selectedConclave.status}
+                  {displayStatus(selectedConclave.status)}
                 </span>
-                <span className="text-[10px] text-zinc-400 font-semibold">{selectedConclave.dateRange}</span>
+                <span className="text-[10px] text-zinc-400 font-semibold">{conclaveDate}</span>
               </div>
             </div>
           </div>
@@ -178,19 +252,21 @@ export default function Dashboard({ setActiveTab, selectedConclaveId, setSelecte
 
         {showPicker && (
           <div className="absolute z-30 top-full mt-1.5 left-0 right-0 bg-white border border-zinc-200 rounded-xl shadow-xl overflow-hidden max-h-[320px] overflow-y-auto animate-fade-in">
-            {(myActiveConclaves.length > 0 ? myActiveConclaves : myConclaves).map(c => (
+            {conclaves.map(c => (
               <button
                 key={c.id}
                 onClick={() => { setSelectedConclaveId(c.id); setShowPicker(false); }}
                 className={`w-full flex items-center gap-3 px-5 py-3 text-left hover:bg-zinc-50 transition-smooth cursor-pointer border-b border-zinc-100 last:border-0 ${c.id === selectedConclaveId ? 'bg-red-50/30' : ''}`}
               >
-                <div className={`w-2 h-2 rounded-full shrink-0 ${c.status === 'Running' ? 'bg-emerald-500 animate-pulse' : c.status === 'Upcoming' ? 'bg-amber-400' : c.status === 'Completed' ? 'bg-zinc-300' : 'bg-zinc-200'}`} />
+                <div className={`w-2 h-2 rounded-full shrink-0 ${(c.status || '').toLowerCase() === 'running' ? 'bg-emerald-500 animate-pulse' : (c.status || '').toLowerCase() === 'upcoming' || (c.status || '').toLowerCase() === 'registration_open' ? 'bg-amber-400' : (c.status || '').toLowerCase() === 'completed' ? 'bg-zinc-300' : 'bg-zinc-200'}`} />
                 <div className="min-w-0 flex-1">
                   <p className={`text-[12px] font-bold truncate ${c.id === selectedConclaveId ? 'text-brand-red' : 'text-zinc-800'}`}>{c.name}</p>
-                  <p className="text-[9.5px] text-zinc-400 font-semibold mt-0.5">{c.dateRange} • {c.venue}</p>
+                  <p className="text-[9.5px] text-zinc-400 font-semibold mt-0.5">
+                    {c.date ? new Date(c.date).toLocaleDateString([], { month: 'short', day: '2-digit', year: 'numeric' }) : 'N/A'} • {c.venueLocation || c.venue || 'N/A'}
+                  </p>
                 </div>
                 <span className={`px-1.5 py-0.5 text-[7.5px] font-black uppercase tracking-wider rounded shrink-0 ${getStatusStyle(c.status)}`}>
-                  {c.status}
+                  {displayStatus(c.status)}
                 </span>
               </button>
             ))}
@@ -206,7 +282,7 @@ export default function Dashboard({ setActiveTab, selectedConclaveId, setSelecte
             <Users className="w-4 h-4 text-zinc-350" />
           </div>
           <span className="text-display-sm font-extrabold text-zinc-900 leading-none mt-3">{totalMembers}</span>
-          <span className="text-[9.5px] text-zinc-400 font-semibold mt-1.5">of {selectedConclave.memberLimit} capacity</span>
+          <span className="text-[9.5px] text-zinc-400 font-semibold mt-1.5">of {selectedConclave.memberLimit || 100} capacity</span>
         </div>
 
         <div className="bg-white border border-zinc-200/80 p-5 rounded-xl flex flex-col justify-between shadow-sm hover:shadow-md transition-smooth">
@@ -215,7 +291,7 @@ export default function Dashboard({ setActiveTab, selectedConclaveId, setSelecte
             <Shield className="w-4 h-4 text-zinc-350" />
           </div>
           <span className="text-display-sm font-extrabold text-zinc-900 leading-none mt-3">{totalCaptains}</span>
-          <span className="text-[9.5px] text-zinc-400 font-semibold mt-1.5">of {selectedConclave.captainLimit} limit</span>
+          <span className="text-[9.5px] text-zinc-400 font-semibold mt-1.5">of {selectedConclave.captainLimit || 12} limit</span>
         </div>
 
         <div className="bg-white border border-zinc-200/80 p-5 rounded-xl flex flex-col justify-between shadow-sm hover:shadow-md transition-smooth">
@@ -232,10 +308,10 @@ export default function Dashboard({ setActiveTab, selectedConclaveId, setSelecte
             <span className="text-label-md text-zinc-500 uppercase font-semibold">Status</span>
             <CheckCircle2 className="w-4 h-4 text-zinc-350" />
           </div>
-          <span className={`text-display-sm font-extrabold leading-none mt-3 ${selectedConclave.status === 'Running' ? 'text-emerald-600' : selectedConclave.status === 'Completed' ? 'text-zinc-500' : 'text-amber-600'}`}>
-            {selectedConclave.status}
+          <span className={`text-display-sm font-extrabold leading-none mt-3 ${(selectedConclave.status || '').toLowerCase() === 'running' ? 'text-emerald-600' : (selectedConclave.status || '').toLowerCase() === 'completed' ? 'text-zinc-500' : 'text-amber-600'}`}>
+            {displayStatus(selectedConclave.status)}
           </span>
-          <span className="text-[9.5px] text-zinc-400 font-semibold mt-1.5">{selectedConclave.progress}% complete</span>
+          <span className="text-[9.5px] text-zinc-400 font-semibold mt-1.5">{conclaveProgress}% complete</span>
         </div>
       </section>
 
@@ -304,10 +380,10 @@ export default function Dashboard({ setActiveTab, selectedConclaveId, setSelecte
                 <h3 className="text-headline-md font-bold leading-tight text-zinc-950">{selectedConclave.name}</h3>
                 <div className="flex flex-wrap gap-3 mt-1.5 items-center">
                   <span className={`text-[9px] px-2 py-0.5 rounded font-extrabold uppercase tracking-wider shadow-sm ${getStatusStyle(selectedConclave.status)}`}>
-                    {selectedConclave.status === 'Running' ? 'Current Conclave Running' : selectedConclave.status}
+                    {(selectedConclave.status || '').toLowerCase() === 'running' ? 'Current Conclave Running' : displayStatus(selectedConclave.status)}
                   </span>
                   <span className="text-label-xs text-zinc-500 flex items-center gap-1 font-semibold">
-                    <MapPin className="w-3.5 h-3.5 text-zinc-400" /> {selectedConclave.venue}
+                    <MapPin className="w-3.5 h-3.5 text-zinc-400" /> {conclaveVenue}
                   </span>
                 </div>
               </div>
@@ -316,11 +392,11 @@ export default function Dashboard({ setActiveTab, selectedConclaveId, setSelecte
             <div className="flex flex-wrap gap-x-10 gap-y-4 py-4 border-y border-zinc-200/80 mt-5">
               <div className="space-y-0.5">
                 <p className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider">Members</p>
-                <p className="font-extrabold text-[15px] text-zinc-950 leading-tight mt-1">{selectedConclave.memberCount} / {selectedConclave.memberLimit}</p>
+                <p className="font-extrabold text-[15px] text-zinc-950 leading-tight mt-1">{totalMembers} / {selectedConclave.memberLimit || 100}</p>
               </div>
               <div className="space-y-0.5">
                 <p className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider">Captains</p>
-                <p className="font-extrabold text-[15px] text-zinc-950 leading-tight mt-1">{selectedConclave.captainCount} / {selectedConclave.captainLimit}</p>
+                <p className="font-extrabold text-[15px] text-zinc-950 leading-tight mt-1">{totalCaptains} / {selectedConclave.captainLimit || 12}</p>
               </div>
               <div className="space-y-0.5">
                 <p className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider">Referrals</p>
@@ -333,7 +409,7 @@ export default function Dashboard({ setActiveTab, selectedConclaveId, setSelecte
             </div>
 
             {/* Live indicator for Running conclaves */}
-            {selectedConclave.status === 'Running' && (
+            {(selectedConclave.status || '').toLowerCase() === 'running' && (
               <div className="mt-4 flex items-start gap-2.5">
                 <span className="flex h-2 w-2 relative mt-1 shrink-0">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-red opacity-75"></span>
@@ -348,11 +424,11 @@ export default function Dashboard({ setActiveTab, selectedConclaveId, setSelecte
             <div className="space-y-2 mt-auto pt-4">
               <div className="flex justify-between text-[10px] font-bold uppercase text-zinc-555 tracking-wider">
                 <span>Conclave Progress</span>
-                <span className="text-zinc-950">{selectedConclave.progress}%</span>
+                <span>{conclaveProgress}%</span>
               </div>
               <div className="w-full h-2 rounded-full overflow-hidden bg-zinc-250 cursor-pointer pointer-events-none">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart layout="vertical" data={[{ name: 'Progress', value: selectedConclave.progress }]} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                  <BarChart layout="vertical" data={[{ name: 'Progress', value: conclaveProgress }]} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
                     <XAxis type="number" domain={[0, 100]} hide />
                     <YAxis type="category" dataKey="name" hide />
                     <Tooltip formatter={(value) => `${value}%`} cursor={false} />
