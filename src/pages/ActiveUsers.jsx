@@ -37,6 +37,7 @@ import captainsData from '../data/captains.json';
 export default function ActiveUsers({ searchQuery, selectedConclaveId }) {
   const [sessions, setSessions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
     if (!selectedConclaveId) return;
@@ -69,7 +70,7 @@ export default function ActiveUsers({ searchQuery, selectedConclaveId }) {
       }
     }
     loadSessions();
-  }, [selectedConclaveId]);
+  }, [selectedConclaveId, refreshTrigger]);
   const [searchTerm, setSearchTerm] = useState('');
   const searchVal = searchQuery !== undefined ? searchQuery : searchTerm;
   const [statusFilter, setStatusFilter] = useState('All');
@@ -134,9 +135,30 @@ export default function ActiveUsers({ searchQuery, selectedConclaveId }) {
     setTimeout(() => setToast(null), 3000);
   };
 
-  // Conclave-specific sessions subset
   const conclaveSessions = useMemo(() => {
     return sessions;
+  }, [sessions]);
+
+  const dynamicFeedLogs = useMemo(() => {
+    const online = sessions.filter(s => s.status === 'Online');
+    const logs = [];
+    online.slice(0, 5).forEach((s, idx) => {
+      logs.push({
+        type: 'login',
+        event: `${s.name} checked in`,
+        detail: `${s.category} • Table Captain Status: ${s.role}`,
+        time: s.loginTime
+      });
+    });
+    if (logs.length === 0) {
+      logs.push({
+        type: 'system',
+        event: 'No active check-ins yet',
+        detail: 'Conclave registry is waiting for member registrations.',
+        time: 'N/A'
+      });
+    }
+    return logs;
   }, [sessions]);
 
   // Filtered Sessions
@@ -243,8 +265,13 @@ export default function ActiveUsers({ searchQuery, selectedConclaveId }) {
 
   // Refresh helper
   const handleRefresh = () => {
+    setRefreshTrigger(prev => prev + 1);
     showToast('Refreshing Sessions', 'Active session logs updated to real-time.');
   };
+
+  const totalActiveSessions = sessions.filter(s => s.status === 'Online').length;
+  const totalLoggedSessions = sessions.length;
+  const totalIdleSessions = sessions.filter(s => s.status === 'Idle').length;
 
   return (
     <div className="p-4 sm:p-6 max-w-[1600px] mx-auto w-full flex flex-col gap-6 animate-fade-in">
@@ -281,7 +308,7 @@ export default function ActiveUsers({ searchQuery, selectedConclaveId }) {
         <div className="bg-white border border-zinc-200/80 p-5 rounded-xl flex flex-col justify-between shadow-sm hover:shadow-md transition-smooth">
           <span className="text-label-md text-zinc-500 uppercase font-semibold">Total Active</span>
           <div className="flex items-baseline justify-between mt-3">
-            <span className="text-display-sm font-extrabold text-zinc-900 leading-none">1,284</span>
+            <span className="text-display-sm font-extrabold text-zinc-900 leading-none">{totalActiveSessions}</span>
           </div>
         </div>
 
@@ -289,7 +316,7 @@ export default function ActiveUsers({ searchQuery, selectedConclaveId }) {
         <div className="bg-white border border-zinc-200/80 p-5 rounded-xl flex flex-col justify-between shadow-sm hover:shadow-md transition-smooth">
           <span className="text-label-md text-zinc-500 uppercase font-semibold">Logged In Today</span>
           <div className="flex items-baseline justify-between mt-3">
-            <span className="text-display-sm font-extrabold text-zinc-900 leading-none">3,412</span>
+            <span className="text-display-sm font-extrabold text-zinc-900 leading-none">{totalLoggedSessions}</span>
           </div>
         </div>
 
@@ -297,7 +324,7 @@ export default function ActiveUsers({ searchQuery, selectedConclaveId }) {
         <div className="bg-white border border-zinc-200/80 p-5 rounded-xl flex flex-col justify-between shadow-sm hover:shadow-md transition-smooth">
           <span className="text-label-md text-zinc-500 uppercase font-semibold">Ready for Snapshot</span>
           <div className="flex items-baseline justify-between mt-3">
-            <span className="text-display-sm font-extrabold text-zinc-900 leading-none">892</span>
+            <span className="text-display-sm font-extrabold text-zinc-900 leading-none">{totalActiveSessions}</span>
           </div>
         </div>
 
@@ -305,7 +332,7 @@ export default function ActiveUsers({ searchQuery, selectedConclaveId }) {
         <div className="bg-white border border-zinc-200/80 p-5 rounded-xl flex flex-col justify-between shadow-sm hover:shadow-md transition-smooth">
           <span className="text-label-md text-zinc-500 uppercase font-semibold">Auto Logout Pending</span>
           <div className="flex items-baseline justify-between mt-3">
-            <span className="text-display-sm font-extrabold text-zinc-900 leading-none">42</span>
+            <span className="text-display-sm font-extrabold text-zinc-900 leading-none">{totalIdleSessions}</span>
           </div>
         </div>
       </div>
@@ -346,8 +373,8 @@ export default function ActiveUsers({ searchQuery, selectedConclaveId }) {
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute flex flex-col items-center pointer-events-none">
-                <span className="text-sm font-black text-zinc-950 leading-none">
-                  {hoveredSlice ? hoveredSlice.value : '1,196'}
+                <span className="text-sm font-black text-zinc-955 leading-none">
+                  {hoveredSlice ? hoveredSlice.value : totalLoggedSessions}
                 </span>
                 <span className="text-[8px] text-zinc-400 font-bold uppercase mt-1">
                   {hoveredSlice ? hoveredSlice.name : 'Total'}
@@ -361,8 +388,8 @@ export default function ActiveUsers({ searchQuery, selectedConclaveId }) {
                     <span className="w-2 h-2 rounded-full" style={{ backgroundColor: d.color }} />
                     <span className="text-zinc-600">{d.name}</span>
                   </div>
-                  <span className="text-zinc-900 font-bold">
-                    {d.value} <span className="text-zinc-450 font-normal text-[9px]">({Math.round((d.value / 1196) * 100)}%)</span>
+                  <span className="text-zinc-905 font-bold">
+                    {d.value} <span className="text-zinc-455 font-normal text-[9px]">({Math.round((d.value / (totalLoggedSessions || 1)) * 100)}%)</span>
                   </span>
                 </div>
               ))}
@@ -398,27 +425,18 @@ export default function ActiveUsers({ searchQuery, selectedConclaveId }) {
             <span className="text-[9px] font-extrabold px-1.5 py-0.5 bg-red-50 text-brand-red rounded border border-red-100 uppercase tracking-wider">LIVE</span>
           </h3>
           <div className="space-y-4 max-h-28 overflow-y-auto pr-1 pt-1">
-            <div className="flex gap-2.5 border-l-2 border-brand-red pl-3 py-0.5">
-              <LogIn className="w-3.5 h-3.5 text-brand-red shrink-0 mt-0.5" />
-              <div className="flex-1 min-w-0">
-                <p className="text-[11px] font-bold text-zinc-800 leading-tight">Anjali Sharma logged in</p>
-                <span className="text-[9px] text-zinc-450 font-semibold block mt-0.5">2 mins ago • Session ID: #1294</span>
-              </div>
-            </div>
-            <div className="flex gap-2.5 border-l-2 border-zinc-400 pl-3 py-0.5">
-              <Camera className="w-3.5 h-3.5 text-zinc-400 shrink-0 mt-0.5" />
-              <div className="flex-1 min-w-0">
-                <p className="text-[11px] font-bold text-zinc-800 leading-tight">Snapshot readiness verified</p>
-                <span className="text-[9px] text-zinc-450 font-semibold block mt-0.5">5 mins ago • Conclave B-12</span>
-              </div>
-            </div>
-            <div className="flex gap-2.5 border-l-2 border-brand-red pl-3 py-0.5">
-              <LogOut className="w-3.5 h-3.5 text-brand-red shrink-0 mt-0.5" />
-              <div className="flex-1 min-w-0">
-                <p className="text-[11px] font-bold text-zinc-800 leading-tight">System Auto Logout: Manoj R.</p>
-                <span className="text-[9px] text-zinc-455 font-semibold block mt-0.5">8 mins ago • Inactivity Timeout</span>
-              </div>
-            </div>
+            {dynamicFeedLogs.map((log, idx) => {
+              const IconComponent = log.type === 'login' ? LogIn : Info;
+              return (
+                <div key={idx} className="flex gap-2.5 border-l-2 border-brand-red pl-3 py-0.5">
+                  <IconComponent className="w-3.5 h-3.5 text-brand-red shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] font-bold text-zinc-800 leading-tight">{log.event}</p>
+                    <span className="text-[9px] text-zinc-450 font-semibold block mt-0.5">{log.time} • {log.detail}</span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
