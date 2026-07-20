@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Award,
   Layers,
@@ -10,24 +10,86 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import { mockAdmins, mockRegions, mockGlobalConclaves, mockGlobalMembers } from '../../data/mockConclaveData';
+import { api } from '../../services/api';
 
 export default function SuperadminDashboard({ setActiveTab }) {
+  const [admins, setAdmins] = useState([]);
+  const [regions, setRegions] = useState([]);
+  const [conclaves, setConclaves] = useState([]);
+  const [members, setMembers] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    async function loadDashboardData() {
+      setIsLoading(true);
+      try {
+        const [adminsList, regionsList, conclavesList, membersList] = await Promise.all([
+          api.get('/admin/coordinators'),
+          api.get('/admin/regions'),
+          api.get('/admin/conclaves'),
+          api.get('/admin/users')
+        ]);
+        setAdmins(adminsList || []);
+        setRegions(regionsList || []);
+        setConclaves(conclavesList || []);
+        setMembers(membersList || []);
+      } catch (err) {
+        console.error("Failed to load superadmin dashboard metrics:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadDashboardData();
+  }, []);
+
   // Aggregate KPIs
-  const totalAdminsCount = mockAdmins.length;
-  const totalRegionsCount = mockRegions.length;
-  const totalConclavesCount = mockGlobalConclaves.length;
-  const totalMembersCount = mockGlobalMembers.length;
+  const totalAdminsCount = admins.length;
+  const totalRegionsCount = regions.length;
+  const totalConclavesCount = conclaves.length;
+  const totalMembersCount = members.length;
 
   // Distribution helpers
-  const conclavesPerRegion = mockRegions.map(reg => {
-    const count = mockGlobalConclaves.filter(c => c.region === reg.name).length;
+  const conclavesPerRegion = regions.map(reg => {
+    const count = conclaves.filter(c => c.region === reg.name).length;
     return { name: reg.name, count };
   });
 
-  const adminsPerRegion = mockRegions.map(reg => {
-    const count = mockAdmins.filter(a => a.region === reg.name).length;
+  const adminsPerRegion = regions.map(reg => {
+    const count = admins.filter(a => a.region === reg.name).length;
     return { name: reg.name, count };
   });
+
+  const recentActivities = useMemo(() => {
+    const list = [];
+    admins.slice(0, 2).forEach(a => {
+      list.push({
+        msg: `Regional Admin '${a.name || a.email}' profile synced`,
+        time: a.grantedAt ? new Date(a.grantedAt).toLocaleDateString() : 'Recently',
+        info: a.region || 'BNI Network',
+        bg: "bg-emerald-50 border-emerald-200 text-emerald-600",
+        Icon: Award
+      });
+    });
+    conclaves.slice(0, 2).forEach(c => {
+      list.push({
+        msg: `Conclave '${c.title}' is registered under ${c.region || 'Guntur'}`,
+        time: c.createdAt ? new Date(c.createdAt).toLocaleDateString() : 'Recently',
+        info: c.status || 'Scheduled',
+        bg: "bg-red-50 border-red-200 text-brand-red",
+        Icon: CalendarRange
+      });
+    });
+    if (list.length === 0) {
+      list.push({
+        msg: "Global BNI networks and regions initialized.",
+        time: "Now",
+        info: "System",
+        bg: "bg-amber-50 border-amber-200 text-amber-600",
+        Icon: ShieldAlert
+      });
+    }
+    return list;
+  }, [admins, conclaves]);
 
   return (
     <div className="space-y-8 animate-fade-in font-sans pb-16">
@@ -157,16 +219,16 @@ export default function SuperadminDashboard({ setActiveTab }) {
             </div>
 
             <div className="divide-y divide-zinc-200 border border-zinc-200 rounded-xl overflow-hidden">
-              {mockGlobalConclaves.filter(c => c.status === 'Active').map(conclave => (
+              {conclaves.filter(c => c.status?.toLowerCase() === 'active').map(conclave => (
                 <div key={conclave.id} className="p-3.5 bg-white hover:bg-zinc-50/50 transition-colors flex justify-between items-center text-body-sm">
                   <div className="space-y-1">
                     <p className="font-black text-zinc-800 leading-none">{conclave.title}</p>
                     <div className="flex gap-2 items-center text-[10px] text-zinc-450 font-semibold mt-1">
-                      <span>{conclave.region}</span>
+                      <span>{conclave.region || conclave.location || 'Guntur Region'}</span>
                       <span>•</span>
-                      <span>{conclave.tablesCount} tables</span>
+                      <span>{conclave.tablesCount || 0} tables</span>
                       <span>•</span>
-                      <span>{conclave.membersCount} checked in</span>
+                      <span>{conclave.membersCount || 0} checked in</span>
                     </div>
                   </div>
                   <span className="px-2 py-0.5 rounded-full text-[8.5px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-150 whitespace-nowrap">
@@ -174,7 +236,7 @@ export default function SuperadminDashboard({ setActiveTab }) {
                   </span>
                 </div>
               ))}
-              {mockGlobalConclaves.filter(c => c.status === 'Active').length === 0 && (
+              {conclaves.filter(c => c.status?.toLowerCase() === 'active').length === 0 && (
                 <p className="text-[11.5px] text-zinc-500 font-semibold p-4 text-center">No active conclaves currently running.</p>
               )}
             </div>
@@ -198,29 +260,7 @@ export default function SuperadminDashboard({ setActiveTab }) {
             </div>
 
             <div className="relative pl-4 border-l border-zinc-155 space-y-3.5 ml-2 my-1">
-              {[
-                {
-                  msg: "Regional Admin Meera Nair status set to Inactive",
-                  time: "2 hours ago",
-                  info: "Singapore Metro",
-                  bg: "bg-amber-50 border-amber-200 text-amber-600",
-                  Icon: ShieldAlert
-                },
-                {
-                  msg: "New Conclave 'Quarterly Synergy Q1' created by Sanjay Wagle",
-                  time: "Yesterday, 3:20 PM",
-                  info: "Guntur Region",
-                  bg: "bg-emerald-50 border-emerald-200 text-emerald-600",
-                  Icon: CalendarRange
-                },
-                {
-                  msg: "Schedule matching verified with 0 repeat collisions",
-                  time: "2 days ago",
-                  info: "Phoenix Chapter",
-                  bg: "bg-red-50 border-red-200 text-brand-red",
-                  Icon: CheckCircle2
-                }
-              ].map((activity, idx) => {
+              {recentActivities.map((activity, idx) => {
                 const Icon = activity.Icon;
                 return (
                   <div key={idx} className="relative flex gap-2 items-start text-body-sm group hover:bg-zinc-50/50 p-1 -mx-1 rounded-lg transition-all duration-200">
