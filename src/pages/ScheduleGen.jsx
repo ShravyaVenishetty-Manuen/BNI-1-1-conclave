@@ -24,24 +24,53 @@ import {
 import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 import confetti from 'canvas-confetti';
 import conclavesData from '../data/conclaves.json';
+import { api } from '../services/api';
 
 export default function ScheduleGen({ selectedConclaveId }) {
   // Read locked state from local storage conclaves
-  const [conclaves, setConclaves] = useState(() => {
-    const stored = localStorage.getItem('bni_conclaves');
-    return stored ? JSON.parse(stored) : conclavesData;
-  });
+  const [conclaves, setConclaves] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Sync state if localStorage changes
   useEffect(() => {
-    const sync = () => {
-      const stored = localStorage.getItem('bni_conclaves');
-      if (stored) {
-        setConclaves(JSON.parse(stored));
+    async function loadConclaves() {
+      setIsLoading(true);
+      try {
+        const data = await api.get('/admin/conclaves');
+        setConclaves(data.map(c => {
+          let state = c.state;
+          let country = c.country;
+          const venue = c.venueLocation || c.venue || 'N/A';
+          const venueShort = venue.split(',')[0] || 'N/A';
+          const startDate = c.date || c.startDate || '';
+          const dateRange = c.date ? new Date(c.date).toLocaleDateString([], { month: 'short', day: '2-digit', year: 'numeric' }) : (c.dateRange || 'N/A');
+          
+          let status = c.status;
+          const s = (c.status || '').toLowerCase();
+          if (s === 'registration_open') status = 'Upcoming';
+          else if (s === 'running') status = 'Running';
+          else if (s === 'completed') status = 'Completed';
+          else if (s === 'draft') status = 'Draft';
+          else if (s === 'cancelled') status = 'Cancelled';
+
+          return {
+            ...c,
+            state,
+            country,
+            venue,
+            venueShort,
+            startDate,
+            dateRange,
+            status,
+            progress: s === 'completed' ? 100 : s === 'running' ? 60 : 0
+          };
+        }));
+      } catch (err) {
+        console.error("API load failed for conclaves:", err);
+      } finally {
+        setIsLoading(false);
       }
-    };
-    window.addEventListener('storage', sync);
-    return () => window.removeEventListener('storage', sync);
+    }
+    loadConclaves();
   }, []);
 
   const selectedConclave = useMemo(() =>
@@ -52,32 +81,59 @@ export default function ScheduleGen({ selectedConclaveId }) {
 
   const isLocked = selectedConclave?.status === 'Locked';
 
+  const displayStatus = (status) => {
+    const s = (status || '').toLowerCase();
+    if (s === 'registration_open') return 'Registration Open';
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  };
+
+  const [stats, setStats] = useState(null);
+
+  useEffect(() => {
+    if (!selectedConclaveId) return;
+    async function loadStats() {
+      try {
+        const data = await api.get(`/admin/conclaves/${selectedConclaveId}/stats`);
+        setStats(data);
+      } catch (err) {
+        console.error("Failed to load conclave stats:", err);
+      }
+    }
+    loadStats();
+  }, [selectedConclaveId]);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [checkedQuality, setCheckedQuality] = useState(false);
   const [checkedEdits, setCheckedEdits] = useState(false);
 
-  // Per-conclave state stored in a Map keyed by conclaveId
-  const [perConclaveState, setPerConclaveState] = useState({});
+  const isConclaveRunningOrLocked = selectedConclave && ['running', 'completed', 'locked'].includes((selectedConclave.status || '').toLowerCase());
 
-  const getState = () => perConclaveState[selectedConclaveId] || {
-    progress: 85, isGenerating: false, elapsed: 42, processed: 1054,
-    currentStep: 'Conflict Resolution', round3Status: 'IN PROGRESS (45%)', activeStepIndex: 4
-  };
+  const [progress, setProgress] = useState(isConclaveRunningOrLocked ? 100 : 0);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [elapsed, setElapsed] = useState(isConclaveRunningOrLocked ? 42 : 0);
+  const [processed, setProcessed] = useState(isConclaveRunningOrLocked ? 1054 : 0);
+  const [currentStep, setCurrentStep] = useState(isConclaveRunningOrLocked ? 'Complete' : 'Idle');
+  const [round3Status, setRound3Status] = useState(isConclaveRunningOrLocked ? 'COMPLETED' : 'PENDING');
+  const [activeStepIndex, setActiveStepIndex] = useState(isConclaveRunningOrLocked ? 5 : 0);
 
-  const patchState = (patch) => setPerConclaveState(prev => ({
-    ...prev,
-    [selectedConclaveId]: { ...getState(), ...patch }
-  }));
-
-  const { progress, isGenerating, elapsed, processed, currentStep, round3Status, activeStepIndex } = getState();
-
-  const setProgress = (val) => patchState({ progress: typeof val === 'function' ? val(getState().progress) : val });
-  const setIsGenerating = (val) => patchState({ isGenerating: val });
-  const setElapsed = (val) => patchState({ elapsed: typeof val === 'function' ? val(getState().elapsed) : val });
-  const setProcessed = (val) => patchState({ processed: typeof val === 'function' ? val(getState().processed) : val });
-  const setCurrentStep = (val) => patchState({ currentStep: val });
-  const setRound3Status = (val) => patchState({ round3Status: val });
-  const setActiveStepIndex = (val) => patchState({ activeStepIndex: val });
+  // Sync state if selected conclave changes
+  useEffect(() => {
+    const isRunning = selectedConclave && ['running', 'completed', 'locked'].includes((selectedConclave.status || '').toLowerCase());
+    setProgress(isRunning ? 100 : 0);
+    setElapsed(isRunning ? 42 : 0);
+    setProcessed(isRunning ? 1054 : 0);
+    setCurrentStep(isRunning ? 'Complete' : 'Idle');
+    setRound3Status(isRunning ? 'COMPLETED' : 'PENDING');
+    setActiveStepIndex(isRunning ? 5 : 0);
+    if (selectedConclave) {
+      if (typeof selectedConclave.personsPerTable === 'number') {
+        setPersonsPerTable(selectedConclave.personsPerTable);
+      }
+      if (typeof selectedConclave.roundCount === 'number') {
+        setRoundCount(selectedConclave.roundCount);
+      }
+    }
+  }, [selectedConclave]);
 
   const [toast, setToast] = useState(null);
   const showToast = (title, desc) => {
@@ -87,7 +143,7 @@ export default function ScheduleGen({ selectedConclaveId }) {
 
   // Seating Parameter Config States
   const [personsPerTable, setPersonsPerTable] = useState(8);
-  const [roundCount, setRoundCount] = useState(3);
+  const [roundCount, setRoundCount] = useState(4);
   const [randomSeed, setRandomSeed] = useState(92843);
   const [manualOverride, setManualOverride] = useState(false);
 
@@ -98,48 +154,75 @@ export default function ScheduleGen({ selectedConclaveId }) {
   const [diversityWeight, setDiversityWeight] = useState(70);
   const [regionWeight, setRegionWeight] = useState(50);
 
-  // Generation Simulator Loop
-  useEffect(() => {
-    let interval = null;
-    if (isGenerating && progress < 100) {
-      interval = setInterval(() => {
-        setProgress(prev => {
-          const next = Math.min(prev + 3, 100);
-          if (next === 100) {
-            setIsGenerating(false);
-            setCurrentStep('Schedule Completion');
-            setRound3Status('COMPLETED');
-            setProcessed(1240);
-            setActiveStepIndex(5); // Complete (Step 6)
-            confetti({
-              particleCount: 100,
-              spread: 70,
-              origin: { y: 0.6 }
-            });
-            showToast('Schedule Generated Successfully', '1,240 member paths matching constraint parameters.');
-          }
-          return next;
-        });
-
-        setElapsed(prev => prev + 1);
-        setProcessed(prev => Math.min(prev + 37, 1240));
-      }, 1000);
+  const handleStartGeneration = async () => {
+    if (!selectedConclaveId) {
+      showToast('Error', 'No conclave selected. Please create a conclave first.');
+      return;
     }
-    return () => clearInterval(interval);
-  }, [isGenerating, progress]);
 
-  const handleStartGeneration = () => {
-    if (progress === 100) {
-      // Reset state for a fresh run
-      setProgress(85);
-      setElapsed(42);
-      setProcessed(1054);
-      setCurrentStep('Conflict Resolution');
-      setRound3Status('IN PROGRESS (45%)');
-      setActiveStepIndex(4);
-    }
+    // Reset visual progress states
+    setProgress(0);
+    setElapsed(0);
+    setProcessed(0);
+    setCurrentStep('Sorting Niches');
+    setRound3Status('IN PROGRESS');
+    setActiveStepIndex(1);
     setIsGenerating(true);
     showToast('Starting Generation', 'Running allocation constraints algorithms...');
+    
+    // Start visual progress simulation timer (runs up to 95% until API finishes)
+    let simProgress = 0;
+    const simInterval = setInterval(() => {
+      simProgress = Math.min(simProgress + 10, 95);
+      setProgress(simProgress);
+      setElapsed(prev => prev + 1);
+      setProcessed(prev => Math.min(prev + 5, stats?.counts?.registered || 48));
+      if (simProgress === 30) {
+        setCurrentStep('Table Balances');
+        setActiveStepIndex(2);
+      }
+      if (simProgress === 60) {
+        setCurrentStep('Diversity Mapping');
+        setActiveStepIndex(3);
+      }
+      if (simProgress === 80) {
+        setCurrentStep('Conflict Resolution');
+        setActiveStepIndex(4);
+      }
+    }, 250);
+
+    try {
+      await api.post(`/admin/conclaves/${selectedConclaveId}/generate-schedule`, {
+        activeOnly: false, // Seeded users are offline by default, so activeOnly must be false to seat them
+        autoFillCaptains: true,
+        personsPerTable,
+        roundCount
+      });
+      
+      clearInterval(simInterval);
+
+      // Instantly mark completed
+      setProgress(100);
+      setIsGenerating(false);
+      setCurrentStep('Schedule Completion');
+      setRound3Status('COMPLETED');
+      setProcessed(stats?.counts?.registered || 48);
+      setActiveStepIndex(5);
+      
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+      
+      showToast('Schedule Generated Successfully', 'Tables allocated and saved to database.');
+    } catch (err) {
+      clearInterval(simInterval);
+      console.warn("Backend schedule generation failed:", err.message);
+      showToast('Generation Failed', err.message || 'Backend schedule generation failed.');
+      setIsGenerating(false);
+      setProgress(0);
+    }
   };
 
   const handleAbort = () => {
@@ -147,19 +230,45 @@ export default function ScheduleGen({ selectedConclaveId }) {
     showToast('Generation Paused', 'Task execution stopped by administrator.');
   };
 
-  const handleConfirmLock = () => {
-    const updatedConclaves = conclaves.map(c => {
-      if (c.id === selectedConclaveId) {
-        return { ...c, status: 'Locked' };
-      }
-      return c;
-    });
-    setConclaves(updatedConclaves);
-    localStorage.setItem('bni_conclaves', JSON.stringify(updatedConclaves));
-    window.dispatchEvent(new Event('storage'));
+  const handleConfirmLock = async () => {
+    const status = (selectedConclave?.status || '').toLowerCase();
+    if (status !== 'running') {
+      // Avoid calling backend which will 409 when conclave isn't running
+      console.warn('Attempted to lock conclave when not running:', status);
+      showToast('Cannot Lock Conclave', 'Conclave must be running before it can be completed. Start the round first.');
+      setIsModalOpen(false);
+      return;
+    }
 
-    setIsModalOpen(false);
-    showToast('Conclave Locked', `${conclaveName} has been locked. Roster published to the mobile app.`);
+    try {
+      await api.post(`/admin/conclaves/${selectedConclaveId}/complete`);
+      const updatedConclaves = conclaves.map(c => {
+        if (c.id === selectedConclaveId) {
+          return { ...c, status: 'Locked' };
+        }
+        return c;
+      });
+      setConclaves(updatedConclaves);
+      localStorage.setItem('bni_conclaves', JSON.stringify(updatedConclaves));
+      window.dispatchEvent(new Event('storage'));
+      
+      setIsModalOpen(false);
+      showToast('Conclave Locked Successfully', 'Seating assignments are now frozen.');
+    } catch (err) {
+      console.warn("Backend conclave lock failed, using local storage fallback:", err.message);
+      const updatedConclaves = conclaves.map(c => {
+        if (c.id === selectedConclaveId) {
+          return { ...c, status: 'Locked' };
+        }
+        return c;
+      });
+      setConclaves(updatedConclaves);
+      localStorage.setItem('bni_conclaves', JSON.stringify(updatedConclaves));
+      window.dispatchEvent(new Event('storage'));
+      
+      setIsModalOpen(false);
+      showToast('Conclave Locked Locally', 'Assignments are locked in local storage.');
+    }
 
     // Confetti drop
     confetti({
@@ -210,9 +319,17 @@ export default function ScheduleGen({ selectedConclaveId }) {
     showToast('Export Downloaded', `Schedule configuration exported (${progress}% complete).`);
   };
 
-  const uniqueMeetingsVal = Math.min(100, Math.round(90 + (overlapWeight * 0.1) - (progress === 100 ? 0 : 2.5)));
-  const diversityVal = Math.min(100, Math.round(85 + (diversityWeight * 0.1) - (progress === 100 ? 0 : 3.5)));
-  const repeatedPairingsVal = Math.max(0, Math.round(10 - (chapterWeight * 0.1)));
+  const uniqueMeetingsVal = selectedConclave?.scheduleSummary?.coverage !== undefined
+    ? Math.round(selectedConclave.scheduleSummary.coverage * 100)
+    : Math.min(100, Math.round(90 + (overlapWeight * 0.1) - (progress === 100 ? 0 : 2.5)));
+
+  const repeatedPairingsVal = selectedConclave?.scheduleSummary?.repeatPairings !== undefined
+    ? selectedConclave.scheduleSummary.repeatPairings
+    : Math.max(0, Math.round(10 - (chapterWeight * 0.1)));
+
+  const diversityVal = selectedConclave?.scheduleSummary?.coverage !== undefined
+    ? Math.min(100, Math.round((selectedConclave.scheduleSummary.coverage * 100) - (selectedConclave.scheduleSummary.repeatPairings || 0)))
+    : Math.min(100, Math.round(85 + (diversityWeight * 0.1) - (progress === 100 ? 0 : 3.5)));
 
   return (
     <div className="p-4 sm:p-6 max-w-[1600px] mx-auto w-full flex flex-col gap-6 animate-fade-in">
@@ -228,17 +345,9 @@ export default function ScheduleGen({ selectedConclaveId }) {
 
         <div className="flex items-center gap-2.5 shrink-0 w-full sm:w-auto">
           <button
-            onClick={() => {
-              setProgress(85);
-              setElapsed(42);
-              setProcessed(1054);
-              setCurrentStep('Conflict Resolution');
-              setRound3Status('IN PROGRESS (45%)');
-              setActiveStepIndex(4);
-              setIsGenerating(false);
-              showToast('Simulation Reset', 'Schedule metrics reverted to initial state.');
-            }}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 border border-zinc-200 bg-white text-zinc-700 font-bold text-button rounded-lg hover:bg-zinc-50 transition-smooth cursor-pointer shadow-sm"
+            onClick={handleStartGeneration}
+            disabled={isGenerating}
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 border border-zinc-200 bg-white text-zinc-700 font-bold text-button rounded-lg hover:bg-zinc-50 transition-smooth cursor-pointer shadow-sm disabled:opacity-50"
           >
             <RefreshCw className="w-4 h-4 text-zinc-400" />
             Regenerate
@@ -286,15 +395,21 @@ export default function ScheduleGen({ selectedConclaveId }) {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 pt-1 font-semibold text-zinc-650">
           <div className="flex flex-col">
             <span className="text-[10px] text-zinc-400 font-bold uppercase">Members</span>
-            <span className="text-body-sm font-bold text-zinc-900 mt-0.5">{(selectedConclave?.memberCount || 0).toLocaleString()}</span>
+            <span className="text-body-sm font-bold text-zinc-900 mt-0.5">
+              {stats ? (stats.counts.registered).toLocaleString() : (selectedConclave?.memberCount || 0).toLocaleString()}
+            </span>
           </div>
           <div className="flex flex-col">
             <span className="text-[10px] text-zinc-400 font-bold uppercase">Captains</span>
-            <span className="text-body-sm font-bold text-zinc-900 mt-0.5">{selectedConclave?.captainCount || 0}</span>
+            <span className="text-body-sm font-bold text-zinc-900 mt-0.5">
+              {stats ? stats.counts.captains : (selectedConclave?.captainCount || 0)}
+            </span>
           </div>
           <div className="flex flex-col">
             <span className="text-[10px] text-zinc-400 font-bold uppercase">Business Types</span>
-            <span className="text-body-sm font-bold text-zinc-900 mt-0.5">{selectedConclave?.businessTypes || 0}</span>
+            <span className="text-body-sm font-bold text-zinc-900 mt-0.5">
+              {stats ? 14 : (selectedConclave?.businessTypes || 0)}
+            </span>
           </div>
           <div className="flex flex-col">
             <span className="text-[10px] text-zinc-400 font-bold uppercase">Rounds</span>
@@ -302,12 +417,14 @@ export default function ScheduleGen({ selectedConclaveId }) {
           </div>
           <div className="flex flex-col">
             <span className="text-[10px] text-zinc-400 font-bold uppercase">Tables</span>
-            <span className="text-body-sm font-bold text-zinc-900 mt-0.5">{Math.ceil((selectedConclave?.memberCount || 0) / personsPerTable)}</span>
+            <span className="text-body-sm font-bold text-zinc-900 mt-0.5">
+              {Math.ceil((stats ? stats.counts.registered : (selectedConclave?.memberCount || 0)) / personsPerTable)}
+            </span>
           </div>
           <div className="flex flex-col">
             <span className="text-[10px] text-zinc-400 font-bold uppercase">Status</span>
             <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-100 w-fit mt-1 uppercase tracking-wider">
-              {selectedConclave?.status || 'Running'}
+              {selectedConclave ? displayStatus(selectedConclave.status) : 'Running'}
             </span>
           </div>
         </div>
@@ -342,11 +459,11 @@ export default function ScheduleGen({ selectedConclaveId }) {
             <label className="text-[10px] text-zinc-400 font-extrabold uppercase tracking-widest whitespace-nowrap">Rounds</label>
             <input
               type="number"
-              min={1}
-              max={6}
+              min={4}
+              max={8}
               value={roundCount}
               onChange={(e) => {
-                const val = Math.max(1, Math.min(6, parseInt(e.target.value) || 3));
+                const val = Math.max(4, Math.min(8, parseInt(e.target.value) || 4));
                 setRoundCount(val);
               }}
               className="w-16 text-body-sm font-bold text-zinc-800 border border-zinc-200 rounded-lg py-1 px-2.5 outline-none bg-zinc-50 focus:bg-white focus:border-brand-red focus:ring-1 focus:ring-brand-red/20 transition-smooth"
@@ -645,57 +762,64 @@ export default function ScheduleGen({ selectedConclaveId }) {
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Round Preview */}
+      </div>      {/* Round Preview */}
       <div className="space-y-4">
         <h4 className="text-section-heading font-extrabold text-zinc-950 px-1">Round Previews</h4>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="border border-zinc-100 bg-white rounded-xl p-4 shadow-sm">
-            <div className="flex justify-between items-start mb-3">
-              <div>
-                <h5 className="font-bold text-zinc-800 text-body-sm">Round 1</h5>
-                <p className="text-[11px] text-zinc-400 font-semibold mt-0.5">{Math.ceil((selectedConclave?.memberCount || 0) / personsPerTable)} Tables • {(selectedConclave?.memberCount || 0).toLocaleString()} Members</p>
-              </div>
-              <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-            </div>
-            <div className="flex items-center justify-between text-[10px] text-zinc-455 font-bold border-t border-zinc-100 pt-3 mt-2.5">
-              <span className="tracking-wider">COMPLETED</span>
-            </div>
-          </div>
+          {Array.from({ length: roundCount }).map((_, idx) => {
+            const roundNum = idx + 1;
+            const currentRound = selectedConclave?.currentRound || 0;
+            const isConclaveCompleted = selectedConclave?.status === 'completed';
+            
+            let roundStatus = 'SCHEDULED';
+            let isRoundCompleted = false;
+            let isRoundActive = false;
 
-          <div className="border border-zinc-100 bg-white rounded-xl p-4 shadow-sm">
-            <div className="flex justify-between items-start mb-3">
-              <div>
-                <h5 className="font-bold text-zinc-800 text-body-sm">Round 2</h5>
-                <p className="text-[11px] text-zinc-400 font-semibold mt-0.5">{Math.ceil((selectedConclave?.memberCount || 0) / personsPerTable)} Tables • {(selectedConclave?.memberCount || 0).toLocaleString()} Members</p>
-              </div>
-              <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-            </div>
-            <div className="flex items-center justify-between text-[10px] text-zinc-455 font-bold border-t border-zinc-100 pt-3 mt-2.5">
-              <span className="tracking-wider">COMPLETED</span>
-            </div>
-          </div>
+            if (progress < 100) {
+              roundStatus = roundNum === 1 ? 'GENERATING...' : 'QUEUED';
+            } else if (isConclaveCompleted) {
+              roundStatus = 'COMPLETED';
+              isRoundCompleted = true;
+            } else if (currentRound === 0) {
+              roundStatus = 'SCHEDULED';
+            } else if (roundNum < currentRound) {
+              roundStatus = 'COMPLETED';
+              isRoundCompleted = true;
+            } else if (roundNum === currentRound) {
+              roundStatus = 'ACTIVE';
+              isRoundActive = true;
+            } else {
+              roundStatus = 'SCHEDULED';
+            }
 
-          <div className={`border rounded-xl p-4 shadow-sm transition-all duration-300 ${progress === 100 ? 'border-zinc-100 bg-white' : 'border-brand-red/40 bg-red-50/5'}`}>
-            <div className="flex justify-between items-start mb-3">
-              <div>
-                <h5 className={`font-bold text-body-sm ${progress === 100 ? 'text-zinc-800' : 'text-brand-red'}`}>Round 3</h5>
-                <p className="text-[11px] text-zinc-400 font-semibold mt-0.5">
-                  {progress === 100 ? `${Math.ceil((selectedConclave?.memberCount || 0) / personsPerTable)} Tables • ${(selectedConclave?.memberCount || 0).toLocaleString()} Members` : 'Allocating Members...'}
-                </p>
+            return (
+              <div key={roundNum} className={`border rounded-xl p-4 shadow-sm transition-all duration-300 ${isRoundActive ? 'border-brand-red/40 bg-red-50/5' : 'border-zinc-100 bg-white'}`}>
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <h5 className={`font-bold text-body-sm ${isRoundActive ? 'text-brand-red' : 'text-zinc-800'}`}>Round {roundNum}</h5>
+                    <p className="text-[11px] text-zinc-400 font-semibold mt-0.5">
+                      {progress === 100
+                        ? `${selectedConclave?.scheduleSummary?.tableCount || Math.ceil((stats?.counts?.registered || selectedConclave?.participants?.length || 0) / personsPerTable)} Tables • ${(stats?.counts?.registered || selectedConclave?.participants?.length || 0).toLocaleString()} Members`
+                        : 'Allocating Members...'}
+                    </p>
+                  </div>
+                  {isRoundCompleted ? (
+                    <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                  ) : isRoundActive ? (
+                    <span className="w-2.5 h-2.5 rounded-full bg-brand-red animate-pulse mt-1" />
+                  ) : (
+                    <Clock className="w-4 h-4 text-zinc-300 mt-0.5" />
+                  )}
+                </div>
+                <div className="flex items-center justify-between text-[10px] font-bold border-t border-zinc-100 pt-3 mt-2.5">
+                  <span className={isRoundCompleted ? 'text-emerald-700' : isRoundActive ? 'text-brand-red' : 'text-zinc-400'}>
+                    {roundStatus}
+                  </span>
+                </div>
               </div>
-              {progress === 100 ? (
-                <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-              ) : (
-                <span className="w-2.5 h-2.5 rounded-full bg-brand-red animate-pulse mt-1" />
-              )}
-            </div>
-            <div className="flex items-center justify-between text-[10px] font-bold border-t border-zinc-100 pt-3 mt-2.5">
-              <span className={progress === 100 ? 'text-zinc-400' : 'text-brand-red'}>{round3Status}</span>
-            </div>
-          </div>
+            );
+          })}
         </div>
       </div>
 
@@ -719,35 +843,37 @@ export default function ScheduleGen({ selectedConclaveId }) {
                       <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
                       <span className="text-body-sm">Members Registered</span>
                     </div>
-                    <span className="text-[10px] text-zinc-455 font-bold uppercase">{(selectedConclave?.memberCount || 0).toLocaleString()} Validated</span>
+                    <span className="text-[10px] text-zinc-455 font-bold uppercase">{(stats?.counts?.registered || selectedConclave?.participants?.length || 0).toLocaleString()} Validated</span>
                   </li>
                   <li className="flex items-center justify-between p-3.5 border border-zinc-100 rounded-xl hover:bg-zinc-50/50 transition-smooth">
                     <div className="flex items-center gap-3">
                       <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
                       <span className="text-body-sm">Captains Assigned</span>
                     </div>
-                    <span className="text-[10px] text-zinc-455 font-bold uppercase">{selectedConclave?.captainCount || 0} Active</span>
+                    <span className="text-[10px] text-zinc-455 font-bold uppercase">{stats?.counts?.captains || selectedConclave?.schedule?.rounds?.[0]?.tables?.filter(t => t.captainId).length || 0} Active</span>
                   </li>
                   <li className="flex items-center justify-between p-3.5 border border-zinc-100 rounded-xl hover:bg-zinc-50/50 transition-smooth">
                     <div className="flex items-center gap-3">
                       <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
                       <span className="text-body-sm">Snapshot Status</span>
                     </div>
-                    <span className="text-[10px] text-zinc-455 font-bold uppercase">Ver: SNAP_922</span>
+                    <span className="text-[10px] text-zinc-455 font-bold uppercase">Ver: {selectedConclave?.snapshot?.version || (selectedConclave?.id ? `SNAP_${selectedConclave.id.slice(0, 4).toUpperCase()}` : 'SNAP_LIVE')}</span>
                   </li>
                   <li className="flex items-center justify-between p-3.5 border border-zinc-100 rounded-xl hover:bg-zinc-50/50 transition-smooth">
                     <div className="flex items-center gap-3">
                       <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
                       <span className="text-body-sm">Validation Check</span>
                     </div>
-                    <span className="text-[10px] text-zinc-455 font-bold uppercase">No Conflicts</span>
+                    <span className="text-[10px] text-zinc-455 font-bold uppercase">
+                      {selectedConclave?.warnings?.length ? `${selectedConclave.warnings.length} Warnings` : 'No Conflicts'}
+                    </span>
                   </li>
                   <li className="flex items-center justify-between p-3.5 border border-zinc-100 rounded-xl hover:bg-zinc-50/50 transition-smooth">
                     <div className="flex items-center gap-3">
                       <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
                       <span className="text-body-sm">Schedule Engine Quality</span>
                     </div>
-                    <span className="text-[10px] text-zinc-455 font-bold uppercase">3 Rounds Generated</span>
+                    <span className="text-[10px] text-zinc-455 font-bold uppercase">{roundCount} Rounds Generated</span>
                   </li>
                 </ul>
               </div>
@@ -759,7 +885,7 @@ export default function ScheduleGen({ selectedConclaveId }) {
                 <h4 className="text-[10px] font-bold text-brand-red uppercase tracking-widest flex items-center gap-1.5">
                   <Info className="w-4 h-4" /> Lock Impact Guidelines
                 </h4>
-                <div className="space-y-3.5 text-body-sm font-semibold text-zinc-650">
+                <div className="space-y-3.5 text-body-sm font-semibold text-zinc-655">
                   <div className="flex gap-3">
                     <Lock className="w-4 h-4 text-zinc-455 shrink-0 mt-0.5" />
                     <p className="leading-relaxed text-[11.5px]">
@@ -789,19 +915,31 @@ export default function ScheduleGen({ selectedConclaveId }) {
                 <div className="grid grid-cols-2 gap-y-4 text-body-sm font-semibold text-zinc-655">
                   <div>
                     <p className="text-[10px] text-zinc-400 font-bold uppercase">Total Tables</p>
-                    <p className="text-body-sm font-bold text-zinc-900 mt-1">{Math.ceil((selectedConclave?.memberCount || 0) / personsPerTable)} Seated</p>
+                    <p className="text-body-sm font-bold text-zinc-900 mt-1">
+                      {selectedConclave?.scheduleSummary?.tableCount || Math.ceil((stats?.counts?.registered || selectedConclave?.participants?.length || 0) / personsPerTable)} Tables
+                    </p>
                   </div>
                   <div>
                     <p className="text-[10px] text-zinc-400 font-bold uppercase">Schedule Quality</p>
-                    <p className="text-body-sm font-bold text-emerald-700 mt-1">98% Match Rate</p>
+                    <p className="text-body-sm font-bold text-emerald-700 mt-1">
+                      {selectedConclave?.scheduleSummary?.coverage !== undefined
+                        ? `${Math.round(selectedConclave.scheduleSummary.coverage * 100)}%`
+                        : '98%'} Match Rate
+                    </p>
                   </div>
                   <div>
                     <p className="text-[10px] text-zinc-400 font-bold uppercase">Repeat Pairs</p>
-                    <p className="text-body-sm font-bold text-zinc-900 mt-1">0 duplicates</p>
+                    <p className="text-body-sm font-bold text-zinc-900 mt-1">
+                      {selectedConclave?.scheduleSummary?.repeatPairings !== undefined
+                        ? selectedConclave.scheduleSummary.repeatPairings
+                        : 0} duplicates
+                    </p>
                   </div>
                   <div>
                     <p className="text-[10px] text-zinc-400 font-bold uppercase">Validation Score</p>
-                    <p className="text-body-sm font-bold text-zinc-900 mt-1">100 / 100</p>
+                    <p className="text-body-sm font-bold text-zinc-900 mt-1">
+                      {selectedConclave?.warnings?.length ? Math.max(70, 100 - selectedConclave.warnings.length * 10) : 100} / 100
+                    </p>
                   </div>
                 </div>
               </div>

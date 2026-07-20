@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Search,
   X,
@@ -13,18 +13,78 @@ import {
   Building2
 } from 'lucide-react';
 import Pagination from '../components/Pagination';
-
+import { api } from '../services/api';
 import initialConclaves from '../data/conclaves_snapshot.json';
 
 export default function Snapshot({ searchQuery, selectedConclaveId }) {
-  const [conclaves, setConclaves] = useState(initialConclaves);
-  
+  const [conclaves, setConclaves] = useState([]);
+  const [isLoadingSnapshot, setIsLoadingSnapshot] = useState(false);
+
+  useEffect(() => {
+    async function loadSnapshot() {
+      setIsLoadingSnapshot(true);
+      try {
+        const conclavesList = await api.get('/admin/conclaves');
+        const updatedConclaves = await Promise.all(conclavesList.map(async (c) => {
+          try {
+            const res = await api.get(`/admin/conclaves/${c.id}/registrations`);
+            const regsList = res.registrations || [];
+            return {
+              ...c,
+              totalRegistered: regsList.length,
+              activeMembers: regsList.filter(r => r.isActive).length,
+              inactive: regsList.filter(r => !r.isActive).length,
+              participants: regsList.map(r => ({
+                id: r.uid || r.id,
+                name: r.name,
+                category: r.businessCategory || 'N/A',
+                captain: r.role === 'captain' ? 'Yes' : 'No',
+                loginStatus: r.isActive ? 'Active' : 'Offline',
+                included: true,
+                remarks: '—',
+                avatar: r.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+              }))
+            };
+          } catch (err) {
+            console.warn("Failed to load registrations for conclave", c.id, err);
+            return {
+              ...c,
+              totalRegistered: 0,
+              activeMembers: 0,
+              inactive: 0,
+              participants: []
+            };
+          }
+        }));
+        setConclaves(updatedConclaves);
+      } catch (err) {
+        console.error("API load failed, using local storage fallback:", err);
+        setConclaves(initialConclaves);
+      } finally {
+        setIsLoadingSnapshot(false);
+      }
+    }
+    loadSnapshot();
+  }, [selectedConclaveId]);
+
   const activeConclaveIndex = useMemo(() => {
+    if (!conclaves || conclaves.length === 0) return 0;
     const idx = conclaves.findIndex(c => c.id === selectedConclaveId);
     return idx !== -1 ? idx : 0;
   }, [conclaves, selectedConclaveId]);
 
-  const currentConclave = conclaves[activeConclaveIndex];
+  const currentConclave = conclaves[activeConclaveIndex] || {
+    name: 'Loading...',
+    dateRange: '...',
+    venue: '...',
+    status: 'Draft',
+    totalRegistered: 0,
+    activeMembers: 0,
+    inactive: 0,
+    version: 'V. 1.0',
+    lastSnapshot: 'Never',
+    participants: []
+  };
 
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
@@ -48,10 +108,14 @@ export default function Snapshot({ searchQuery, selectedConclaveId }) {
     setTimeout(() => setToast(null), 3000);
   };
 
-  // Filtered participants
-  const filteredParticipants = useMemo(() => {
+  // Reset pagination and selection when filters change
+  useEffect(() => {
     setCurrentPage(1);
     setSelectedRows(new Set());
+  }, [searchVal, categoryFilter]);
+
+  // Filtered participants
+  const filteredParticipants = useMemo(() => {
     return currentConclave.participants.filter(p => {
       const matchesSearch =
         p.name.toLowerCase().includes(searchVal.toLowerCase()) ||
@@ -122,22 +186,45 @@ export default function Snapshot({ searchQuery, selectedConclaveId }) {
     showToast('Export Completed', `Successfully exported snapshot with ${filteredParticipants.length} members.`);
   };
 
-  const handleTakeSnapshot = () => {
-    // Generate new version tag and update timestamp
-    setConclaves(prev => prev.map((c, idx) => {
-      if (idx === activeConclaveIndex) {
-        const currentVer = parseFloat(c.version.substring(2));
-        const newVer = `V. ${(currentVer + 0.1).toFixed(1)}`;
-        return {
-          ...c,
-          version: newVer,
-          lastSnapshot: `${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date().toLocaleDateString([], { month: 'short', day: '2-digit', year: 'numeric' })}`
-        };
-      }
-      return c;
-    }));
-    setIsSnapshotModalOpen(false);
-    showToast('Snapshot Captured', `New frozen participant state version has been locked successfully.`);
+  const handleTakeSnapshot = async () => {
+    if (!currentConclave || !currentConclave.id || currentConclave.name === 'Loading...') {
+      showToast('Error', 'Conclave details not loaded yet. Please wait.');
+      return;
+    }
+
+    try {
+      await api.post(`/admin/conclaves/${currentConclave.id}/registration`);
+      setConclaves(prev => prev.map((c, idx) => {
+        if (idx === activeConclaveIndex) {
+          const currentVer = parseFloat((c.version || "V. 1.0").substring(2));
+          const newVer = `V. ${(currentVer + 0.1).toFixed(1)}`;
+          return {
+            ...c,
+            version: newVer,
+            lastSnapshot: `${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date().toLocaleDateString([], { month: 'short', day: '2-digit', year: 'numeric' })}`
+          };
+        }
+        return c;
+      }));
+      setIsSnapshotModalOpen(false);
+      showToast('Snapshot Captured', `New frozen participant state version has been locked successfully.`);
+    } catch (err) {
+      console.warn("Backend snapshot failed, using local fallback:", err.message);
+      setConclaves(prev => prev.map((c, idx) => {
+        if (idx === activeConclaveIndex) {
+          const currentVer = parseFloat((c.version || "V. 1.0").substring(2));
+          const newVer = `V. ${(currentVer + 0.1).toFixed(1)}`;
+          return {
+            ...c,
+            version: newVer,
+            lastSnapshot: `${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date().toLocaleDateString([], { month: 'short', day: '2-digit', year: 'numeric' })}`
+          };
+        }
+        return c;
+      }));
+      setIsSnapshotModalOpen(false);
+      showToast('Snapshot Captured', `New frozen local participant state version has been locked.`);
+    }
   };
 
   return (
@@ -416,12 +503,14 @@ export default function Snapshot({ searchQuery, selectedConclaveId }) {
           <div className="grid grid-cols-2 gap-4 pt-1">
             <div className="bg-zinc-550/10 p-3.5 bg-zinc-50 rounded-lg border border-zinc-100">
               <span className="text-[9px] text-zinc-400 font-bold uppercase block">Tables Required</span>
-              <span className="text-body-lg font-bold text-zinc-900 block mt-1">155</span>
-              <span className="text-[9px] text-zinc-500 font-semibold block mt-0.5">@ 8 per table</span>
+              <span className="text-body-lg font-bold text-zinc-900 block mt-1">
+                {Math.ceil((currentConclave.memberCount || 0) / (currentConclave.personsPerTable || 8))}
+              </span>
+              <span className="text-[9px] text-zinc-500 font-semibold block mt-0.5">@ {currentConclave.personsPerTable || 8} per table</span>
             </div>
             <div className="bg-zinc-550/10 p-3.5 bg-zinc-50 rounded-lg border border-zinc-100">
               <span className="text-[9px] text-zinc-400 font-bold uppercase block">Expected Rounds</span>
-              <span className="text-body-lg font-bold text-zinc-900 block mt-1">3 Rounds</span>
+              <span className="text-body-lg font-bold text-zinc-900 block mt-1">{currentConclave.roundCount || 4} Rounds</span>
               <span className="text-[9px] text-zinc-500 font-semibold block mt-0.5">45 mins each</span>
             </div>
 

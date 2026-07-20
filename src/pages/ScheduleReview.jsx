@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import {
   RefreshCw,
   Download,
+  Play,
   Lock,
   Search,
   Filter,
@@ -29,10 +30,12 @@ import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pi
 import initialTables from '../data/tables.json';
 import conclavesData from '../data/conclaves.json';
 import initialConclavesValidation from '../data/conclaves_validation.json';
+import { api } from '../services/api';
 
 export default function ScheduleReview({ setActiveTab, searchQuery: globalSearchQuery, selectedConclaveId }) {
-  const allTables = initialTables;
-  const [localTables, setLocalTables] = useState(initialTables);
+  const [conclave, setConclave] = useState(null);
+  const [isLoadingReview, setIsLoadingReview] = useState(false);
+  const [localTables, setLocalTables] = useState([]);
   const [activeRound, setActiveRound] = useState(() => {
     const marker = localStorage.getItem('schedule_review_tab');
     if (marker === 'validation') {
@@ -41,6 +44,78 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
     }
     return 1;
   });
+
+  useEffect(() => {
+    async function loadConclaveDetails() {
+      setIsLoadingReview(true);
+      try {
+        // Fetch the full conclave document (includes schedule & participants)
+        const full = await api.get(`/admin/conclaves/${selectedConclaveId}`);
+        setConclave(full);
+      } catch (err) {
+        console.error("API load failed for conclave details, falling back to local storage:", err);
+        const stored = localStorage.getItem('bni_conclaves');
+        const list = stored ? JSON.parse(stored) : [];
+        const selected = list.find(c => c.id === selectedConclaveId) || null;
+        setConclave(selected);
+      } finally {
+        setIsLoadingReview(false);
+      }
+    }
+    loadConclaveDetails();
+  }, [selectedConclaveId]);
+
+  
+
+  useEffect(() => {
+    if (!conclave) return;
+
+    if (conclave.schedule && conclave.participants) {
+      // Real backend schedule mapped to frontend representation
+      const roundSeating = conclave.schedule.rounds.find(r => r.roundNumber === activeRound);
+      if (roundSeating) {
+        const mapped = roundSeating.tables.map(t => {
+          const captain = conclave.participants.find(p => p.id === t.captainId);
+          const members = t.memberIds.map(mId => {
+            const p = conclave.participants.find(p => p.id === mId);
+            return {
+              id: p?._originalUid || String(mId),
+              name: p?.name || 'Unknown',
+              category: p?.businessCategory || 'Uncategorized',
+              conflict: false
+            };
+          });
+
+          // Check if there are category conflicts (duplicate categories at the table)
+          const categories = [captain?.businessCategory, ...members.map(m => m.category)].filter(Boolean);
+          const hasConflict = categories.length !== new Set(categories).size;
+
+          return {
+            id: `Table ${String(t.tableNumber).padStart(2, '0')}`,
+            conclaveId: selectedConclaveId,
+            status: hasConflict ? 'warning' : 'validated',
+            warningText: hasConflict ? 'Warning: Business Conflict' : undefined,
+            capacity: `${members.length + 1}/${conclave.personsPerTable}`,
+            captain: {
+              name: captain?.name || 'Unknown',
+              role: 'Table Captain',
+              initials: captain?.name ? captain.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'TC'
+            },
+            members
+          };
+        });
+        setLocalTables(mapped);
+      } else {
+        setLocalTables([]);
+      }
+    } else {
+      // Prefer live backend data: if the conclave exists but lacks a generated
+      // schedule/participants, don't show bundled mock tables automatically.
+      // Leave the review empty until the server publishes a schedule.
+      setLocalTables([]);
+    }
+  }, [conclave, activeRound, selectedConclaveId]);
+
   const [localSearchQuery, setLocalSearchQuery] = useState('');
   const searchVal = globalSearchQuery !== undefined ? globalSearchQuery : localSearchQuery;
   const [statusFilter, setStatusFilter] = useState('All');
@@ -53,7 +128,47 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
     return idx !== -1 ? idx : 0;
   }, [validationConclaves, selectedConclaveId]);
 
-  const activeConclave = validationConclaves[activeConclaveIndex] || initialConclavesValidation[0];
+  const activeConclave = validationConclaves[activeConclaveIndex] || initialConclavesValidation[0] || {
+    passedCount: 0,
+    warningsCount: 0,
+    errorsCount: 0,
+    score: 100,
+    rules: [],
+    timeline: []
+  };
+
+  const conclaveKPIs = useMemo(() => {
+    if (!conclave) {
+      return {
+        rounds: 3,
+        tables: 0,
+        members: 0,
+        captains: 0,
+        repeatPairings: 0
+      };
+    }
+    const rounds = conclave.scheduleSummary?.roundCount || conclave.roundCount || conclave.schedule?.rounds?.length || 4;
+    const tables = conclave.scheduleSummary?.tableCount || conclave.schedule?.rounds?.[0]?.tables?.length || 0;
+    const members = conclave.participants?.length || 0;
+    const uniqueCaptains = new Set(conclave.schedule?.rounds?.[0]?.tables?.map(t => t.captainId).filter(Boolean));
+    const captains = uniqueCaptains.size || conclave.scheduleSummary?.tableCount || 0;
+    const repeatPairings = conclave.scheduleSummary?.repeatPairingCount || 0;
+    return {
+      rounds,
+      tables,
+      members,
+      captains,
+      repeatPairings
+    };
+  }, [conclave]);
+
+  const roundsList = useMemo(() => {
+    const list = [];
+    for (let i = 1; i <= conclaveKPIs.rounds; i++) {
+      list.push(i);
+    }
+    return list;
+  }, [conclaveKPIs.rounds]);
 
   const [expandedRules, setExpandedRules] = useState(new Set(['rule-2']));
   const [isValidating, setIsValidating] = useState(false);
@@ -125,16 +240,42 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
   const [targetMemberId, setTargetMemberId] = useState('');
 
   // KPI state
-  const [issuesCount, setIssuesCount] = useState(2);
-  const [warningsCount, setWarningsCount] = useState(2);
-  const [overallScore, setOverallScore] = useState(96);
+  const [issuesCount, setIssuesCount] = useState(0);
+  const [warningsCount, setWarningsCount] = useState(0);
+  const [overallScore, setOverallScore] = useState(100);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // Validation affected list
-  const [affectedList, setAffectedList] = useState([
-    { id: 'aff-1', title: 'Table 01: Duplicate Profession', desc: 'Two Legal members placed at the same table. This violates Rule #4.' },
-    { id: 'aff-2', title: 'Table 112: Capacity Underfill', desc: 'Table has only 4 members assigned. Recommended min: 6.' }
-  ]);
+  const [affectedList, setAffectedList] = useState([]);
+
+  useEffect(() => {
+    if (!conclave) return;
+
+    if (!selectedConclaveId.startsWith('CON-')) {
+      // Real database conclave
+      setIssuesCount(0); // If it generated, there are no blocking validation errors
+      setWarningsCount(conclave.warnings ? conclave.warnings.length : 0);
+      
+      const coverage = conclave.scheduleSummary?.coverage || 1.0;
+      setOverallScore(Math.round(coverage * 100));
+      
+      const affected = (conclave.warnings || []).map((w, idx) => ({
+        id: `warn-${idx}`,
+        title: w.code || 'Warning',
+        desc: w.message
+      }));
+      setAffectedList(affected);
+    } else {
+      // Mock conclave fallback
+      setIssuesCount(2);
+      setWarningsCount(2);
+      setOverallScore(96);
+      setAffectedList([
+        { id: 'aff-1', title: 'Table 01: Duplicate Profession', desc: 'Two Legal members placed at the same table. This violates Rule #4.' },
+        { id: 'aff-2', title: 'Table 112: Capacity Underfill', desc: 'Table has only 4 members assigned. Recommended min: 6.' }
+      ]);
+    }
+  }, [conclave, selectedConclaveId]);
 
 
 
@@ -142,6 +283,20 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
   const showToast = (title, desc) => {
     setToast({ title, desc });
     setTimeout(() => setToast(null), 3000);
+  };
+
+  const handleStartRound = async (roundNumber = 1) => {
+    if (!selectedConclaveId) return;
+    try {
+      await api.post(`/admin/conclaves/${selectedConclaveId}/start-round`, { roundNumber });
+      // Refresh conclave data
+      const full = await api.get(`/admin/conclaves/${selectedConclaveId}`);
+      setConclave(full);
+      showToast('Round Started', `Round ${roundNumber} started.`);
+    } catch (err) {
+      console.error('Failed to start round:', err.message || err);
+      showToast('Start Round Failed', err.message || 'Could not start round.');
+    }
   };
 
   // Revalidate click simulator
@@ -193,7 +348,7 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
 
   const setTables = (updater) => setLocalTables(updater);
 
-  const selectedConclave = conclavesData.find(c => c.id === selectedConclaveId);
+  const selectedConclave = conclave;
   const conclaveName = selectedConclave?.name || 'Conclave';
 
   // Filtered tables by search query & status filter
@@ -282,6 +437,16 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
             Export Schedule
           </button>
 
+          {conclave?.schedule && (conclave.status || '').toLowerCase() !== 'running' && (
+            <button
+              onClick={() => handleStartRound(1)}
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 border border-zinc-200 bg-white text-zinc-700 font-bold text-button rounded-lg hover:bg-zinc-50 transition-smooth cursor-pointer shadow-sm"
+            >
+              <Play className="w-4 h-4 text-zinc-400" />
+              Start Round
+            </button>
+          )}
+
           <button
             onClick={handleLockConclave}
             className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-5 py-2 bg-brand-red hover:bg-red-700 text-white font-bold text-button rounded-lg transition-smooth shadow-md cursor-pointer"
@@ -296,23 +461,23 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
         <div className="bg-white border border-zinc-200/80 p-4 rounded-xl shadow-sm">
           <p className="text-[10px] font-bold text-zinc-400 uppercase mb-1">Rounds</p>
-          <h4 className="text-headline-md font-extrabold text-zinc-900 mt-1">3</h4>
+          <h4 className="text-headline-md font-extrabold text-zinc-900 mt-1">{conclaveKPIs.rounds}</h4>
         </div>
         <div className="bg-white border border-zinc-200/80 p-4 rounded-xl shadow-sm">
           <p className="text-[10px] font-bold text-zinc-400 uppercase mb-1">Tables</p>
-          <h4 className="text-headline-md font-extrabold text-zinc-900 mt-1">155</h4>
+          <h4 className="text-headline-md font-extrabold text-zinc-900 mt-1">{conclaveKPIs.tables}</h4>
         </div>
         <div className="bg-white border border-zinc-200/80 p-4 rounded-xl shadow-sm">
           <p className="text-[10px] font-bold text-zinc-400 uppercase mb-1">Members</p>
-          <h4 className="text-headline-md font-extrabold text-zinc-900 mt-1">1,240</h4>
+          <h4 className="text-headline-md font-extrabold text-zinc-900 mt-1">{conclaveKPIs.members.toLocaleString()}</h4>
         </div>
         <div className="bg-white border border-zinc-200/80 p-4 rounded-xl shadow-sm">
           <p className="text-[10px] font-bold text-zinc-400 uppercase mb-1">Captains</p>
-          <h4 className="text-headline-md font-extrabold text-zinc-900 mt-1">48</h4>
+          <h4 className="text-headline-md font-extrabold text-zinc-900 mt-1">{conclaveKPIs.captains}</h4>
         </div>
         <div className="bg-white border border-zinc-200/80 p-4 rounded-xl shadow-sm">
           <p className="text-[10px] font-bold text-zinc-400 uppercase mb-1">Repeat Pairings</p>
-          <h4 className="text-headline-md font-extrabold text-zinc-900 mt-1">0</h4>
+          <h4 className="text-headline-md font-extrabold text-zinc-900 mt-1">{conclaveKPIs.repeatPairings}</h4>
         </div>
         <div className={`bg-white border p-4 rounded-xl shadow-sm flex items-center justify-between ${issuesCount > 0 ? 'border-brand-red text-brand-red bg-red-50/5' : 'border-emerald-100 text-emerald-700 bg-emerald-50/5'}`}>
           <div>
@@ -326,7 +491,7 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
       {/* Control Navigation tab bar */}
       <div className="bg-white border border-zinc-200/80 rounded-xl p-3 flex flex-col md:flex-row justify-between items-center gap-4 shadow-sm">
         <div className="flex bg-zinc-100 p-1 rounded-lg w-full md:w-auto">
-          {[1, 2, 3].map(round => (
+          {roundsList.map(round => (
             <button
               key={round}
               onClick={() => setActiveRound(round)}
@@ -754,11 +919,20 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
                 <div>
                   <div className="flex justify-between items-center mb-1.5 text-[10px]">
                     <span>Unique Meetings</span>
-                    <span className="font-bold text-brand-red">98%</span>
+                    <span className="font-bold text-brand-red">
+                      {conclave?.scheduleSummary?.coverage !== undefined
+                        ? `${Math.round(conclave.scheduleSummary.coverage * 100)}%`
+                        : '98%'}
+                    </span>
                   </div>
                   <div className="h-2 w-full rounded-full overflow-hidden cursor-pointer">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart layout="vertical" data={[{ name: 'Unique Meetings', value: 98 }]} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                      <BarChart layout="vertical" data={[{
+                        name: 'Unique Meetings',
+                        value: conclave?.scheduleSummary?.coverage !== undefined
+                          ? Math.round(conclave.scheduleSummary.coverage * 100)
+                          : 98
+                      }]} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
                         <XAxis type="number" domain={[0, 100]} hide />
                         <YAxis type="category" dataKey="name" hide />
                         <Tooltip formatter={(value) => `${value}%`} cursor={false} />
@@ -771,14 +945,23 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
                 <div>
                   <div className="flex justify-between items-center mb-1.5 text-[10px]">
                     <span>Repeat Pairings</span>
-                    <span className="font-bold text-zinc-900">0%</span>
+                    <span className="font-bold text-zinc-900">
+                      {conclave?.scheduleSummary?.repeatPairings !== undefined
+                        ? conclave.scheduleSummary.repeatPairings
+                        : 0}
+                    </span>
                   </div>
                   <div className="h-2 w-full rounded-full overflow-hidden cursor-pointer">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart layout="vertical" data={[{ name: 'Repeat Pairings', value: 0 }]} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-                        <XAxis type="number" domain={[0, 100]} hide />
+                      <BarChart layout="vertical" data={[{
+                        name: 'Repeat Pairings',
+                        value: conclave?.scheduleSummary?.repeatPairings !== undefined
+                          ? conclave.scheduleSummary.repeatPairings
+                          : 0
+                      }]} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                        <XAxis type="number" domain={[0, conclave?.scheduleSummary?.repeatPairings > 5 ? conclave.scheduleSummary.repeatPairings : 5]} hide />
                         <YAxis type="category" dataKey="name" hide />
-                        <Tooltip formatter={(value) => `${value}%`} cursor={false} />
+                        <Tooltip formatter={(value) => `${value}`} cursor={false} />
                         <Bar dataKey="value" fill="#af101a" radius={[4, 4, 4, 4]} background={{ fill: '#f4f4f5' }} barSize={8} />
                       </BarChart>
                     </ResponsiveContainer>
