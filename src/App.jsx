@@ -27,6 +27,7 @@ import referralsData from './data/referrals.json';
 import conclavesData from './data/conclaves.json';
 import { Sparkles } from 'lucide-react';
 import SuperadminLayout from './components/SuperadminLayout';
+import { api } from './services/api';
 
 export default function App() {
   // Read logged in status from localStorage
@@ -79,14 +80,25 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
 
   // Global conclave selector for admin panel - default to current admin's active conclave
-  const [selectedConclaveId, setSelectedConclaveId] = useState(() => {
-    const adminData = localStorage.getItem('bni_logged_admin');
-    const admin = adminData ? JSON.parse(adminData) : { name: "Sanjay Wagle", email: "admin@bni.com", region: "Guntur Central" };
-    const myActiveConclave = conclavesData.find(c => c.status === 'Running' && c.coordinator === admin?.name);
-    if (myActiveConclave) return myActiveConclave.id;
-    const myAnyConclave = conclavesData.find(c => c.coordinator === admin?.name);
-    return myAnyConclave?.id || '';
-  });
+  const [selectedConclaveId, setSelectedConclaveId] = useState('');
+
+  useEffect(() => {
+    if (!isLoggedIn || userRole !== 'admin') return;
+    async function initActiveConclave() {
+      try {
+        const list = await api.get('/admin/conclaves');
+        if (list && list.length > 0) {
+          const exists = list.some(c => c.id === selectedConclaveId);
+          if (!exists) {
+            setSelectedConclaveId(list[0].id);
+          }
+        }
+      } catch (err) {
+        console.warn("Could not sync active conclave ID with backend:", err.message);
+      }
+    }
+    initActiveConclave();
+  }, [isLoggedIn, userRole]);
 
   const mainRef = useRef(null);
 
@@ -210,24 +222,24 @@ export default function App() {
       if (payload) {
         localStorage.setItem('bni_logged_admin', JSON.stringify(payload));
         setLoggedInAdmin(payload);
-        const myActiveConclave = conclavesData.find(c => c.status === 'Running' && c.coordinator === payload.name);
-        if (myActiveConclave) {
-          setSelectedConclaveId(myActiveConclave.id);
-        } else {
-          const myAnyConclave = conclavesData.find(c => c.coordinator === payload.name);
-          setSelectedConclaveId(myAnyConclave?.id || '');
-        }
       } else {
         localStorage.removeItem('bni_logged_admin');
         setLoggedInAdmin({ name: "Sanjay Wagle", email: "admin@bni.com", region: "Guntur Central" });
-        const myActiveConclave = conclavesData.find(c => c.status === 'Running' && c.coordinator === "Sanjay Wagle");
-        if (myActiveConclave) {
-          setSelectedConclaveId(myActiveConclave.id);
-        } else {
-          const myAnyConclave = conclavesData.find(c => c.coordinator === "Sanjay Wagle");
-          setSelectedConclaveId(myAnyConclave?.id || '');
-        }
       }
+
+      // Fetch live conclaves to set active ID
+      api.get('/admin/conclaves').then(list => {
+        if (list && list.length > 0) {
+          const adminName = payload?.name || "Sanjay Wagle";
+          const myConclave = list.find(c => c.coordinator === adminName) || list[0];
+          setSelectedConclaveId(myConclave.id);
+        } else {
+          setSelectedConclaveId('');
+        }
+      }).catch(err => {
+        console.warn("Failed to fetch live conclaves during login:", err.message);
+        setSelectedConclaveId('');
+      });
       setLoggedInCaptain(null);
       setLoggedInMember(null);
       setIsLoggedIn(true);

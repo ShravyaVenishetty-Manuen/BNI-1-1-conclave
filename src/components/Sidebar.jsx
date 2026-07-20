@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 
 import conclavesData from '../data/conclaves.json';
+import { api } from '../services/api';
 
 const navItems = [
   { id: 'dashboard', label: 'Dashboard', Icon: LayoutDashboard },
@@ -47,9 +48,35 @@ export default function Sidebar({ activeTab, setActiveTab, onLogout, isOpen, onC
   const [showConclaveDropdown, setShowConclaveDropdown] = useState(false);
   const dropdownRef = useRef(null);
 
-  const activeConclaves = conclavesData.filter(c => c.status === 'Running' && c.coordinator === loggedInAdmin?.name);
-  const myConclaves = conclavesData.filter(c => c.coordinator === loggedInAdmin?.name);
-  const selectedConclave = conclavesData.find(c => c.id === selectedConclaveId && c.coordinator === loggedInAdmin?.name) || activeConclaves[0] || myConclaves[0] || null;
+  const [conclaves, setConclaves] = useState([]);
+
+  useEffect(() => {
+    async function loadConclaves() {
+      try {
+        const data = await api.get('/admin/conclaves');
+        setConclaves(data.map(c => {
+          let status = c.status;
+          const s = (c.status || '').toLowerCase();
+          if (s === 'registration_open') status = 'Upcoming';
+          else if (s === 'running') status = 'Running';
+          else if (s === 'completed') status = 'Completed';
+          else if (s === 'draft') status = 'Draft';
+          else if (s === 'cancelled') status = 'Cancelled';
+          return {
+            ...c,
+            status
+          };
+        }));
+      } catch (err) {
+        console.warn("Sidebar conclave sync failed:", err.message);
+      }
+    }
+    loadConclaves();
+  }, []);
+
+  const activeConclaves = conclaves.filter(c => c.status === 'Running');
+  const myConclaves = conclaves;
+  const selectedConclave = conclaves.find(c => c.id === selectedConclaveId) || activeConclaves[0] || myConclaves[0] || null;
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -110,13 +137,13 @@ export default function Sidebar({ activeTab, setActiveTab, onLogout, isOpen, onC
             <div className="px-3 py-2 border-b border-zinc-100">
               <p className="text-[8px] font-black text-zinc-400 uppercase tracking-widest">Active Conclaves</p>
             </div>
-            {(activeConclaves.length === 0 ? myConclaves : activeConclaves).length === 0 ? (
+            {myConclaves.length === 0 ? (
               <div className="px-3 py-3 text-[9px] text-zinc-400 font-semibold text-center">No conclaves found</div>
-            ) : (activeConclaves.length > 0 ? activeConclaves : myConclaves).map(c => (
+            ) : myConclaves.map(c => (
               <button
                 key={c.id}
                 onClick={() => { setSelectedConclaveId(c.id); setShowConclaveDropdown(false); }}
-                className={`w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-zinc-50 transition-smooth cursor-pointer border-b border-zinc-50 last:border-0 ${c.id === selectedConclaveId ? 'bg-red-50/40' : ''}`}
+                className={`w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-zinc-55 transition-smooth cursor-pointer border-b border-zinc-50 last:border-0 ${c.id === selectedConclaveId ? 'bg-red-50/40' : ''}`}
               >
                 <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${getStatusDot(c.status)}`} />
                 <div className="min-w-0 flex-1">

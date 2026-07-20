@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Award, Lock, Mail, Eye, EyeOff, ShieldCheck, Sparkles } from 'lucide-react';
 import { mockAdmins } from '../data/mockConclaveData';
+import { auth } from '../config/firebase';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 
 const MOCK_CAPTAINS = [
   {
@@ -94,60 +96,39 @@ export default function Login({ onLogin }) {
 
     setIsLoading(true);
 
-    // Mock API request delay
-    setTimeout(() => {
-      setIsLoading(false);
-      
-      if (role === 'superadmin') {
-        if (inputVal.toLowerCase() === 'superadmin@bni.com' && password === 'password') {
-          onLogin && onLogin('superadmin', null);
-        } else {
-          setError('Invalid superadministrator credentials.');
-        }
-      } else if (role === 'admin') {
-        const emailLower = inputVal.toLowerCase();
-        const matchedMockAdmin = mockAdmins.find(a => a.email.toLowerCase() === emailLower);
+    const emailLower = inputVal.toLowerCase();
+
+    // Enforce real Firebase Auth login only
+    signInWithEmailAndPassword(auth, emailLower, password)
+      .then(async (userCredential) => {
+        const firebaseUser = userCredential.user;
+        const token = await firebaseUser.getIdToken();
+        localStorage.setItem('bni_auth_token', token);
         
-        let payload = null;
-        if (emailLower === 'admin@bni.com') {
-          payload = { name: "Sanjay Wagle", email: "admin@bni.com", region: "Guntur Central" };
-        } else if (emailLower === 'gunturcentral.admin@bni.com') {
-          payload = { name: "Sanjay Wagle", email: emailLower, region: "Guntur Central" };
-        } else if (emailLower === 'gunturwest.admin@bni.com') {
-          payload = { name: "Anjali Sharma", email: emailLower, region: "Guntur West" };
-        } else if (emailLower === 'gunturnorth.admin@bni.com') {
-          payload = { name: "Rajesh Mehta", email: emailLower, region: "Guntur North" };
-        } else if (matchedMockAdmin) {
-          payload = matchedMockAdmin;
+        let payload = { uid: firebaseUser.uid, email: firebaseUser.email, name: firebaseUser.displayName || firebaseUser.email.split('@')[0] };
+        if (role === 'admin') {
+          payload.region = "Guntur Central";
+        } else if (role === 'captain') {
+          payload.tableId = "Table 01";
+          payload.chapter = "Peak Performance";
+          payload.category = "Financial Services";
         }
 
-        if (payload && password === 'password') {
-          onLogin && onLogin('admin', payload);
+        setIsLoading(false);
+        onLogin && onLogin(role, payload);
+      })
+      .catch((firebaseErr) => {
+        setIsLoading(false);
+        console.error("Firebase Auth failed:", firebaseErr.message);
+        
+        if (firebaseErr.code === 'auth/invalid-credential' || firebaseErr.code === 'auth/user-not-found' || firebaseErr.code === 'auth/wrong-password') {
+          setError('Invalid email or password.');
+        } else if (firebaseErr.code === 'auth/api-key-not-valid') {
+          setError('Firebase API Key is invalid or unconfigured. Please check your .env configuration.');
         } else {
-          setError('Invalid administrator credentials.');
+          setError(firebaseErr.message);
         }
-      } else if (role === 'captain') {
-        // Captain Login: email or mobile check
-        const captain = MOCK_CAPTAINS.find(
-          c => (c.email.toLowerCase() === inputVal.toLowerCase() || c.mobile === inputVal) && c.password === password
-        );
-        if (captain) {
-          onLogin && onLogin('captain', captain);
-        } else {
-          setError('Invalid Captain credentials. Use amit@bni.com / 9876543210 and "password".');
-        }
-      } else {
-        // Member Login: email or mobile check
-        const member = MOCK_MEMBERS.find(
-          m => (m.email.toLowerCase() === inputVal.toLowerCase() || m.phone.replace(/[^0-9]/g, '').includes(inputVal)) && password === 'password'
-        );
-        if (member) {
-          onLogin && onLogin('member', member);
-        } else {
-          setError('Invalid Member credentials. Use anjali.s@sharmaads.in and "password".');
-        }
-      }
-    }, 1200);
+      });
   };
 
   return (
