@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { ResponsiveContainer, PieChart, Pie, BarChart, Bar, Cell, XAxis, YAxis, Tooltip } from 'recharts';
+import { api } from '../services/api';
 import conclavesData from '../data/conclaves.json';
 import referralsJson from '../data/referrals.json';
 
@@ -26,46 +27,105 @@ import runnerData from '../data/tables_runner.json';
 const { initialTables, mockRosters } = runnerData;
 
 export default function RoundRunner({ selectedConclaveId }) {
-  const selectedConclave = conclavesData.find(c => c.id === selectedConclaveId);
+  const [conclaves, setConclaves] = useState([]);
+  const [stats, setStats] = useState(null);
+
+  useEffect(() => {
+    async function loadConclaves() {
+      try {
+        const data = await api.get('/admin/conclaves');
+        setConclaves(data);
+      } catch (err) {
+        console.error("Failed to load conclaves:", err);
+      }
+    }
+    loadConclaves();
+  }, []);
+
+  useEffect(() => {
+    if (!selectedConclaveId) return;
+    async function loadStats() {
+      try {
+        const data = await api.get(`/admin/conclaves/${selectedConclaveId}/stats`);
+        setStats(data);
+      } catch (err) {
+        console.error("Failed to load conclave stats:", err);
+      }
+    }
+    loadStats();
+  }, [selectedConclaveId]);
+
+  const selectedConclave = useMemo(() =>
+    conclaves.find(c => c.id === selectedConclaveId),
+    [conclaves, selectedConclaveId]
+  );
+
   const conclaveName = selectedConclave?.name || 'Conclave';
 
   const [allTables, setAllTables] = useState(initialTables);
-  const tables = useMemo(() =>
-    allTables.filter(t => t.conclaveId === selectedConclaveId),
-    [allTables, selectedConclaveId]
-  );
   const setTables = (updater) => setAllTables(updater);
-  const [activeRound, setActiveRound] = useState(2);
 
-  const [referrals, setReferrals] = useState(() => {
-    const stored = localStorage.getItem('bni_referrals');
-    const local = stored ? JSON.parse(stored) : [];
-    const merged = [...referralsJson];
-    local.forEach(r => {
-      if (!merged.find(m => m.id === r.id)) merged.push(r);
-    });
-    return merged;
-  });
+  const activeRound = selectedConclave?.currentRound || 1;
+
+  const totalRounds = useMemo(() => {
+    return selectedConclave?.scheduleSummary?.roundCount || selectedConclave?.roundCount || 4;
+  }, [selectedConclave]);
+
+  const progressPercent = useMemo(() => {
+    const isConclaveCompleted = (selectedConclave?.status || '').toLowerCase() === 'completed';
+    if (isConclaveCompleted) return 100;
+    return Math.min(100, Math.round(((activeRound - 1) / totalRounds) * 100));
+  }, [selectedConclave, activeRound, totalRounds]);
+
+  const [referrals, setReferrals] = useState([]);
 
   useEffect(() => {
-    const sync = () => {
-      const s = localStorage.getItem('bni_referrals');
-      const local = s ? JSON.parse(s) : [];
-      setReferrals(() => {
-        const merged = [...referralsJson];
-        local.forEach(r => {
-          if (!merged.find(m => m.id === r.id)) merged.push(r);
+    if (!selectedConclaveId) return;
+    async function loadReferrals() {
+      try {
+        const list = await api.get(`/admin/conclaves/${selectedConclaveId}/referrals`);
+        setReferrals(list || []);
+      } catch (err) {
+        console.error("Failed to load referrals:", err);
+      }
+    }
+    loadReferrals();
+    const interval = setInterval(loadReferrals, 5000); // refresh every 5s for live real-time sync
+    return () => clearInterval(interval);
+  }, [selectedConclaveId]);
+
+  const tables = useMemo(() => {
+    if (selectedConclave && selectedConclave.schedule && selectedConclave.participants) {
+      const roundSeating = selectedConclave.schedule.rounds.find(r => r.roundNumber === activeRound);
+      if (roundSeating) {
+        return roundSeating.tables.map(t => {
+          const captain = selectedConclave.participants.find(p => p.id === t.captainId);
+          const members = t.memberIds.map(mId => {
+            const p = selectedConclave.participants.find(p => p.id === mId);
+            return {
+              id: p?._originalUid || String(mId),
+              name: p?.name || 'Unknown',
+              category: p?.businessCategory || 'Uncategorized',
+              checkedIn: p?.isActive ?? true
+            };
+          });
+          return {
+            id: `Table ${t.tableNumber}`,
+            tableNumber: t.tableNumber,
+            conclaveId: selectedConclaveId,
+            status: 'active',
+            captain: {
+              name: captain?.name || 'Unknown',
+              role: 'Table Captain',
+              initials: captain?.name ? captain.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'TC'
+            },
+            members
+          };
         });
-        return merged;
-      });
-    };
-    window.addEventListener('storage', sync);
-    const interval = setInterval(sync, 1000);
-    return () => {
-      window.removeEventListener('storage', sync);
-      clearInterval(interval);
-    };
-  }, []);
+      }
+    }
+    return [];
+  }, [selectedConclave, activeRound]);
 
   const filteredReferrals = useMemo(() =>
     referrals.filter(r => r.conclaveId === selectedConclaveId || !r.conclaveId),
@@ -80,17 +140,6 @@ export default function RoundRunner({ selectedConclaveId }) {
   // Timer States
   const [timeLeft, setTimeLeft] = useState(765); // 12:45 in seconds
   const [timerRunning, setTimerRunning] = useState(true);
-
-  // Live feed updates
-  const [feedLogs, setFeedLogs] = useState([
-    { event: 'Table 14 Ready', detail: 'Manoj Kumar confirmed table readiness.', time: '12:44:02' },
-    { event: 'Manual Seating Override', detail: 'Admin added Guest Member to Table 5.', time: '12:43:15' },
-    { event: 'Round 2 Started', detail: 'System auto-triggered Round 2.', time: '12:40:00' },
-    { event: 'Round 1 Finished', detail: 'All tables reported completion.', time: '12:38:42' },
-    { event: 'Conclave Initialized', detail: 'Welcome phase completed.', time: '12:15:00' }
-  ]);
-
-
 
   const [toast, setToast] = useState(null);
   const showToast = (title, desc) => {
@@ -109,20 +158,81 @@ export default function RoundRunner({ selectedConclaveId }) {
     return () => clearInterval(timer);
   }, [timerRunning, timeLeft]);
 
-  // Simulate real-time logs appending every 9 seconds
-  useEffect(() => {
-    const feedInterval = setInterval(() => {
-      const mockEvents = [
-        { event: 'Table 15 Active', detail: 'Shweta Iyer reported table is fully active.', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) },
-        { event: 'Table 16 Synced', detail: 'Devendra Chawla confirmed member rosters check.', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) },
-        { event: 'Roster Broadcast', detail: 'Mobile notifications re-sent to round 2 captains.', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) }
-      ];
-      const randomEvent = mockEvents[Math.floor(Math.random() * mockEvents.length)];
-      setFeedLogs(prev => [randomEvent, ...prev]);
-    }, 9000);
+  // Top 3 referrals leaderboard
+  const leaderboard = useMemo(() => {
+    const counts = {};
+    filteredReferrals.forEach(r => {
+      const giverId = r.fromMemberId || r.fromName;
+      if (!giverId) return;
+      if (!counts[giverId]) {
+        const participant = selectedConclave?.participants?.find(p => p.id === r.fromMemberId || p.name === r.fromName);
+        counts[giverId] = {
+          name: r.fromName || 'Unknown Member',
+          category: participant?.businessCategory || 'BNI Member',
+          count: 0
+        };
+      }
+      counts[giverId].count++;
+    });
+    return Object.values(counts).sort((a, b) => b.count - a.count).slice(0, 3);
+  }, [filteredReferrals, selectedConclave]);
 
-    return () => clearInterval(feedInterval);
-  }, []);
+  // Live feed updates
+  const feedLogs = useMemo(() => {
+    const logs = [];
+    if (!selectedConclave) return logs;
+
+    const conclaveTime = selectedConclave.createdAt
+      ? new Date(selectedConclave.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+      : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+    // 1. Initialized log
+    logs.push({
+      event: 'Conclave Initialized',
+      detail: `Welcome phase completed for ${selectedConclave.name}.`,
+      time: conclaveTime
+    });
+
+    // 2. Schedule generated
+    if (selectedConclave.scheduleSummary) {
+      logs.push({
+        event: 'Schedule Generated',
+        detail: `Matching engine generated ${selectedConclave.scheduleSummary.tableCount || 0} tables for ${totalRounds} rounds.`,
+        time: conclaveTime
+      });
+    }
+
+    // 3. Round logs
+    const currentRoundNum = selectedConclave.currentRound || 0;
+    const isCompleted = selectedConclave.status === 'completed';
+
+    for (let r = 1; r <= currentRoundNum; r++) {
+      logs.push({
+        event: `Round ${r} Started`,
+        detail: `System triggered round rotation. Member rosters broadcasted.`,
+        time: selectedConclave.currentRoundStartedAt 
+          ? new Date(selectedConclave.currentRoundStartedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+          : 'Active'
+      });
+      if (r < currentRoundNum || isCompleted) {
+        logs.push({
+          event: `Round ${r} Finished`,
+          detail: `All tables reported referral logging completion.`,
+          time: 'Done'
+        });
+      }
+    }
+
+    if (isCompleted) {
+      logs.push({
+        event: 'Conclave Completed',
+        detail: 'Event finalized. Seating logs saved to historical reports.',
+        time: 'Closed'
+      });
+    }
+
+    return logs.reverse(); // Newest first
+  }, [selectedConclave, totalRounds]);
 
   // Format seconds to MM:SS
   const formatTime = (seconds) => {
@@ -131,16 +241,42 @@ export default function RoundRunner({ selectedConclaveId }) {
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
+  // Start next round trigger
+  const handleStartNextRound = async () => {
+    try {
+      const nextRoundVal = activeRound + 1;
+      await api.post(`/admin/conclaves/${selectedConclaveId}/start-round`, {
+        roundNumber: nextRoundVal
+      });
+      // Reload conclaves from Express backend API to sync states
+      const data = await api.get('/admin/conclaves');
+      setConclaves(data);
+      showToast('Next Round Started', `Round ${nextRoundVal} started. Captains notified.`);
+    } catch (err) {
+      console.error("Failed to start round:", err);
+      showToast('Start Round Failed', err.message || "Could not start next round.");
+    }
+  };
+
   // Finish conclave trigger
-  const handleFinishConclave = () => {
-    setTimerRunning(false);
-    setTimeLeft(0);
-    confetti({
-      particleCount: 150,
-      spread: 80,
-      origin: { y: 0.6 }
-    });
-    showToast('Conclave Concluded', 'Live round runs completed successfully. Seating logs archived.');
+  const handleFinishConclave = async () => {
+    try {
+      await api.post(`/admin/conclaves/${selectedConclaveId}/complete`);
+      // Reload conclaves from Express backend API to sync states
+      const data = await api.get('/admin/conclaves');
+      setConclaves(data);
+      setTimerRunning(false);
+      setTimeLeft(0);
+      confetti({
+        particleCount: 150,
+        spread: 80,
+        origin: { y: 0.6 }
+      });
+      showToast('Conclave Concluded', 'Live conclave completed successfully.');
+    } catch (err) {
+      console.error("Failed to conclude conclave:", err);
+      showToast('Conclude Failed', err.message || "Could not complete conclave.");
+    }
   };
 
 
@@ -157,6 +293,16 @@ export default function RoundRunner({ selectedConclaveId }) {
         </div>
 
         <div className="flex items-center gap-2.5 shrink-0 w-full sm:w-auto">
+          {activeRound < (selectedConclave?.roundCount || 4) && (
+            <button
+              onClick={handleStartNextRound}
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 border border-zinc-200 bg-white text-zinc-700 font-bold text-button rounded-lg hover:bg-zinc-50 transition-smooth cursor-pointer shadow-sm"
+            >
+              <RefreshCw className="w-4 h-4 text-zinc-400 animate-spin-slow" />
+              Start Round {activeRound + 1}
+            </button>
+          )}
+
           <button
             onClick={() => setTimerRunning(false)}
             className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 border border-zinc-200 bg-white text-zinc-700 font-bold text-button rounded-lg hover:bg-zinc-50 transition-smooth cursor-pointer shadow-sm"
@@ -193,7 +339,7 @@ export default function RoundRunner({ selectedConclaveId }) {
               <div className="flex items-center gap-4">
                 <div className="px-3.5 py-1.5 bg-red-50 text-brand-red border border-red-100 rounded-lg">
                   <p className="text-[8px] font-bold uppercase tracking-wider">Current Stage</p>
-                  <p className="text-body-sm font-bold mt-0.5">Round {activeRound} of 4</p>
+                  <p className="text-body-sm font-bold mt-0.5">Round {activeRound} of {totalRounds}</p>
                 </div>
                 <div className="flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-100 rounded-full text-[10px] font-bold uppercase">
                   <span className="relative flex h-2 w-2">
@@ -208,13 +354,13 @@ export default function RoundRunner({ selectedConclaveId }) {
                 <p className="text-[9px] text-zinc-455 font-bold uppercase tracking-wider mb-1">Global Completion</p>
                 <div className="w-44 h-1.5 rounded-full overflow-hidden">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart layout="vertical" data={[{ value: 35 }]} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                    <BarChart layout="vertical" data={[{ value: progressPercent }]} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
                       <XAxis type="number" domain={[0, 100]} hide />
                       <Bar dataKey="value" fill="#af101a" radius={[2, 2, 2, 2]} background={{ fill: '#f4f4f5' }} barSize={6} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
-                <p className="text-[9px] text-zinc-400 font-bold mt-1">35% Complete</p>
+                <p className="text-[9px] text-zinc-400 font-bold mt-1">{progressPercent}% Complete</p>
               </div>
             </div>
 
@@ -224,7 +370,7 @@ export default function RoundRunner({ selectedConclaveId }) {
                 <RefreshCw className="w-5 h-5 text-brand-red mb-2" />
                 <div>
                   <p className="text-[10px] text-zinc-400 font-bold uppercase">Active Round</p>
-                  <h4 className="text-headline-md font-extrabold text-zinc-950 mt-1">{activeRound} / 4</h4>
+                  <h4 className="text-headline-md font-extrabold text-zinc-955 mt-1">{activeRound} / {totalRounds}</h4>
                 </div>
               </div>
 
@@ -232,7 +378,9 @@ export default function RoundRunner({ selectedConclaveId }) {
                 <Grid className="w-5 h-5 text-brand-red mb-2" />
                 <div>
                   <p className="text-[10px] text-zinc-400 font-bold uppercase">Running Tables</p>
-                  <h4 className="text-headline-md font-extrabold text-zinc-950 mt-1">32</h4>
+                  <h4 className="text-headline-md font-extrabold text-zinc-955 mt-1">
+                    {selectedConclave?.scheduleSummary?.tableCount || stats?.counts?.captains || 0}
+                  </h4>
                 </div>
               </div>
 
@@ -240,7 +388,9 @@ export default function RoundRunner({ selectedConclaveId }) {
                 <Users className="w-5 h-5 text-brand-red mb-2" />
                 <div>
                   <p className="text-[10px] text-zinc-400 font-bold uppercase">Members</p>
-                  <h4 className="text-headline-md font-extrabold text-zinc-950 mt-1">256</h4>
+                  <h4 className="text-headline-md font-extrabold text-zinc-955 mt-1">
+                    {stats?.counts?.registered || selectedConclave?.participants?.length || 0}
+                  </h4>
                 </div>
               </div>
 
@@ -248,7 +398,9 @@ export default function RoundRunner({ selectedConclaveId }) {
                 <Shield className="w-5 h-5 text-brand-red mb-2" />
                 <div>
                   <p className="text-[10px] text-zinc-400 font-bold uppercase">Captains Active</p>
-                  <h4 className="text-headline-md font-extrabold text-zinc-950 mt-1">32</h4>
+                  <h4 className="text-headline-md font-extrabold text-zinc-955 mt-1">
+                    {stats?.counts?.captains || selectedConclave?.schedule?.rounds?.[0]?.tables?.filter(t => t.captainId).length || selectedConclave?.scheduleSummary?.tableCount || 0}
+                  </h4>
                 </div>
               </div>
 
@@ -256,7 +408,9 @@ export default function RoundRunner({ selectedConclaveId }) {
                 <Send className="w-5 h-5 text-brand-red mb-2" />
                 <div>
                   <p className="text-[10px] text-zinc-400 font-bold uppercase">Total Referrals</p>
-                  <h4 className="text-headline-md font-extrabold text-zinc-950 mt-1">{totalReferrals}</h4>
+                  <h4 className="text-headline-md font-extrabold text-zinc-950 mt-1">
+                    {stats?.counts?.referrals || 0}
+                  </h4>
                 </div>
               </div>
             </div>
@@ -315,56 +469,37 @@ export default function RoundRunner({ selectedConclaveId }) {
           </div>
 
           <div className="space-y-3 flex-1 flex flex-col justify-center">
-            {/* Rank 1 */}
-            <div className="bg-gradient-to-r from-amber-50/20 to-white border border-zinc-150 rounded-lg p-2.5 flex items-center justify-between shadow-xs">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-amber-500 text-white rounded-full flex items-center justify-center font-black text-xs border border-amber-300 shadow-sm">
-                  1
-                </div>
-                <div>
-                  <p className="text-body-sm font-extrabold text-zinc-850">Amit Patel</p>
-                  <p className="text-[9px] text-zinc-455 font-bold uppercase tracking-wider">Marketing</p>
-                </div>
+            {leaderboard.length === 0 ? (
+              <div className="text-center py-6 text-zinc-400 font-semibold text-[10px]">
+                No referrals logged yet for this conclave.
               </div>
-              <div className="text-right">
-                <span className="text-body-sm font-extrabold text-amber-600 leading-none">12</span>
-                <p className="text-[8px] text-zinc-400 font-bold uppercase mt-0.5">Referrals</p>
-              </div>
-            </div>
-
-            {/* Rank 2 */}
-            <div className="bg-gradient-to-r from-zinc-50/20 to-white border border-zinc-150 rounded-lg p-2.5 flex items-center justify-between shadow-xs">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-zinc-400 text-white rounded-full flex items-center justify-center font-black text-xs border border-zinc-300 shadow-sm">
-                  2
-                </div>
-                <div>
-                  <p className="text-body-sm font-extrabold text-zinc-855">Shweta Iyer</p>
-                  <p className="text-[9px] text-zinc-455 font-bold uppercase tracking-wider">Real Estate</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <span className="text-body-sm font-extrabold text-zinc-500 leading-none">9</span>
-                <p className="text-[8px] text-zinc-400 font-bold uppercase mt-0.5">Referrals</p>
-              </div>
-            </div>
-
-            {/* Rank 3 */}
-            <div className="bg-gradient-to-r from-amber-600/5 to-white border border-zinc-150 rounded-lg p-2.5 flex items-center justify-between shadow-xs">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-amber-700/85 text-white rounded-full flex items-center justify-center font-black text-xs border border-amber-600/30 shadow-sm">
-                  3
-                </div>
-                <div>
-                  <p className="text-body-sm font-extrabold text-zinc-855">Manoj Kumar</p>
-                  <p className="text-[9px] text-zinc-455 font-bold uppercase tracking-wider">Legal</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <span className="text-body-sm font-extrabold text-amber-700/85 leading-none">8</span>
-                <p className="text-[8px] text-zinc-400 font-bold uppercase mt-0.5">Referrals</p>
-              </div>
-            </div>
+            ) : (
+              leaderboard.map((person, idx) => {
+                const colors = [
+                  { bg: 'bg-amber-500', text: 'text-amber-600', border: 'border-amber-300' }, // Gold
+                  { bg: 'bg-zinc-400', text: 'text-zinc-500', border: 'border-zinc-300' },    // Silver
+                  { bg: 'bg-amber-700/85', text: 'text-amber-700/85', border: 'border-amber-600/30' } // Bronze
+                ];
+                const c = colors[idx] || colors[2];
+                return (
+                  <div key={idx} className="bg-gradient-to-r from-zinc-50/10 to-white border border-zinc-150 rounded-lg p-2.5 flex items-center justify-between shadow-xs animate-fade-in">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 ${c.bg} text-white rounded-full flex items-center justify-center font-black text-xs border ${c.border} shadow-sm`}>
+                        {idx + 1}
+                      </div>
+                      <div>
+                        <p className="text-body-sm font-extrabold text-zinc-850">{person.name}</p>
+                        <p className="text-[9px] text-zinc-455 font-bold uppercase tracking-wider">{person.category}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className={`text-body-sm font-extrabold ${c.text} leading-none`}>{person.count}</span>
+                      <p className="text-[8px] text-zinc-400 font-bold uppercase mt-0.5">Referrals</p>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
 
@@ -450,8 +585,6 @@ export default function RoundRunner({ selectedConclaveId }) {
         </div>
       </div>
 
-
-
       {/* Toast Alert Feedback */}
       {toast && (
         <div className="fixed bottom-5 right-5 z-[70] bg-zinc-900 text-white text-[11px] font-bold py-2.5 px-4 rounded-lg shadow-xl flex items-center gap-2 border border-zinc-800 animate-slide-up">
@@ -468,7 +601,6 @@ export default function RoundRunner({ selectedConclaveId }) {
           </button>
         </div>
       )}
-
     </div>
   );
 }

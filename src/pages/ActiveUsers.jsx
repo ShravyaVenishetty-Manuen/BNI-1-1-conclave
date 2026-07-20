@@ -28,12 +28,48 @@ import {
   Cell
 } from 'recharts';
 
+import { api } from '../services/api';
+
 import initialSessions from '../data/sessions.json';
 import membersData from '../data/members.json';
 import captainsData from '../data/captains.json';
 
 export default function ActiveUsers({ searchQuery, selectedConclaveId }) {
-  const [sessions, setSessions] = useState(initialSessions);
+  const [sessions, setSessions] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (!selectedConclaveId) return;
+    async function loadSessions() {
+      setIsLoading(true);
+      try {
+        const data = await api.get(`/admin/conclaves/${selectedConclaveId}/registrations`);
+        const mapped = data.registrations.map(r => {
+          return {
+            id: r.uid,
+            name: r.name,
+            role: r.role === 'captain' ? 'Captain' : 'Member',
+            category: r.businessCategory || 'Uncategorized',
+            status: r.isActive ? 'Online' : 'Idle',
+            loginTime: r.lastLoginAt ? new Date(r.lastLoginAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A',
+            duration: r.lastLoginAt ? `${Math.round((Date.now() - new Date(r.lastLoginAt).getTime()) / 60000)} Mins` : 'N/A',
+            deadline: r.lastLoginAt ? new Date(new Date(r.lastLoginAt).getTime() + 60 * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A',
+            device: 'Mobile App',
+            ip: '192.168.1.1',
+            location: r.location ? (typeof r.location === 'object' ? (r.location.place || 'Unknown') : r.location) : 'Unknown',
+            email: r.email,
+            phone: r.phone
+          };
+        });
+        setSessions(mapped);
+      } catch (err) {
+        console.error("Failed to load registrations for active sessions:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadSessions();
+  }, [selectedConclaveId]);
   const [searchTerm, setSearchTerm] = useState('');
   const searchVal = searchQuery !== undefined ? searchQuery : searchTerm;
   const [statusFilter, setStatusFilter] = useState('All');
@@ -50,18 +86,33 @@ export default function ActiveUsers({ searchQuery, selectedConclaveId }) {
   const [toast, setToast] = useState(null);
 
   // Recharts Data for Widgets
-  const sessionStatusData = useMemo(() => [
-    { name: 'Online', value: 742, color: '#af101a' },
-    { name: 'Idle', value: 312, color: '#fd867d' },
-    { name: 'Expiring', value: 142, color: '#e4beba' }
-  ], []);
+  const sessionStatusData = useMemo(() => {
+    const online = sessions.filter(s => s.status === 'Online').length;
+    const idle = sessions.filter(s => s.status === 'Idle').length;
+    const expiring = sessions.filter(s => s.status === 'Expiring').length;
+    return [
+      { name: 'Online', value: online || 0, color: '#af101a' },
+      { name: 'Idle', value: idle || 0, color: '#fd867d' },
+      { name: 'Expiring', value: expiring || 0, color: '#e4beba' }
+    ];
+  }, [sessions]);
 
-  const autoLogoutData = useMemo(() => [
-    { name: '5M', value: 15, color: '#fd867d' },
-    { name: '15M', value: 45, color: '#af101a' },
-    { name: '30M', value: 80, color: '#af101a' },
-    { name: '60M+', value: 60, color: '#271816' }
-  ], []);
+  const autoLogoutData = useMemo(() => {
+    let c5m = 0, c15m = 0, c30m = 0, c60m = 0;
+    sessions.forEach(s => {
+      const mins = parseInt(s.duration) || 0;
+      if (mins <= 5) c5m++;
+      else if (mins <= 15) c15m++;
+      else if (mins <= 30) c30m++;
+      else c60m++;
+    });
+    return [
+      { name: '5M', value: c5m, color: '#fd867d' },
+      { name: '15M', value: c15m, color: '#af101a' },
+      { name: '30M', value: c30m, color: '#af101a' },
+      { name: '60M+', value: c60m, color: '#271816' }
+    ];
+  }, [sessions]);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -85,14 +136,8 @@ export default function ActiveUsers({ searchQuery, selectedConclaveId }) {
 
   // Conclave-specific sessions subset
   const conclaveSessions = useMemo(() => {
-    const conclaveMemberIds = new Set(
-      membersData.filter(m => m.conclaveIds && m.conclaveIds.includes(selectedConclaveId)).map(m => m.id)
-    );
-    const conclaveCaptainIds = new Set(
-      captainsData.filter(c => c.conclaveIds && c.conclaveIds.includes(selectedConclaveId)).map(c => c.id)
-    );
-    return sessions.filter(s => conclaveMemberIds.has(s.id) || conclaveCaptainIds.has(s.id));
-  }, [sessions, selectedConclaveId]);
+    return sessions;
+  }, [sessions]);
 
   // Filtered Sessions
   const filteredSessions = useMemo(() => {

@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import initialConclaves from '../../data/conclaves.json';
 import SearchableDropdown from '../../components/SearchableDropdown';
+import { api } from '../../services/api';
 
 export default function Registrations({ loggedInMember }) {
   const [conclaves, setConclaves] = useState(() => {
@@ -116,7 +117,7 @@ export default function Registrations({ loggedInMember }) {
     setIsRegModalOpen(true);
   };
 
-  const handleRegisterSubmit = (e) => {
+  const handleRegisterSubmit = async (e) => {
     e.preventDefault();
     if (!selectedConclaveForReg) return;
 
@@ -124,6 +125,13 @@ export default function Registrations({ loggedInMember }) {
     const conclaveName = selectedConclaveForReg.name;
     const registeredIds = member?.conclaveIds || [];
     if (registeredIds.includes(conclaveId)) return;
+
+    try {
+      // API call to register
+      await api.post(`/conclaves/${conclaveId}/register`);
+    } catch (err) {
+      console.warn("Backend registration failed, proceeding with local fallback:", err.message);
+    }
 
     // 1. Update Member conclaveIds
     const updatedMember = {

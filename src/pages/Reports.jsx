@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Pagination from '../components/Pagination';
+import { api } from '../services/api';
 import {
   Printer,
   FileSpreadsheet,
@@ -29,11 +30,48 @@ import {
 } from 'recharts';
 
 import reportsSeed from '../data/reports_data.json';
-const { initialMembers, conclaveList } = reportsSeed;
+const { initialMembers } = reportsSeed;
 
 export default function Reports({ searchQuery: globalSearchQuery, selectedConclaveId }) {
+  const [conclaves, setConclaves] = useState([]);
+  const [stats, setStats] = useState(null);
+
+  useEffect(() => {
+    async function loadConclaves() {
+      try {
+        const data = await api.get('/admin/conclaves');
+        setConclaves(data);
+      } catch (err) {
+        console.error("Failed to load conclaves:", err);
+      }
+    }
+    loadConclaves();
+  }, []);
+
+  useEffect(() => {
+    if (!selectedConclaveId) return;
+    async function loadStats() {
+      try {
+        const data = await api.get(`/admin/conclaves/${selectedConclaveId}/stats`);
+        setStats(data);
+      } catch (err) {
+        console.error("Failed to load conclave stats:", err);
+      }
+    }
+    loadStats();
+  }, [selectedConclaveId]);
+
   const [isConclaveSelectorOpen, setIsConclaveSelectorOpen] = useState(false);
   const [localSearchQuery, setLocalSearchQuery] = useState('');
+  const [activeConclaveIndex, setActiveConclaveIndex] = useState(0);
+
+  const selectedConclave = useMemo(() => {
+    if (selectedConclaveId) {
+      const found = conclaves.find(c => c.id === selectedConclaveId);
+      if (found) return found;
+    }
+    return conclaves[activeConclaveIndex] || conclaves[0] || { name: 'Conclave', details: 'No details available', memberCount: 0 };
+  }, [conclaves, selectedConclaveId, activeConclaveIndex]);
   const searchVal = globalSearchQuery !== undefined ? globalSearchQuery : localSearchQuery;
   const [hoveredSlice, setHoveredSlice] = useState(null);
 
@@ -43,36 +81,94 @@ export default function Reports({ searchQuery: globalSearchQuery, selectedConcla
     setTimeout(() => setToast(null), 3000);
   };
 
-  const activeConclaveIndex = useMemo(() => {
-    if (selectedConclaveId === 'CON-2024-0012') return 0;
-    if (selectedConclaveId === 'CON-2024-0015') return 1;
-    return 0;
-  }, [selectedConclaveId]);
+  // Dynamically resolve participants from conclave state
+  const conclaveParticipants = useMemo(() => {
+    if (!selectedConclave || !selectedConclave.participants) return [];
+    return selectedConclave.participants.map((p, idx) => {
+      const isCap = p.role === 'captain';
+      return {
+        id: p.id || String(idx),
+        name: p.name || 'Unknown Member',
+        region: p.chapter || selectedConclave.region || 'Guntur Central',
+        category: p.businessCategory || 'Uncategorized',
+        captain: isCap ? 'Table Captain' : 'Regular Member',
+        rounds: selectedConclave.scheduleSummary?.roundCount || selectedConclave.roundCount || 4,
+        meetings: (selectedConclave.scheduleSummary?.roundCount || selectedConclave.roundCount || 4) * ((selectedConclave.personsPerTable || 8) - 1),
+        status: p.isActive ?? true ? 'Checked In' : 'Absent'
+      };
+    });
+  }, [selectedConclave]);
 
-  const selectedConclave = conclaveList[activeConclaveIndex];
+  // Dynamically resolve Categories list for filters dropdown
+  const categoriesList = useMemo(() => {
+    const set = new Set(conclaveParticipants.map(p => p.category).filter(Boolean));
+    return Array.from(set).sort();
+  }, [conclaveParticipants]);
 
-  // Recharts Participation Data (R1 - R6)
-  const barData = [
-    { name: 'R1', Members: 1100, Captains: 40 },
-    { name: 'R2', Members: 1150, Captains: 42 },
-    { name: 'R3', Members: 1200, Captains: 45 },
-    { name: 'R4', Members: 1180, Captains: 44 },
-    { name: 'R5', Members: 1120, Captains: 41 },
-    { name: 'R6', Members: 1240, Captains: 48 }
-  ];
+  // Dynamically resolve Captains list for filters dropdown
+  const captainsList = useMemo(() => {
+    const set = new Set(conclaveParticipants.filter(p => p.captain.includes('Captain')).map(p => p.name));
+    return Array.from(set).sort();
+  }, [conclaveParticipants]);
 
-  // Recharts Business Diversity Data
-  const donutData = [
-    { name: 'Finance', value: 34, color: '#af101a' },     // BNI Brand Red
-    { name: 'Marketing', value: 28, color: '#bee9ff' },   // Slate Tertiary
-    { name: 'Legal', value: 22, color: '#005f7b' },       // Teal
-    { name: 'Technology', value: 16, color: '#ffe2de' }   // Soft Red Container
-  ];
+  // Recharts Participation Data (R1 - R6) calculated dynamically
+  const barData = useMemo(() => {
+    const roundsNum = selectedConclave?.scheduleSummary?.roundCount || selectedConclave?.roundCount || 4;
+    const totalCaptains = stats?.counts?.captains || selectedConclave?.schedule?.rounds?.[0]?.tables?.filter(t => t.captainId).length || 0;
+    const totalMembers = stats?.counts?.members || selectedConclave?.participants?.filter(p => p.role !== 'captain').length || 0;
+    
+    return Array.from({ length: roundsNum }).map((_, idx) => ({
+      name: `R${idx + 1}`,
+      Members: totalMembers || 0,
+      Captains: totalCaptains || 0
+    }));
+  }, [selectedConclave, stats]);
+
+  // Recharts Business Diversity Data calculated dynamically
+  const donutData = useMemo(() => {
+    if (!selectedConclave || !selectedConclave.participants) {
+      return [
+        { name: 'Finance', value: 0, color: '#af101a' },
+        { name: 'Marketing', value: 0, color: '#bee9ff' },
+        { name: 'Legal', value: 0, color: '#005f7b' },
+        { name: 'Technology', value: 0, color: '#ffe2de' }
+      ];
+    }
+    const counts = {};
+    selectedConclave.participants.forEach(p => {
+      const cat = p.businessCategory || 'Other';
+      counts[cat] = (counts[cat] || 0) + 1;
+    });
+    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    const colors = ['#af101a', '#005f7b', '#fd867d', '#bee9ff', '#271816', '#ffe2de'];
+    return sorted.map(([name, value], idx) => ({
+      name,
+      value,
+      color: colors[idx % colors.length]
+    }));
+  }, [selectedConclave]);
 
   // Recharts Mini Gauge Data
-  const satisfactionData = [{ value: 90 }, { value: 10 }];
-  const diversityData = [{ value: 95 }, { value: 5 }];
-  const captainData = [{ value: 80 }, { value: 20 }];
+  const satisfactionData = useMemo(() => {
+    const liveMatchRate = selectedConclave?.scheduleSummary?.coverage !== undefined
+      ? Math.round(selectedConclave.scheduleSummary.coverage * 100)
+      : 98;
+    return [{ value: liveMatchRate }, { value: 100 - liveMatchRate }];
+  }, [selectedConclave]);
+
+  const diversityData = useMemo(() => {
+    const liveValidationScore = selectedConclave?.warnings?.length
+      ? Math.max(70, 100 - selectedConclave.warnings.length * 10)
+      : 100;
+    return [{ value: liveValidationScore }, { value: 100 - liveValidationScore }];
+  }, [selectedConclave]);
+
+  const captainData = useMemo(() => {
+    const activePercent = stats?.counts?.registered
+      ? Math.round((stats.counts.active / stats.counts.registered) * 100)
+      : 100;
+    return [{ value: activePercent }, { value: 100 - activePercent }];
+  }, [stats]);
 
   const [filterRound, setFilterRound] = useState('all');
   const [filterCategory, setFilterCategory] = useState('all');
@@ -83,7 +179,7 @@ export default function Reports({ searchQuery: globalSearchQuery, selectedConcla
 
   // Seating Table filter
   const filteredMembers = useMemo(() => {
-    return initialMembers.filter(m => {
+    return conclaveParticipants.filter(m => {
       const matchSearch = !searchVal ||
         m.name.toLowerCase().includes(searchVal.toLowerCase()) ||
         m.category.toLowerCase().includes(searchVal.toLowerCase()) ||
@@ -92,7 +188,7 @@ export default function Reports({ searchQuery: globalSearchQuery, selectedConcla
       const matchCaptain = filterCaptain === 'all' || m.captain === filterCaptain;
       return matchSearch && matchCategory && matchCaptain;
     });
-  }, [searchVal, filterCategory, filterCaptain]);
+  }, [conclaveParticipants, searchVal, filterCategory, filterCaptain]);
 
   const paginatedMembers = useMemo(() => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -100,7 +196,7 @@ export default function Reports({ searchQuery: globalSearchQuery, selectedConcla
   }, [filteredMembers, currentPage]);
 
   // Reset to page 1 on filter change
-  React.useEffect(() => { setCurrentPage(1); }, [searchVal, filterCategory, filterCaptain]);
+  useEffect(() => { setCurrentPage(1); }, [searchVal, filterCategory, filterCaptain]);
 
   // Export helpers
   const exportCSV = () => {
@@ -224,9 +320,9 @@ export default function Reports({ searchQuery: globalSearchQuery, selectedConcla
               className="px-4 py-2.5 border border-zinc-200 bg-white rounded-lg text-body-sm font-bold text-zinc-700 transition-smooth cursor-pointer focus:outline-none focus:border-brand-red"
             >
               <option value="all">All Categories</option>
-              <option value="LEGAL">Legal</option>
-              <option value="MARKETING">Marketing</option>
-              <option value="FINANCE">Finance</option>
+              {categoriesList.map(cat => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
             </select>
           </div>
 
@@ -238,8 +334,9 @@ export default function Reports({ searchQuery: globalSearchQuery, selectedConcla
               className="px-4 py-2.5 border border-zinc-200 bg-white rounded-lg text-body-sm font-bold text-zinc-700 transition-smooth cursor-pointer focus:outline-none focus:border-brand-red"
             >
               <option value="all">All Captains</option>
-              <option value="Shweta Iyer">Shweta Iyer</option>
-              <option value="Manoj Kumar">Manoj Kumar</option>
+              {captainsList.map(cap => (
+                <option key={cap} value={cap}>{cap}</option>
+              ))}
             </select>
           </div>
         </div>
@@ -255,7 +352,9 @@ export default function Reports({ searchQuery: globalSearchQuery, selectedConcla
           </div>
           <div>
             <p className="text-[10px] text-zinc-400 font-bold uppercase">Total Members</p>
-            <h4 className="text-headline-md font-extrabold text-zinc-950 mt-0.5">1,240</h4>
+            <h4 className="text-headline-md font-extrabold text-zinc-955 mt-0.5">
+              {(stats?.counts?.registered || selectedConclave?.participants?.length || 0).toLocaleString()}
+            </h4>
           </div>
         </div>
 
@@ -267,7 +366,9 @@ export default function Reports({ searchQuery: globalSearchQuery, selectedConcla
           </div>
           <div>
             <p className="text-[10px] text-zinc-400 font-bold uppercase">Unique Meetings</p>
-            <h4 className="text-headline-md font-extrabold text-zinc-950 mt-0.5">98.4%</h4>
+            <h4 className="text-headline-md font-extrabold text-zinc-955 mt-0.5">
+              {selectedConclave?.scheduleSummary?.coverage ? `${Math.round(selectedConclave.scheduleSummary.coverage * 100)}%` : '0%'}
+            </h4>
           </div>
         </div>
 
@@ -279,7 +380,9 @@ export default function Reports({ searchQuery: globalSearchQuery, selectedConcla
           </div>
           <div>
             <p className="text-[10px] text-zinc-400 font-bold uppercase">Repeat Pairings</p>
-            <h4 className="text-headline-md font-extrabold text-zinc-950 mt-0.5">0%</h4>
+            <h4 className="text-headline-md font-extrabold text-zinc-955 mt-0.5">
+              {selectedConclave?.scheduleSummary?.repeatPairings !== undefined ? `${selectedConclave.scheduleSummary.repeatPairings}` : '0'}
+            </h4>
           </div>
         </div>
 
@@ -291,8 +394,9 @@ export default function Reports({ searchQuery: globalSearchQuery, selectedConcla
           </div>
           <div>
             <p className="text-[10px] text-zinc-400 font-bold uppercase">Seating Quality</p>
-            <h4 className="text-headline-md font-extrabold text-zinc-950 mt-0.5">
-              96<span className="text-body-sm font-normal text-zinc-450">/100</span>
+            <h4 className="text-headline-md font-extrabold text-zinc-955 mt-0.5">
+              {selectedConclave?.scheduleSummary?.coverage ? Math.round(selectedConclave.scheduleSummary.coverage * 100) : 0}
+              <span className="text-body-sm font-normal text-zinc-455">/100</span>
             </h4>
           </div>
         </div>
@@ -305,9 +409,106 @@ export default function Reports({ searchQuery: globalSearchQuery, selectedConcla
           </div>
           <div>
             <p className="text-[10px] text-zinc-400 font-bold uppercase">Validation Score</p>
-            <h4 className="text-headline-md font-extrabold text-zinc-950 mt-0.5">
-              100<span className="text-body-sm font-normal text-zinc-450">/100</span>
+            <h4 className="text-headline-md font-extrabold text-zinc-955 mt-0.5">
+              {selectedConclave?.warnings?.length ? Math.max(70, 100 - selectedConclave.warnings.length * 10) : 100}
+              <span className="text-body-sm font-normal text-zinc-455">/100</span>
             </h4>
+          </div>
+        </div>
+      </section>
+
+      {/* Event Performance Analytics section */}
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-2">
+        {/* Attendance breakdown */}
+        <div className="bg-white border border-zinc-200/80 p-5 rounded-xl flex flex-col justify-between shadow-sm">
+          <div>
+            <div className="flex justify-between items-center border-b border-zinc-100 pb-2.5 mb-4">
+              <h4 className="text-body-sm font-extrabold text-zinc-955 uppercase">Attendance Breakdown</h4>
+              <span className="px-2 py-0.5 bg-red-50 text-brand-red border border-red-100 rounded text-[9px] font-extrabold tracking-wider">LIVE</span>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <div className="flex justify-between text-body-sm font-bold text-zinc-700 mb-1.5">
+                  <span>Checked In (Active)</span>
+                  <span>{stats?.counts?.active || 0} / {stats?.counts?.registered || 0}</span>
+                </div>
+                <div className="w-full h-2 bg-zinc-100 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-brand-red rounded-full transition-all duration-500" 
+                    style={{ width: `${stats?.counts?.registered ? Math.round((stats.counts.active / stats.counts.registered) * 100) : 0}%` }}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4 text-[11px] font-semibold text-zinc-550 pt-2 border-t border-dashed border-zinc-100">
+                <div>
+                  <p className="text-zinc-450">Checked In Ratio</p>
+                  <p className="text-body-sm font-bold text-zinc-800 mt-0.5">
+                    {stats?.counts?.registered ? `${Math.round((stats.counts.active / stats.counts.registered) * 100)}%` : '0%'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-zinc-450">Absent Members</p>
+                  <p className="text-body-sm font-bold text-zinc-800 mt-0.5">
+                    {(stats?.counts?.registered || 0) - (stats?.counts?.active || 0)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Referral Productivity */}
+        <div className="bg-white border border-zinc-200/80 p-5 rounded-xl flex flex-col justify-between shadow-sm">
+          <div>
+            <div className="flex justify-between items-center border-b border-zinc-100 pb-2.5 mb-4">
+              <h4 className="text-body-sm font-extrabold text-zinc-955 uppercase">Referral Productivity</h4>
+              <span className="px-2 py-0.5 bg-amber-50 text-amber-800 border border-amber-100 rounded text-[9px] font-extrabold tracking-wider">KPI</span>
+            </div>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-[28px] font-black text-zinc-900 tracking-tight">{stats?.counts?.referrals || 0}</p>
+                  <p className="text-[10px] text-zinc-450 font-bold uppercase mt-0.5">Total Referrals Logged</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[28px] font-black text-brand-red tracking-tight">
+                    {stats?.counts?.active ? (stats.counts.referrals / stats.counts.active).toFixed(2) : '0.00'}
+                  </p>
+                  <p className="text-[10px] text-zinc-450 font-bold uppercase mt-0.5">Avg Referrals / Attendee</p>
+                </div>
+              </div>
+              <div className="text-[10px] text-zinc-500 bg-zinc-50/50 rounded-lg p-2.5 border border-zinc-150 font-semibold leading-relaxed">
+                Referral logging measures the direct business value generated face-to-face during the conclave's rotating rounds.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Table Seating Allocation */}
+        <div className="bg-white border border-zinc-200/80 p-5 rounded-xl flex flex-col justify-between shadow-sm">
+          <div>
+            <div className="flex justify-between items-center border-b border-zinc-100 pb-2.5 mb-4">
+              <h4 className="text-body-sm font-extrabold text-zinc-955 uppercase">Table Allocation</h4>
+              <span className="px-2 py-0.5 bg-blue-50 text-blue-800 border border-blue-100 rounded text-[9px] font-extrabold tracking-wider">ENGINE</span>
+            </div>
+            <div className="space-y-3.5">
+              <div className="flex justify-between items-center">
+                <span className="text-[11px] font-semibold text-zinc-500">Seating Density Limit</span>
+                <span className="font-extrabold text-zinc-800 text-body-sm">{selectedConclave?.personsPerTable || 8} Members / Table</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-[11px] font-semibold text-zinc-500">Total Seated Captains</span>
+                <span className="font-extrabold text-zinc-800 text-body-sm">
+                  {stats?.counts?.captains || selectedConclave?.schedule?.rounds?.[0]?.tables?.filter(t => t.captainId).length || 0} Captains
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-[11px] font-semibold text-zinc-500">Active Rounds Run</span>
+                <span className="font-extrabold text-zinc-800 text-body-sm">
+                  {selectedConclave?.currentRound || 0} / {selectedConclave?.scheduleSummary?.roundCount || selectedConclave?.roundCount || 4} Rounds
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -317,99 +518,6 @@ export default function Reports({ searchQuery: globalSearchQuery, selectedConcla
 
         {/* Charts & Tables Area */}
         <div className="space-y-6">
-
-          {/* Bento Charts Block */}
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-
-            {/* Recharts Bar Chart — wider */}
-            <div className="lg:col-span-3 bg-white border border-zinc-200/80 p-5 rounded-xl h-[350px] flex flex-col shadow-sm">
-              <div className="flex justify-between items-center mb-6">
-                <div>
-                  <h3 className="text-body-sm font-extrabold text-zinc-900 uppercase">Participation Trends</h3>
-                  <p className="text-[10px] text-zinc-400 font-semibold mt-0.5">Members vs Captains per Round</p>
-                </div>
-              </div>
-
-              <div className="flex-1 min-h-0 text-[10px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={barData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
-                    <XAxis dataKey="name" stroke="#a1a1aa" fontSize={10} fontStyle="semibold" />
-                    <YAxis stroke="#a1a1aa" fontSize={10} fontStyle="semibold" />
-                    <Tooltip contentStyle={{ fontSize: '11px', borderRadius: '8px', border: '1px solid #f4f4f5' }} cursor={false} />
-                    <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '10px' }} />
-                    <Bar dataKey="Members" fill="#af101a" radius={[3, 3, 0, 0]} />
-                    <Bar dataKey="Captains" fill="#8f6f6c" radius={[3, 3, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            {/* Recharts Pie Donut Chart */}
-            <div className="lg:col-span-2 bg-white border border-zinc-200/80 p-5 rounded-xl h-[350px] flex flex-col shadow-sm">
-              <div className="flex justify-between items-center mb-6">
-                <div>
-                  <h3 className="text-body-sm font-extrabold text-zinc-900 uppercase">Business Diversity</h3>
-                  <p className="text-[10px] text-zinc-400 font-semibold mt-0.5">Category Distribution</p>
-                </div>
-              </div>
-
-              <div className="flex-1 grid grid-cols-2 gap-4 items-center min-h-0">
-                <div className="relative w-full h-full flex items-center justify-center">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={donutData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={50}
-                        outerRadius={65}
-                        paddingAngle={3}
-                        dataKey="value"
-                      >
-                        {donutData.map((entry, index) => (
-                          <Cell 
-                            key={`cell-${index}`} 
-                            fill={entry.color} 
-                            stroke="none" 
-                            onMouseEnter={() => setHoveredSlice(entry)}
-                            onMouseLeave={() => setHoveredSlice(null)}
-                            className="outline-none cursor-pointer"
-                          />
-                        ))}
-                      </Pie>
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div className="absolute flex flex-col items-center pointer-events-none">
-                    <span className="text-xl font-black text-zinc-950 leading-none">
-                      {hoveredSlice ? `${hoveredSlice.value}%` : '34%'}
-                    </span>
-                    <span className="text-[8px] text-zinc-400 font-bold uppercase mt-1">
-                      {hoveredSlice ? hoveredSlice.name : 'Finance'}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="space-y-3 font-semibold text-zinc-650">
-                  {donutData.map((d, index) => (
-                    <div key={index} className="space-y-1">
-                      <div className="flex justify-between text-[10px]">
-                        <span className="text-zinc-600">{d.name}</span>
-                        <span className="text-zinc-900 font-bold">{d.value}%</span>
-                      </div>
-                      <div className="w-full h-1.5 rounded-full overflow-hidden">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart layout="vertical" data={[{ value: d.value }]} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-                            <XAxis type="number" domain={[0, 100]} hide />
-                            <Bar dataKey="value" fill={d.color} radius={[2, 2, 2, 2]} background={{ fill: '#e4e4e7' }} barSize={6} />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
 
           {/* Member table section */}
           <div className="bg-white border border-zinc-200/80 rounded-xl overflow-hidden shadow-sm flex flex-col">
@@ -507,7 +615,7 @@ export default function Reports({ searchQuery: globalSearchQuery, selectedConcla
               </button>
             </div>
             <div className="p-5 space-y-2.5 max-h-[50vh] overflow-y-auto">
-              {conclaveList.map((c, idx) => (
+              {conclaves.map((c, idx) => (
                 <div
                   key={c.id}
                   onClick={() => {
@@ -520,7 +628,7 @@ export default function Reports({ searchQuery: globalSearchQuery, selectedConcla
                 >
                   <div>
                     <h4 className="text-body-sm font-bold text-zinc-900 leading-tight">{c.name}</h4>
-                    <p className="text-[10px] text-zinc-450 font-semibold mt-1">{c.details}</p>
+                    <p className="text-[10px] text-zinc-450 font-semibold mt-1">{c.details || c.venueLocation || c.venue || 'No details available'}</p>
                   </div>
                   {idx === activeConclaveIndex && (
                     <span className="w-2.5 h-2.5 rounded-full bg-brand-red" />
