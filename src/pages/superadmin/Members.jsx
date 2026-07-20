@@ -5,6 +5,7 @@ import {
   Eye,
 } from 'lucide-react';
 import { mockGlobalMembers, mockRegions } from '../../data/mockConclaveData';
+import { api } from '../../services/api';
 
 export default function SuperadminMembers({ searchQuery }) {
   const [selectedRegion, setSelectedRegion] = useState('All');
@@ -23,7 +24,6 @@ export default function SuperadminMembers({ searchQuery }) {
       }
     };
     window.addEventListener('storage', handleStorageChange);
-    // Listen to local storage events as well
     const interval = setInterval(handleStorageChange, 1000);
     return () => {
       window.removeEventListener('storage', handleStorageChange);
@@ -31,13 +31,23 @@ export default function SuperadminMembers({ searchQuery }) {
     };
   }, []);
 
-  // Members state for toggling captain/member role dynamically
-  const [members, setMembers] = useState(() => {
-    return mockGlobalMembers.map((m, idx) => ({
-      ...m,
-      isCaptain: idx % 3 === 0
-    }));
-  });
+  const [members, setMembers] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    async function loadMembers() {
+      setIsLoading(true);
+      try {
+        const data = await api.get('/admin/users');
+        setMembers(data || []);
+      } catch (err) {
+        console.error("Failed to load global members:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadMembers();
+  }, []);
 
   const [roleChangeTarget, setRoleChangeTarget] = useState(null);
 
