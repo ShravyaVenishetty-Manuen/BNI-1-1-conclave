@@ -114,15 +114,19 @@ export default function SuperadminAdmins({ searchQuery }) {
 
   // Filtered Lists
   const q = searchQuery ? searchQuery.toLowerCase() : '';
-  const filteredAdmins = admins.filter(admin =>
-    admin.name.toLowerCase().includes(q) ||
-    admin.email.toLowerCase().includes(q) ||
-    admin.region.toLowerCase().includes(q)
-  );
+  const filteredAdmins = admins.filter(admin => {
+    const name = admin.name || '';
+    const email = admin.email || '';
+    const region = admin.region || '';
+    return name.toLowerCase().includes(q) ||
+           email.toLowerCase().includes(q) ||
+           region.toLowerCase().includes(q);
+  });
 
-  const filteredRegions = regions.filter(region =>
-    region.name.toLowerCase().includes(q)
-  );
+  const filteredRegions = regions.filter(region => {
+    const name = region.name || '';
+    return name.toLowerCase().includes(q);
+  });
 
   // Admin CRUD Handlers
   const handleOpenAdminModal = (admin = null) => {
@@ -325,18 +329,18 @@ export default function SuperadminAdmins({ searchQuery }) {
                         onClick={() => setActiveAdmin(admin)}
                         className="font-black text-zinc-900 text-left cursor-pointer"
                       >
-                        {admin.name}
+                        {admin.name || admin.email || 'Unnamed Admin'}
                       </button>
                     </td>
                     <td className="p-4">
                       <span className="px-2.5 py-0.5 bg-zinc-50 border border-zinc-200 text-zinc-550 text-[10px] font-bold rounded-full whitespace-nowrap">
-                        {admin.region}
+                        {admin.region || 'Unassigned Region'}
                       </span>
                     </td>
                     <td className="p-4 text-zinc-500">{admin.email}</td>
-                    <td className="p-4 text-zinc-500">{admin.mobile}</td>
+                    <td className="p-4 text-zinc-500">{admin.mobile || 'N/A'}</td>
                     <td className="p-4 text-center">
-                      <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${admin.status === 'Active'
+                      <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${(admin.status || 'Active') === 'Active'
                         ? 'bg-emerald-50 text-emerald-700 border border-emerald-150'
                         : 'bg-zinc-50 text-zinc-450 border border-zinc-200'
                         }`}>
