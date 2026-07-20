@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Plus,
   Edit,
@@ -18,13 +18,15 @@ import {
   mockGlobalConclaves,
   mockGlobalMembers
 } from '../../data/mockConclaveData';
+import { api } from '../../services/api';
 
 export default function SuperadminAdmins({ searchQuery }) {
   const [subTab, setSubTab] = useState('admins'); // 'admins' or 'regions'
 
   // Local state for interactive CRUD
-  const [admins, setAdmins] = useState(mockAdmins);
-  const [regions, setRegions] = useState(mockRegions);
+  const [admins, setAdmins] = useState([]);
+  const [regions, setRegions] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Drawer states
   const [activeAdmin, setActiveAdmin] = useState(null);
@@ -50,11 +52,30 @@ export default function SuperadminAdmins({ searchQuery }) {
     status: 'Active'
   });
 
-  // Reset Password states
   const [resetPasswordTarget, setResetPasswordTarget] = useState(null);
   const [tempPassword, setTempPassword] = useState('');
   const [isPasswordCopied, setIsPasswordCopied] = useState(false);
   const [isPasswordResetDone, setIsPasswordResetDone] = useState(false);
+
+  const loadData = async () => {
+    setIsLoading(true);
+    try {
+      const [adminsList, regionsList] = await Promise.all([
+        api.get('/admin/coordinators'),
+        api.get('/admin/regions')
+      ]);
+      setAdmins(adminsList || []);
+      setRegions(regionsList || []);
+    } catch (err) {
+      console.error("Failed to load superadmin admins/regions data:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   const generateRandomPassword = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -78,9 +99,17 @@ export default function SuperadminAdmins({ searchQuery }) {
     setTimeout(() => setIsPasswordCopied(false), 2000);
   };
 
-  const handleConfirmReset = () => {
-    // In a real database we would update the password in db
-    setIsPasswordResetDone(true);
+  const handleConfirmReset = async () => {
+    if (!resetPasswordTarget) return;
+    try {
+      await api.post(`/admin/coordinators/${resetPasswordTarget.uid}/reset-password`, {
+        password: tempPassword
+      });
+      setIsPasswordResetDone(true);
+    } catch (err) {
+      console.error("Failed to reset password:", err);
+      alert(err.message || "Failed to reset coordinator password.");
+    }
   };
 
   // Filtered Lists
@@ -119,26 +148,47 @@ export default function SuperadminAdmins({ searchQuery }) {
     setShowAdminModal(true);
   };
 
-  const handleSaveAdmin = (e) => {
+  const handleSaveAdmin = async (e) => {
     e.preventDefault();
-    if (editingAdmin) {
-      // Update
-      setAdmins(prev => prev.map(a => a.id === editingAdmin.id ? { ...a, ...adminForm } : a));
-    } else {
-      // Create
-      const newAdmin = {
-        id: `adm-${Date.now()}`,
-        ...adminForm
-      };
-      setAdmins(prev => [...prev, newAdmin]);
+    try {
+      if (editingAdmin) {
+        await api.patch(`/admin/coordinators/${editingAdmin.uid}`, {
+          name: adminForm.name,
+          mobile: adminForm.mobile,
+          region: adminForm.region,
+          status: adminForm.status
+        });
+      } else {
+        const tempPass = generateRandomPassword();
+        await api.post('/admin/coordinators', {
+          email: adminForm.email,
+          password: tempPass,
+          name: adminForm.name,
+          mobile: adminForm.mobile,
+          region: adminForm.region,
+          status: adminForm.status,
+          role: 'coordinator'
+        });
+        alert(`Coordinator created successfully!\n\nTemporary generated password: ${tempPass}\n\nPlease share this with the coordinator.`);
+      }
+      setShowAdminModal(false);
+      loadData();
+    } catch (err) {
+      console.error("Failed to save admin:", err);
+      alert(err.message || "Failed to save administrator.");
     }
-    setShowAdminModal(false);
   };
 
-  const handleDeleteAdmin = (id) => {
-    if (window.confirm("Are you sure you want to delete this BNI Admin?")) {
-      setAdmins(prev => prev.filter(a => a.id !== id));
-      if (activeAdmin?.id === id) setActiveAdmin(null);
+  const handleDeleteAdmin = async (uid) => {
+    if (window.confirm("Are you sure you want to revoke this coordinator's administrator access?")) {
+      try {
+        await api.delete(`/admin/coordinators/${uid}`);
+        if (activeAdmin?.uid === uid) setActiveAdmin(null);
+        loadData();
+      } catch (err) {
+        console.error("Failed to delete admin:", err);
+        alert(err.message || "Failed to delete administrator.");
+      }
     }
   };
 
@@ -148,8 +198,8 @@ export default function SuperadminAdmins({ searchQuery }) {
       setEditingRegion(region);
       setRegionForm({
         name: region.name,
-        membersCount: region.membersCount,
-        conclavesCount: region.conclavesCount,
+        membersCount: region.membersCount || 0,
+        conclavesCount: region.conclavesCount || 0,
         status: region.status
       });
     } else {
@@ -164,26 +214,38 @@ export default function SuperadminAdmins({ searchQuery }) {
     setShowRegionModal(true);
   };
 
-  const handleSaveRegion = (e) => {
+  const handleSaveRegion = async (e) => {
     e.preventDefault();
-    if (editingRegion) {
-      // Update
-      setRegions(prev => prev.map(r => r.id === editingRegion.id ? { ...r, ...regionForm } : r));
-    } else {
-      // Create
-      const newRegion = {
-        id: `reg-${Date.now()}`,
-        ...regionForm
-      };
-      setRegions(prev => [...prev, newRegion]);
+    try {
+      if (editingRegion) {
+        await api.patch(`/admin/regions/${editingRegion.id}`, {
+          name: regionForm.name,
+          status: regionForm.status
+        });
+      } else {
+        await api.post('/admin/regions', {
+          name: regionForm.name,
+          status: regionForm.status
+        });
+      }
+      setShowRegionModal(false);
+      loadData();
+    } catch (err) {
+      console.error("Failed to save region:", err);
+      alert(err.message || "Failed to save region.");
     }
-    setShowRegionModal(false);
   };
 
-  const handleDeleteRegion = (id) => {
+  const handleDeleteRegion = async (id) => {
     if (window.confirm("Are you sure you want to delete this BNI Region?")) {
-      setRegions(prev => prev.filter(r => r.id !== id));
-      if (activeRegion?.id === id) setActiveRegion(null);
+      try {
+        await api.delete(`/admin/regions/${id}`);
+        if (activeRegion?.id === id) setActiveRegion(null);
+        loadData();
+      } catch (err) {
+        console.error("Failed to delete region:", err);
+        alert(err.message || "Failed to delete region.");
+      }
     }
   };
 
@@ -257,7 +319,7 @@ export default function SuperadminAdmins({ searchQuery }) {
               </thead>
               <tbody className="divide-y divide-zinc-200 text-[12.5px] font-semibold text-zinc-700">
                 {filteredAdmins.map((admin) => (
-                  <tr key={admin.id} className="hover:bg-zinc-50/50 transition-colors">
+                  <tr key={admin.uid || admin.id} className="hover:bg-zinc-50/50 transition-colors">
                     <td className="p-4 pl-6">
                       <button
                         onClick={() => setActiveAdmin(admin)}
@@ -305,7 +367,7 @@ export default function SuperadminAdmins({ searchQuery }) {
                           <KeyRound className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleDeleteAdmin(admin.id)}
+                          onClick={() => handleDeleteAdmin(admin.uid || admin.id)}
                           className="p-1.5 text-zinc-400 hover:text-zinc-700 transition-smooth cursor-pointer"
                           title="Delete"
                         >
