@@ -56,18 +56,35 @@ export default function SuperadminMembers({ searchQuery }) {
     setActiveMember(prev => prev && prev.id === id ? { ...prev, isCaptain } : prev);
   };
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const membersPerPage = 10;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedRegion]);
+
   // Filter list
   const filteredMembers = members.filter(member => {
     const q = searchQuery ? searchQuery.toLowerCase() : '';
+    const name = member.name || '';
+    const company = member.company || '';
+    const category = member.category || '';
+    const chapter = member.chapter || '';
     const matchesSearch =
-      member.name.toLowerCase().includes(q) ||
-      member.company.toLowerCase().includes(q) ||
-      member.category.toLowerCase().includes(q) ||
-      member.chapter.toLowerCase().includes(q);
+      name.toLowerCase().includes(q) ||
+      company.toLowerCase().includes(q) ||
+      category.toLowerCase().includes(q) ||
+      chapter.toLowerCase().includes(q);
 
     const matchesRegion = selectedRegion === 'All' ? true : member.region === selectedRegion;
     return matchesSearch && matchesRegion;
   });
+
+  const totalPages = Math.ceil(filteredMembers.length / membersPerPage);
+  const paginatedMembers = filteredMembers.slice(
+    (currentPage - 1) * membersPerPage,
+    currentPage * membersPerPage
+  );
 
   return (
     <div className="space-y-6 animate-fade-in font-sans pb-16 relative">
@@ -120,7 +137,7 @@ export default function SuperadminMembers({ searchQuery }) {
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-200 text-[12.5px] font-semibold text-zinc-700">
-              {filteredMembers.map((member) => (
+              {paginatedMembers.map((member) => (
                 <tr key={member.id} className="hover:bg-zinc-50/50 transition-colors">
                   <td className="p-4 pl-6">
                     <button
@@ -187,6 +204,30 @@ export default function SuperadminMembers({ searchQuery }) {
             </tbody>
           </table>
         </div>
+        {/* Pagination Footer */}
+        {totalPages > 1 && (
+          <div className="bg-zinc-50 border-t border-zinc-200 px-6 py-4 flex items-center justify-between">
+            <span className="text-xs text-zinc-500 font-semibold">
+              Showing {((currentPage - 1) * membersPerPage) + 1} to {Math.min(currentPage * membersPerPage, filteredMembers.length)} of {filteredMembers.length} members
+            </span>
+            <div className="flex gap-2">
+              <button
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                className="px-3 py-1.5 border border-zinc-200 bg-white text-zinc-700 font-bold text-xs rounded-lg hover:bg-zinc-50 disabled:opacity-50 transition-smooth cursor-pointer"
+              >
+                Previous
+              </button>
+              <button
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                className="px-3 py-1.5 border border-zinc-200 bg-white text-zinc-700 font-bold text-xs rounded-lg hover:bg-zinc-50 disabled:opacity-50 transition-smooth cursor-pointer"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </section>
 
       {/* Member detail drawer */}
