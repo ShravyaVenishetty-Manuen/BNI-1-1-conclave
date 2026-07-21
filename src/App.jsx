@@ -275,7 +275,7 @@ export default function App() {
       try {
         const [list, profile] = await Promise.all([
           api.get('/conclaves').catch(() => []),
-          api.get('/users/me').catch(() => null),
+          api.get('/me').catch(() => null),
         ]);
 
         setMemberConclaves(Array.isArray(list) ? list : []);

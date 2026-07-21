@@ -48,8 +48,8 @@ export default function Registrations({ loggedInMember }) {
     async function loadData() {
       try {
         const [memberData, conclavesData] = await Promise.all([
-          api.get('/member/me').catch(() => null),
-          api.get('/member/conclaves').catch(() => [])
+          api.get('/me').catch(() => null),
+          api.get('/conclaves').catch(() => [])
         ]);
 
         if (memberData) {
