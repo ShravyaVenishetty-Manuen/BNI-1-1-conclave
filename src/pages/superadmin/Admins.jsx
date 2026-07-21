@@ -12,12 +12,6 @@ import {
   KeyRound,
   CheckCircle2
 } from 'lucide-react';
-import {
-  mockAdmins,
-  mockRegions,
-  mockGlobalConclaves,
-  mockGlobalMembers
-} from '../../data/mockConclaveData';
 import { api } from '../../services/api';
 
 export default function SuperadminAdmins({ searchQuery }) {
@@ -26,6 +20,8 @@ export default function SuperadminAdmins({ searchQuery }) {
   // Local state for interactive CRUD
   const [admins, setAdmins] = useState([]);
   const [regions, setRegions] = useState([]);
+  const [conclaves, setConclaves] = useState([]);
+  const [members, setMembers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
   // Drawer states
@@ -60,12 +56,16 @@ export default function SuperadminAdmins({ searchQuery }) {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const [adminsList, regionsList] = await Promise.all([
+      const [adminsList, regionsList, conclavesList, membersList] = await Promise.all([
         api.get('/admin/coordinators'),
-        api.get('/admin/regions')
+        api.get('/admin/regions'),
+        api.get('/admin/conclaves'),
+        api.get('/admin/users')
       ]);
       setAdmins(adminsList || []);
       setRegions(regionsList || []);
+      setConclaves(conclavesList || []);
+      setMembers(membersList || []);
     } catch (err) {
       console.error("Failed to load superadmin admins/regions data:", err);
     } finally {
@@ -505,7 +505,7 @@ export default function SuperadminAdmins({ searchQuery }) {
                       <div>
                         <span className="text-[9px] font-black text-zinc-400 uppercase tracking-wider block">Conclaves</span>
                         <span className="text-[13px] font-black text-zinc-900">
-                          {mockGlobalConclaves.filter(c => c.region === activeAdmin.region).length} Created
+                          {conclaves.filter(c => (c.region || 'Guntur Region') === (activeAdmin.region || 'Guntur Region')).length} Created
                         </span>
                       </div>
                     </div>
@@ -514,7 +514,7 @@ export default function SuperadminAdmins({ searchQuery }) {
                       <div>
                         <span className="text-[9px] font-black text-zinc-400 uppercase tracking-wider block">Members</span>
                         <span className="text-[13px] font-black text-zinc-900">
-                          {mockGlobalMembers.filter(m => m.region === activeAdmin.region).length} Registered
+                          {members.filter(m => (m.region ? (typeof m.region === 'object' ? m.region.place : m.region) : (m.location ? (typeof m.location === 'object' ? m.location.place : m.location) : 'Guntur Region')) === (activeAdmin.region || 'Guntur Region')).length} Registered
                         </span>
                       </div>
                     </div>
@@ -525,7 +525,7 @@ export default function SuperadminAdmins({ searchQuery }) {
                 <div className="space-y-3">
                   <h4 className="text-[11px] font-black text-zinc-400 uppercase tracking-widest px-0.5">Registered Members</h4>
                   <div className="border border-zinc-200 rounded-xl overflow-hidden divide-y divide-zinc-200">
-                    {mockGlobalMembers.filter(m => m.region === activeAdmin.region).map(member => (
+                    {members.filter(m => (m.region ? (typeof m.region === 'object' ? m.region.place : m.region) : (m.location ? (typeof m.location === 'object' ? m.location.place : m.location) : 'Guntur Region')) === (activeAdmin.region || 'Guntur Region')).map(member => (
                       <div key={member.id} className="p-3 flex justify-between items-center text-body-sm bg-white hover:bg-zinc-50/50 transition-colors">
                         <div>
                           <p className="font-black text-zinc-800">{member.name}</p>
@@ -618,13 +618,13 @@ export default function SuperadminAdmins({ searchQuery }) {
                 <div className="space-y-3">
                   <h4 className="text-[11px] font-black text-zinc-400 uppercase tracking-widest px-0.5">Created Conclaves</h4>
                   <div className="border border-zinc-200 rounded-xl overflow-hidden divide-y divide-zinc-200">
-                    {mockGlobalConclaves.filter(c => c.region === activeRegion.name).map(conclave => (
+                    {conclaves.filter(c => (c.region || 'Guntur Region') === activeRegion.name).map(conclave => (
                       <div key={conclave.id} className="p-3 flex justify-between items-center text-body-sm bg-white hover:bg-zinc-50/50 transition-colors">
                         <div>
-                          <p className="font-black text-zinc-800">{conclave.title}</p>
-                          <p className="text-[10px] text-zinc-450 font-semibold mt-0.5">{conclave.venue} • {conclave.date}</p>
+                          <p className="font-black text-zinc-800">{conclave.name || conclave.title || 'Unnamed Conclave'}</p>
+                          <p className="text-[10px] text-zinc-450 font-semibold mt-0.5">{conclave.venueLocation || conclave.venue || 'TBD Venue'} • {conclave.date ? new Date(conclave.date).toLocaleDateString() : 'TBD Date'}</p>
                         </div>
-                        <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider ${conclave.status === 'Completed' ? 'bg-zinc-100 text-zinc-650' : 'bg-emerald-50 text-emerald-700'
+                        <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider ${conclave.status?.toLowerCase() === 'completed' ? 'bg-zinc-100 text-zinc-650' : 'bg-emerald-50 text-emerald-700'
                           }`}>
                           {conclave.status}
                         </span>
