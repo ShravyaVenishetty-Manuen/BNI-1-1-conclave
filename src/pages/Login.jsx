@@ -298,45 +298,7 @@ export default function Login({ onLogin }) {
             </button>
           </form>
 
-          {/* Quick Logins */}
-          {role !== 'admin' && (
-            <div className="mt-4 pt-4 border-t border-zinc-150 space-y-2">
-              <span className="text-[9px] font-black text-zinc-400 uppercase tracking-widest block">Quick Demo Logins</span>
-              <div className="grid grid-cols-2 gap-2">
-                {role === 'captain' ? (
-                  MOCK_CAPTAINS.map(c => (
-                    <button
-                      key={c.id}
-                      type="button"
-                      onClick={() => {
-                        setInputVal(c.email);
-                        setPassword('password');
-                      }}
-                      className="p-2 bg-zinc-50 hover:bg-red-50 border border-zinc-200/60 rounded-lg text-[10px] text-left font-bold text-zinc-700 hover:text-brand-red hover:border-brand-red/35 transition-smooth cursor-pointer leading-tight truncate"
-                    >
-                      <span className="block font-black truncate">{c.name}</span>
-                      <span className="text-[8.5px] text-zinc-450 font-semibold truncate block">{c.tableId}</span>
-                    </button>
-                  ))
-                ) : (
-                  MOCK_MEMBERS.map(m => (
-                    <button
-                      key={m.id}
-                      type="button"
-                      onClick={() => {
-                        setInputVal(m.email);
-                        setPassword('password');
-                      }}
-                      className="p-2 bg-zinc-50 hover:bg-red-50 border border-zinc-200/60 rounded-lg text-[10px] text-left font-bold text-zinc-700 hover:text-brand-red hover:border-brand-red/35 transition-smooth cursor-pointer leading-tight truncate"
-                    >
-                      <span className="block font-black truncate">{m.name}</span>
-                      <span className="text-[8.5px] text-zinc-455 font-semibold truncate block">{m.category}</span>
-                    </button>
-                  ))
-                )}
-              </div>
-            </div>
-          )}
+
 
           {/* Terms Footer */}
           <p className="text-[10px] text-zinc-450 text-center leading-relaxed font-semibold pt-4">
