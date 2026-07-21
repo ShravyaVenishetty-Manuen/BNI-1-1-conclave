@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   X,
   Calendar,
@@ -10,12 +10,34 @@ import {
   User,
   MapPin
 } from 'lucide-react';
-import { mockGlobalConclaves, mockRegions } from '../../data/mockConclaveData';
+import { api } from '../../services/api';
 
 export default function SuperadminConclaves({ searchQuery }) {
   const [selectedStatus, setSelectedStatus] = useState('All');
   const [selectedRegion, setSelectedRegion] = useState('All');
   const [activeConclave, setActiveConclave] = useState(null);
+  const [conclaves, setConclaves] = useState([]);
+  const [regions, setRegions] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    async function loadData() {
+      setIsLoading(true);
+      try {
+        const [conclavesList, regionsList] = await Promise.all([
+          api.get('/admin/conclaves'),
+          api.get('/admin/regions')
+        ]);
+        setConclaves(conclavesList || []);
+        setRegions(regionsList || []);
+      } catch (err) {
+        console.error("Failed to load conclaves/regions:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadData();
+  }, []);
 
   if (activeConclave) {
     return (
@@ -27,11 +49,17 @@ export default function SuperadminConclaves({ searchQuery }) {
   }
 
   // Filter lists
-  const filteredConclaves = mockGlobalConclaves.filter(conclave => {
+  const filteredConclaves = conclaves.filter(conclave => {
     const q = searchQuery ? searchQuery.toLowerCase() : '';
-    const matchesSearch = conclave.title.toLowerCase().includes(q) || conclave.venue.toLowerCase().includes(q);
-    const matchesStatus = selectedStatus === 'All' ? true : conclave.status === selectedStatus;
-    const matchesRegion = selectedRegion === 'All' ? true : conclave.region === selectedRegion;
+    const title = conclave.name || conclave.title || '';
+    const venue = conclave.venueLocation || conclave.venue || '';
+    const matchesSearch = title.toLowerCase().includes(q) || venue.toLowerCase().includes(q);
+    const matchesStatus = selectedStatus === 'All'
+      ? true
+      : conclave.status?.toLowerCase() === selectedStatus.toLowerCase();
+    const matchesRegion = selectedRegion === 'All'
+      ? true
+      : (conclave.region || 'Guntur Region') === selectedRegion;
     return matchesSearch && matchesStatus && matchesRegion;
   });
 
@@ -73,7 +101,7 @@ export default function SuperadminConclaves({ searchQuery }) {
             className="h-9 px-2.5 bg-zinc-50 border border-zinc-200 rounded-lg text-body-sm font-bold text-zinc-700 focus:outline-hidden focus:ring-1 focus:ring-brand-red focus:border-brand-red cursor-pointer"
           >
             <option value="All">All Regions</option>
-            {mockRegions.map(reg => (
+            {regions.map(reg => (
               <option key={reg.id} value={reg.name}>{reg.name}</option>
             ))}
           </select>
@@ -104,22 +132,22 @@ export default function SuperadminConclaves({ searchQuery }) {
                       onClick={() => setActiveConclave(conclave)}
                       className="font-black text-zinc-900 text-left cursor-pointer"
                     >
-                      {conclave.title}
+                      {conclave.name || conclave.title || 'Unnamed Conclave'}
                     </button>
                   </td>
                   <td className="p-4">
                     <span className="px-2.5 py-0.5 bg-zinc-50 border border-zinc-200 text-zinc-550 text-[10px] font-bold rounded-full whitespace-nowrap">
-                      {conclave.region}
+                      {conclave.region || 'Guntur Region'}
                     </span>
                   </td>
-                  <td className="p-4 text-zinc-500">{conclave.creator}</td>
-                  <td className="p-4 text-zinc-500 truncate max-w-[160px]">{conclave.venue}</td>
-                  <td className="p-4 text-center font-bold text-zinc-800">{conclave.tablesCount} tables</td>
-                  <td className="p-4 text-center font-bold text-zinc-800">{conclave.membersCount} members</td>
+                  <td className="p-4 text-zinc-500">{conclave.creator || 'Superadmin'}</td>
+                  <td className="p-4 text-zinc-500 truncate max-w-[160px]">{conclave.venueLocation || conclave.venue || 'TBD Venue'}</td>
+                  <td className="p-4 text-center font-bold text-zinc-800">{conclave.tablesCount || 0} tables</td>
+                  <td className="p-4 text-center font-bold text-zinc-800">{conclave.membersCount || conclave.registrationCount || 0} members</td>
                   <td className="p-4 text-center">
-                    <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${conclave.status === 'Completed'
+                    <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${conclave.status?.toLowerCase() === 'completed'
                         ? 'bg-zinc-100 text-zinc-550 border border-zinc-200'
-                        : conclave.status === 'Active'
+                        : conclave.status?.toLowerCase() === 'active' || conclave.status?.toLowerCase() === 'running'
                           ? 'bg-emerald-50 text-emerald-700 border border-emerald-150'
                           : 'bg-red-50 text-brand-red border border-red-100'
                       }`}>
@@ -210,11 +238,11 @@ function ConclaveDetailView({ conclave, onBack }) {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2.5">
-              <h1 className="text-2xl font-black text-zinc-955 tracking-tight">{conclave.title}</h1>
+              <h1 className="text-2xl font-black text-zinc-955 tracking-tight">{conclave.name || conclave.title || 'Unnamed Conclave'}</h1>
               <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider whitespace-nowrap ${
-                conclave.status === 'Completed' 
+                conclave.status?.toLowerCase() === 'completed' 
                   ? 'bg-zinc-150 text-zinc-550 border border-zinc-200' 
-                  : conclave.status === 'Active' 
+                  : conclave.status?.toLowerCase() === 'active' || conclave.status?.toLowerCase() === 'running'
                   ? 'bg-emerald-50 text-emerald-700 border border-emerald-150'
                   : 'bg-red-50 text-brand-red border border-red-100'
               }`}>
@@ -223,9 +251,9 @@ function ConclaveDetailView({ conclave, onBack }) {
             </div>
             <p className="text-xs text-zinc-500 font-semibold flex items-center gap-1.5 flex-wrap">
               <MapPin className="w-3.5 h-3.5 text-zinc-400" />
-              {conclave.venue}
+              {conclave.venueLocation || conclave.venue || 'TBD Venue'}
               <span className="text-zinc-300">•</span>
-              <span>Region: {conclave.region}</span>
+              <span>Region: {conclave.region || 'Guntur Region'}</span>
             </p>
           </div>
 
@@ -233,7 +261,7 @@ function ConclaveDetailView({ conclave, onBack }) {
             <span className="text-[9px] font-black text-zinc-400 uppercase tracking-widest block">Created By</span>
             <span className="text-body-sm font-black text-zinc-900 flex items-center sm:justify-end gap-1.5 mt-1">
               <User className="w-4 h-4 text-zinc-400" />
-              {conclave.creator}
+              {conclave.creator || 'Superadmin'}
             </span>
           </div>
         </div>
