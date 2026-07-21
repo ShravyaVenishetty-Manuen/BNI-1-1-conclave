@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Send, X, AlertCircle } from 'lucide-react';
+import { addNotification } from '../utils/notifications';
 
 export default function ReferModal({ recipient, loggedInUser, onClose, onSuccess }) {
   const [description, setDescription] = useState('');
@@ -28,6 +29,9 @@ export default function ReferModal({ recipient, loggedInUser, onClose, onSuccess
 
     const updatedList = [newReferral, ...referrals];
     localStorage.setItem('bni_referrals', JSON.stringify(updatedList));
+
+    // Push local notification
+    addNotification('Referral Sent', `Submitted referral lead slip for ${recipient.name}.`, 'success');
 
     // Notify other windows/tabs
     window.dispatchEvent(new Event('storage'));

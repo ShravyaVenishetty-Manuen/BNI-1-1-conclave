@@ -10,7 +10,8 @@ import {
   Users,
   Eye,
   KeyRound,
-  CheckCircle2
+  CheckCircle2,
+  AlertCircle
 } from 'lucide-react';
 import { api } from '../../services/api';
 
@@ -52,6 +53,14 @@ export default function SuperadminAdmins({ searchQuery }) {
   const [tempPassword, setTempPassword] = useState('');
   const [isPasswordCopied, setIsPasswordCopied] = useState(false);
   const [isPasswordResetDone, setIsPasswordResetDone] = useState(false);
+  const [isNewAdminCreation, setIsNewAdminCreation] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [confirmModal, setConfirmModal] = useState(null);
+
+  const showToast = (title, desc, type = 'success') => {
+    setToast({ title, desc, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   const loadData = async () => {
     setIsLoading(true);
@@ -86,11 +95,20 @@ export default function SuperadminAdmins({ searchQuery }) {
     return `BNI-R${randStr}`;
   };
 
+  const generateDefaultPassword = (fullName) => {
+    const nameStr = fullName || 'Admin';
+    const firstName = nameStr.trim().split(' ')[0] || 'Admin';
+    // Remove any special characters, keep only standard letters/numbers
+    const cleanName = firstName.replace(/[^a-zA-Z0-9]/g, '');
+    return `${cleanName}123`;
+  };
+
   const handleOpenResetPassword = (admin) => {
     setResetPasswordTarget(admin);
-    setTempPassword(generateRandomPassword());
+    setTempPassword(generateDefaultPassword(admin.name));
     setIsPasswordCopied(false);
     setIsPasswordResetDone(false);
+    setIsNewAdminCreation(false);
   };
 
   const handleCopyPassword = () => {
@@ -119,8 +137,8 @@ export default function SuperadminAdmins({ searchQuery }) {
     const email = admin.email || '';
     const region = admin.region || '';
     return name.toLowerCase().includes(q) ||
-           email.toLowerCase().includes(q) ||
-           region.toLowerCase().includes(q);
+      email.toLowerCase().includes(q) ||
+      region.toLowerCase().includes(q);
   });
 
   const filteredRegions = regions.filter(region => {
@@ -162,8 +180,9 @@ export default function SuperadminAdmins({ searchQuery }) {
           region: adminForm.region,
           status: adminForm.status
         });
+        showToast('Admin Profile Updated', `Coordinator profile for ${adminForm.name} was updated successfully.`, 'info');
       } else {
-        const tempPass = generateRandomPassword();
+        const tempPass = generateDefaultPassword(adminForm.name);
         await api.post('/admin/coordinators', {
           email: adminForm.email,
           password: tempPass,
@@ -173,27 +192,41 @@ export default function SuperadminAdmins({ searchQuery }) {
           status: adminForm.status,
           role: 'coordinator'
         });
-        alert(`Coordinator created successfully!\n\nTemporary generated password: ${tempPass}\n\nPlease share this with the coordinator.`);
+        setResetPasswordTarget({
+          name: adminForm.name,
+          email: adminForm.email,
+          region: adminForm.region || 'Guntur Region'
+        });
+        setTempPassword(tempPass);
+        setIsPasswordResetDone(true);
+        setIsNewAdminCreation(true);
       }
       setShowAdminModal(false);
       loadData();
     } catch (err) {
       console.error("Failed to save admin:", err);
-      alert(err.message || "Failed to save administrator.");
+      showToast('Error saving coordinator', err.message || "Failed to save administrator.", 'error');
     }
   };
 
-  const handleDeleteAdmin = async (uid) => {
-    if (window.confirm("Are you sure you want to revoke this coordinator's administrator access?")) {
-      try {
-        await api.delete(`/admin/coordinators/${uid}`);
-        if (activeAdmin?.uid === uid) setActiveAdmin(null);
-        loadData();
-      } catch (err) {
-        console.error("Failed to delete admin:", err);
-        alert(err.message || "Failed to delete administrator.");
+  const handleDeleteAdmin = (uid) => {
+    const adminObj = admins.find(a => a.uid === uid);
+    const adminName = adminObj ? adminObj.name : 'this coordinator';
+    setConfirmModal({
+      title: "Revoke Coordinator Access",
+      message: `Are you sure you want to revoke administrator access for ${adminName}? This action cannot be undone.`,
+      onConfirm: async () => {
+        try {
+          await api.delete(`/admin/coordinators/${uid}`);
+          if (activeAdmin?.uid === uid) setActiveAdmin(null);
+          loadData();
+          showToast('Access Revoked', 'Coordinator administrator access has been revoked.', 'warning');
+        } catch (err) {
+          console.error("Failed to delete admin:", err);
+          showToast('Failed to revoke access', err.message || "Failed to delete administrator.", 'error');
+        }
       }
-    }
+    });
   };
 
   // Region CRUD Handlers
@@ -226,31 +259,40 @@ export default function SuperadminAdmins({ searchQuery }) {
           name: regionForm.name,
           status: regionForm.status
         });
+        showToast('Region Updated', `Region '${regionForm.name}' was updated successfully.`, 'info');
       } else {
         await api.post('/admin/regions', {
           name: regionForm.name,
           status: regionForm.status
         });
+        showToast('New Region Created', `Region '${regionForm.name}' has been successfully created.`, 'success');
       }
       setShowRegionModal(false);
       loadData();
     } catch (err) {
       console.error("Failed to save region:", err);
-      alert(err.message || "Failed to save region.");
+      showToast('Error saving region', err.message || "Failed to save region.", 'error');
     }
   };
 
-  const handleDeleteRegion = async (id) => {
-    if (window.confirm("Are you sure you want to delete this BNI Region?")) {
-      try {
-        await api.delete(`/admin/regions/${id}`);
-        if (activeRegion?.id === id) setActiveRegion(null);
-        loadData();
-      } catch (err) {
-        console.error("Failed to delete region:", err);
-        alert(err.message || "Failed to delete region.");
+  const handleDeleteRegion = (id) => {
+    const regionObj = regions.find(r => r.id === id);
+    const regionName = regionObj ? regionObj.name : 'this region';
+    setConfirmModal({
+      title: "Delete BNI Region",
+      message: `Are you sure you want to delete the region "${regionName}"? All linked coordinators and conclaves will lose their region reference.`,
+      onConfirm: async () => {
+        try {
+          await api.delete(`/admin/regions/${id}`);
+          if (activeRegion?.id === id) setActiveRegion(null);
+          loadData();
+          showToast('Region Deleted', 'BNI Region has been removed from the database.', 'warning');
+        } catch (err) {
+          console.error("Failed to delete region:", err);
+          showToast('Failed to delete region', err.message || "Failed to delete region.", 'error');
+        }
       }
-    }
+    });
   };
 
   return (
@@ -322,65 +364,72 @@ export default function SuperadminAdmins({ searchQuery }) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-200 text-[12.5px] font-semibold text-zinc-700">
-                {filteredAdmins.map((admin) => (
-                  <tr key={admin.uid || admin.id} className="hover:bg-zinc-50/50 transition-colors">
-                    <td className="p-4 pl-6">
-                      <button
-                        onClick={() => setActiveAdmin(admin)}
-                        className="font-black text-zinc-900 text-left cursor-pointer"
-                      >
-                        {admin.name || admin.email || 'Unnamed Admin'}
-                      </button>
-                    </td>
-                    <td className="p-4">
-                      <span className="px-2.5 py-0.5 bg-zinc-50 border border-zinc-200 text-zinc-550 text-[10px] font-bold rounded-full whitespace-nowrap">
-                        {admin.region || 'Unassigned Region'}
-                      </span>
-                    </td>
-                    <td className="p-4 text-zinc-500">{admin.email}</td>
-                    <td className="p-4 text-zinc-500">{admin.mobile || 'N/A'}</td>
-                    <td className="p-4 text-center">
-                      <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${(admin.status || 'Active') === 'Active'
-                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-150'
-                        : 'bg-zinc-50 text-zinc-450 border border-zinc-200'
-                        }`}>
-                        {admin.status}
-                      </span>
-                    </td>
-                    <td className="p-4 text-right pr-6">
-                      <div className="flex justify-end gap-2.5">
+                {filteredAdmins.map((admin) => {
+                  const adminName = admin.name || admin.email?.split('@')[0] || 'Unnamed Admin';
+                  const adminRegion = admin.region || (admin.email?.includes('admin') || admin.email?.includes('super') ? 'Global (Superadmin)' : 'Guntur Region');
+                  const adminMobile = admin.mobile || 'N/A';
+                  const adminStatus = admin.status || 'Active';
+
+                  return (
+                    <tr key={admin.uid || admin.id} className="hover:bg-zinc-50/50 transition-colors">
+                      <td className="p-4 pl-6">
                         <button
                           onClick={() => setActiveAdmin(admin)}
-                          className="p-1.5 text-zinc-400 hover:text-zinc-700 transition-smooth cursor-pointer"
-                          title="View Details"
+                          className="font-black text-zinc-900 text-left cursor-pointer"
                         >
-                          <Eye className="w-4 h-4" />
+                          {adminName}
                         </button>
-                        <button
-                          onClick={() => handleOpenAdminModal(admin)}
-                          className="p-1.5 text-zinc-400 hover:text-zinc-700 transition-smooth cursor-pointer"
-                          title="Edit"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleOpenResetPassword(admin)}
-                          className="p-1.5 text-zinc-400 hover:text-zinc-700 transition-smooth cursor-pointer"
-                          title="Reset Password"
-                        >
-                          <KeyRound className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteAdmin(admin.uid || admin.id)}
-                          className="p-1.5 text-zinc-400 hover:text-zinc-700 transition-smooth cursor-pointer"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="p-4">
+                        <span className="px-2.5 py-0.5 bg-zinc-50 border border-zinc-200 text-zinc-550 text-[10px] font-bold rounded-full whitespace-nowrap">
+                          {adminRegion}
+                        </span>
+                      </td>
+                      <td className="p-4 text-zinc-500">{admin.email}</td>
+                      <td className="p-4 text-zinc-500">{adminMobile}</td>
+                      <td className="p-4 text-center">
+                        <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${adminStatus === 'Active'
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-150'
+                          : 'bg-zinc-50 text-zinc-450 border border-zinc-200'
+                          }`}>
+                          {adminStatus}
+                        </span>
+                      </td>
+                      <td className="p-4 text-right pr-6">
+                        <div className="flex justify-end gap-2.5">
+                          <button
+                            onClick={() => setActiveAdmin(admin)}
+                            className="p-1.5 text-zinc-400 hover:text-zinc-700 transition-smooth cursor-pointer"
+                            title="View Details"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleOpenAdminModal(admin)}
+                            className="p-1.5 text-zinc-400 hover:text-zinc-700 transition-smooth cursor-pointer"
+                            title="Edit"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleOpenResetPassword(admin)}
+                            className="p-1.5 text-zinc-400 hover:text-zinc-700 transition-smooth cursor-pointer"
+                            title="Reset Password"
+                          >
+                            <KeyRound className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteAdmin(admin.uid || admin.id)}
+                            className="p-1.5 text-zinc-400 hover:text-zinc-700 transition-smooth cursor-pointer"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -460,105 +509,120 @@ export default function SuperadminAdmins({ searchQuery }) {
             className="fixed inset-0 bg-black/50 z-[55] transition-opacity duration-300"
           />
           <div className="fixed inset-y-0 right-0 w-full max-w-lg bg-white shadow-xl z-[60] p-6 overflow-y-auto border-l border-zinc-200 animate-slide-in flex flex-col justify-between">
-            <div className="space-y-6">
-              <div className="flex justify-between items-center pb-4 border-b border-zinc-200">
-                <div>
-                  <h2 className="text-base font-black text-zinc-900 leading-tight">Admin Profile details</h2>
-                  <p className="text-[10px] text-zinc-450 font-semibold mt-0.5">Admin ID: {activeAdmin.id}</p>
-                </div>
-                <button
-                  onClick={() => setActiveAdmin(null)}
-                  className="p-1.5 rounded-full hover:bg-zinc-100 text-zinc-450"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
+            {(() => {
+              const adminName = activeAdmin.name || activeAdmin.email?.split('@')[0] || 'Unnamed Admin';
+              const adminRegion = activeAdmin.region || (activeAdmin.email?.includes('admin') || activeAdmin.email?.includes('super') ? 'Global (Superadmin)' : 'Guntur Region');
+              const adminMobile = activeAdmin.mobile || 'N/A';
+              const adminStatus = activeAdmin.status || 'Active';
+              const adminInitials = adminName.split(' ').map(n => n[0]).filter(Boolean).join('').substring(0, 2).toUpperCase() || 'AD';
 
-              <div className="space-y-5">
-                <div className="flex items-center gap-3.5 bg-zinc-50 p-4 rounded-xl border border-zinc-200">
-                  <div className="w-12 h-12 rounded-full bg-brand-red/10 text-brand-red flex items-center justify-center font-black text-[13px]">
-                    {activeAdmin.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
-                  </div>
-                  <div>
-                    <h3 className="text-[13.5px] font-black text-zinc-900 leading-none">{activeAdmin.name}</h3>
-                    <p className="text-[10px] text-zinc-455 font-bold uppercase tracking-wider mt-1">{activeAdmin.region}</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-3.5 bg-white border border-zinc-200 rounded-xl shadow-2xs">
-                    <span className="text-[9px] font-black text-zinc-400 uppercase tracking-wider block">Email Address</span>
-                    <span className="text-body-sm font-bold text-zinc-800 mt-1 block truncate">{activeAdmin.email}</span>
-                  </div>
-                  <div className="p-3.5 bg-white border border-zinc-200 rounded-xl shadow-2xs">
-                    <span className="text-[9px] font-black text-zinc-400 uppercase tracking-wider block">Mobile Number</span>
-                    <span className="text-body-sm font-bold text-zinc-800 mt-1 block">{activeAdmin.mobile}</span>
-                  </div>
-                </div>
-
-                {/* Region Metrics */}
-                <div className="space-y-3">
-                  <h4 className="text-[11px] font-black text-zinc-400 uppercase tracking-widest px-0.5">Linked Region Summary</h4>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="p-3.5 bg-zinc-50/50 border border-zinc-200 rounded-xl flex items-center gap-3">
-                      <CalendarRange className="w-4 h-4 text-brand-red" />
+              return (
+                <>
+                  <div className="space-y-6">
+                    <div className="flex justify-between items-center pb-4 border-b border-zinc-200">
                       <div>
-                        <span className="text-[9px] font-black text-zinc-400 uppercase tracking-wider block">Conclaves</span>
-                        <span className="text-[13px] font-black text-zinc-900">
-                          {conclaves.filter(c => (c.region || 'Guntur Region') === (activeAdmin.region || 'Guntur Region')).length} Created
-                        </span>
+                        <h2 className="text-base font-black text-zinc-900 leading-tight">Admin Profile details</h2>
+                        <p className="text-[10px] text-zinc-450 font-semibold mt-0.5">Admin ID: {activeAdmin.uid || activeAdmin.id}</p>
                       </div>
+                      <button
+                        onClick={() => setActiveAdmin(null)}
+                        className="p-1.5 rounded-full hover:bg-zinc-100 text-zinc-455 cursor-pointer"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
                     </div>
-                    <div className="p-3.5 bg-zinc-50/50 border border-zinc-200 rounded-xl flex items-center gap-3">
-                      <Users className="w-4 h-4 text-brand-red" />
-                      <div>
-                        <span className="text-[9px] font-black text-zinc-400 uppercase tracking-wider block">Members</span>
-                        <span className="text-[13px] font-black text-zinc-900">
-                          {members.filter(m => (m.region ? (typeof m.region === 'object' ? m.region.place : m.region) : (m.location ? (typeof m.location === 'object' ? m.location.place : m.location) : 'Guntur Region')) === (activeAdmin.region || 'Guntur Region')).length} Registered
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
 
-                {/* Region Members List preview */}
-                <div className="space-y-3">
-                  <h4 className="text-[11px] font-black text-zinc-400 uppercase tracking-widest px-0.5">Registered Members</h4>
-                  <div className="border border-zinc-200 rounded-xl overflow-hidden divide-y divide-zinc-200">
-                    {members.filter(m => (m.region ? (typeof m.region === 'object' ? m.region.place : m.region) : (m.location ? (typeof m.location === 'object' ? m.location.place : m.location) : 'Guntur Region')) === (activeAdmin.region || 'Guntur Region')).map(member => (
-                      <div key={member.id} className="p-3 flex justify-between items-center text-body-sm bg-white hover:bg-zinc-50/50 transition-colors">
-                        <div>
-                          <p className="font-black text-zinc-800">{member.name}</p>
-                          <p className="text-[10px] text-zinc-450 font-semibold mt-0.5">{member.company} • {member.category}</p>
+                    <div className="space-y-5">
+                      <div className="flex items-center gap-3.5 bg-zinc-50 p-4 rounded-xl border border-zinc-200">
+                        <div className="w-12 h-12 rounded-full bg-brand-red/10 text-brand-red flex items-center justify-center font-black text-[13px]">
+                          {adminInitials}
                         </div>
-                        <span className="text-[10px] bg-zinc-50 border border-zinc-200 text-zinc-500 font-bold px-2 py-0.5 rounded-full">
-                          {member.chapter}
-                        </span>
+                        <div>
+                          <h3 className="text-[13.5px] font-black text-zinc-900 leading-none">{adminName}</h3>
+                          <p className="text-[10px] text-zinc-455 font-bold uppercase tracking-wider mt-1">{adminRegion}</p>
+                        </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
 
-            <div className="pt-6 border-t border-zinc-200 flex flex-col gap-2">
-              <button
-                onClick={() => {
-                  setActiveAdmin(null);
-                  handleOpenResetPassword(activeAdmin);
-                }}
-                className="w-full py-2.5 bg-brand-red hover:bg-red-750 text-white text-[11px] font-black uppercase tracking-wider rounded-lg transition-smooth cursor-pointer flex items-center justify-center gap-2"
-              >
-                <KeyRound className="w-3.5 h-3.5" />
-                Reset Password
-              </button>
-              <button
-                onClick={() => setActiveAdmin(null)}
-                className="w-full py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-[11px] font-black uppercase tracking-wider rounded-lg transition-smooth cursor-pointer"
-              >
-                Close View
-              </button>
-            </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="p-3.5 bg-white border border-zinc-200 rounded-xl shadow-2xs">
+                          <span className="text-[9px] font-black text-zinc-400 uppercase tracking-wider block">Email Address</span>
+                          <span className="text-body-sm font-bold text-zinc-800 mt-1 block truncate">{activeAdmin.email}</span>
+                        </div>
+                        <div className="p-3.5 bg-white border border-zinc-200 rounded-xl shadow-2xs">
+                          <span className="text-[9px] font-black text-zinc-400 uppercase tracking-wider block">Mobile Number</span>
+                          <span className="text-body-sm font-bold text-zinc-800 mt-1 block">{adminMobile}</span>
+                        </div>
+                      </div>
+
+                      {/* Region Metrics */}
+                      <div className="space-y-3">
+                        <h4 className="text-[11px] font-black text-zinc-400 uppercase tracking-widest px-0.5">Linked Region Summary</h4>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="p-3.5 bg-zinc-50/50 border border-zinc-200 rounded-xl flex items-center gap-3">
+                            <CalendarRange className="w-4 h-4 text-brand-red" />
+                            <div>
+                              <span className="text-[9px] font-black text-zinc-400 uppercase tracking-wider block">Conclaves</span>
+                              <span className="text-[13px] font-black text-zinc-900">
+                                {conclaves.filter(c => (c.region || 'Guntur Region') === adminRegion).length} Created
+                              </span>
+                            </div>
+                          </div>
+                          <div className="p-3.5 bg-zinc-50/50 border border-zinc-200 rounded-xl flex items-center gap-3">
+                            <Users className="w-4 h-4 text-brand-red" />
+                            <div>
+                              <span className="text-[9px] font-black text-zinc-400 uppercase tracking-wider block">Members</span>
+                              <span className="text-[13px] font-black text-zinc-900">
+                                {members.filter(m => (m.region ? (typeof m.region === 'object' ? m.region.place : m.region) : (m.location ? (typeof m.location === 'object' ? m.location.place : m.location) : 'Guntur Region')) === adminRegion).length} Registered
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Region Members List preview */}
+                      <div className="space-y-3">
+                        <h4 className="text-[11px] font-black text-zinc-400 uppercase tracking-widest px-0.5">Registered Members</h4>
+                        <div className="border border-zinc-200 rounded-xl overflow-hidden divide-y divide-zinc-200 max-h-[220px] overflow-y-auto">
+                          {members.filter(m => (m.region ? (typeof m.region === 'object' ? m.region.place : m.region) : (m.location ? (typeof m.location === 'object' ? m.location.place : m.location) : 'Guntur Region')) === adminRegion).map(member => (
+                            <div key={member.id} className="p-3 flex justify-between items-center text-body-sm bg-white hover:bg-zinc-50/50 transition-colors">
+                              <div>
+                                <p className="font-black text-zinc-800">{member.name}</p>
+                                <p className="text-[10px] text-zinc-450 font-semibold mt-0.5">{member.company} • {member.category}</p>
+                              </div>
+                              <span className="text-[10px] bg-zinc-50 border border-zinc-200 text-zinc-500 font-bold px-2 py-0.5 rounded-full">
+                                {member.chapter}
+                              </span>
+                            </div>
+                          ))}
+                          {members.filter(m => (m.region ? (typeof m.region === 'object' ? m.region.place : m.region) : (m.location ? (typeof m.location === 'object' ? m.location.place : m.location) : 'Guntur Region')) === adminRegion).length === 0 && (
+                            <p className="p-4 text-center text-zinc-400 text-caption font-semibold">No registered members in this region.</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-6 border-t border-zinc-200 flex flex-col gap-2">
+                    <button
+                      onClick={() => {
+                        setActiveAdmin(null);
+                        handleOpenResetPassword(activeAdmin);
+                      }}
+                      className="w-full py-2.5 bg-brand-red hover:bg-red-750 text-white text-[11px] font-black uppercase tracking-wider rounded-lg transition-smooth cursor-pointer flex items-center justify-center gap-2"
+                    >
+                      <KeyRound className="w-3.5 h-3.5" />
+                      Reset Password
+                    </button>
+                    <button
+                      onClick={() => setActiveAdmin(null)}
+                      className="w-full py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-[11px] font-black uppercase tracking-wider rounded-lg transition-smooth cursor-pointer"
+                    >
+                      Close View
+                    </button>
+                  </div>
+                </>
+              );
+            })()}
           </div>
         </>
       )}
@@ -848,7 +912,7 @@ export default function SuperadminAdmins({ searchQuery }) {
           <div className="bg-white border border-zinc-250 rounded-xl shadow-xl w-full max-w-md relative z-10 overflow-hidden animate-fade-in">
             <div className="p-4 border-b border-zinc-200 flex justify-between items-center bg-zinc-50">
               <h3 className="text-body-md font-black text-zinc-900 leading-tight">
-                {isPasswordResetDone ? 'Password Reset Successful' : 'Reset Administrator Password'}
+                {isPasswordResetDone ? (isNewAdminCreation ? 'Coordinator Created Successfully' : 'Password Reset Successful') : 'Reset Administrator Password'}
               </h3>
               <button
                 onClick={() => setResetPasswordTarget(null)}
@@ -876,9 +940,9 @@ export default function SuperadminAdmins({ searchQuery }) {
                       className="flex-1 h-10 px-3 border border-zinc-250 bg-zinc-50/50 rounded-lg text-body-sm font-extrabold text-zinc-900 select-all focus:outline-hidden"
                     />
                     <button
-                      onClick={() => setTempPassword(generateRandomPassword())}
+                      onClick={() => setTempPassword(generateDefaultPassword(resetPasswordTarget.name))}
                       className="px-3 h-10 border border-zinc-250 text-zinc-700 font-bold rounded-lg hover:bg-zinc-50 transition-smooth cursor-pointer text-body-sm"
-                      title="Generate new random password"
+                      title="Generate new default password"
                     >
                       Regenerate
                     </button>
@@ -914,9 +978,9 @@ export default function SuperadminAdmins({ searchQuery }) {
                   <CheckCircle2 className="w-6 h-6" />
                 </div>
                 <div className="space-y-1">
-                  <p className="text-body-md font-black text-zinc-900">Password Reset Completed</p>
+                  <p className="text-body-md font-black text-zinc-900">{isNewAdminCreation ? 'Coordinator Account Created' : 'Password Reset Completed'}</p>
                   <p className="text-[11px] text-zinc-500 font-semibold leading-relaxed">
-                    The temporary credential for <span className="font-extrabold">{resetPasswordTarget.name}</span> has been generated. Provide them this code to log in.
+                    {isNewAdminCreation ? `The account credentials for ${resetPasswordTarget.name} have been set. Provide them this code to log in.` : `The temporary credential for ${resetPasswordTarget.name} has been generated. Provide them this code to log in.`}
                   </p>
                 </div>
 
@@ -944,6 +1008,57 @@ export default function SuperadminAdmins({ searchQuery }) {
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Live Toast Notifications */}
+      {toast && (
+        <div className="fixed bottom-5 right-5 z-[70] bg-zinc-900 text-white text-[11px] font-bold py-2.5 px-4 rounded-lg shadow-xl flex items-center gap-2 border border-zinc-800 animate-slide-up">
+          <span className={`w-1.5 h-1.5 rounded-full ${toast.type === 'error' ? 'bg-red-500' : toast.type === 'warning' ? 'bg-amber-500' : toast.type === 'info' ? 'bg-blue-500' : 'bg-emerald-500'}`} />
+          <div>
+            <p className="font-bold">{toast.title}</p>
+            <p className="text-zinc-400 font-semibold mt-0.5">{toast.desc}</p>
+          </div>
+          <button
+            onClick={() => setToast(null)}
+            className="text-white opacity-40 hover:opacity-100 ml-2"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
+      {confirmModal && (
+        <div className="fixed inset-0 bg-black/45 backdrop-blur-xs flex items-center justify-center z-[100] animate-fade-in">
+          <div className="bg-white rounded-xl border border-zinc-200 shadow-xl max-w-sm w-full p-5 space-y-4 animate-scale-up">
+            <div className="flex gap-3 items-start">
+              <div className="p-2 bg-red-50 text-brand-red rounded-lg">
+                <AlertCircle className="w-5 h-5" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="font-black text-zinc-800 text-body">{confirmModal.title}</h3>
+                <p className="text-zinc-500 text-body-sm leading-relaxed">{confirmModal.message}</p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2.5 pt-2">
+              <button
+                onClick={() => setConfirmModal(null)}
+                className="px-3.5 py-2 border border-zinc-200 text-zinc-550 text-[11px] font-black uppercase tracking-wider rounded-lg hover:bg-zinc-50 transition-smooth cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  confirmModal.onConfirm();
+                  setConfirmModal(null);
+                }}
+                className="px-4 py-2 bg-brand-red hover:bg-red-700 text-white text-[11px] font-black uppercase tracking-wider rounded-lg transition-smooth cursor-pointer"
+              >
+                Confirm
+              </button>
+            </div>
           </div>
         </div>
       )}

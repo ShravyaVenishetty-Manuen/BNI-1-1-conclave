@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Search, Bell, X, Check, Award, Clock, Users } from 'lucide-react';
+import { getNotifications } from '../utils/notifications';
 
 export default function MemberHeader({
   loggedInMember,
@@ -10,22 +11,7 @@ export default function MemberHeader({
   setSearchQuery
 }) {
   const [showNotifications, setShowNotifications] = useState(false);
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      title: 'Current round active',
-      desc: 'Round 3 is running. Timer ends in 8 mins.',
-      time: '2 mins ago',
-      unread: true
-    },
-    {
-      id: 2,
-      title: 'Welcome to Conclave',
-      desc: 'You are registered for 1-1 Conclave 2026.',
-      time: '1 hour ago',
-      unread: false
-    }
-  ]);
+  const [notifications, setNotifications] = useState(getNotifications);
 
   const dropdownRef = useRef(null);
 
@@ -39,10 +25,24 @@ export default function MemberHeader({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    const syncNotifs = () => {
+      setNotifications(getNotifications());
+    };
+    window.addEventListener('storage', syncNotifs);
+    const interval = setInterval(syncNotifs, 1500);
+    return () => {
+      window.removeEventListener('storage', syncNotifs);
+      clearInterval(interval);
+    };
+  }, []);
+
   const unreadCount = notifications.filter(n => n.unread).length;
 
   const markAllRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
+    const updated = notifications.map(n => ({ ...n, unread: false }));
+    setNotifications(updated);
+    localStorage.setItem('bni_notifications', JSON.stringify(updated));
   };
 
   const navItems = [

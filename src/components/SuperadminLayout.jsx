@@ -1,24 +1,26 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
-  LayoutDashboard, 
-  Users, 
-  Award, 
-  CalendarRange, 
-  LogOut, 
-  X, 
-  Menu, 
-  Bell, 
-  Search,
-  Check,
-  AlertTriangle,
-  AlertCircle,
-  Sparkles
+   LayoutDashboard, 
+   Users, 
+   Award, 
+   CalendarRange, 
+   LogOut, 
+   X, 
+   Menu, 
+   Bell, 
+   Search,
+   Check,
+   AlertTriangle,
+   AlertCircle,
+   Sparkles
 } from 'lucide-react';
 import SuperadminDashboard from '../pages/superadmin/Dashboard';
 import SuperadminAdmins from '../pages/superadmin/Admins';
 import SuperadminConclaves from '../pages/superadmin/Conclaves';
 import SuperadminMembers from '../pages/superadmin/Members';
 import AdminProfile from '../pages/admin/Profile';
+import { getNotifications, addNotification } from '../utils/notifications';
+import { api } from '../services/api';
 
 export default function SuperadminLayout({
   activeTab,
@@ -32,32 +34,7 @@ export default function SuperadminLayout({
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const profileDropdownRef = useRef(null);
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      title: 'Global System Sync',
-      desc: 'All regional databases synchronized successfully.',
-      time: '10 mins ago',
-      type: 'success',
-      unread: true,
-    },
-    {
-      id: 2,
-      title: 'New Region Request',
-      desc: 'Region Guntur Chapter Elite requested activation.',
-      time: '1 hour ago',
-      type: 'warning',
-      unread: true,
-    },
-    {
-      id: 3,
-      title: 'API Rate Limit Warning',
-      desc: 'Regional gateways approaching daily query limits.',
-      time: '4 hours ago',
-      type: 'error',
-      unread: false,
-    },
-  ]);
+  const [notifications, setNotifications] = useState(getNotifications);
 
   const dropdownRef = useRef(null);
 
@@ -75,18 +52,69 @@ export default function SuperadminLayout({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    const syncNotifs = () => {
+      setNotifications(getNotifications());
+    };
+    window.addEventListener('storage', syncNotifs);
+    const interval = setInterval(syncNotifs, 1500);
+    return () => {
+      window.removeEventListener('storage', syncNotifs);
+      clearInterval(interval);
+    };
+  }, []);
+
+  // Poll conclaves to notify superadmin about coordinator actions
+  useEffect(() => {
+    const checkNewConclaves = async () => {
+      try {
+        const conclavesList = await api.get('/admin/conclaves');
+        const notifiedList = JSON.parse(localStorage.getItem('superadmin_notified_conclaves') || '[]');
+        let updated = false;
+        
+        conclavesList.forEach(conclave => {
+          if (conclave.creator && conclave.creator !== 'Superadmin' && !notifiedList.includes(conclave.id)) {
+            addNotification(
+              'Conclave Scheduled',
+              `Coordinator ${conclave.creator} scheduled conclave "${conclave.name}" in region "${conclave.region || 'Guntur Region'}".`,
+              'info'
+            );
+            notifiedList.push(conclave.id);
+            updated = true;
+          }
+        });
+        
+        if (updated) {
+          localStorage.setItem('superadmin_notified_conclaves', JSON.stringify(notifiedList));
+        }
+      } catch (err) {
+        console.error("Failed to check conclaves for notifications:", err);
+      }
+    };
+
+    checkNewConclaves();
+    const interval = setInterval(checkNewConclaves, 12000);
+    return () => clearInterval(interval);
+  }, []);
+
   const unreadCount = notifications.filter(n => n.unread).length;
 
   const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
+    const updated = notifications.map(n => ({ ...n, unread: false }));
+    setNotifications(updated);
+    localStorage.setItem('bni_notifications', JSON.stringify(updated));
   };
 
   const removeNotification = (id) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
+    const updated = notifications.filter(n => n.id !== id);
+    setNotifications(updated);
+    localStorage.setItem('bni_notifications', JSON.stringify(updated));
   };
 
   const toggleReadStatus = (id) => {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, unread: !n.unread } : n));
+    const updated = notifications.map(n => n.id === id ? { ...n, unread: !n.unread } : n);
+    setNotifications(updated);
+    localStorage.setItem('bni_notifications', JSON.stringify(updated));
   };
 
   const navItems = [

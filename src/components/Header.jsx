@@ -1,36 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Search, Bell, X, Check, AlertTriangle, AlertCircle, Sparkles, Menu } from 'lucide-react';
+import { getNotifications } from '../utils/notifications';
 
 export default function Header({ searchQuery, setSearchQuery, activeTab, setActiveTab, onMenuClick, loggedInAdmin, onLogout }) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const profileDropdownRef = useRef(null);
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      title: 'Validation Conflict Detected',
-      desc: 'Table 04 has a business classification conflict (Real Estate).',
-      time: '5 mins ago',
-      type: 'warning',
-      unread: true,
-    },
-    {
-      id: 2,
-      title: 'Schedule Generated Successfully',
-      desc: 'Optimized seating arrangements generated for 1,240 members.',
-      time: '1 hour ago',
-      type: 'success',
-      unread: true,
-    },
-    {
-      id: 3,
-      title: 'West Chapter Underfilled',
-      desc: 'West Chapter requires 2 more captains to manage table assignments.',
-      time: '2 hours ago',
-      type: 'error',
-      unread: false,
-    },
-  ]);
+  const [notifications, setNotifications] = useState(getNotifications);
 
   const dropdownRef = useRef(null);
 
@@ -48,10 +24,24 @@ export default function Header({ searchQuery, setSearchQuery, activeTab, setActi
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    const syncNotifs = () => {
+      setNotifications(getNotifications());
+    };
+    window.addEventListener('storage', syncNotifs);
+    const interval = setInterval(syncNotifs, 1500);
+    return () => {
+      window.removeEventListener('storage', syncNotifs);
+      clearInterval(interval);
+    };
+  }, []);
+
   const unreadCount = notifications.filter(n => n.unread).length;
 
   const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
+    const updated = notifications.map(n => ({ ...n, unread: false }));
+    setNotifications(updated);
+    localStorage.setItem('bni_notifications', JSON.stringify(updated));
   };
 
   const removeNotification = (id) => {
