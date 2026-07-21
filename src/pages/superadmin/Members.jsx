@@ -4,7 +4,6 @@ import {
   MapPin,
   Eye,
 } from 'lucide-react';
-import { mockGlobalMembers, mockRegions } from '../../data/mockConclaveData';
 import { api } from '../../services/api';
 
 export default function SuperadminMembers({ searchQuery }) {
@@ -32,21 +31,26 @@ export default function SuperadminMembers({ searchQuery }) {
   }, []);
 
   const [members, setMembers] = useState([]);
+  const [regions, setRegions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    async function loadMembers() {
+    async function loadMembersAndRegions() {
       setIsLoading(true);
       try {
-        const data = await api.get('/admin/users');
-        setMembers(data || []);
+        const [membersData, regionsData] = await Promise.all([
+          api.get('/admin/users'),
+          api.get('/admin/regions')
+        ]);
+        setMembers(membersData || []);
+        setRegions(regionsData || []);
       } catch (err) {
-        console.error("Failed to load global members:", err);
+        console.error("Failed to load global members/regions:", err);
       } finally {
         setIsLoading(false);
       }
     }
-    loadMembers();
+    loadMembersAndRegions();
   }, []);
 
   const [roleChangeTarget, setRoleChangeTarget] = useState(null);
@@ -76,7 +80,8 @@ export default function SuperadminMembers({ searchQuery }) {
       category.toLowerCase().includes(q) ||
       chapter.toLowerCase().includes(q);
 
-    const matchesRegion = selectedRegion === 'All' ? true : member.region === selectedRegion;
+    const reg = member.region ? (typeof member.region === 'object' ? (member.region.place || 'Guntur Region') : member.region) : (member.location ? (typeof member.location === 'object' ? (member.location.place || 'Guntur Region') : member.location) : 'Guntur Region');
+    const matchesRegion = selectedRegion === 'All' ? true : reg === selectedRegion;
     return matchesSearch && matchesRegion;
   });
 
@@ -107,7 +112,7 @@ export default function SuperadminMembers({ searchQuery }) {
             className="h-9 px-2.5 bg-zinc-50 border border-zinc-200 rounded-lg text-body-sm font-bold text-zinc-700 focus:outline-hidden focus:ring-1 focus:ring-brand-red focus:border-brand-red cursor-pointer"
           >
             <option value="All">All Regions</option>
-            {mockRegions.map(reg => (
+            {regions.map(reg => (
               <option key={reg.id} value={reg.name}>{reg.name}</option>
             ))}
           </select>
