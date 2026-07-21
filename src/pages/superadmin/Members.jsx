@@ -69,6 +69,8 @@ export default function SuperadminMembers({ searchQuery }) {
 
   // Filter list
   const filteredMembers = members.filter(member => {
+    if (member.email === 'superadmin@bni.com') return false;
+
     const q = searchQuery ? searchQuery.toLowerCase() : '';
     const name = member.name || '';
     const company = member.company || '';
