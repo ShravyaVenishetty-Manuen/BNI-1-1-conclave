@@ -21,7 +21,6 @@ import {
 } from 'lucide-react';
 import Pagination from '../components/Pagination';
 import { ResponsiveContainer, BarChart, Bar, XAxis } from 'recharts';
-import initialConclaves from '../data/conclaves.json';
 import SearchableDropdown from '../components/SearchableDropdown';
 import { api } from '../services/api';
 
@@ -89,33 +88,8 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
           };
         }));
       } catch (err) {
-        console.error("API load failed, trying local storage fallback:", err);
-        const stored = localStorage.getItem('bni_conclaves');
-        const rawList = stored ? JSON.parse(stored) : initialConclaves;
-        setConclaves(rawList.map(c => {
-          let state = c.state;
-          let country = c.country;
-          if (!state || !country) {
-            const r = (c.region || "").toLowerCase();
-            if (r.includes("guntur")) {
-              state = "Andhra Pradesh";
-              country = "India";
-            } else if (r.includes("london")) {
-              state = "Greater London";
-              country = "United Kingdom";
-            } else if (r.includes("singapore")) {
-              state = "Central Region";
-              country = "Singapore";
-            } else if (r.includes("south")) {
-              state = "Tamil Nadu";
-              country = "India";
-            } else {
-              state = "Andhra Pradesh";
-              country = "India";
-            }
-          }
-          return { ...c, state, country };
-        }));
+        console.error("Failed to load conclaves from API:", err);
+        setConclaves([]);
       } finally {
         setIsLoadingConclaves(false);
       }

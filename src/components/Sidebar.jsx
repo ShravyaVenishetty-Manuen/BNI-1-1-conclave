@@ -18,7 +18,6 @@ import {
   ChevronDown
 } from 'lucide-react';
 
-import conclavesData from '../data/conclaves.json';
 import { api } from '../services/api';
 
 const navItems = [

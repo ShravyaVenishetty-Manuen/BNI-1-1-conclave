@@ -71,7 +71,8 @@ export default function App() {
     const validTabs = [
       'dashboard', 'members', 'active-users', 'business-types', 'captains',
       'conclaves', 'snapshot', 'schedule-gen', 'schedule-review',
-      'round-runner', 'reports', 'admins', 'referrals', 'profile', 'registrations'
+      'round-runner', 'reports', 'admins', 'referrals', 'profile', 'registrations',
+      'my-schedule', 'current-round', 'history'
     ];
     return validTabs.includes(lastPart) ? lastPart : 'dashboard';
   });
@@ -125,7 +126,8 @@ export default function App() {
       const validTabs = [
         'dashboard', 'members', 'active-users', 'business-types', 'captains',
         'conclaves', 'snapshot', 'schedule-gen', 'schedule-review',
-        'round-runner', 'reports', 'admins', 'referrals', 'profile', 'registrations'
+        'round-runner', 'reports', 'admins', 'referrals', 'profile', 'registrations',
+        'my-schedule', 'current-round', 'history'
       ];
       const cleanTab = validTabs.includes(lastPart) ? lastPart : 'dashboard';
 
@@ -262,6 +264,49 @@ export default function App() {
     setIsSidebarOpen(false);
   };
 
+  const [conclaveSyncData, setConclaveSyncData] = useState(null);
+  const [memberConclaves, setMemberConclaves] = useState([]);
+  const [memberProfile, setMemberProfile] = useState(null);
+
+  useEffect(() => {
+    if (!isLoggedIn || (userRole !== 'member' && userRole !== 'captain')) return;
+
+    async function loadMemberData() {
+      try {
+        const [list, profile] = await Promise.all([
+          api.get('/conclaves').catch(() => []),
+          api.get('/users/me').catch(() => null),
+        ]);
+
+        setMemberConclaves(Array.isArray(list) ? list : []);
+
+        if (profile) {
+          const mergedProfile = {
+            ...(loggedInMember || {}),
+            ...profile,
+            uid: profile.uid || profile.id || loggedInMember?.uid || loggedInMember?.id,
+            id: profile.id || profile.uid || loggedInMember?.id || loggedInMember?.uid,
+          };
+          setMemberProfile(mergedProfile);
+          localStorage.setItem('bni_logged_member', JSON.stringify(mergedProfile));
+          setLoggedInMember(mergedProfile);
+        }
+
+        const active = Array.isArray(list) ? (list.find(c => c.status === 'running' || c.status === 'active') || list[0]) : null;
+        if (active) {
+          const syncResult = await api.post(`/conclaves/${active.id}/sync`, {});
+          setConclaveSyncData(syncResult);
+        }
+      } catch (err) {
+        console.warn("Failed to sync member conclave data:", err.message);
+      }
+    }
+
+    loadMemberData();
+    const interval = setInterval(loadMemberData, 10000);
+    return () => clearInterval(interval);
+  }, [isLoggedIn, userRole]);
+
   useEffect(() => {
     if (!isLoggedIn) {
       window.history.pushState({}, '', '/login');
@@ -329,6 +374,7 @@ export default function App() {
         activeTab={activeTab}
         onTabChange={handleTabChange}
         onLogout={handleLogout}
+        conclaveSyncData={conclaveSyncData}
       />
     );
   }
@@ -348,35 +394,40 @@ export default function App() {
         <main className="flex-1 overflow-y-auto p-6 md:p-8 max-w-7xl mx-auto w-full">
           {activeTab === 'dashboard' ? (
             <MemberDashboard
-              loggedInMember={loggedInMember}
+              loggedInMember={memberProfile || loggedInMember}
               onTabChange={handleTabChange}
+              conclaveSyncData={conclaveSyncData}
             />
           ) : activeTab === 'registrations' ? (
             <MemberRegistrations
-              loggedInMember={loggedInMember}
+              loggedInMember={memberProfile || loggedInMember}
+              memberConclaves={memberConclaves}
             />
           ) : activeTab === 'my-schedule' ? (
             <MemberSchedule
-              loggedInMember={loggedInMember}
+              loggedInMember={memberProfile || loggedInMember}
               onTabChange={handleTabChange}
+              conclaveSyncData={conclaveSyncData}
             />
           ) : activeTab === 'current-round' ? (
             <MemberCurrentRound
-              loggedInMember={loggedInMember}
+              loggedInMember={memberProfile || loggedInMember}
               onTabChange={handleTabChange}
+              conclaveSyncData={conclaveSyncData}
             />
           ) : activeTab === 'history' ? (
             <MemberConclaveHistory
-              loggedInMember={loggedInMember}
+              loggedInMember={memberProfile || loggedInMember}
+              memberConclaves={memberConclaves}
             />
           ) : activeTab === 'referrals' ? (
             <Referrals
-              loggedInUser={loggedInMember}
+              loggedInUser={memberProfile || loggedInMember}
               userType="member"
             />
           ) : activeTab === 'profile' ? (
             <MemberProfile
-              loggedInMember={loggedInMember}
+              loggedInMember={memberProfile || loggedInMember}
               onTabChange={handleTabChange}
               onLogout={handleLogout}
             />

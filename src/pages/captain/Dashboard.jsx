@@ -24,7 +24,7 @@ import captainsData from '../../data/captains.json';
 // Import tables to match seating data dynamically
 import initialTables from '../../data/tables.json';
 
-export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboard', onTabChange, onLogout }) {
+export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboard', onTabChange, onLogout, conclaveSyncData }) {
   const [referrals, setReferrals] = useState(() => {
     const stored = localStorage.getItem('bni_referrals');
     return stored ? JSON.parse(stored) : [];
@@ -57,22 +57,27 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
   const [attendance, setAttendance] = useState({});
   const [isLocked, setIsLocked] = useState(false);
   const [toast, setToast] = useState(null);
-  const [activeRound, setActiveRound] = useState('Round 3');
+  const activeRound = `Round ${conclaveSyncData?.conclaveStatus?.currentRound || 0}`;
   const [searchQuery, setSearchQuery] = useState('');
 
-  const displayTable = String(loggedInCaptain.tableId || '5').toLowerCase().startsWith('table')
-    ? loggedInCaptain.tableId
-    : `Table ${loggedInCaptain.tableId || '5'}`;
+  const displayTable = `Table ${conclaveSyncData?.tableNumber || 'N/A'}`;
 
-  // Live ticking countdown timer starting at 08:42 (522 seconds)
-  const [secondsLeft, setSecondsLeft] = useState(522);
+  const [secondsLeft, setSecondsLeft] = useState(600);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setSecondsLeft(prev => (prev > 0 ? prev - 1 : 0));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
+    const startedAt = conclaveSyncData?.conclaveStatus?.currentRoundStartedAt;
+    if (startedAt && conclaveSyncData?.conclaveStatus?.status === 'active') {
+      const updateTimer = () => {
+        const elapsed = Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000);
+        setSecondsLeft(Math.max(0, 600 - elapsed));
+      };
+      updateTimer();
+      const timer = setInterval(updateTimer, 1000);
+      return () => clearInterval(timer);
+    } else {
+      setSecondsLeft(600);
+    }
+  }, [conclaveSyncData]);
 
   const formatTime = (totalSeconds) => {
     const mins = Math.floor(totalSeconds / 60);
@@ -207,7 +212,7 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
                   <p className="text-[11px] font-bold text-zinc-455 uppercase tracking-wide">Current Round</p>
                   <div className="flex items-end justify-between mt-2">
                     <span className="text-lg font-black text-zinc-900 leading-none">
-                      3 <span className="text-zinc-400 text-xs font-semibold">of 6</span>
+                      {conclaveSyncData?.conclaveStatus?.currentRound || 0} <span className="text-zinc-400 text-xs font-semibold">of {conclaveSyncData?.mySchedule?.length || 6}</span>
                     </span>
                     <RefreshCw className="w-5 h-5 text-brand-red shrink-0" />
                   </div>
@@ -225,7 +230,7 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
                   <p className="text-[11px] font-bold text-zinc-455 uppercase tracking-wide">Total Members</p>
                   <div className="flex items-end justify-between mt-2">
                     <span className="text-lg font-black text-zinc-900 leading-none">
-                      6 <span className="text-zinc-400 text-xs font-semibold">Active</span>
+                      {conclaveSyncData?.tableOccupants?.length || 0} <span className="text-zinc-400 text-xs font-semibold">Active</span>
                     </span>
                     <Users className="w-5 h-5 text-brand-red shrink-0" />
                   </div>
@@ -258,7 +263,7 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
                     <div className="absolute top-4 left-4 md:top-6 md:left-6">
                       <span className="text-[11px] font-extrabold text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
                         <span className="w-2 h-2 bg-brand-red rounded-full animate-pulse"></span>
-                        LIVE ROUND 3
+                        LIVE ROUND {conclaveSyncData?.conclaveStatus?.currentRound || 0}
                       </span>
                     </div>
 
@@ -376,23 +381,34 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
 
                 {/* Right Column: Schedule & Activity */}
                 <div className="lg:col-span-4 space-y-6">
-                  {/* My Table Summary Card */}
                   <div className="bg-brand-red p-6 rounded-xl border border-red-700 shadow-md text-white select-none">
                     <div className="flex justify-between items-start mb-4">
                       <div>
                         <p className="text-[10px] font-bold opacity-80 uppercase tracking-widest">Your Station</p>
-                        <h3 className="text-2xl font-black mt-1 leading-none">Table 05</h3>
+                        <h3 className="text-2xl font-black mt-1 leading-none">{displayTable}</h3>
                       </div>
                       <Award className="w-7 h-7 text-white opacity-50 shrink-0" />
                     </div>
 
                     <div className="flex items-center gap-2.5 mb-6">
                       <div className="flex -space-x-1.5">
-                        <div className="w-7 h-7 rounded-full border border-brand-red bg-red-700/60 flex items-center justify-center text-[7px] font-bold">AS</div>
-                        <div className="w-7 h-7 rounded-full border border-brand-red bg-red-700/60 flex items-center justify-center text-[7px] font-bold">RV</div>
-                        <div className="w-7 h-7 rounded-full border border-brand-red bg-red-700/60 flex items-center justify-center text-[7px] font-bold font-black">+4</div>
+                        {(conclaveSyncData?.tableOccupants || []).slice(0, 3).map((p, pIdx) => {
+                          const initials = p.name.split(' ').map(n => n[0]).filter(Boolean).join('').substring(0, 2).toUpperCase() || 'M';
+                          return (
+                            <div key={pIdx} className="w-7 h-7 rounded-full border border-brand-red bg-red-700/60 flex items-center justify-center text-[7px] font-bold">
+                              {initials}
+                            </div>
+                          );
+                        })}
+                        {conclaveSyncData?.tableOccupants?.length > 3 && (
+                          <div className="w-7 h-7 rounded-full border border-brand-red bg-red-700/60 flex items-center justify-center text-[7px] font-bold font-black">
+                            +{conclaveSyncData.tableOccupants.length - 3}
+                          </div>
+                        )}
                       </div>
-                      <span className="text-[10.5px] font-extrabold text-red-50">6 Members Present</span>
+                      <span className="text-[10.5px] font-extrabold text-red-50">
+                        {conclaveSyncData?.tableOccupants?.length || 0} Members Assigned
+                      </span>
                     </div>
 
                     <button
@@ -408,34 +424,30 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
                   <section className="bg-white rounded-xl border border-zinc-200 shadow-2xs p-5.5 space-y-5">
                     <h3 className="text-body-sm font-black text-zinc-950 border-b border-zinc-100 pb-2">Today's Schedule</h3>
                     <div className="relative space-y-6 before:content-[''] before:absolute before:left-3 before:top-2 before:bottom-2 before:w-[2px] before:bg-zinc-150">
-                      <div className="relative pl-8">
-                        <div className="absolute left-1.5 top-1.5 w-3 h-3 rounded-full bg-zinc-300 border-2 border-white z-10"></div>
-                        <div className="flex flex-col">
-                          <span className="text-zinc-400 font-extrabold text-[9px] uppercase tracking-wider">09:00 AM - 09:30 AM</span>
-                          <span className="text-zinc-800 font-bold text-[11.5px] mt-0.5">Breakfast & Networking</span>
-                        </div>
-                      </div>
-                      <div className="relative pl-8">
-                        <div className="absolute left-1.5 top-1.5 w-3 h-3 rounded-full bg-zinc-300 border-2 border-white z-10"></div>
-                        <div className="flex flex-col">
-                          <span className="text-zinc-400 font-extrabold text-[9px] uppercase tracking-wider">09:30 AM - 10:00 AM</span>
-                          <span className="text-zinc-800 font-bold text-[11.5px] mt-0.5">Opening Keynote</span>
-                        </div>
-                      </div>
-                      <div className="relative pl-8">
-                        <div className="absolute left-[3px] top-1.5 w-[18px] h-[18px] rounded-full bg-brand-red border-4 border-red-100 z-10 shadow-xs animate-pulse"></div>
-                        <div className="flex flex-col">
-                          <span className="text-brand-red font-black text-[9px] uppercase tracking-wider">10:00 AM - 10:45 AM (ACTIVE)</span>
-                          <span className="text-zinc-900 font-extrabold text-[12px] mt-0.5">Round 3: 1-to-1 Meetings</span>
-                        </div>
-                      </div>
-                      <div className="relative pl-8">
-                        <div className="absolute left-1.5 top-1.5 w-3 h-3 rounded-full bg-zinc-150 border-2 border-white z-10"></div>
-                        <div className="flex flex-col">
-                          <span className="text-zinc-400 font-bold text-[9px] uppercase tracking-wider">10:45 AM - 11:00 AM</span>
-                          <span className="text-zinc-505 font-semibold text-[11.5px] mt-0.5">Short Break</span>
-                        </div>
-                      </div>
+                      {(conclaveSyncData?.mySchedule || []).map((rnd) => {
+                        const isActive = rnd.status === 'Active';
+                        const isCompleted = rnd.status === 'Completed';
+                        return (
+                          <div key={rnd.number} className="relative pl-8">
+                            {isActive ? (
+                              <div className="absolute left-[3px] top-1.5 w-[18px] h-[18px] rounded-full bg-brand-red border-4 border-red-100 z-10 shadow-xs animate-pulse"></div>
+                            ) : (
+                              <div className={`absolute left-1.5 top-1.5 w-3 h-3 rounded-full border-2 border-white z-10 ${isCompleted ? 'bg-emerald-500' : 'bg-zinc-300'}`}></div>
+                            )}
+                            <div className="flex flex-col">
+                              <span className={`font-extrabold text-[9px] uppercase tracking-wider ${isActive ? 'text-brand-red font-black' : 'text-zinc-400'}`}>
+                                {rnd.time} {isActive && '(ACTIVE)'}
+                              </span>
+                              <span className={`font-extrabold text-[12px] mt-0.5 ${isActive ? 'text-zinc-900 font-black' : 'text-zinc-800'}`}>
+                                Round {rnd.number}: Table {rnd.tableNumber} Seating
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                      {(!conclaveSyncData?.mySchedule || conclaveSyncData.mySchedule.length === 0) && (
+                        <p className="text-zinc-400 text-caption font-semibold text-center">No rounds generated yet.</p>
+                      )}
                     </div>
                   </section>
 
@@ -447,22 +459,22 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
 
           {/* Sub-tab view: My Table Seating Checklist */}
           {activeTab === 'my-table' && (
-            <Table loggedInCaptain={loggedInCaptain} searchQuery={searchQuery} />
+            <Table loggedInCaptain={loggedInCaptain} searchQuery={searchQuery} conclaveSyncData={conclaveSyncData} />
           )}
 
           {/* Sub-tab view: Current Round Info */}
           {activeTab === 'current-round' && (
-            <CurrentRound loggedInCaptain={loggedInCaptain} />
+            <CurrentRound loggedInCaptain={loggedInCaptain} conclaveSyncData={conclaveSyncData} />
           )}
 
           {/* Sub-tab view: Schedule */}
           {activeTab === 'schedule' && (
-            <Schedule loggedInCaptain={loggedInCaptain} />
+            <Schedule loggedInCaptain={loggedInCaptain} conclaveSyncData={conclaveSyncData} />
           )}
 
           {/* Sub-tab view: Referrals Page */}
           {activeTab === 'referrals' && (
-            <Referrals loggedInUser={loggedInCaptain} userType="captain" />
+            <Referrals loggedInUser={loggedInCaptain} userType="captain" conclaveSyncData={conclaveSyncData} />
           )}
 
           {/* Sub-tab view: Profile Page */}

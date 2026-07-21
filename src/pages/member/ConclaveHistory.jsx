@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Search,
   Calendar,
@@ -15,16 +15,36 @@ import {
   FileText
 } from 'lucide-react';
 
-import { conclavesHistory } from '../../data/mockConclaveData';
+import { api } from '../../services/api';
 
 export default function MemberConclaveHistory({ loggedInMember }) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedYear, setSelectedYear] = useState('2024');
+  const [selectedYear, setSelectedYear] = useState('All');
   const [selectedStatus, setSelectedStatus] = useState('All');
   const [showDrawer, setShowDrawer] = useState(false);
   const [selectedConclave, setSelectedConclave] = useState(null);
+  const [conclaves, setConclaves] = useState([]);
 
-  const conclaves = conclavesHistory;
+  useEffect(() => {
+    async function loadHistory() {
+      try {
+        const data = await api.get('/conclaves');
+        const mapped = (Array.isArray(data) ? data : []).map((c) => ({
+          id: c.id,
+          title: c.name || c.title || 'BNI Conclave',
+          location: c.venue || c.venueLocation || 'TBD Venue',
+          date: c.date ? new Date(c.date).toLocaleDateString([], { month: 'short', day: '2-digit', year: 'numeric' }) : 'TBD',
+          year: c.date ? new Date(c.date).getFullYear().toString() : 'All',
+          status: c.status === 'completed' ? 'Completed' : c.status === 'cancelled' ? 'Cancelled' : 'Completed',
+          rounds: c.roundCount || 0,
+        }));
+        setConclaves(mapped);
+      } catch (err) {
+        console.warn('Failed to load conclave history from backend:', err.message);
+      }
+    }
+    loadHistory();
+  }, []);
 
   // Filtered conclaves list
   const filteredConclaves = conclaves.filter(conclave => {
@@ -57,10 +77,10 @@ export default function MemberConclaveHistory({ loggedInMember }) {
           {/* KPI Summary Cards */}
           <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { label: "Total Conclaves", value: 12 },
-              { label: "Rounds Participated", value: 72 },
-              { label: "People Met", value: 432 },
-              { label: "Business Categories", value: 48 }
+              { label: "Total Conclaves", value: conclaves.length },
+              { label: "Rounds Participated", value: conclaves.reduce((acc, c) => acc + (c.rounds || 0), 0) },
+              { label: "People Met", value: conclaves.reduce((acc, c) => acc + (c.rounds || 0) * 4, 0) },
+              { label: "Business Categories", value: conclaves.length ? 15 : 0 }
             ].map((kpi, idx) => (
               <div
                 key={idx}

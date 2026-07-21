@@ -27,9 +27,6 @@ import {
 import confetti from 'canvas-confetti';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell } from 'recharts';
 
-import initialTables from '../data/tables.json';
-import conclavesData from '../data/conclaves.json';
-import initialConclavesValidation from '../data/conclaves_validation.json';
 import { api } from '../services/api';
 
 export default function ScheduleReview({ setActiveTab, searchQuery: globalSearchQuery, selectedConclaveId }) {
@@ -121,14 +118,14 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
   const [statusFilter, setStatusFilter] = useState('All');
 
   // Validation States
-  const [validationConclaves, setValidationConclaves] = useState(initialConclavesValidation);
+  const [validationConclaves, setValidationConclaves] = useState([]);
   
   const activeConclaveIndex = useMemo(() => {
     const idx = validationConclaves.findIndex(c => c.id === selectedConclaveId);
     return idx !== -1 ? idx : 0;
   }, [validationConclaves, selectedConclaveId]);
 
-  const activeConclave = validationConclaves[activeConclaveIndex] || initialConclavesValidation[0] || {
+  const activeConclave = validationConclaves[activeConclaveIndex] || {
     passedCount: 0,
     warningsCount: 0,
     errorsCount: 0,
@@ -251,7 +248,7 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
   useEffect(() => {
     if (!conclave) return;
 
-    if (!selectedConclaveId.startsWith('CON-')) {
+    if (!selectedConclaveId?.startsWith('CON-')) {
       // Real database conclave
       setIssuesCount(0); // If it generated, there are no blocking validation errors
       setWarningsCount(conclave.warnings ? conclave.warnings.length : 0);

@@ -29,8 +29,7 @@ import {
   Cell
 } from 'recharts';
 
-import reportsSeed from '../data/reports_data.json';
-const { initialMembers } = reportsSeed;
+const initialMembers = [];
 
 export default function Reports({ searchQuery: globalSearchQuery, selectedConclaveId }) {
   const [conclaves, setConclaves] = useState([]);

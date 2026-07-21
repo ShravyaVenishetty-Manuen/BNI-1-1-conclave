@@ -2,18 +2,16 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ArrowRight, Shield, X, Award } from 'lucide-react';
 
-import { captainRoundData } from '../../data/mockConclaveData';
 import ReferModal from '../../components/ReferModal';
 
-export default function CaptainTable({ loggedInCaptain, searchQuery }) {
-  const [selectedRound, setSelectedRound] = useState(3);
+export default function CaptainTable({ loggedInCaptain, searchQuery, conclaveSyncData }) {
+  const [selectedRound, setSelectedRound] = useState(() => conclaveSyncData?.conclaveStatus?.currentRound || 1);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [referTarget, setReferTarget] = useState(null);
   const [toast, setToast] = useState(null);
 
-  const roundData = captainRoundData;
-
-  const currentMembersList = roundData[selectedRound] || [];
+  const roundObj = conclaveSyncData?.mySchedule?.find(s => s.number === selectedRound);
+  const currentMembersList = roundObj ? roundObj.participants : [];
 
   const filteredMembers = currentMembersList.filter(member => {
     if (!searchQuery) return true;
@@ -21,15 +19,15 @@ export default function CaptainTable({ loggedInCaptain, searchQuery }) {
     return (
       member.name.toLowerCase().includes(q) ||
       member.company.toLowerCase().includes(q) ||
-      member.category.toLowerCase().includes(q) ||
-      member.bniId.toLowerCase().includes(q)
+      member.category.toLowerCase().includes(q)
     );
   });
 
   const getRoundStatus = (roundNum) => {
-    if (roundNum < 3) return { text: 'Completed', bg: 'bg-emerald-50 border-emerald-100 text-emerald-700' };
-    if (roundNum === 3) return { text: 'Running', bg: 'bg-red-50 border-red-100 text-brand-red animate-pulse' };
-    return { text: 'Upcoming', bg: 'bg-zinc-50 border-zinc-200 text-zinc-550' };
+    const activeRoundNum = conclaveSyncData?.conclaveStatus?.currentRound || 1;
+    if (roundNum < activeRoundNum) return { text: 'Completed', bg: 'bg-emerald-50 border-emerald-100 text-emerald-700' };
+    if (roundNum === activeRoundNum) return { text: 'Running', bg: 'bg-red-50 border-red-100 text-brand-red animate-pulse' };
+    return { text: 'Upcoming', bg: 'bg-zinc-50 border-zinc-200 text-zinc-555' };
   };
 
   const currentStatus = getRoundStatus(selectedRound);
@@ -51,7 +49,7 @@ export default function CaptainTable({ loggedInCaptain, searchQuery }) {
             {currentStatus.text} (Round {selectedRound})
           </span>
           <span className="bg-zinc-800 text-white px-3 py-1 rounded-full text-[10px] font-black tracking-wider uppercase shadow-2xs">
-            Table 5
+            Table {conclaveSyncData?.tableNumber || 'N/A'}
           </span>
         </div>
       </div>
@@ -59,7 +57,7 @@ export default function CaptainTable({ loggedInCaptain, searchQuery }) {
       {/* KPI Row */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {[
-          { label: 'Table', val: '5', accent: false },
+          { label: 'Table', val: conclaveSyncData?.tableNumber || 'N/A', accent: false },
           { label: 'Captain', val: loggedInCaptain.name.split(' ')[0], accent: false },
           { label: 'Selected Round', val: `Round ${selectedRound}`, accent: true },
           { label: 'Status', val: currentStatus.text, accent: false, isStatus: true },
@@ -69,8 +67,8 @@ export default function CaptainTable({ loggedInCaptain, searchQuery }) {
           <div key={idx} className="bg-white p-4 rounded-xl border border-zinc-200 shadow-2xs">
             <p className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider mb-1">{kpi.label}</p>
             {kpi.isStatus ? (
-              <div className={`flex items-center gap-1.5 text-[14px] font-black ${selectedRound === 3 ? 'text-brand-red' : selectedRound < 3 ? 'text-emerald-600' : 'text-zinc-550'}`}>
-                {selectedRound === 3 && <span className="w-1.5 h-1.5 rounded-full bg-brand-red animate-pulse"></span>}
+              <div className={`flex items-center gap-1.5 text-[14px] font-black ${selectedRound === (conclaveSyncData?.conclaveStatus?.currentRound || 1) ? 'text-brand-red' : selectedRound < (conclaveSyncData?.conclaveStatus?.currentRound || 1) ? 'text-emerald-600' : 'text-zinc-550'}`}>
+                {selectedRound === (conclaveSyncData?.conclaveStatus?.currentRound || 1) && <span className="w-1.5 h-1.5 rounded-full bg-brand-red animate-pulse"></span>}
                 {kpi.val}
               </div>
             ) : (
@@ -84,16 +82,16 @@ export default function CaptainTable({ loggedInCaptain, searchQuery }) {
 
       {/* Round Selector Tabs */}
       <div className="bg-zinc-150/80 p-1.5 rounded-xl border border-zinc-200 flex w-full overflow-x-auto gap-2">
-        {['Round 1', 'Round 2', 'Round 3', 'Round 4', 'Round 5', 'Round 6'].map((r, i) => {
-          const roundNum = i + 1;
-          const isCompleted = roundNum < 3;
-          const isActive = roundNum === selectedRound;
+        {(conclaveSyncData?.mySchedule || []).map((r) => {
+          const isCompleted = r.status === 'Completed';
+          const isActive = r.status === 'Active';
+          const isSelected = r.number === selectedRound;
 
           return (
             <button
-              key={r}
-              onClick={() => setSelectedRound(roundNum)}
-              className={`flex-1 min-w-[100px] flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg text-[10.5px] font-black uppercase tracking-wider transition-smooth cursor-pointer ${isActive
+              key={r.number}
+              onClick={() => setSelectedRound(r.number)}
+              className={`flex-1 min-w-[100px] flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg text-[10.5px] font-black uppercase tracking-wider transition-smooth cursor-pointer ${isSelected
                   ? 'bg-brand-red text-white shadow-md shadow-brand-red/10'
                   : 'text-zinc-555 hover:bg-zinc-200 hover:text-zinc-850 bg-white/50 border border-zinc-200/40'
                 }`}
@@ -101,10 +99,10 @@ export default function CaptainTable({ loggedInCaptain, searchQuery }) {
               {isCompleted && (
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
               )}
-              {roundNum === 3 && (
+              {isActive && (
                 <span className="w-1.5 h-1.5 rounded-full bg-brand-red animate-pulse"></span>
               )}
-              <span>{r}</span>
+              <span>Round {r.number}</span>
             </button>
           );
         })}
@@ -150,45 +148,63 @@ export default function CaptainTable({ loggedInCaptain, searchQuery }) {
                 <p className="text-[12px] text-zinc-450 font-bold">No members found matching your search query.</p>
               </div>
             ) : (
-              filteredMembers.map((member) => (
-                <div
-                  key={member.id}
-                  className="bg-white p-4.5 rounded-xl border border-zinc-200 hover:border-brand-red/20 shadow-2xs flex flex-col justify-between gap-4 transition-smooth"
-                >
-                  <div className="flex items-start gap-3.5">
-                    <div className="w-11 h-11 rounded-lg bg-zinc-50 border border-zinc-200 flex items-center justify-center font-bold text-sm text-zinc-450 shrink-0 shadow-inner">
-                      {member.initials}
-                    </div>
-
-                    <div className="min-w-0 flex-1 space-y-1">
-                      <h4 className="text-[13px] font-black text-zinc-800 truncate leading-tight">{member.name}</h4>
-                      <span className={`inline-block px-2 py-0.5 rounded-[4px] text-[8px] font-black uppercase border tracking-wider leading-none ${member.bgClass}`}>
-                        {member.category}
-                      </span>
-                      {/* Fixed: Changed leading-none to leading-normal mt-0.5 to prevent text descender cuts */}
-                      <p className="text-[10.5px] text-zinc-450 font-semibold truncate leading-normal mt-0.5">{member.company}</p>
-                    </div>
-                  </div>
-
-                  <div className="pt-3 border-t border-zinc-100 flex justify-between items-center text-[10px]">
-                    <span className="text-zinc-400 font-extrabold uppercase text-[9px] tracking-wide">{member.chapter}</span>
-                    <span className="text-brand-red bg-red-50/50 border border-red-100 px-2 py-0.5 rounded font-mono font-bold leading-none">
-                      {member.bniId}
-                    </span>
-                  </div>
-
-                  {/* Refer button */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setReferTarget(member);
-                    }}
-                    className="w-full py-1.5 border border-zinc-200 hover:border-brand-red text-zinc-650 hover:text-brand-red bg-zinc-50/50 hover:bg-red-50/5 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition-smooth cursor-pointer font-bold"
+              filteredMembers.map((member) => {
+                const initials = member.name.split(' ').map(n => n[0]).filter(Boolean).join('').substring(0, 2).toUpperCase() || 'M';
+                const bgClass = member.isCaptain 
+                  ? 'bg-red-50 border-red-100 text-brand-red' 
+                  : 'bg-zinc-50 border-zinc-200 text-zinc-550';
+                const bniId = member.chapter ? member.chapter.substring(0, 3).toUpperCase() : 'BNI';
+                return (
+                  <div
+                    key={member.uid || member.name}
+                    className="bg-white p-4.5 rounded-xl border border-zinc-200 hover:border-brand-red/20 shadow-2xs flex flex-col justify-between gap-4 transition-smooth"
                   >
-                    Send Referral
-                  </button>
-                </div>
-              ))
+                    <div className="flex items-start gap-3.5">
+                      <div className="w-11 h-11 rounded-lg bg-zinc-50 border border-zinc-200 flex items-center justify-center font-bold text-sm text-zinc-450 shrink-0 shadow-inner">
+                        {initials}
+                      </div>
+
+                      <div className="min-w-0 flex-1 space-y-1">
+                        <div className="flex justify-between items-center gap-1">
+                          <h4 className="text-[13px] font-black text-zinc-800 truncate leading-tight">{member.name}</h4>
+                          {member.isPresent ? (
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" title="Checked In"></span>
+                          ) : (
+                            <span className="w-2 h-2 rounded-full bg-zinc-300 shrink-0" title="Absent"></span>
+                          )}
+                        </div>
+                        <span className={`inline-block px-2 py-0.5 rounded-[4px] text-[8px] font-black uppercase border tracking-wider leading-none ${bgClass}`}>
+                          {member.category}
+                        </span>
+                        <p className="text-[10.5px] text-zinc-455 font-semibold truncate leading-normal mt-0.5">{member.company}</p>
+                      </div>
+                    </div>
+
+                    <div className="pt-3 border-t border-zinc-100 flex justify-between items-center text-[10px]">
+                      <span className="text-zinc-400 font-extrabold uppercase text-[9px] tracking-wide">{member.chapter || 'No Chapter'}</span>
+                      <span className="text-brand-red bg-red-50/50 border border-red-100 px-2 py-0.5 rounded font-mono font-bold leading-none">
+                        {bniId}
+                      </span>
+                    </div>
+
+                    {/* Refer button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setReferTarget({
+                          id: member.uid,
+                          name: member.name,
+                          company: member.company,
+                          category: member.category
+                        });
+                      }}
+                      className="w-full py-1.5 border border-zinc-200 hover:border-brand-red text-zinc-650 hover:text-brand-red bg-zinc-50/50 hover:bg-red-50/5 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition-smooth cursor-pointer font-bold font-black"
+                    >
+                      Send Referral
+                    </button>
+                  </div>
+                );
+              })
             )}
           </div>
         </div>

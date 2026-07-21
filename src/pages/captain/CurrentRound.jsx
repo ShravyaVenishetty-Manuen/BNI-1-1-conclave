@@ -10,19 +10,25 @@ import {
   X
 } from 'lucide-react';
 
-import { captainParticipants, captainCategories } from '../../data/mockConclaveData';
-
-export default function CurrentRound({ loggedInCaptain }) {
-  // Countdown timer starting at 08:42 (522 seconds)
-  const [timeLeft, setTimeLeft] = useState(522);
+export default function CurrentRound({ loggedInCaptain, conclaveSyncData }) {
+  const [timeLeft, setTimeLeft] = useState(600);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const initialTime = 600; // 10 mins total round simulation
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft(prev => (prev > 0 ? prev - 1 : 0));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
+    const startedAt = conclaveSyncData?.conclaveStatus?.currentRoundStartedAt;
+    if (startedAt && conclaveSyncData?.conclaveStatus?.status === 'active') {
+      const updateTimer = () => {
+        const elapsed = Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000);
+        setTimeLeft(Math.max(0, initialTime - elapsed));
+      };
+      updateTimer();
+      const timer = setInterval(updateTimer, 1000);
+      return () => clearInterval(timer);
+    } else {
+      setTimeLeft(600);
+    }
+  }, [conclaveSyncData]);
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -30,8 +36,8 @@ export default function CurrentRound({ loggedInCaptain }) {
     return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   };
 
-  const participants = captainParticipants;
-  const categories = captainCategories;
+  const participants = conclaveSyncData?.tableOccupants || [];
+  const categories = [...new Set(participants.map(p => p.category))];
 
   return (
     <div className="space-y-6 animate-fade-in font-sans">
@@ -44,7 +50,7 @@ export default function CurrentRound({ loggedInCaptain }) {
         </div>
         <div className="flex gap-2">
           <span className="px-3 py-1 bg-zinc-100 text-zinc-650 font-black text-[10px] uppercase tracking-wider rounded-full border border-zinc-200 shadow-2xs">
-            Round 3
+            Round {conclaveSyncData?.conclaveStatus?.currentRound || 0}
           </span>
           <span className="px-3 py-1 bg-emerald-50 text-emerald-800 font-black text-[10px] uppercase tracking-wider rounded-full border border-emerald-150 flex items-center gap-1.5 shadow-2xs">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -63,7 +69,7 @@ export default function CurrentRound({ loggedInCaptain }) {
           <div className="absolute top-4 left-4">
             <span className="text-[11px] font-extrabold text-zinc-550 uppercase tracking-wider flex items-center gap-1.5">
               <span className="w-2 h-2 bg-brand-red rounded-full animate-pulse"></span>
-              LIVE ROUND 3
+              LIVE ROUND {conclaveSyncData?.conclaveStatus?.currentRound || 0}
             </span>
           </div>
 
@@ -152,11 +158,13 @@ export default function CurrentRound({ loggedInCaptain }) {
             <div className="space-y-3 text-xs">
               <div className="flex justify-between items-center py-1.5 border-b border-zinc-100">
                 <span className="text-zinc-450 font-semibold">Progress</span>
-                <span className="font-extrabold text-zinc-800">3 of 6 Rounds</span>
+                <span className="font-extrabold text-zinc-800">
+                  {conclaveSyncData?.conclaveStatus?.currentRound || 0} of {conclaveSyncData?.mySchedule?.length || 6} Rounds
+                </span>
               </div>
               <div className="flex justify-between items-center py-1.5 border-b border-zinc-100">
                 <span className="text-zinc-450 font-semibold">Assigned Table</span>
-                <span className="font-extrabold text-zinc-800">Table 5 (Main Hall)</span>
+                <span className="font-extrabold text-zinc-800">Table {conclaveSyncData?.tableNumber || 'N/A'}</span>
               </div>
               <div className="flex justify-between items-center py-1.5 border-b border-zinc-100">
                 <span className="text-zinc-450 font-semibold">Round Status</span>
@@ -164,7 +172,7 @@ export default function CurrentRound({ loggedInCaptain }) {
               </div>
               <div className="flex justify-between items-center py-1.5">
                 <span className="text-zinc-450 font-semibold">Captain</span>
-                <span className="font-extrabold text-zinc-800">Ganesh V.</span>
+                <span className="font-extrabold text-zinc-800">{loggedInCaptain.name}</span>
               </div>
             </div>
           </div>
@@ -181,12 +189,12 @@ export default function CurrentRound({ loggedInCaptain }) {
         <div className="col-span-12 bg-white border border-zinc-200 rounded-xl p-5 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
             <div className="w-11 h-11 bg-brand-red rounded-lg flex items-center justify-center text-white font-black text-sm shadow-md shadow-brand-red/10">
-              T5
+              T{conclaveSyncData?.tableNumber || 'N/A'}
             </div>
             <div>
-              <h2 className="font-black text-zinc-900 text-body-sm">Table #5 Networking Cluster</h2>
+              <h2 className="font-black text-zinc-900 text-body-sm">Table #{conclaveSyncData?.tableNumber || 'N/A'} Networking Cluster</h2>
               <p className="text-xs text-zinc-450 font-semibold mt-0.5">
-                Table Captain: <span className="text-zinc-800 font-extrabold">Ganesh</span> • 6/8 Occupancy
+                Table Captain: <span className="text-zinc-800 font-extrabold">{loggedInCaptain.name}</span> • {participants.length} Occupancy
               </p>
             </div>
           </div>
@@ -201,22 +209,29 @@ export default function CurrentRound({ loggedInCaptain }) {
 
         {/* Current Participants Grid */}
         <div className="col-span-12 lg:col-span-9 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 items-start">
-          {participants.map((p) => (
-            <div key={p.name} className="bg-white border border-zinc-200 rounded-xl p-4 flex gap-3.5 hover:border-brand-red/20 shadow-2xs transition-smooth">
-              <div className="w-12 h-12 rounded-lg bg-zinc-100 border border-zinc-200 flex items-center justify-center font-bold text-sm text-zinc-500 shrink-0 shadow-inner">
-                {p.initials}
-              </div>
-              <div className="flex-1 space-y-1 overflow-hidden">
-                <h4 className="text-[13px] font-black text-zinc-850 truncate leading-tight">{p.name}</h4>
-                {/* Fixed: Changed leading-none to leading-normal mt-0.5 to prevent text cuts */}
-                <p className="text-[11px] text-zinc-450 font-semibold truncate leading-normal mt-0.5">{p.company}</p>
-                <div className="flex items-center gap-2 pt-1.5">
-                  <span className="px-1.5 py-0.5 bg-red-50 border border-red-100 text-brand-red text-[8.5px] font-black rounded uppercase">{p.type}</span>
-                  <span className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider">{p.chapter} Chapter</span>
+          {participants.map((p) => {
+            const initials = p.name.split(' ').map(n => n[0]).filter(Boolean).join('').substring(0, 2).toUpperCase() || 'M';
+            return (
+              <div key={p.uid || p.name} className="bg-white border border-zinc-200 rounded-xl p-4 flex gap-3.5 hover:border-brand-red/20 shadow-2xs transition-smooth">
+                <div className="w-12 h-12 rounded-lg bg-zinc-100 border border-zinc-200 flex items-center justify-center font-bold text-sm text-zinc-500 shrink-0 shadow-inner">
+                  {initials}
+                </div>
+                <div className="flex-1 space-y-1 overflow-hidden">
+                  <h4 className="text-[13px] font-black text-zinc-850 truncate leading-tight">{p.name}</h4>
+                  <p className="text-[11px] text-zinc-450 font-semibold truncate leading-normal mt-0.5">{p.company}</p>
+                  <div className="flex items-center gap-2 pt-1.5">
+                    <span className={`px-1.5 py-0.5 rounded text-[8.5px] font-black uppercase border ${p.isCaptain ? 'bg-red-50 border-red-100 text-brand-red' : 'bg-zinc-50 border-zinc-200 text-zinc-550'}`}>
+                      {p.isCaptain ? 'Captain' : 'Member'}
+                    </span>
+                    <span className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider">{p.chapter || 'No Chapter'}</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
+          {participants.length === 0 && (
+            <p className="col-span-4 p-8 text-center text-zinc-400 text-caption font-semibold">No participants registered at this table.</p>
+          )}
         </div>
 
         {/* Sidebar Column */}
@@ -225,19 +240,33 @@ export default function CurrentRound({ loggedInCaptain }) {
           {/* Next Round Preview */}
           <div className="bg-zinc-900 border border-zinc-800 text-white rounded-xl p-5 shadow-md flex flex-col justify-between h-[215px]">
             <div>
-              <p className="text-[8px] font-black text-zinc-400 uppercase tracking-widest">Up Next: Round 4</p>
-              <h3 className="text-lg font-black text-white mt-1 leading-tight">Table 5 Cluster</h3>
+              {(() => {
+                const currentRoundNum = conclaveSyncData?.conclaveStatus?.currentRound || 1;
+                const nextRoundObj = conclaveSyncData?.mySchedule?.find(s => s.number === currentRoundNum + 1);
+                if (nextRoundObj) {
+                  return (
+                    <>
+                      <p className="text-[8px] font-black text-zinc-400 uppercase tracking-widest">Up Next: Round {nextRoundObj.number}</p>
+                      <h3 className="text-lg font-black text-white mt-1 leading-tight">{nextRoundObj.table} Cluster</h3>
 
-              <div className="mt-4 space-y-2">
-                <div className="flex items-center gap-2 text-zinc-300 text-xs">
-                  <Users className="w-3.5 h-3.5 text-brand-red" />
-                  <span>7 Expected Members</span>
-                </div>
-                <div className="flex items-center gap-2 text-zinc-300 text-xs">
-                  <Clock className="w-3.5 h-3.5 text-brand-red animate-pulse" />
-                  <span>Starts at 10:45 AM</span>
-                </div>
-              </div>
+                      <div className="mt-4 space-y-2">
+                        <div className="flex items-center gap-2 text-zinc-300 text-xs">
+                          <Users className="w-3.5 h-3.5 text-brand-red" />
+                          <span>{nextRoundObj.participants?.length || 0} Expected Members</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-zinc-300 text-xs">
+                          <Clock className="w-3.5 h-3.5 text-brand-red animate-pulse" />
+                          <span>Starts at {nextRoundObj.time.split(' - ')[0]}</span>
+                        </div>
+                      </div>
+                    </>
+                  );
+                } else {
+                  return (
+                    <p className="text-zinc-400 text-caption font-semibold">No upcoming rounds scheduled.</p>
+                  );
+                }
+              })()}
             </div>
 
             <button

@@ -1,10 +1,9 @@
 import React from 'react';
 import { Check, Play, ArrowRight, Award, Shield, PhoneCall, BookOpen } from 'lucide-react';
 
-import { captainScheduleItems } from '../../data/mockConclaveData';
-
-export default function CaptainSchedule({ loggedInCaptain }) {
-  const scheduleItems = captainScheduleItems;
+export default function CaptainSchedule({ loggedInCaptain, conclaveSyncData }) {
+  const scheduleItems = conclaveSyncData?.mySchedule || [];
+  const currentRoundNum = conclaveSyncData?.conclaveStatus?.currentRound || 0;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -20,7 +19,7 @@ export default function CaptainSchedule({ loggedInCaptain }) {
         
         <div className="flex gap-2">
           <span className="bg-red-50 text-brand-red px-3 py-1 rounded-full text-[10px] font-black tracking-wider uppercase border border-red-100 shadow-2xs">
-            Round 3 Active
+            Round {currentRoundNum} Active
           </span>
         </div>
       </div>
@@ -35,16 +34,16 @@ export default function CaptainSchedule({ loggedInCaptain }) {
 
           <div className="space-y-6 relative z-10">
             {scheduleItems.map((item) => {
-              const isCompleted = item.status === 'completed';
-              const isActive = item.status === 'active';
+              const isCompleted = item.status?.toLowerCase() === 'completed';
+              const isActive = item.status?.toLowerCase() === 'active';
 
               return (
-                <div key={item.id} className={`flex gap-5 items-start ${!isActive && !isCompleted ? 'opacity-70' : ''}`}>
+                <div key={item.number} className={`flex gap-5 items-start ${!isActive && !isCompleted ? 'opacity-70' : ''}`}>
                   
-                  {/* Status Indicator circle (vertically aligned with card top) */}
+                  {/* Status Indicator circle */}
                   <div className="shrink-0 flex items-center justify-center w-6 h-6 relative mt-5">
                     {isCompleted ? (
-                      <div className="w-5 h-5 rounded-full bg-brand-red text-white flex items-center justify-center shadow-xs z-10 border border-zinc-50">
+                      <div className="w-5 h-5 rounded-full bg-brand-red text-white flex items-center justify-center shadow-xs z-10 border border-zinc-55">
                         <Check className="w-2.5 h-2.5" />
                       </div>
                     ) : isActive ? (
@@ -80,23 +79,19 @@ export default function CaptainSchedule({ loggedInCaptain }) {
                     <h3 className={`text-[12.5px] font-black leading-snug ${
                       isActive ? 'text-zinc-955' : 'text-zinc-800'
                     }`}>
-                      {item.title}
+                      Round {item.number} Seating ({item.table})
                     </h3>
                     
-                    <p className="text-[11px] text-zinc-450 font-semibold leading-relaxed mt-1">
-                      {item.desc}
+                    <p className="text-[11px] text-zinc-455 font-semibold leading-relaxed mt-1">
+                      Networking session matching synergetic categories at Table {item.tableNumber}. Seated with captain {item.captain}.
                     </p>
 
                     {isActive && (
                       <div className="mt-4 pt-3.5 border-t border-zinc-200 flex items-center justify-between text-[9.5px] font-extrabold text-brand-red">
                         <div className="flex items-center gap-1.5">
                           <Award className="w-3.5 h-3.5" />
-                          <span>{loggedInCaptain.tableId?.toLowerCase().startsWith('table') ? loggedInCaptain.tableId : `Table ${loggedInCaptain.tableId || '5'}`} Seating Locked</span>
+                          <span>Table {conclaveSyncData?.tableNumber || 'N/A'} Seating Active</span>
                         </div>
-                        <span className="flex items-center gap-0.5 font-black hover:underline cursor-pointer">
-                          Track Details
-                          <ArrowRight className="w-3 h-3" />
-                        </span>
                       </div>
                     )}
                   </div>
@@ -104,6 +99,9 @@ export default function CaptainSchedule({ loggedInCaptain }) {
                 </div>
               );
             })}
+            {scheduleItems.length === 0 && (
+              <p className="text-center text-zinc-400 text-caption font-semibold py-8">No schedule items generated.</p>
+            )}
           </div>
         </div>
 

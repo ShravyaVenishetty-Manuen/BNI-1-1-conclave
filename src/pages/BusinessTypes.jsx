@@ -14,13 +14,32 @@ import {
 import Pagination from '../components/Pagination';
 import SearchableDropdown from '../components/SearchableDropdown';
 import { api } from '../services/api';
-import initialCategories from '../data/categories.json';
-import membersData from '../data/members.json';
 
 export default function BusinessTypes({ searchQuery, selectedConclaveId }) {
-  const [categories, setCategories] = useState(initialCategories);
+  const [categories, setCategories] = useState([]);
   const [members, setMembers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    async function loadCategories() {
+      try {
+        const stored = localStorage.getItem('bni_categories');
+        if (stored) {
+          setCategories(JSON.parse(stored));
+        } else {
+          setCategories([
+            { id: 'BT-001', name: 'Real Estate', description: 'Real estate and property services', status: 'Active' },
+            { id: 'BT-002', name: 'Financial Services', description: 'Finance, investment, insurance', status: 'Active' },
+            { id: 'BT-003', name: 'Technology', description: 'IT, software, cloud', status: 'Active' }
+          ]);
+        }
+      } catch (err) {
+        console.error('Failed to load business types:', err);
+      }
+    }
+
+    loadCategories();
+  }, []);
 
   useEffect(() => {
     if (!selectedConclaveId) return;
@@ -28,21 +47,28 @@ export default function BusinessTypes({ searchQuery, selectedConclaveId }) {
       setIsLoading(true);
       try {
         const data = await api.get(`/admin/conclaves/${selectedConclaveId}/registrations`);
-        const mapped = data.registrations.map(r => {
+        const mapped = (data.registrations || []).map(r => {
+          const displayName = r.name?.trim() || r.uid || 'Unknown Member';
+          const fallbackCategory = r.businessCategory?.trim() || 'General';
+          const fallbackCompany = r.businessName?.trim() || 'Self Employed';
+          const fallbackLocation = typeof r.location === 'object' && r.location !== null
+            ? (r.location.place || r.location.city || '')
+            : (r.location || '');
           return {
             id: r.uid,
-            name: r.name,
-            email: r.email,
-            phone: r.phone,
-            company: r.businessName,
-            category: r.businessCategory || 'Uncategorized',
-            address: r.location ? (typeof r.location === 'object' ? (r.location.place || '') : r.location) : '',
+            name: displayName,
+            email: r.email?.trim() || 'n/a',
+            phone: r.phone?.trim() || 'n/a',
+            company: fallbackCompany,
+            category: fallbackCategory,
+            address: fallbackLocation,
             state: r.state || 'Andhra Pradesh',
             country: r.country || 'India',
+            chapter: r.chapter || 'Peak Performance',
             isCaptain: r.role === 'captain',
             status: r.isActive ? 'Active' : 'Inactive',
             joinDate: r.registeredAt ? new Date(r.registeredAt).toLocaleDateString([], { month: 'short', year: 'numeric' }) : 'N/A',
-            avatar: r.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'M',
+            avatar: displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'M',
             conclaveIds: [selectedConclaveId],
           };
         });
@@ -184,10 +210,12 @@ export default function BusinessTypes({ searchQuery, selectedConclaveId }) {
 
     if (editingCategory) {
       // Edit mode
-      setCategories(prev => prev.map(c => c.id === editingCategory.id ? {
+      const updated = categories.map(c => c.id === editingCategory.id ? {
         ...c,
         ...formData
-      } : c));
+      } : c);
+      setCategories(updated);
+      localStorage.setItem('bni_categories', JSON.stringify(updated));
       showToast(`Category "${formData.name}" was successfully updated.`, 'success');
     } else {
       // Add mode
@@ -202,7 +230,9 @@ export default function BusinessTypes({ searchQuery, selectedConclaveId }) {
         usage: [0, 0, 0, 0, 0, 0],
         chapters: []
       };
-      setCategories(prev => [newCat, ...prev]);
+      const next = [newCat, ...categories];
+      setCategories(next);
+      localStorage.setItem('bni_categories', JSON.stringify(next));
       showToast(`Created new classification "${formData.name}".`, 'success');
     }
 

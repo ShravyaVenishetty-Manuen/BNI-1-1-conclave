@@ -21,34 +21,17 @@ import {
 } from 'lucide-react';
 
 import { api } from '../services/api';
-import membersData from '../data/members.json';
-import captainsData from '../data/captains.json';
-import referralsJson from '../data/referrals.json';
 
 export default function Dashboard({ setActiveTab, selectedConclaveId, setSelectedConclaveId, loggedInAdmin }) {
-  // Referrals: merge static seed data with any localStorage referrals
   const [referrals, setReferrals] = useState(() => {
     const stored = localStorage.getItem('bni_referrals');
-    const local = stored ? JSON.parse(stored) : [];
-    // Merge: local entries override seed, keyed by id
-    const merged = [...referralsJson];
-    local.forEach(r => {
-      if (!merged.find(m => m.id === r.id)) merged.push(r);
-    });
-    return merged;
+    return stored ? JSON.parse(stored) : [];
   });
 
   useEffect(() => {
     const sync = () => {
       const s = localStorage.getItem('bni_referrals');
-      const local = s ? JSON.parse(s) : [];
-      setReferrals(() => {
-        const merged = [...referralsJson];
-        local.forEach(r => {
-          if (!merged.find(m => m.id === r.id)) merged.push(r);
-        });
-        return merged;
-      });
+      setReferrals(s ? JSON.parse(s) : []);
     };
     window.addEventListener('storage', sync);
     return () => window.removeEventListener('storage', sync);
@@ -99,19 +82,17 @@ export default function Dashboard({ setActiveTab, selectedConclaveId, setSelecte
   // Filtered data based on selected conclave
   const totalMembers = useMemo(() => {
     if (stats) return stats.counts.registered;
-    const filtered = membersData.filter(m => m.conclaveIds && m.conclaveIds.includes(selectedConclaveId));
-    return filtered.length;
-  }, [stats, selectedConclaveId]);
+    return 0;
+  }, [stats]);
 
   const totalCaptains = useMemo(() => {
     if (stats) return stats.counts.captains;
-    const filtered = captainsData.filter(c => c.conclaveIds && c.conclaveIds.includes(selectedConclaveId));
-    return filtered.length;
-  }, [stats, selectedConclaveId]);
+    return 0;
+  }, [stats]);
 
   const filteredCaptains = useMemo(() => {
-    const list = captainsData.filter(c => c.conclaveIds && c.conclaveIds.includes(selectedConclaveId));
-    if (stats && list.length === 0 && stats.counts.captains > 0) {
+    const list = [];
+    if (stats && stats.counts.captains > 0) {
       return Array.from({ length: stats.counts.captains }).map((_, i) => ({
         id: `cap-${i}`,
         name: `Table Captain ${i + 1}`,

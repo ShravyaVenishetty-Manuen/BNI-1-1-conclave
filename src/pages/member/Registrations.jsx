@@ -13,20 +13,13 @@ import {
   Info,
   CalendarRange
 } from 'lucide-react';
-import initialConclaves from '../../data/conclaves.json';
 import SearchableDropdown from '../../components/SearchableDropdown';
 import { api } from '../../services/api';
 
 export default function Registrations({ loggedInMember }) {
-  const [conclaves, setConclaves] = useState(() => {
-    const stored = localStorage.getItem('bni_conclaves');
-    return stored ? JSON.parse(stored) : initialConclaves;
-  });
+  const [conclaves, setConclaves] = useState([]);
 
-  const [member, setMember] = useState(() => {
-    const stored = localStorage.getItem('bni_logged_member');
-    return stored ? JSON.parse(stored) : loggedInMember;
-  });
+  const [member, setMember] = useState(loggedInMember || null);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [regionFilter, setRegionFilter] = useState('All');
@@ -51,22 +44,36 @@ export default function Registrations({ loggedInMember }) {
     specialInstructions: ''
   });
 
-  // Sync session and conclaves on storage events
   useEffect(() => {
-    const syncData = () => {
-      const storedConclaves = localStorage.getItem('bni_conclaves');
-      if (storedConclaves) setConclaves(JSON.parse(storedConclaves));
+    async function loadData() {
+      try {
+        const [memberData, conclavesData] = await Promise.all([
+          api.get('/member/me').catch(() => null),
+          api.get('/member/conclaves').catch(() => [])
+        ]);
 
-      const storedMember = localStorage.getItem('bni_logged_member');
-      if (storedMember) setMember(JSON.parse(storedMember));
-    };
+        if (memberData) {
+          setMember(memberData);
+          localStorage.setItem('bni_logged_member', JSON.stringify(memberData));
+        }
 
-    window.addEventListener('storage', syncData);
-    const interval = setInterval(syncData, 1000);
-    return () => {
-      window.removeEventListener('storage', syncData);
-      clearInterval(interval);
-    };
+        const mappedConclaves = (Array.isArray(conclavesData) ? conclavesData : []).map((c) => ({
+          ...c,
+          name: c.name || c.title || 'BNI Conclave',
+          venue: c.venue || c.venueLocation || 'TBD Venue',
+          region: c.region || 'Guntur Region',
+          startDate: c.date || c.startDate || null,
+          status: c.status === 'running' ? 'Running' : c.status === 'completed' ? 'Completed' : c.status === 'registration_open' ? 'Upcoming' : 'Upcoming',
+          memberCount: c.memberCount || c.registrationCount || 0,
+        }));
+        setConclaves(mappedConclaves);
+        localStorage.setItem('bni_conclaves', JSON.stringify(mappedConclaves));
+      } catch (err) {
+        console.warn('Failed to load member registration data from backend:', err.message);
+      }
+    }
+
+    loadData();
   }, []);
 
   const showToastMessage = (message, type = 'success') => {
@@ -141,7 +148,6 @@ export default function Registrations({ loggedInMember }) {
     setMember(updatedMember);
     localStorage.setItem('bni_logged_member', JSON.stringify(updatedMember));
 
-    // 2. Increment conclave member count
     const updatedConclaves = conclaves.map(c => {
       if (c.id === conclaveId) {
         return { ...c, memberCount: (c.memberCount || 0) + 1 };
@@ -151,7 +157,6 @@ export default function Registrations({ loggedInMember }) {
     setConclaves(updatedConclaves);
     localStorage.setItem('bni_conclaves', JSON.stringify(updatedConclaves));
 
-    // 3. Store the actual registration form response in local storage
     const allRegistrations = JSON.parse(localStorage.getItem('bni_conclave_registrations') || '[]');
     allRegistrations.push({
       conclaveId,
@@ -161,7 +166,6 @@ export default function Registrations({ loggedInMember }) {
     });
     localStorage.setItem('bni_conclave_registrations', JSON.stringify(allRegistrations));
 
-    // 4. Notify other tabs/components
     window.dispatchEvent(new Event('storage'));
     setIsRegModalOpen(false);
     showToastMessage(`Successfully registered for ${conclaveName}!`);
@@ -172,7 +176,6 @@ export default function Registrations({ loggedInMember }) {
     const registeredIds = member?.conclaveIds || [];
     if (!registeredIds.includes(conclaveId)) return;
 
-    // 1. Update Member conclaveIds
     const updatedMember = {
       ...member,
       conclaveIds: registeredIds.filter(id => id !== conclaveId)
@@ -180,7 +183,6 @@ export default function Registrations({ loggedInMember }) {
     setMember(updatedMember);
     localStorage.setItem('bni_logged_member', JSON.stringify(updatedMember));
 
-    // 2. Decrement conclave member count
     const updatedConclaves = conclaves.map(c => {
       if (c.id === conclaveId) {
         return { ...c, memberCount: Math.max(0, (c.memberCount || 1) - 1) };
@@ -190,7 +192,6 @@ export default function Registrations({ loggedInMember }) {
     setConclaves(updatedConclaves);
     localStorage.setItem('bni_conclaves', JSON.stringify(updatedConclaves));
 
-    // 3. Notify other tabs/components
     window.dispatchEvent(new Event('storage'));
     showToastMessage(`Cancelled registration for ${conclaveName}.`, 'warning');
   };

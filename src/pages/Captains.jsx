@@ -23,8 +23,6 @@ import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recha
 
 import { api } from '../services/api';
 
-import initialCaptains from '../data/captains.json';
-
 export default function Captains({ searchQuery, selectedConclaveId }) {
   const [captains, setCaptains] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -35,21 +33,28 @@ export default function Captains({ searchQuery, selectedConclaveId }) {
       setIsLoading(true);
       try {
         const data = await api.get(`/admin/conclaves/${selectedConclaveId}/registrations`);
-        const mapped = data.registrations.map(r => {
+        const mapped = (data.registrations || []).map(r => {
+          const displayName = r.name?.trim() || r.uid || 'Unknown Captain';
+          const fallbackCategory = r.businessCategory?.trim() || 'General';
+          const fallbackCompany = r.businessName?.trim() || 'Self Employed';
+          const fallbackLocation = typeof r.location === 'object' && r.location !== null
+            ? (r.location.place || r.location.city || '')
+            : (r.location || '');
           return {
             id: r.uid,
-            name: r.name,
-            email: r.email,
-            phone: r.phone,
-            company: r.businessName,
-            category: r.businessCategory || 'Uncategorized',
-            address: r.location ? (typeof r.location === 'object' ? (r.location.place || '') : r.location) : '',
+            name: displayName,
+            email: r.email?.trim() || 'n/a',
+            phone: r.phone?.trim() || 'n/a',
+            company: fallbackCompany,
+            category: fallbackCategory,
+            address: fallbackLocation,
             state: r.state || 'Andhra Pradesh',
             country: r.country || 'India',
+            chapter: r.chapter || 'Peak Performance',
             isCaptain: r.role === 'captain',
             status: r.isActive ? 'Available' : 'Busy',
             joinDate: r.registeredAt ? new Date(r.registeredAt).toLocaleDateString([], { month: 'short', year: 'numeric' }) : 'N/A',
-            avatar: r.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'TC',
+            avatar: displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'TC',
             conclaveIds: [selectedConclaveId],
             history: [{ event: 'Registered', date: r.registeredAt ? new Date(r.registeredAt).toLocaleDateString() : 'N/A', role: r.role === 'captain' ? 'Captain' : 'Member' }]
           };

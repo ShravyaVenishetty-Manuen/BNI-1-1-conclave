@@ -6,16 +6,13 @@ import {
   Check,
 } from 'lucide-react';
 
-import { tableMembers, getAgendaSteps } from '../../data/mockConclaveData';
 import ReferModal from '../../components/ReferModal';
-import membersData from '../../data/members.json';
-import captainsData from '../../data/captains.json';
 
-export default function MemberCurrentRound({ loggedInMember, onTabChange }) {
+export default function MemberCurrentRound({ loggedInMember, onTabChange, conclaveSyncData }) {
   const [referTarget, setReferTarget] = useState(null);
   const [toast, setToast] = useState(null);
-  // Countdown timer starting at 08:38 (518 seconds)
-  const [timeLeft, setTimeLeft] = useState(518);
+  
+  const [timeLeft, setTimeLeft] = useState(600);
   const initialTime = 600; // 10 mins total round simulation
 
   const [referrals, setReferrals] = useState(() => {
@@ -39,20 +36,28 @@ export default function MemberCurrentRound({ loggedInMember, onTabChange }) {
   }, []);
 
   const getMemberReferralCount = (name) => {
-    const match = membersData.find(m => m.name.toLowerCase() === name.toLowerCase()) || 
-                  captainsData.find(c => c.name.toLowerCase() === name.toLowerCase());
+    const occupants = conclaveSyncData?.tableOccupants || [];
+    const match = occupants.find(o => o.name.toLowerCase() === name.toLowerCase());
     if (!match) return { given: 0, received: 0 };
-    const given = referrals.filter(r => r.fromMemberId === match.id).length;
-    const received = referrals.filter(r => r.toMemberId === match.id).length;
+    const given = referrals.filter(r => r.fromMemberId === match.uid).length;
+    const received = referrals.filter(r => r.toMemberId === match.uid).length;
     return { given, received };
   };
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft(prev => (prev > 0 ? prev - 1 : 0));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
+    const startedAt = conclaveSyncData?.conclaveStatus?.currentRoundStartedAt;
+    if (startedAt && conclaveSyncData?.conclaveStatus?.status === 'active') {
+      const updateTimer = () => {
+        const elapsed = Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000);
+        setTimeLeft(Math.max(0, initialTime - elapsed));
+      };
+      updateTimer();
+      const timer = setInterval(updateTimer, 1000);
+      return () => clearInterval(timer);
+    } else {
+      setTimeLeft(600);
+    }
+  }, [conclaveSyncData]);
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -60,7 +65,6 @@ export default function MemberCurrentRound({ loggedInMember, onTabChange }) {
     return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   };
 
-  // Math for Circular Countdown Progress Ring
   const radius = 88;
   const circumference = radius * 2 * Math.PI;
   const progressPercent = (timeLeft / initialTime) * 100;
@@ -68,7 +72,29 @@ export default function MemberCurrentRound({ loggedInMember, onTabChange }) {
 
   const memberName = loggedInMember?.name || 'Anjali Sharma';
 
-  // Agenda Steps showing what to do in the round
+  const getAgendaSteps = (seconds) => {
+    return [
+      {
+        time: 'First 5 Mins',
+        title: 'Introductions & Quick Exchange',
+        desc: 'Introduce yourself, your business category, and state your primary contact target for the conclave.',
+        isCurrent: seconds > 450
+      },
+      {
+        time: 'Next 30 Mins',
+        title: 'Synergy Discussions',
+        desc: 'Review potential cross-referral avenues with table members. Focus on category pairs.',
+        isCurrent: seconds <= 450 && seconds > 150
+      },
+      {
+        time: 'Last 10 Mins',
+        title: 'Referral Logging & Lock',
+        desc: 'Log any referrals or 1-to-1 sync requests in your portal dashboard. Prepare to migrate.',
+        isCurrent: seconds <= 150
+      }
+    ];
+  };
+
   const agendaSteps = getAgendaSteps(timeLeft);
 
   return (
@@ -90,48 +116,41 @@ export default function MemberCurrentRound({ loggedInMember, onTabChange }) {
                   Networking Conclave 2026
                 </span>
               </div>
-              <h1 className="text-2xl md:text-3xl font-black text-zinc-955 tracking-tight">Round 3 of 6</h1>
+              <h1 className="text-2xl md:text-3xl font-black text-zinc-955 tracking-tight">
+                Round {conclaveSyncData?.conclaveStatus?.currentRound || 0} of {conclaveSyncData?.mySchedule?.length || 6}
+              </h1>
 
               {/* Stepper Progress Bar */}
               <div className="flex items-center w-full max-w-xl pt-2">
-                <div className="flex flex-col items-center flex-1">
-                  <div className="w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-[10.5px] shadow-sm select-none">
-                    <Check className="w-3.5 h-3.5 stroke-[3]" />
-                  </div>
-                  <span className="text-[9.5px] font-extrabold text-zinc-400 mt-1 uppercase tracking-wide">R1</span>
-                </div>
-                <div className="h-0.5 bg-emerald-500 flex-1 mb-4"></div>
-
-                <div className="flex flex-col items-center flex-1">
-                  <div className="w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-[10.5px] shadow-sm select-none">
-                    <Check className="w-3.5 h-3.5 stroke-[3]" />
-                  </div>
-                  <span className="text-[9.5px] font-extrabold text-zinc-400 mt-1 uppercase tracking-wide">R2</span>
-                </div>
-                <div className="h-0.5 bg-brand-red flex-1 mb-4"></div>
-
-                <div className="flex flex-col items-center flex-1">
-                  <div className="w-9 h-9 rounded-full bg-brand-red text-white flex items-center justify-center font-black text-[12px] shadow-md ring-4 ring-brand-red/10 select-none">
-                    3
-                  </div>
-                  <span className="text-[10px] font-black text-brand-red mt-1 uppercase tracking-wide">Active</span>
-                </div>
-                <div className="h-0.5 bg-zinc-200 flex-1 mb-4"></div>
-
-                <div className="flex flex-col items-center flex-1 opacity-45">
-                  <div className="w-7 h-7 rounded-full border border-zinc-300 bg-zinc-50 text-zinc-450 flex items-center justify-center font-bold text-[11px] select-none">
-                    4
-                  </div>
-                  <span className="text-[9.5px] font-extrabold text-zinc-400 mt-1 uppercase tracking-wide">R4</span>
-                </div>
-                <div className="h-0.5 bg-zinc-200 flex-1 mb-4"></div>
-
-                <div className="flex flex-col items-center flex-1 opacity-45">
-                  <div className="w-7 h-7 rounded-full border border-zinc-300 bg-zinc-50 text-zinc-450 flex items-center justify-center font-bold text-[11px] select-none">
-                    5
-                  </div>
-                  <span className="text-[9.5px] font-extrabold text-zinc-400 mt-1 uppercase tracking-wide">R5</span>
-                </div>
+                {(conclaveSyncData?.mySchedule || []).map((r, idx) => {
+                  const isCompleted = r.status === 'Completed';
+                  const isActive = r.status === 'Active';
+                  return (
+                    <React.Fragment key={r.number}>
+                      {idx > 0 && (
+                        <div className={`h-0.5 flex-1 mb-4 ${isCompleted ? 'bg-emerald-500' : isActive ? 'bg-brand-red' : 'bg-zinc-200'}`}></div>
+                      )}
+                      <div className={`flex flex-col items-center flex-1 ${!isCompleted && !isActive ? 'opacity-45' : ''}`}>
+                        {isCompleted ? (
+                          <div className="w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-[10.5px] shadow-sm select-none">
+                            <Check className="w-3.5 h-3.5 stroke-[3]" />
+                          </div>
+                        ) : isActive ? (
+                          <div className="w-9 h-9 rounded-full bg-brand-red text-white flex items-center justify-center font-black text-[12px] shadow-md ring-4 ring-brand-red/10 select-none">
+                            {r.number}
+                          </div>
+                        ) : (
+                          <div className="w-7 h-7 rounded-full border border-zinc-300 bg-zinc-50 text-zinc-450 flex items-center justify-center font-bold text-[11px] select-none">
+                            {r.number}
+                          </div>
+                        )}
+                        <span className={`text-[9.5px] mt-1 uppercase tracking-wide ${isActive ? 'font-black text-brand-red' : 'font-extrabold text-zinc-400'}`}>
+                          {isActive ? 'Active' : `R${r.number}`}
+                        </span>
+                      </div>
+                    </React.Fragment>
+                  );
+                })}
               </div>
             </div>
 
@@ -139,17 +158,17 @@ export default function MemberCurrentRound({ loggedInMember, onTabChange }) {
             <div className="grid grid-cols-2 md:grid-cols-3 gap-6 pt-4">
               <div>
                 <p className="text-[9.5px] font-black text-zinc-400 uppercase tracking-widest">Assigned Table</p>
-                <p className="font-black text-zinc-900 text-body-lg mt-0.5">Table 05</p>
+                <p className="font-black text-zinc-900 text-body-lg mt-0.5">Table {conclaveSyncData?.tableNumber || 'N/A'}</p>
               </div>
               <div>
                 <p className="text-[9.5px] font-black text-zinc-400 uppercase tracking-widest">Session Captain</p>
-                <p className="font-black text-zinc-900 text-body-lg mt-0.5">Ganesh V.</p>
+                <p className="font-black text-zinc-900 text-body-lg mt-0.5">{conclaveSyncData?.captainName || 'Unknown'}</p>
               </div>
               <div className="col-span-2 md:col-span-1">
                 <p className="text-[9.5px] font-black text-zinc-400 uppercase tracking-widest">Location</p>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <MapPin className="w-4.5 h-4.5 text-brand-red shrink-0" />
-                  <p className="font-black text-zinc-900 text-body-lg">Grand Convention Hall</p>
+                  <p className="font-black text-zinc-900 text-body-lg truncate">{conclaveSyncData?.conclaveStatus?.venue || 'TBD Venue'}</p>
                 </div>
               </div>
             </div>
@@ -217,58 +236,69 @@ export default function MemberCurrentRound({ loggedInMember, onTabChange }) {
             <div className="flex justify-between items-end border-b border-zinc-100 pb-3">
               <div>
                 <h2 className="text-body-md font-black text-zinc-900 leading-tight">Your Networking Group</h2>
-                <p className="text-[11px] text-zinc-450 font-semibold mt-0.5">Table 5 Strategy Circle</p>
+                <p className="text-[11px] text-zinc-450 font-semibold mt-0.5">Table {conclaveSyncData?.tableNumber || 'N/A'} Strategy Circle</p>
               </div>
               <span className="px-2 py-0.5 bg-zinc-50 border border-zinc-250/60 text-zinc-550 text-[10px] font-black rounded uppercase tracking-wider">
-                {tableMembers.length} Members
+                {conclaveSyncData?.tableOccupants?.length || 0} Members
               </span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-              {tableMembers.map((member) => (
-                <div
-                  key={member.name}
-                  className="p-4 border border-zinc-200/85 rounded-xl transition-smooth group bg-white flex flex-col justify-between"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-zinc-50 border border-zinc-200 flex items-center justify-center font-bold text-xs text-zinc-500 shrink-0 transition-colors select-none">
-                      {member.initials}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <h3 className="text-[12.5px] font-black text-zinc-850 transition-smooth truncate leading-tight">
-                        {member.name}
-                      </h3>
-                      <span className="inline-block px-1.5 py-0.5 bg-zinc-100 border border-zinc-200/50 text-zinc-500 text-[8.5px] font-black rounded uppercase tracking-wide mt-1.5">
-                        {member.category}
-                      </span>
-                      <p className="text-[11px] text-zinc-805 font-extrabold mt-2.5 truncate leading-tight">
-                        {member.company}
-                      </p>
-                      <p className="text-[10px] text-zinc-400 font-semibold truncate leading-none mt-1">
-                        {member.chapter}
-                      </p>
-                      <div className="flex gap-2 mt-2.5 pt-2 border-t border-zinc-100 text-[9px] font-bold text-zinc-400">
-                        <span>Sent: <span className="text-zinc-700">{getMemberReferralCount(member.name).given}</span></span>
-                        <span>•</span>
-                        <span>Recv: <span className="text-zinc-700">{getMemberReferralCount(member.name).received}</span></span>
+              {(conclaveSyncData?.tableOccupants || []).map((member) => {
+                const initials = member.name.split(' ').map(n => n[0]).filter(Boolean).join('').substring(0, 2).toUpperCase() || 'M';
+                return (
+                  <div
+                    key={member.uid}
+                    className="p-4 border border-zinc-200/85 rounded-xl transition-smooth group bg-white flex flex-col justify-between"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-zinc-50 border border-zinc-200 flex items-center justify-center font-bold text-xs text-zinc-500 shrink-0 transition-colors select-none">
+                        {initials}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-[12.5px] font-black text-zinc-850 transition-smooth truncate leading-tight">
+                          {member.name}
+                        </h3>
+                        <span className="inline-block px-1.5 py-0.5 bg-zinc-100 border border-zinc-200/50 text-zinc-500 text-[8.5px] font-black rounded uppercase tracking-wide mt-1.5">
+                          {member.category}
+                        </span>
+                        <p className="text-[11px] text-zinc-805 font-extrabold mt-2.5 truncate leading-tight">
+                          {member.company}
+                        </p>
+                        <p className="text-[10px] text-zinc-400 font-semibold truncate leading-none mt-1">
+                          {member.chapter}
+                        </p>
+                        <div className="flex gap-2 mt-2.5 pt-2 border-t border-zinc-100 text-[9px] font-bold text-zinc-400">
+                          <span>Sent: <span className="text-zinc-700">{getMemberReferralCount(member.name).given}</span></span>
+                          <span>•</span>
+                          <span>Recv: <span className="text-zinc-700">{getMemberReferralCount(member.name).received}</span></span>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Refer button */}
-                  {member.name !== (loggedInMember?.name || 'Anjali Sharma') && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setReferTarget(member);
-                      }}
-                      className="mt-4 w-full py-1.5 border border-zinc-200 hover:border-brand-red text-zinc-650 hover:text-brand-red bg-zinc-50/50 hover:bg-red-50/5 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition-smooth cursor-pointer"
-                    >
-                      Send Referral
-                    </button>
-                  )}
-                </div>
-              ))}
+                    {/* Refer button */}
+                    {member.uid !== (loggedInMember?.uid || loggedInMember?.id) && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setReferTarget({
+                            id: member.uid,
+                            name: member.name,
+                            company: member.company,
+                            category: member.category
+                          });
+                        }}
+                        className="mt-4 w-full py-1.5 border border-zinc-200 hover:border-brand-red text-zinc-650 hover:text-brand-red bg-zinc-50/50 hover:bg-red-50/5 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition-smooth cursor-pointer font-black"
+                      >
+                        Send Referral
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+              {(!conclaveSyncData?.tableOccupants || conclaveSyncData.tableOccupants.length === 0) && (
+                <p className="col-span-3 p-8 text-center text-zinc-400 text-caption font-semibold">No members seated at your table in this round.</p>
+              )}
             </div>
           </div>
 
