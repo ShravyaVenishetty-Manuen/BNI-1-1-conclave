@@ -36,6 +36,7 @@ export default function MemberSchedule({ loggedInMember, onTabChange, conclaveSy
   const rounds = conclaveSyncData?.mySchedule || [];
   const currentRoundNum = conclaveSyncData?.conclaveStatus?.currentRound || 0;
   const currentRoundSeating = conclaveSyncData?.mySchedule?.find(s => s.number === currentRoundNum);
+  const nextRound = rounds.find(r => r.number === currentRoundNum + 1);
   const memberName = loggedInMember?.name || 'Anjali Sharma';
 
   return (
