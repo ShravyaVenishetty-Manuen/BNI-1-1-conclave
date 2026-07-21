@@ -142,8 +142,8 @@ export default function SuperadminConclaves({ searchQuery }) {
                   </td>
                   <td className="p-4 text-zinc-500">{conclave.creator || 'Superadmin'}</td>
                   <td className="p-4 text-zinc-500 truncate max-w-[160px]">{conclave.venueLocation || conclave.venue || 'TBD Venue'}</td>
-                  <td className="p-4 text-center font-bold text-zinc-800">{conclave.tablesCount || 0} tables</td>
-                  <td className="p-4 text-center font-bold text-zinc-800">{conclave.membersCount || conclave.registrationCount || 0} members</td>
+                  <td className="p-4 text-center font-bold text-zinc-800">{Math.ceil((conclave.registrationCount || conclave.membersCount || 0) / (conclave.personsPerTable || 7)) || 1} tables</td>
+                  <td className="p-4 text-center font-bold text-zinc-800">{conclave.registrationCount || conclave.membersCount || 0} members</td>
                   <td className="p-4 text-center">
                     <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${conclave.status?.toLowerCase() === 'completed'
                         ? 'bg-zinc-100 text-zinc-550 border border-zinc-200'
@@ -175,6 +175,7 @@ export default function SuperadminConclaves({ searchQuery }) {
 }
 
 function ConclaveDetailView({ conclave, onBack }) {
+  const derivedTables = conclave.tablesCount || Math.ceil((conclave.registrationCount || conclave.membersCount || 0) / (conclave.personsPerTable || 7)) || 1;
   // Mock table seating structure
   const mockTableSeating = [
     {
@@ -271,14 +272,14 @@ function ConclaveDetailView({ conclave, onBack }) {
       <section className="grid grid-cols-2 lg:grid-cols-4 gap-5">
         <div className="bg-white p-5 rounded-xl border border-zinc-200 shadow-2xs">
           <span className="text-[9px] font-black text-zinc-400 uppercase tracking-wider block">Assigned Stations</span>
-          <span className="text-2xl font-black text-brand-red block mt-2">{conclave.tablesCount} Tables</span>
-          <span className="text-[10px] text-zinc-450 font-semibold block mt-1">Structured 1-to-1 rooms</span>
+          <span className="text-2xl font-black text-brand-red block mt-2">{derivedTables} Tables</span>
+          <span className="text-[10px] text-zinc-455 font-semibold block mt-1">Structured 1-to-1 rooms</span>
         </div>
         <div className="bg-white p-5 rounded-xl border border-zinc-200 shadow-2xs">
           <span className="text-[9px] font-black text-zinc-400 uppercase tracking-wider block">Total Checked In</span>
-          <span className="text-2xl font-black text-brand-red block mt-2">{conclave.membersCount} Members</span>
+          <span className="text-2xl font-black text-brand-red block mt-2">{conclave.registrationCount || conclave.membersCount || 0} Members</span>
           <div className="w-full bg-zinc-150 h-1.5 rounded-full overflow-hidden mt-2">
-            <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${Math.min(100, (conclave.membersCount / (conclave.tablesCount * 4)) * 100)}%` }} />
+            <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${Math.min(100, ((conclave.registrationCount || conclave.membersCount || 0) / (derivedTables * 4)) * 100)}%` }} />
           </div>
         </div>
         <div className="bg-white p-5 rounded-xl border border-zinc-200 shadow-2xs">

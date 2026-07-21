@@ -237,9 +237,9 @@ export default function SuperadminDashboard({ setActiveTab }) {
                     <div className="flex gap-2 items-center text-[10px] text-zinc-450 font-semibold mt-1">
                       <span>{conclave.region || conclave.location || 'Guntur Region'}</span>
                       <span>•</span>
-                      <span>{conclave.tablesCount || 0} tables</span>
+                      <span>{Math.ceil((conclave.registrationCount || conclave.membersCount || 0) / (conclave.personsPerTable || 7)) || 1} tables</span>
                       <span>•</span>
-                      <span>{conclave.membersCount || 0} checked in</span>
+                      <span>{conclave.registrationCount || conclave.membersCount || 0} checked in</span>
                     </div>
                   </div>
                   <span className="px-2 py-0.5 rounded-full text-[8.5px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-150 whitespace-nowrap">
