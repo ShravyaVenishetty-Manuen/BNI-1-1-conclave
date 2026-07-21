@@ -9,7 +9,6 @@ import {
   ShieldAlert,
   CheckCircle2
 } from 'lucide-react';
-import { mockAdmins, mockRegions, mockGlobalConclaves, mockGlobalMembers } from '../../data/mockConclaveData';
 import { api } from '../../services/api';
 
 export default function SuperadminDashboard({ setActiveTab }) {
@@ -50,21 +49,33 @@ export default function SuperadminDashboard({ setActiveTab }) {
 
   // Distribution helpers
   const conclavesPerRegion = regions.map(reg => {
-    const count = conclaves.filter(c => c.region === reg.name).length;
+    const count = conclaves.filter(c => (c.region || 'Guntur Region') === reg.name).length;
     return { name: reg.name, count };
   });
 
   const adminsPerRegion = regions.map(reg => {
-    const count = admins.filter(a => a.region === reg.name).length;
+    const count = admins.filter(a => (a.region || 'Guntur Region') === reg.name).length;
     return { name: reg.name, count };
   });
+
+  const parseDate = (val) => {
+    if (!val) return 'Recently';
+    if (typeof val.toDate === 'function') {
+      return val.toDate().toLocaleDateString();
+    }
+    if (val._seconds !== undefined) {
+      return new Date(val._seconds * 1000).toLocaleDateString();
+    }
+    const d = new Date(val);
+    return isNaN(d.getTime()) ? 'Recently' : d.toLocaleDateString();
+  };
 
   const recentActivities = useMemo(() => {
     const list = [];
     admins.slice(0, 2).forEach(a => {
       list.push({
         msg: `Regional Admin '${a.name || a.email}' profile synced`,
-        time: a.grantedAt ? new Date(a.grantedAt).toLocaleDateString() : 'Recently',
+        time: parseDate(a.grantedAt),
         info: a.region || 'BNI Network',
         bg: "bg-emerald-50 border-emerald-200 text-emerald-600",
         Icon: Award
@@ -72,8 +83,8 @@ export default function SuperadminDashboard({ setActiveTab }) {
     });
     conclaves.slice(0, 2).forEach(c => {
       list.push({
-        msg: `Conclave '${c.title}' is registered under ${c.region || 'Guntur'}`,
-        time: c.createdAt ? new Date(c.createdAt).toLocaleDateString() : 'Recently',
+        msg: `Conclave '${c.name || c.title || 'Unnamed Conclave'}' is registered under ${c.region || 'Guntur'}`,
+        time: parseDate(c.createdAt || c.date),
         info: c.status || 'Scheduled',
         bg: "bg-red-50 border-red-200 text-brand-red",
         Icon: CalendarRange
@@ -222,7 +233,7 @@ export default function SuperadminDashboard({ setActiveTab }) {
               {conclaves.filter(c => c.status?.toLowerCase() === 'active').map(conclave => (
                 <div key={conclave.id} className="p-3.5 bg-white hover:bg-zinc-50/50 transition-colors flex justify-between items-center text-body-sm">
                   <div className="space-y-1">
-                    <p className="font-black text-zinc-800 leading-none">{conclave.title}</p>
+                    <p className="font-black text-zinc-800 leading-none">{conclave.name || conclave.title || 'Unnamed Conclave'}</p>
                     <div className="flex gap-2 items-center text-[10px] text-zinc-450 font-semibold mt-1">
                       <span>{conclave.region || conclave.location || 'Guntur Region'}</span>
                       <span>•</span>
