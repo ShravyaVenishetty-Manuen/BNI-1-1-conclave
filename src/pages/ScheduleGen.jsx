@@ -377,11 +377,12 @@ export default function ScheduleGen({ selectedConclaveId }) {
     ? Math.round(selectedConclave.scheduleSummary.coverage * 100)
     : Math.min(100, Math.round(90 + (overlapWeight * 0.1) - (progress === 100 ? 0 : 2.5)));
 
-  const repeatedPairingsVal = repeatPairingDetails.length || (
-    selectedConclave?.scheduleSummary?.repeatPairings !== undefined
-      ? selectedConclave.scheduleSummary.repeatPairings
-      : Math.max(0, Math.round(10 - (chapterWeight * 0.1)))
-  );
+  const hasSchedule = Boolean(selectedConclave?.schedule?.rounds?.length);
+  const repeatedPairingsVal = hasSchedule
+    ? repeatPairingDetails.length
+    : (selectedConclave?.scheduleSummary?.repeatPairings !== undefined
+        ? selectedConclave.scheduleSummary.repeatPairings
+        : 0);
 
   const diversityVal = selectedConclave?.scheduleSummary?.coverage !== undefined
     ? Math.min(100, Math.round((selectedConclave.scheduleSummary.coverage * 100) - (selectedConclave.scheduleSummary.repeatPairings || 0)))

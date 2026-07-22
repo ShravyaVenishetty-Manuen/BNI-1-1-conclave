@@ -203,7 +203,10 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
     const members = conclave.participants?.length || 0;
     const uniqueCaptains = new Set(conclave.schedule?.rounds?.[0]?.tables?.map(t => t.captainId).filter(Boolean));
     const captains = uniqueCaptains.size || conclave.scheduleSummary?.tableCount || 0;
-    const repeatPairings = repeatPairingDetails.length || conclave.scheduleSummary?.repeatPairingCount || 0;
+    const hasSchedule = Boolean(conclave.schedule?.rounds?.length);
+    const repeatPairings = hasSchedule
+      ? repeatPairingDetails.length
+      : (conclave.scheduleSummary?.repeatPairingCount || 0);
     return {
       rounds,
       tables,
