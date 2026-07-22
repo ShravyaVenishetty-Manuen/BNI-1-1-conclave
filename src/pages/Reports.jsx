@@ -74,6 +74,12 @@ export default function Reports({ searchQuery: globalSearchQuery, selectedConcla
   const searchVal = globalSearchQuery !== undefined ? globalSearchQuery : localSearchQuery;
   const [hoveredSlice, setHoveredSlice] = useState(null);
 
+  const [toast, setToast] = useState(null);
+  const showToast = (title, desc) => {
+    setToast({ title, desc });
+    setTimeout(() => setToast(null), 3000);
+  };
+
   const [showRepeatModal, setShowRepeatModal] = useState(false);
 
   const repeatPairingDetails = useMemo(() => {
