@@ -82,7 +82,14 @@ export default function BusinessTypes({ searchQuery, selectedConclaveId }) {
     loadRegistrations();
   }, [selectedConclaveId]);
   const [searchTerm, setSearchTerm] = useState('');
-  const searchVal = searchQuery !== undefined ? searchQuery : searchTerm;
+
+  useEffect(() => {
+    if (searchQuery !== undefined && searchQuery !== null) {
+      setSearchTerm(searchQuery);
+    }
+  }, [searchQuery]);
+
+  const searchVal = searchTerm;
   const [statusFilter, setStatusFilter] = useState('All');
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedRows, setSelectedRows] = useState(new Set());

@@ -80,7 +80,14 @@ export default function Members({ searchQuery, selectedConclaveId }) {
     };
   }, []);
   const [searchTerm, setSearchTerm] = useState('');
-  const searchVal = searchQuery !== undefined ? searchQuery : searchTerm;
+
+  useEffect(() => {
+    if (searchQuery !== undefined && searchQuery !== null) {
+      setSearchTerm(searchQuery);
+    }
+  }, [searchQuery]);
+
+  const searchVal = searchTerm;
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [captainFilter, setCaptainFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');

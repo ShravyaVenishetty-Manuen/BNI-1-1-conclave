@@ -72,7 +72,14 @@ export default function ActiveUsers({ searchQuery, selectedConclaveId }) {
     loadSessions();
   }, [selectedConclaveId, refreshTrigger]);
   const [searchTerm, setSearchTerm] = useState('');
-  const searchVal = searchQuery !== undefined ? searchQuery : searchTerm;
+
+  useEffect(() => {
+    if (searchQuery !== undefined && searchQuery !== null) {
+      setSearchTerm(searchQuery);
+    }
+  }, [searchQuery]);
+
+  const searchVal = searchTerm;
   const [statusFilter, setStatusFilter] = useState('All');
   const [selectedSession, setSelectedSession] = useState(null);
   const [hoveredSlice, setHoveredSlice] = useState(null);

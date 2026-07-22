@@ -105,7 +105,14 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
   }, [conclaves]);
 
   const [searchTerm, setSearchTerm] = useState('');
-  const searchVal = searchQuery !== undefined ? searchQuery : searchTerm;
+
+  useEffect(() => {
+    if (searchQuery !== undefined && searchQuery !== null) {
+      setSearchTerm(searchQuery);
+    }
+  }, [searchQuery]);
+
+  const searchVal = searchTerm;
   const [statusFilter, setStatusFilter] = useState('All');
   const [venueFilter, setVenueFilter] = useState('All');
   const [stateFilter, setStateFilter] = useState('All');
