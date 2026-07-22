@@ -809,7 +809,7 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
                   <div className="flex items-center gap-2 mt-1">
                     {selectedConclave.coordinator && (
                       <div className="w-5 h-5 rounded-full bg-brand-red/10 text-brand-red font-bold text-[9px] flex items-center justify-center shrink-0">
-                        {selectedConclave.coordinator.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)}
+                        {selectedConclave.coordinator.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                       </div>
                     )}
                     <span className="text-body-sm font-bold text-zinc-800">{selectedConclave.coordinator || '—'}</span>
