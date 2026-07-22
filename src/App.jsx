@@ -72,7 +72,7 @@ export default function App() {
       'dashboard', 'members', 'active-users', 'business-types', 'captains',
       'conclaves', 'snapshot', 'schedule-gen', 'schedule-review',
       'round-runner', 'reports', 'admins', 'referrals', 'profile', 'registrations',
-      'my-schedule', 'current-round', 'history'
+      'my-schedule', 'current-round', 'history', 'my-table', 'schedule'
     ];
     return validTabs.includes(lastPart) ? lastPart : 'dashboard';
   });
@@ -91,7 +91,9 @@ export default function App() {
         if (list && list.length > 0) {
           const exists = list.some(c => c.id === selectedConclaveId);
           if (!exists) {
-            setSelectedConclaveId(list[0].id);
+            // Prefer the active/running conclave — same one members see
+            const active = list.find(c => c.status === 'active' || c.status === 'running') || list[0];
+            setSelectedConclaveId(active.id);
           }
         }
       } catch (err) {
@@ -233,7 +235,9 @@ export default function App() {
       api.get('/admin/conclaves').then(list => {
         if (list && list.length > 0) {
           const adminName = payload?.name || "Sanjay Wagle";
-          const myConclave = list.find(c => c.coordinator === adminName) || list[0];
+          // Prefer active/running conclave (same as member portal), then admin's own, then first
+          const active = list.find(c => c.status === 'active' || c.status === 'running');
+          const myConclave = active || list.find(c => c.coordinator === adminName) || list[0];
           setSelectedConclaveId(myConclave.id);
         } else {
           setSelectedConclaveId('');
@@ -424,6 +428,7 @@ export default function App() {
             <Referrals
               loggedInUser={memberProfile || loggedInMember}
               userType="member"
+              conclaveSyncData={conclaveSyncData}
             />
           ) : activeTab === 'profile' ? (
             <MemberProfile
