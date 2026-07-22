@@ -18,13 +18,10 @@ import CurrentRound from './CurrentRound';
 import Schedule from './Schedule';
 import Profile from './Profile';
 import Referrals from '../Referrals';
-import membersData from '../../data/members.json';
-import captainsData from '../../data/captains.json';
-
-// Import tables to match seating data dynamically
-import initialTables from '../../data/tables.json';
+import MemberProfileModal from '../../components/MemberProfileModal';
 
 export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboard', onTabChange, onLogout, conclaveSyncData }) {
+  const [selectedProfileMember, setSelectedProfileMember] = useState(null);
   const [referrals, setReferrals] = useState(() => {
     const stored = localStorage.getItem('bni_referrals');
     return stored ? JSON.parse(stored) : [];
@@ -45,15 +42,34 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
     };
   }, []);
 
-  const getMemberReferralCount = (name) => {
-    const match = membersData.find(m => m.name.toLowerCase() === name.toLowerCase()) || 
-                  captainsData.find(c => c.name.toLowerCase() === name.toLowerCase());
-    if (!match) return { given: 0, received: 0 };
-    const given = referrals.filter(r => r.fromMemberId === match.id).length;
-    const received = referrals.filter(r => r.toMemberId === match.id).length;
+  const getMemberReferralCount = (name, uid) => {
+    const targetName = (name || '').toLowerCase();
+    const targetUid = uid || (conclaveSyncData?.tableOccupants || []).find(o => o.name?.toLowerCase() === targetName)?.uid;
+
+    const allRefs = [
+      ...referrals,
+      ...(conclaveSyncData?.newReferralsReceived || []).map(r => ({
+        fromUserId: r.fromUserId,
+        fromMemberId: r.fromUserId,
+        fromName: r.giverName,
+        toUserId: conclaveSyncData?.userUid,
+        toMemberId: conclaveSyncData?.userUid
+      }))
+    ];
+
+    const given = allRefs.filter(r => 
+      (targetUid && (r.fromMemberId === targetUid || r.fromUserId === targetUid)) ||
+      (targetName && r.fromName && r.fromName.toLowerCase() === targetName) ||
+      (targetName && r.giverName && r.giverName.toLowerCase() === targetName)
+    ).length;
+
+    const received = allRefs.filter(r => 
+      (targetUid && (r.toMemberId === targetUid || r.toUserId === targetUid)) ||
+      (targetName && r.toName && r.toName.toLowerCase() === targetName)
+    ).length;
+
     return { given, received };
   };
-  const [tables, setTables] = useState(initialTables);
   const [attendance, setAttendance] = useState({});
   const [isLocked, setIsLocked] = useState(false);
   const [toast, setToast] = useState(null);
@@ -91,17 +107,20 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
     return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   };
 
-  // Find the table details assigned to this Captain
-  const myTable = tables.find(t => t.id === loggedInCaptain.tableId) || {
-    id: loggedInCaptain.tableId,
+  // Find the table details assigned to this Captain from live backend sync data
+  const liveMembers = (conclaveSyncData?.tableOccupants || []).map(m => ({
+    id: m.uid || String(m.id),
+    name: m.name,
+    category: m.category,
+    company: m.company,
+    initials: m.name ? m.name.split(' ').map(n => n[0]).filter(Boolean).join('').substring(0, 2).toUpperCase() : 'M'
+  }));
+
+  const myTable = {
+    id: conclaveSyncData?.tableNumber ? `Table ${conclaveSyncData.tableNumber}` : 'Table',
     status: 'validated',
-    capacity: '8/8',
-    members: [
-      { id: 'm-101', name: 'Anita Sharma', category: 'ARCHITECTURE', company: 'Blue Lotus Architecture', initials: 'AS' },
-      { id: 'm-102', name: 'Rajesh Varma', category: 'IT SERVICES', company: 'TechFlow Solutions', initials: 'RV' },
-      { id: 'm-103', name: 'Meera Iyer', category: 'LEGAL SERVICES', company: 'Iyer & Co Legal', initials: 'MI' },
-      { id: 'm-104', name: 'Siddharth Shah', category: 'LOGISTICS', company: 'Elite Logistics', initials: 'SS' }
-    ]
+    capacity: `${liveMembers.length}/${conclaveSyncData?.personsPerTable || 6}`,
+    members: liveMembers
   };
 
   const showToast = (title, desc) => {
@@ -175,23 +194,21 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <span className="bg-red-50 text-brand-red text-[10px] font-extrabold px-2 py-0.5 rounded uppercase tracking-widest border border-red-100/50">
-                      Running
+                      {conclaveSyncData?.conclaveStatus?.status === 'active' ? 'LIVE NOW' : 'Conclave Session'}
                     </span>
-                    <span className="text-zinc-450 font-semibold text-xs tracking-wider">Event ID: ABC-2026-05</span>
+                    <span className="text-zinc-450 font-semibold text-xs tracking-wider">
+                      ID: {conclaveSyncData?.conclaveStatus?.id || conclaveSyncData?.conclaveId || 'Guntur Region'}
+                    </span>
                   </div>
 
                   <h1 className="text-2xl md:text-3xl font-extrabold text-zinc-950 tracking-tight">
-                    Annual Business Conclave 2026
+                    {conclaveSyncData?.conclaveStatus?.name || conclaveSyncData?.conclaveName || 'Guntur central networking conclave'}
                   </h1>
 
                   <div className="flex flex-wrap gap-4 text-zinc-500 text-[13px] font-medium">
                     <div className="flex items-center gap-1.5">
                       <MapPin className="w-4.5 h-4.5 text-zinc-400" />
-                      <span>Grand Convention Center, Ballroom A</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Calendar className="w-4.5 h-4.5 text-zinc-400" />
-                      <span>Oct 24, 2026</span>
+                      <span>{conclaveSyncData?.conclaveStatus?.venue || conclaveSyncData?.venue || 'Venue Location TBD'}</span>
                     </div>
                   </div>
                 </div>
@@ -245,11 +262,34 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
                 <div className="bg-white p-4.5 rounded-xl border border-zinc-200 shadow-2xs flex flex-col justify-between h-24 col-span-2 md:col-span-1">
                   <p className="text-[11px] font-bold text-zinc-455 uppercase tracking-wide">Referral Exchange</p>
                   <div className="flex items-end justify-between mt-2">
-                    <span className="text-body-sm font-black text-zinc-900 leading-none flex items-center gap-1">
-                      <span className="text-emerald-700 font-extrabold">{referrals.filter(r => r.fromMemberId === loggedInCaptain.id).length} Given</span>
-                      <span className="text-zinc-300">•</span>
-                      <span className="text-blue-700 font-extrabold">{referrals.filter(r => r.toMemberId === loggedInCaptain.id).length} Taken</span>
-                    </span>
+                    {(() => {
+                      const myUid = loggedInCaptain?.uid || loggedInCaptain?.id;
+                      const myName = (loggedInCaptain?.name || '').toLowerCase();
+                      const allRefs = [
+                        ...referrals,
+                        ...(conclaveSyncData?.newReferralsReceived || []).map(r => ({
+                          fromUserId: r.fromUserId,
+                          fromMemberId: r.fromUserId,
+                          toUserId: myUid,
+                          toMemberId: myUid
+                        }))
+                      ];
+                      const givenCount = allRefs.filter(r => 
+                        r.fromMemberId === myUid || r.fromUserId === myUid || (r.fromName && r.fromName.toLowerCase() === myName)
+                      ).length;
+
+                      const takenCount = allRefs.filter(r => 
+                        r.toMemberId === myUid || r.toUserId === myUid || (r.toName && r.toName.toLowerCase() === myName)
+                      ).length;
+
+                      return (
+                        <span className="text-body-sm font-black text-zinc-900 leading-none flex items-center gap-1">
+                          <span className="text-emerald-700 font-extrabold">{givenCount} Given</span>
+                          <span className="text-zinc-300">•</span>
+                          <span className="text-blue-700 font-extrabold">{takenCount} Taken</span>
+                        </span>
+                      );
+                    })()}
                     <TrendingUp className="w-5 h-5 text-brand-red shrink-0" />
                   </div>
                 </div>
@@ -316,29 +356,45 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
                       <div className="border-t border-zinc-100 pt-3.5 space-y-3">
                         <span className="text-[9.5px] font-black text-zinc-450 uppercase tracking-wider block">Table Matchmaking & Insights</span>
                         
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11.5px] font-semibold text-zinc-600">
-                          <div className="space-y-1">
-                            <span className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider block">Synergy Score</span>
-                            <div className="flex items-center gap-2">
-                              <span className="text-[13px] font-black text-zinc-950 leading-none">85% Optimal</span>
-                              <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 border border-emerald-100 rounded px-1.5 py-0.5 leading-none">Excellent</span>
-                            </div>
-                          </div>
+                        {(() => {
+                          const tableOccupants = conclaveSyncData?.tableOccupants || [];
+                          const tableCategories = tableOccupants.map(m => m.category).filter(Boolean);
+                          const uniqueCats = new Set(tableCategories).size;
+                          const synergyPct = tableCategories.length > 0 ? Math.min(100, Math.round((uniqueCats / tableCategories.length) * 100)) : 100;
 
-                          <div className="space-y-1">
-                            <span className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider block">Coordinating Captain</span>
-                            <div className="text-[12px] font-extrabold text-zinc-800 leading-none pt-0.5">
-                              {loggedInCaptain.name}
-                            </div>
-                          </div>
+                          const tableChapters = Array.from(new Set(
+                            tableOccupants.map(m => m.chapter).filter(Boolean)
+                          ));
+                          const chaptersText = tableChapters.length > 0 ? tableChapters.join(', ') : 'BNI Guntur Chapters';
 
-                          <div className="space-y-1 sm:col-span-2">
-                            <span className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider block">Represented Chapters</span>
-                            <p className="text-[11px] font-extrabold text-zinc-800 leading-normal">
-                              Phoenix Chapter, South Phoenix, Vista Chapter, Downtown Chapter
-                            </p>
-                          </div>
-                        </div>
+                          return (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11.5px] font-semibold text-zinc-600">
+                              <div className="space-y-1">
+                                <span className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider block">Synergy Score</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[13px] font-black text-zinc-950 leading-none">{synergyPct}% Optimal</span>
+                                  <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 border border-emerald-100 rounded px-1.5 py-0.5 leading-none">
+                                    {synergyPct >= 80 ? 'Excellent' : synergyPct >= 60 ? 'Good' : 'Balanced'}
+                                  </span>
+                                </div>
+                              </div>
+
+                              <div className="space-y-1">
+                                <span className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider block">Coordinating Captain</span>
+                                <div className="text-[12px] font-extrabold text-zinc-800 leading-none pt-0.5">
+                                  {loggedInCaptain.name}
+                                </div>
+                              </div>
+
+                              <div className="space-y-1 sm:col-span-2">
+                                <span className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider block">Represented Chapters</span>
+                                <p className="text-[11px] font-extrabold text-zinc-800 leading-normal">
+                                  {chaptersText}
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
                   </div>
@@ -356,7 +412,8 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
                       {myTable.members.map((member) => (
                         <div
                           key={member.id}
-                          className="bg-white p-4.5 rounded-xl border border-zinc-200 hover:border-brand-red/35 hover:bg-zinc-50/20 shadow-2xs flex items-start gap-4 transition-smooth"
+                          onClick={() => setSelectedProfileMember(member)}
+                          className="bg-white p-4.5 rounded-xl border border-zinc-200 hover:border-brand-red/35 hover:bg-zinc-50/20 shadow-2xs flex items-start gap-4 transition-smooth cursor-pointer"
                         >
                           <div className="w-12 h-12 rounded-lg bg-zinc-100 border border-zinc-200 flex items-center justify-center font-bold text-sm text-zinc-500 shrink-0 shadow-inner">
                             {member.initials}
@@ -369,7 +426,7 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
                                 {member.category}
                               </span>
                               <span className="text-[9px] font-bold text-zinc-400 whitespace-nowrap">
-                                Sent: <span className="text-zinc-700">{getMemberReferralCount(member.name).given}</span> • Recv: <span className="text-zinc-700">{getMemberReferralCount(member.name).received}</span>
+                                Sent: <span className="text-zinc-700">{getMemberReferralCount(member.name, member.id).given}</span> • Recv: <span className="text-zinc-700">{getMemberReferralCount(member.name, member.id).received}</span>
                               </span>
                             </div>
                           </div>
@@ -488,6 +545,16 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
 
         </div>
       </main>
+
+      {selectedProfileMember && (
+        <MemberProfileModal
+          member={selectedProfileMember}
+          onClose={() => setSelectedProfileMember(null)}
+          onSendReferral={(m) => {
+            onTabChange && onTabChange('referrals');
+          }}
+        />
+      )}
 
       {/* Toast notifications */}
       {toast && (

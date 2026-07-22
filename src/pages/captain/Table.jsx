@@ -3,11 +3,13 @@ import { createPortal } from 'react-dom';
 import { ArrowRight, Shield, X, Award } from 'lucide-react';
 
 import ReferModal from '../../components/ReferModal';
+import MemberProfileModal from '../../components/MemberProfileModal';
 
 export default function CaptainTable({ loggedInCaptain, searchQuery, conclaveSyncData }) {
   const [selectedRound, setSelectedRound] = useState(() => conclaveSyncData?.conclaveStatus?.currentRound || 1);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [referTarget, setReferTarget] = useState(null);
+  const [selectedProfileMember, setSelectedProfileMember] = useState(null);
   const [toast, setToast] = useState(null);
 
   const roundObj = conclaveSyncData?.mySchedule?.find(s => s.number === selectedRound);
@@ -115,30 +117,40 @@ export default function CaptainTable({ loggedInCaptain, searchQuery, conclaveSyn
         <div className="lg:col-span-9 space-y-6">
           {/* Table Capacity Card */}
           <div className="bg-white p-5 rounded-xl border border-zinc-200 shadow-2xs flex flex-col justify-between">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="font-black text-zinc-900 text-body-sm">Table 5 Seating Statistics</h3>
-                <p className="text-[10px] text-zinc-400 font-semibold mt-0.5">Statistical breakdown of the currently selected round.</p>
-              </div>
-              <div className="text-right">
-                <span className="text-lg font-black text-brand-red leading-none">
-                  {Math.round((filteredMembers.length / 8) * 100)}%
-                </span>
-                <p className="text-[10px] text-zinc-400 font-semibold leading-none mt-1">{filteredMembers.length} of 8 Seats</p>
-              </div>
-            </div>
+            {(() => {
+              const tableNum = conclaveSyncData?.tableNumber || 'N/A';
+              const maxSeats = conclaveSyncData?.personsPerTable || 6;
+              const pct = Math.min(100, Math.round((filteredMembers.length / maxSeats) * 100));
 
-            <div className="w-full bg-zinc-50 rounded-full h-2.5 mb-3 overflow-hidden border border-zinc-150">
-              <div
-                className="bg-brand-red h-full rounded-full transition-all duration-700 ease-out shadow-inner"
-                style={{ width: `${(filteredMembers.length / 8) * 100}%` }}
-              ></div>
-            </div>
+              return (
+                <>
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h3 className="font-black text-zinc-900 text-body-sm">Table {tableNum} Seating Statistics</h3>
+                      <p className="text-[10px] text-zinc-400 font-semibold mt-0.5">Statistical breakdown of the currently selected round.</p>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-lg font-black text-brand-red leading-none">
+                        {pct}%
+                      </span>
+                      <p className="text-[10px] text-zinc-400 font-semibold leading-none mt-1">{filteredMembers.length} of {maxSeats} Seats</p>
+                    </div>
+                  </div>
 
-            <div className="flex justify-between text-[9px] text-zinc-400 font-bold uppercase tracking-wider">
-              <span>Optimal Seating: 8 Members Max</span>
-              <span>Diversity Index: Excellent</span>
-            </div>
+                  <div className="w-full bg-zinc-50 rounded-full h-2.5 mb-3 overflow-hidden border border-zinc-150">
+                    <div
+                      className="bg-brand-red h-full rounded-full transition-all duration-700 ease-out shadow-inner"
+                      style={{ width: `${pct}%` }}
+                    ></div>
+                  </div>
+
+                  <div className="flex justify-between text-[9px] text-zinc-400 font-bold uppercase tracking-wider">
+                    <span>Optimal Seating: {maxSeats} Members Max</span>
+                    <span>Diversity Index: High</span>
+                  </div>
+                </>
+              );
+            })()}
           </div>
 
           {/* Participant Cards Grid */}
@@ -153,14 +165,15 @@ export default function CaptainTable({ loggedInCaptain, searchQuery, conclaveSyn
                 const bgClass = member.isCaptain 
                   ? 'bg-red-50 border-red-100 text-brand-red' 
                   : 'bg-zinc-50 border-zinc-200 text-zinc-550';
-                const bniId = member.chapter ? member.chapter.substring(0, 3).toUpperCase() : 'BNI';
+                const bniTag = 'BNI';
                 return (
                   <div
                     key={member.uid || member.name}
-                    className="bg-white p-4.5 rounded-xl border border-zinc-200 hover:border-brand-red/20 shadow-2xs flex flex-col justify-between gap-4 transition-smooth"
+                    onClick={() => setSelectedProfileMember(member)}
+                    className="bg-white p-4.5 rounded-xl border border-zinc-200 hover:border-brand-red/40 shadow-2xs flex flex-col justify-between gap-4 transition-smooth cursor-pointer"
                   >
                     <div className="flex items-start gap-3.5">
-                      <div className="w-11 h-11 rounded-lg bg-zinc-50 border border-zinc-200 flex items-center justify-center font-bold text-sm text-zinc-450 shrink-0 shadow-inner">
+                      <div className="w-11 h-11 rounded-lg bg-zinc-50 border border-zinc-200 flex items-center justify-center font-bold text-sm text-zinc-455 shrink-0 shadow-inner">
                         {initials}
                       </div>
 
@@ -181,9 +194,9 @@ export default function CaptainTable({ loggedInCaptain, searchQuery, conclaveSyn
                     </div>
 
                     <div className="pt-3 border-t border-zinc-100 flex justify-between items-center text-[10px]">
-                      <span className="text-zinc-400 font-extrabold uppercase text-[9px] tracking-wide">{member.chapter || 'No Chapter'}</span>
+                      <span className="text-zinc-400 font-extrabold uppercase text-[9px] tracking-wide truncate">{member.chapter || 'BNI Chapter'}</span>
                       <span className="text-brand-red bg-red-50/50 border border-red-100 px-2 py-0.5 rounded font-mono font-bold leading-none">
-                        {bniId}
+                        {bniTag}
                       </span>
                     </div>
 
@@ -251,93 +264,119 @@ export default function CaptainTable({ loggedInCaptain, searchQuery, conclaveSyn
       </div>
 
       {/* Next Round Preview Footer */}
-      <div className="bg-white p-5 rounded-xl border border-zinc-200 shadow-2xs flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className="bg-red-50 p-2.5 rounded-lg border border-red-100 text-brand-red shrink-0 shadow-sm shadow-brand-red/5">
-            <ArrowRight className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-[9px] text-zinc-400 font-extrabold uppercase tracking-widest leading-none">Coming Up Next</p>
-            <h4 className="font-extrabold text-zinc-900 text-body-sm leading-tight mt-1.5">Round 4 Migration</h4>
-          </div>
-        </div>
-        <div className="flex items-center gap-8">
-          <div className="text-center">
-            <p className="text-[10px] text-zinc-400 font-semibold leading-none">Expected Members</p>
-            <p className="font-black text-zinc-800 text-[12px] mt-1.5">7 members</p>
-          </div>
-          <div className="text-center">
-            <p className="text-[10px] text-zinc-400 font-semibold leading-none">Start Time</p>
-            <p className="font-black text-zinc-800 text-[12px] mt-1.5">10:45 AM</p>
-          </div>
-          <button
-            onClick={() => setShowPreviewModal(true)}
-            className="bg-zinc-900 border border-zinc-800 text-white hover:bg-zinc-850 px-4.5 py-2.5 rounded-lg text-[10.5px] font-black uppercase tracking-wider transition-smooth shadow-sm cursor-pointer"
-          >
-            Preview Table List
-          </button>
-        </div>
-      </div>
+      {(() => {
+        const nextRoundNum = selectedRound + 1;
+        const nextRoundObj = conclaveSyncData?.mySchedule?.find(s => s.number === nextRoundNum);
+        if (!nextRoundObj) return null;
+        const nextMembers = nextRoundObj.participants || [];
 
-      {/* Slide-Up / Overlay Modal for Preview Table List */}
-      {showPreviewModal && createPortal(
-        <div className="fixed inset-0 bg-zinc-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fade-in font-sans">
-          <div className="bg-white rounded-xl border border-zinc-200 shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="px-5 py-4 border-b border-zinc-150 flex items-center justify-between bg-zinc-50">
-              <div className="flex items-center gap-2">
-                <Award className="w-4 h-4 text-brand-red" />
-                <h3 className="font-black text-zinc-955 text-body-md">Round 4 Table Seating Preview</h3>
-              </div>
-              <button
-                onClick={() => setShowPreviewModal(false)}
-                className="text-zinc-400 hover:text-zinc-700 p-1 rounded-lg hover:bg-zinc-200/50 transition-smooth cursor-pointer"
-              >
-                <X className="w-4.5 h-4.5" />
-              </button>
-            </div>
-
-            <div className="p-5 overflow-y-auto space-y-4">
-              <div className="flex justify-between items-center bg-red-50/50 border border-red-100 p-3 rounded-lg text-[11.5px] font-semibold text-brand-red">
-                <span>Migration Target: Table 5</span>
-                <span>Expected Occupancy: 7 / 8 Seats</span>
-              </div>
-
-              <div className="space-y-2.5">
-                <span className="text-[9.5px] font-black text-zinc-450 uppercase tracking-wider block">Incoming Members Grid</span>
-                <div className="space-y-2">
-                  {roundData[4].map((member) => (
-                    <div key={member.id} className="flex items-center justify-between p-3 bg-zinc-50 border border-zinc-200 rounded-lg text-[11.5px]">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded bg-white border border-zinc-200 flex items-center justify-center font-bold text-zinc-500 text-xs shrink-0">
-                          {member.initials}
-                        </div>
-                        <div>
-                          <span className="font-black text-zinc-850 block leading-tight">{member.name}</span>
-                          <span className="text-[9.5px] text-zinc-400 font-semibold">{member.company}</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="px-1.5 py-0.5 bg-red-50 border border-red-100 text-brand-red text-[8px] font-black rounded uppercase">
-                          {member.category}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
+        return (
+          <>
+            <div className="bg-white p-5 rounded-xl border border-zinc-200 shadow-2xs flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="bg-red-50 p-2.5 rounded-lg border border-red-100 text-brand-red shrink-0 shadow-sm shadow-brand-red/5">
+                  <ArrowRight className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-[9px] text-zinc-400 font-extrabold uppercase tracking-widest leading-none">Coming Up Next</p>
+                  <h4 className="font-extrabold text-zinc-900 text-body-sm leading-tight mt-1.5">Round {nextRoundNum} Migration</h4>
                 </div>
               </div>
+              <div className="flex items-center gap-8">
+                <div className="text-center">
+                  <p className="text-[10px] text-zinc-400 font-semibold leading-none">Expected Members</p>
+                  <p className="font-black text-zinc-800 text-[12px] mt-1.5">{nextMembers.length} members</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-[10px] text-zinc-400 font-semibold leading-none">Scheduled Time</p>
+                  <p className="font-black text-zinc-800 text-[12px] mt-1.5">{nextRoundObj.time || 'Next Session'}</p>
+                </div>
+                <button
+                  onClick={() => setShowPreviewModal(true)}
+                  className="bg-zinc-900 border border-zinc-800 text-white hover:bg-zinc-850 px-4.5 py-2.5 rounded-lg text-[10.5px] font-black uppercase tracking-wider transition-smooth shadow-sm cursor-pointer"
+                >
+                  Preview Table List
+                </button>
+              </div>
             </div>
 
-            <div className="p-4 border-t border-zinc-150 flex justify-end bg-zinc-50">
-              <button
-                onClick={() => setShowPreviewModal(false)}
-                className="px-4 py-2 bg-zinc-900 hover:bg-zinc-850 text-white rounded-lg text-[10.5px] font-black uppercase tracking-wider transition-smooth cursor-pointer"
-              >
-                Close Preview
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
+            {showPreviewModal && createPortal(
+              <div className="fixed inset-0 bg-zinc-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fade-in font-sans">
+                <div className="bg-white rounded-xl border border-zinc-200 shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+                  <div className="px-5 py-4 border-b border-zinc-150 flex items-center justify-between bg-zinc-50">
+                    <div className="flex items-center gap-2">
+                      <Award className="w-4 h-4 text-brand-red" />
+                      <h3 className="font-black text-zinc-955 text-body-md">Round {nextRoundNum} Table Seating Preview</h3>
+                    </div>
+                    <button
+                      onClick={() => setShowPreviewModal(false)}
+                      className="text-zinc-400 hover:text-zinc-700 p-1 rounded-lg hover:bg-zinc-200/50 transition-smooth cursor-pointer"
+                    >
+                      <X className="w-4.5 h-4.5" />
+                    </button>
+                  </div>
+
+                  <div className="p-5 overflow-y-auto space-y-4">
+                    <div className="flex justify-between items-center bg-red-50/50 border border-red-100 p-3 rounded-lg text-[11.5px] font-semibold text-brand-red">
+                      <span>Table Number: Table {nextRoundObj.tableNumber || conclaveSyncData?.tableNumber}</span>
+                      <span>Expected Occupancy: {nextMembers.length} Seats</span>
+                    </div>
+
+                    <div className="space-y-2.5">
+                      <span className="text-[9.5px] font-black text-zinc-450 uppercase tracking-wider block">Incoming Members Grid</span>
+                      <div className="space-y-2">
+                        {nextMembers.map((member, idx) => (
+                          <div key={member.uid || member.id || idx} className="flex items-center justify-between p-3 bg-zinc-50 border border-zinc-200 rounded-lg text-[11.5px]">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded bg-white border border-zinc-200 flex items-center justify-center font-bold text-zinc-500 text-xs shrink-0">
+                                {(member.name || 'M').split(' ').map(n => n[0]).filter(Boolean).join('').substring(0, 2).toUpperCase()}
+                              </div>
+                              <div>
+                                <span className="font-black text-zinc-850 block leading-tight">{member.name}</span>
+                                <span className="text-[9.5px] text-zinc-400 font-semibold">{member.company}</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="px-1.5 py-0.5 bg-red-50 border border-red-100 text-brand-red text-[8px] font-black rounded uppercase">
+                                {member.category}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                        {nextMembers.length === 0 && (
+                          <p className="text-zinc-400 text-xs text-center py-4">No member details available for next round.</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-4 border-t border-zinc-150 flex justify-end bg-zinc-50">
+                    <button
+                      onClick={() => setShowPreviewModal(false)}
+                      className="px-4 py-2 bg-zinc-900 hover:bg-zinc-850 text-white rounded-lg text-[10.5px] font-black uppercase tracking-wider transition-smooth cursor-pointer"
+                    >
+                      Close Preview
+                    </button>
+                  </div>
+                </div>
+              </div>,
+              document.body
+            )}
+          </>
+        );
+      })()}
+
+      {selectedProfileMember && (
+        <MemberProfileModal
+          member={selectedProfileMember}
+          onClose={() => setSelectedProfileMember(null)}
+          onSendReferral={(m) => setReferTarget({
+            id: m.uid || m.id,
+            name: m.name,
+            company: m.company,
+            category: m.category
+          })}
+        />
       )}
 
       {referTarget && (

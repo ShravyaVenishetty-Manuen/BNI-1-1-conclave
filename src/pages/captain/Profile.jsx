@@ -14,14 +14,14 @@ export default function CaptainProfile({ loggedInCaptain, onTabChange, onLogout 
   // Local editable state for profile info
   const [isEditing, setIsEditing] = useState(false);
   const [profileData, setProfileData] = useState({
-    name: loggedInCaptain?.name || 'Ganesh V.',
-    email: loggedInCaptain?.email || 'ganesh.v@bni-guntur.in',
-    phone: loggedInCaptain?.phone || loggedInCaptain?.mobile || '+91 98765 43210',
+    name: loggedInCaptain?.name || 'Captain',
+    email: loggedInCaptain?.email || '',
+    phone: loggedInCaptain?.phone || loggedInCaptain?.mobile || '',
     designation: loggedInCaptain?.designation || 'Table Captain',
-    company: loggedInCaptain?.company || 'Varma & Associates',
-    category: loggedInCaptain?.category || 'Financial Consulting',
-    chapter: loggedInCaptain?.chapter || 'Phoenix Chapter',
-    registrationDate: loggedInCaptain?.registrationDate || loggedInCaptain?.joinedDate || 'November 2023'
+    company: loggedInCaptain?.company || loggedInCaptain?.businessName || '',
+    category: loggedInCaptain?.category || loggedInCaptain?.businessCategory || '',
+    chapter: loggedInCaptain?.chapter || 'BNI Chapter',
+    registrationDate: loggedInCaptain?.registrationDate || loggedInCaptain?.joinedDate || '2026'
   });
 
   const [emailNotifications, setEmailNotifications] = useState(true);
@@ -45,12 +45,15 @@ export default function CaptainProfile({ loggedInCaptain, onTabChange, onLogout 
     }
   };
 
-  const displayInitials = profileData.name
+  const displayInitials = (profileData.name || 'Captain')
     .split(' ')
     .map(n => n[0])
+    .filter(Boolean)
     .join('')
     .substring(0, 2)
     .toUpperCase();
+
+  const captainId = loggedInCaptain?.uid || loggedInCaptain?.id || loggedInCaptain?.bniId;
 
   return (
     <div className="space-y-8 animate-fade-in font-sans pb-16">
@@ -58,7 +61,7 @@ export default function CaptainProfile({ loggedInCaptain, onTabChange, onLogout 
       {/* Page Header */}
       <div>
         <h1 className="text-2xl md:text-3xl font-black text-zinc-955 tracking-tight">Profile &amp; Settings</h1>
-        <p className="text-xs text-zinc-500 font-semibold mt-1">Manage your account information, conclave role, and system preferences.</p>
+        <p className="text-xs text-zinc-500 font-semibold mt-1">Manage your account information, captain role, and system preferences.</p>
       </div>
 
       <div className="grid grid-cols-12 gap-6 items-start">
@@ -85,18 +88,20 @@ export default function CaptainProfile({ loggedInCaptain, onTabChange, onLogout 
               </div>
 
               <p className="text-[12px] text-zinc-500 font-semibold mt-2.5 leading-snug">
-                {profileData.category} at <strong className="text-zinc-800 font-bold">{profileData.company}</strong>
+                {profileData.category} {profileData.company ? `at ${profileData.company}` : ''}
               </p>
 
               <div className="grid grid-cols-2 gap-4 w-full mt-6 py-2">
                 <div>
                   <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">Captain ID</p>
-                  <p className="font-black text-zinc-800 text-[12.5px] mt-0.5">{loggedInCaptain?.bniId || loggedInCaptain?.id || 'BNI-CAPT-01'}</p>
+                  <p className="font-black text-zinc-800 text-[12.5px] mt-0.5 uppercase truncate" title={captainId}>
+                    {captainId ? `BNI-${captainId.substring(0, 6).toUpperCase()}` : 'BNI-CAPT'}
+                  </p>
                 </div>
                 <div>
-                  <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">Table</p>
+                  <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">Role</p>
                   <p className="font-black text-zinc-800 text-[12.5px] mt-0.5">
-                    {loggedInCaptain?.tableId?.toLowerCase().startsWith('table') ? loggedInCaptain?.tableId : `Table ${loggedInCaptain?.tableId || '5'}`}
+                    Table Captain
                   </p>
                 </div>
               </div>
@@ -123,13 +128,13 @@ export default function CaptainProfile({ loggedInCaptain, onTabChange, onLogout 
             </div>
           </section>
 
-          {/* Networking Summary KPIs */}
+          {/* Captain Summary KPIs */}
           <section className="grid grid-cols-2 gap-3">
             {[
-              { label: "Verified Seating", value: "8 / 8" },
-              { label: "Total Rounds", value: 6 },
-              { label: "Members met", value: 48 },
-              { label: "Conflicts Resolved", value: 0 }
+              { label: "Role", value: "Captain" },
+              { label: "Conclaves", value: "1 Active" },
+              { label: "Rounds", value: "4 Total" },
+              { label: "Status", value: "Verified" }
             ].map((kpi, idx) => (
               <div key={idx} className="bg-white border border-zinc-200 p-4 rounded-xl shadow-2xs">
                 <p className="text-[9px] font-black text-zinc-400 uppercase tracking-wider">{kpi.label}</p>
@@ -174,7 +179,7 @@ export default function CaptainProfile({ loggedInCaptain, onTabChange, onLogout 
                 { label: "Company", key: "company", type: "text" },
                 { label: "Business Category", key: "category", type: "text" },
                 { label: "BNI Chapter", key: "chapter", type: "text", disabled: true },
-                { label: "Joined Date", key: "registrationDate", type: "text", disabled: true }
+                { label: "Registration Date", key: "registrationDate", type: "text", disabled: true }
               ].map((field) => (
                 <div key={field.key}>
                   <label className="block text-[9.5px] font-black text-zinc-400 uppercase tracking-wider mb-1.5">{field.label}</label>
@@ -186,7 +191,7 @@ export default function CaptainProfile({ loggedInCaptain, onTabChange, onLogout 
                       className="w-full h-10 px-3 border border-zinc-250 rounded-lg text-body-sm font-semibold text-zinc-800 placeholder-zinc-400 focus:ring-1 focus:ring-brand-red focus:border-brand-red focus:outline-hidden"
                     />
                   ) : (
-                    <p className="text-body-sm font-bold text-zinc-800 leading-tight">{profileData[field.key]}</p>
+                    <p className="text-body-sm font-bold text-zinc-800 leading-tight">{profileData[field.key] || 'Not specified'}</p>
                   )}
                 </div>
               ))}
@@ -196,7 +201,7 @@ export default function CaptainProfile({ loggedInCaptain, onTabChange, onLogout 
           {/* Two Column Settings & Activity */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-            {/* Account Preferences */}
+            {/* Account Settings */}
             <section className="bg-white border border-zinc-200 rounded-xl shadow-2xs flex flex-col justify-between">
               <div>
                 <div className="p-4 bg-zinc-50 rounded-t-xl">
@@ -223,7 +228,7 @@ export default function CaptainProfile({ loggedInCaptain, onTabChange, onLogout 
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-[12px] font-black text-zinc-800 leading-none">Push Notifications</p>
-                      <p className="text-[10px] text-zinc-455 font-semibold mt-1">Real-time alerts</p>
+                      <p className="text-[10px] text-zinc-450 font-semibold mt-1">Real-time alerts</p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer select-none">
                       <input
@@ -267,18 +272,18 @@ export default function CaptainProfile({ loggedInCaptain, onTabChange, onLogout 
               {/* Security Display */}
               <div className="p-4 bg-zinc-50 rounded-b-xl space-y-2">
                 <div className="flex items-center gap-1.5 text-zinc-450">
-                  <Shield className="w-3.5 h-3.5" />
-                  <span className="text-[8.5px] font-black uppercase tracking-wider">Security Status</span>
+                  <Shield className="w-3.5 h-3.5 text-brand-red" />
+                  <span className="text-[8.5px] font-black uppercase tracking-wider text-zinc-700">Security Status</span>
                 </div>
                 <div className="flex justify-between items-center text-[11px] font-semibold text-zinc-500">
-                  <span>Last Login</span>
-                  <span className="text-zinc-700 font-bold">Today, 08:30 AM</span>
+                  <span>Last Authentication</span>
+                  <span className="text-zinc-700 font-bold">Session Active</span>
                 </div>
                 <div className="flex justify-between items-center text-[11px] font-semibold text-zinc-500">
-                  <span>Active Session</span>
+                  <span>Current Session</span>
                   <span className="text-emerald-600 font-bold flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                    Singapore
+                    Verified Device
                   </span>
                 </div>
               </div>
@@ -287,7 +292,7 @@ export default function CaptainProfile({ loggedInCaptain, onTabChange, onLogout 
             {/* Recent Activity Timeline */}
             <section className="bg-white border border-zinc-200 rounded-xl shadow-2xs flex flex-col">
               <div className="p-4 bg-zinc-50 rounded-t-xl">
-                <h2 className="text-body-sm font-black text-zinc-900 leading-tight">Recent Activity</h2>
+                <h2 className="text-body-sm font-black text-zinc-900 leading-tight">Account Activity</h2>
               </div>
 
               <div className="p-5 flex-grow relative">
@@ -300,9 +305,9 @@ export default function CaptainProfile({ loggedInCaptain, onTabChange, onLogout 
                       <CheckCircle className="w-3.5 h-3.5 fill-current" />
                     </div>
                     <div>
-                      <p className="text-[12px] font-black text-zinc-800 leading-tight">Schedule Verified</p>
-                      <p className="text-[10px] text-zinc-450 font-semibold mt-0.5">Table 5 seating assignments confirmed</p>
-                      <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mt-1">2 hours ago</p>
+                      <p className="text-[12px] font-black text-zinc-800 leading-tight">Captain Session Active</p>
+                      <p className="text-[10px] text-zinc-450 font-semibold mt-0.5">Firebase Auth active for {loggedInCaptain?.email || 'Captain'}</p>
+                      <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mt-1">Active Session</p>
                     </div>
                   </div>
 
@@ -311,27 +316,12 @@ export default function CaptainProfile({ loggedInCaptain, onTabChange, onLogout 
                       <LayoutGrid className="w-3.5 h-3.5" />
                     </div>
                     <div>
-                      <p className="text-[12px] font-black text-zinc-800 leading-tight">Assigned as Table Captain</p>
-                      <p className="text-[10px] text-zinc-450 font-semibold mt-0.5">Role: Table Captain assigned by Region Admin</p>
-                      <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mt-1">Yesterday, 4:15 PM</p>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3 relative z-10">
-                    <div className="w-6.5 h-6.5 rounded-full bg-zinc-50 border border-zinc-200 text-zinc-400 flex items-center justify-center shadow-xs shrink-0 select-none">
-                      <LogIn className="w-3.5 h-3.5" />
-                    </div>
-                    <div>
-                      <p className="text-[12px] font-black text-zinc-800 leading-tight">New Login Session</p>
-                      <p className="text-[10px] text-zinc-450 font-semibold mt-0.5">Desktop Login from Guntur IP: 157.44.XX.X</p>
-                      <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mt-1">Today, 08:30 AM</p>
+                      <p className="text-[12px] font-black text-zinc-800 leading-tight">Table Synchronization</p>
+                      <p className="text-[10px] text-zinc-450 font-semibold mt-0.5">Table assignments synced with backend engine</p>
+                      <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mt-1">Live Status</p>
                     </div>
                   </div>
                 </div>
-
-                <button className="w-full mt-5 text-[10px] font-black text-brand-red uppercase tracking-wider hover:underline text-center">
-                  View All Activity
-                </button>
               </div>
             </section>
 
