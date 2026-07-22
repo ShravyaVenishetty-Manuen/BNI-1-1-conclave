@@ -158,15 +158,23 @@ export default function BusinessTypes({ searchQuery, selectedConclaveId }) {
   const totalMembersCount = categoriesWithCounts.reduce((sum, c) => sum + c.memberCount, 0);
   const inactiveCount = categoriesWithCounts.filter(c => c.status === 'Inactive').length;
 
+  // Reset page on filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+    setSelectedRows(new Set());
+  }, [searchVal, statusFilter]);
+
   // Filtered List
   const filteredCategories = useMemo(() => {
-    setCurrentPage(1); // Reset to page 1 on filter changes
-    setSelectedRows(new Set());
+    const q = (searchVal || '').trim().toLowerCase();
+
     return categoriesWithCounts.filter(cat => {
-      const matchesSearch =
-        cat.name.toLowerCase().includes(searchVal.toLowerCase()) ||
-        cat.id.toLowerCase().includes(searchVal.toLowerCase()) ||
-        cat.description.toLowerCase().includes(searchVal.toLowerCase());
+      const matchesSearch = !q || (
+        (cat.name && cat.name.toLowerCase().includes(q)) ||
+        (cat.id && cat.id.toLowerCase().includes(q)) ||
+        (cat.description && cat.description.toLowerCase().includes(q)) ||
+        (cat.status && cat.status.toLowerCase().includes(q))
+      );
 
       const matchesStatus = statusFilter === 'All' || cat.status === statusFilter;
 
@@ -176,9 +184,11 @@ export default function BusinessTypes({ searchQuery, selectedConclaveId }) {
 
   // Paginated List
   const paginatedCategories = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
+    const totalPages = Math.ceil(filteredCategories.length / itemsPerPage) || 1;
+    const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+    const startIndex = (safeCurrentPage - 1) * itemsPerPage;
     return filteredCategories.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredCategories, currentPage]);
+  }, [filteredCategories, currentPage, itemsPerPage]);
 
   const openAddModal = () => {
     setEditingCategory(null);

@@ -115,9 +115,9 @@ export default function Members({ searchQuery, selectedConclaveId }) {
   const itemsPerPage = 5;
 
   // Reset to first page when search or filters change
-  useMemo(() => {
+  useEffect(() => {
     setCurrentPage(1);
-  }, [searchVal, categoryFilter, captainFilter, statusFilter]);
+  }, [searchVal, categoryFilter, captainFilter, statusFilter, stateFilter, countryFilter, viewScope]);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingMember, setEditingMember] = useState(null);
@@ -238,12 +238,12 @@ export default function Members({ searchQuery, selectedConclaveId }) {
 
   // Filtered members list
   const filteredMembers = useMemo(() => {
+    const q = (searchVal || '').trim().toLowerCase();
+    const tokens = q ? q.split(/\s+/) : [];
+
     return conclaveMembers.filter(member => {
-      const matchesSearch =
-        member.name.toLowerCase().includes(searchVal.toLowerCase()) ||
-        member.id.toLowerCase().includes(searchVal.toLowerCase()) ||
-        member.email.toLowerCase().includes(searchVal.toLowerCase()) ||
-        member.phone.includes(searchVal);
+      const memberText = `${member.name || ''} ${member.id || ''} ${member.email || ''} ${member.phone || ''} ${member.company || ''} ${member.category || ''} ${member.chapter || ''} ${member.address || ''}`.toLowerCase();
+      const matchesSearch = !q || tokens.every(token => memberText.includes(token));
 
       const matchesCategory = categoryFilter === 'All' || member.category === categoryFilter;
 
@@ -267,7 +267,9 @@ export default function Members({ searchQuery, selectedConclaveId }) {
 
   // Paginated members slice
   const paginatedMembers = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
+    const totalPages = Math.ceil(filteredMembers.length / itemsPerPage) || 1;
+    const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+    const startIndex = (safeCurrentPage - 1) * itemsPerPage;
     return filteredMembers.slice(startIndex, startIndex + itemsPerPage);
   }, [filteredMembers, currentPage, itemsPerPage]);
 

@@ -117,11 +117,19 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
   }));
 
   const myTable = {
-    id: conclaveSyncData?.tableNumber ? `Table ${conclaveSyncData.tableNumber}` : 'Table',
-    status: 'validated',
     capacity: `${liveMembers.length}/${conclaveSyncData?.personsPerTable || 6}`,
     members: liveMembers
   };
+
+  const filteredMyTableMembers = useMemo(() => {
+    const list = myTable?.members || [];
+    if (!searchQuery || !searchQuery.trim()) return list;
+    const tokens = searchQuery.trim().toLowerCase().split(/\s+/);
+    return list.filter(m => {
+      const text = `${m.name || ''} ${m.company || ''} ${m.category || ''} ${m.chapter || ''}`.toLowerCase();
+      return tokens.every(token => text.includes(token));
+    });
+  }, [myTable?.members, searchQuery]);
 
   const showToast = (title, desc) => {
     setToast({ title, desc });
@@ -409,7 +417,7 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-                      {myTable.members.map((member) => (
+                      {filteredMyTableMembers.map((member) => (
                         <div
                           key={member.id}
                           onClick={() => setSelectedProfileMember(member)}

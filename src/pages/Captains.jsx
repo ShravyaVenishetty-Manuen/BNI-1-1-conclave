@@ -160,15 +160,20 @@ export default function Captains({ searchQuery, selectedConclaveId }) {
     return ['All', ...Array.from(list).sort()];
   }, [captains]);
 
-  // Filtered List
-  const filteredCaptains = useMemo(() => {
+  // Reset to page 1 on filter changes
+  useEffect(() => {
     setCurrentPage(1);
     setSelectedRows(new Set());
+  }, [searchVal, categoryFilter, statusFilter, stateFilter, countryFilter, viewScope]);
+
+  // Filtered List
+  const filteredCaptains = useMemo(() => {
+    const q = (searchVal || '').trim().toLowerCase();
+    const tokens = q ? q.split(/\s+/) : [];
+
     return conclaveCaptains.filter(cap => {
-      const matchesSearch =
-        cap.name.toLowerCase().includes(searchVal.toLowerCase()) ||
-        cap.id.toLowerCase().includes(searchVal.toLowerCase()) ||
-        cap.email.toLowerCase().includes(searchVal.toLowerCase());
+      const capText = `${cap.name || ''} ${cap.id || ''} ${cap.email || ''} ${cap.phone || ''} ${cap.company || ''} ${cap.category || ''} ${cap.chapter || ''} ${cap.address || ''}`.toLowerCase();
+      const matchesSearch = !q || tokens.every(token => capText.includes(token));
 
       const matchesCategory = categoryFilter === 'All' || cap.category === categoryFilter;
       const matchesStatus = statusFilter === 'All' || cap.status === statusFilter;
@@ -185,9 +190,11 @@ export default function Captains({ searchQuery, selectedConclaveId }) {
 
   // Paginated List
   const paginatedCaptains = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
+    const totalPages = Math.ceil(filteredCaptains.length / itemsPerPage) || 1;
+    const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+    const startIndex = (safeCurrentPage - 1) * itemsPerPage;
     return filteredCaptains.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredCaptains, currentPage]);
+  }, [filteredCaptains, currentPage, itemsPerPage]);
 
   // Checkbox functions
   const toggleRow = (id, e) => {

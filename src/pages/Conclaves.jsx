@@ -165,17 +165,25 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
     return ['All', ...Array.from(list).sort()];
   }, [conclaves]);
 
-  // Filtered & Sorted conclaves
-  const filteredConclaves = useMemo(() => {
+  // Reset page on filter changes
+  useEffect(() => {
     setCurrentPage(1);
     setSelectedRows(new Set());
+  }, [searchVal, statusFilter, venueFilter, stateFilter, countryFilter, sortBy, viewScope]);
+
+  // Filtered & Sorted conclaves
+  const filteredConclaves = useMemo(() => {
+    const q = (searchVal || '').trim().toLowerCase();
 
     let result = conclaves.filter(c => {
-      const matchesSearch =
-        c.name.toLowerCase().includes(searchVal.toLowerCase()) ||
-        c.venue.toLowerCase().includes(searchVal.toLowerCase()) ||
-        c.coordinator.toLowerCase().includes(searchVal.toLowerCase()) ||
-        c.id.toLowerCase().includes(searchVal.toLowerCase());
+      const matchesSearch = !q || (
+        (c.name && c.name.toLowerCase().includes(q)) ||
+        (c.venue && c.venue.toLowerCase().includes(q)) ||
+        (c.coordinator && c.coordinator.toLowerCase().includes(q)) ||
+        (c.id && c.id.toLowerCase().includes(q)) ||
+        (c.region && c.region.toLowerCase().includes(q)) ||
+        (c.status && c.status.toLowerCase().includes(q))
+      );
 
       const matchesStatus = statusFilter === 'All' || c.status === statusFilter;
       const matchesVenue = venueFilter === 'All' || c.venueShort === venueFilter;
@@ -200,9 +208,11 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
 
   // Paginated list
   const paginatedConclaves = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
+    const totalPages = Math.ceil(filteredConclaves.length / itemsPerPage) || 1;
+    const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+    const startIndex = (safeCurrentPage - 1) * itemsPerPage;
     return filteredConclaves.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredConclaves, currentPage]);
+  }, [filteredConclaves, currentPage, itemsPerPage]);
 
   const toggleRow = (id, e) => {
     e.stopPropagation();

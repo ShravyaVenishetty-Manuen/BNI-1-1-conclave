@@ -379,6 +379,8 @@ export default function App() {
         onTabChange={handleTabChange}
         onLogout={handleLogout}
         conclaveSyncData={conclaveSyncData}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
       />
     );
   }
@@ -401,34 +403,40 @@ export default function App() {
               loggedInMember={memberProfile || loggedInMember}
               onTabChange={handleTabChange}
               conclaveSyncData={conclaveSyncData}
+              searchQuery={searchQuery}
             />
           ) : activeTab === 'registrations' ? (
             <MemberRegistrations
               loggedInMember={memberProfile || loggedInMember}
               memberConclaves={memberConclaves}
+              searchQuery={searchQuery}
             />
           ) : activeTab === 'my-schedule' ? (
             <MemberSchedule
               loggedInMember={memberProfile || loggedInMember}
               onTabChange={handleTabChange}
               conclaveSyncData={conclaveSyncData}
+              searchQuery={searchQuery}
             />
           ) : activeTab === 'current-round' ? (
             <MemberCurrentRound
               loggedInMember={memberProfile || loggedInMember}
               onTabChange={handleTabChange}
               conclaveSyncData={conclaveSyncData}
+              searchQuery={searchQuery}
             />
           ) : activeTab === 'history' ? (
             <MemberConclaveHistory
               loggedInMember={memberProfile || loggedInMember}
               memberConclaves={memberConclaves}
+              searchQuery={searchQuery}
             />
           ) : activeTab === 'referrals' ? (
             <Referrals
               loggedInUser={memberProfile || loggedInMember}
               userType="member"
               conclaveSyncData={conclaveSyncData}
+              searchQuery={searchQuery}
             />
           ) : activeTab === 'profile' ? (
             <MemberProfile

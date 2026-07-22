@@ -161,15 +161,24 @@ export default function ActiveUsers({ searchQuery, selectedConclaveId }) {
     return logs;
   }, [sessions]);
 
-  // Filtered Sessions
-  const filteredSessions = useMemo(() => {
+  // Reset page on filter change
+  useEffect(() => {
     setCurrentPage(1);
     setSelectedRows(new Set());
+  }, [searchVal, statusFilter]);
+
+  // Filtered Sessions
+  const filteredSessions = useMemo(() => {
+    const q = (searchVal || '').trim().toLowerCase();
+
     return conclaveSessions.filter(s => {
-      const matchesSearch =
-        s.name.toLowerCase().includes(searchVal.toLowerCase()) ||
-        s.id.toLowerCase().includes(searchVal.toLowerCase()) ||
-        s.category.toLowerCase().includes(searchVal.toLowerCase());
+      const matchesSearch = !q || (
+        (s.name && s.name.toLowerCase().includes(q)) ||
+        (s.id && s.id.toLowerCase().includes(q)) ||
+        (s.category && s.category.toLowerCase().includes(q)) ||
+        (s.role && s.role.toLowerCase().includes(q)) ||
+        (s.loginTime && s.loginTime.toLowerCase().includes(q))
+      );
 
       const matchesStatus =
         statusFilter === 'All' ||
@@ -181,9 +190,11 @@ export default function ActiveUsers({ searchQuery, selectedConclaveId }) {
 
   // Paginated Sessions
   const paginatedSessions = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
+    const totalPages = Math.ceil(filteredSessions.length / itemsPerPage) || 1;
+    const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+    const startIndex = (safeCurrentPage - 1) * itemsPerPage;
     return filteredSessions.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredSessions, currentPage]);
+  }, [filteredSessions, currentPage, itemsPerPage]);
 
   // Checkbox toggle logic
   const toggleRow = (id, e) => {

@@ -14,10 +14,20 @@ import {
 import ReferModal from '../../components/ReferModal';
 import MemberProfileModal from '../../components/MemberProfileModal';
 
-export default function MemberDashboard({ loggedInMember, onTabChange, conclaveSyncData }) {
+export default function MemberDashboard({ loggedInMember, onTabChange, conclaveSyncData, searchQuery }) {
   const [referTarget, setReferTarget] = useState(null);
   const [selectedProfileMember, setSelectedProfileMember] = useState(null);
   const [toast, setToast] = useState(null);
+
+  const filteredOccupants = useMemo(() => {
+    const list = conclaveSyncData?.tableOccupants || [];
+    if (!searchQuery || !searchQuery.trim()) return list;
+    const tokens = searchQuery.trim().toLowerCase().split(/\s+/);
+    return list.filter(m => {
+      const text = `${m.name || ''} ${m.company || ''} ${m.category || ''} ${m.chapter || ''}`.toLowerCase();
+      return tokens.every(token => text.includes(token));
+    });
+  }, [conclaveSyncData?.tableOccupants, searchQuery]);
   
   const [timeLeft, setTimeLeft] = useState(600);
   const initialTime = 600; // 10 mins total round duration
@@ -366,7 +376,7 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {(conclaveSyncData?.tableOccupants || []).map((member) => {
+            {filteredOccupants.map((member) => {
               const initials = member.name.split(' ').map(n => n[0]).filter(Boolean).join('').substring(0, 2).toUpperCase() || 'M';
               return (
                 <div
