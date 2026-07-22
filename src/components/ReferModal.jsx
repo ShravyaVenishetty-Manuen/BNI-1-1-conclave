@@ -1,41 +1,71 @@
 import React, { useState } from 'react';
 import { Send, X, AlertCircle } from 'lucide-react';
 import { addNotification } from '../utils/notifications';
+import { api } from '../services/api';
 
-export default function ReferModal({ recipient, loggedInUser, onClose, onSuccess }) {
+export default function ReferModal({ recipient, loggedInUser, activeConclaveId, onClose, onSuccess }) {
   const [description, setDescription] = useState('');
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!description.trim()) {
       setError('Please enter referral lead details.');
       return;
     }
 
-    const stored = localStorage.getItem('bni_referrals');
-    const referrals = stored ? JSON.parse(stored) : [];
+    setIsSubmitting(true);
+    setError('');
+
+    const fromUid = loggedInUser?.uid || loggedInUser?.id;
+    const toUid = recipient?.uid || recipient?.id || recipient?._originalUid;
+    const refId = `ref_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
 
     const newReferral = {
-      id: `REF-${Date.now()}`,
-      fromMemberId: loggedInUser.id || loggedInUser.bniId || 'MEM-LOCAL',
-      fromName: loggedInUser.name,
-      toMemberId: recipient.id || recipient.bniId || recipient.name, // match name if id not present
-      toName: recipient.name,
+      id: refId,
+      fromUserId: fromUid,
+      fromMemberId: fromUid,
+      fromName: loggedInUser?.name,
+      toUserId: toUid,
+      toMemberId: toUid,
+      toName: recipient?.name,
+      notes: description,
       description: description,
-      status: 'Pending',
+      roundNumber: recipient?.roundNumber || 1,
+      timestamp: new Date().toISOString(),
       date: new Date().toISOString().split('T')[0]
     };
 
+    // 1. Save to local storage backup
+    const stored = localStorage.getItem('bni_referrals');
+    const referrals = stored ? JSON.parse(stored) : [];
     const updatedList = [newReferral, ...referrals];
     localStorage.setItem('bni_referrals', JSON.stringify(updatedList));
 
-    // Push local notification
-    addNotification('Referral Sent', `Submitted referral lead slip for ${recipient.name}.`, 'success');
+    // 2. Submit to backend API if active conclave ID is present
+    if (activeConclaveId) {
+      try {
+        await api.post(`/conclaves/${activeConclaveId}/sync`, {
+          referrals: [{
+            id: refId,
+            fromUserId: fromUid,
+            toUserId: toUid,
+            roundNumber: recipient?.roundNumber || 1,
+            notes: description,
+            timestamp: new Date().toISOString()
+          }]
+        });
+      } catch (err) {
+        console.warn("Backend sync failed for referral (stored locally):", err.message);
+      }
+    }
 
-    // Notify other windows/tabs
+    // Push local notification & trigger storage event
+    addNotification('Referral Sent', `Submitted referral lead slip for ${recipient.name}.`, 'success');
     window.dispatchEvent(new Event('storage'));
 
+    setIsSubmitting(false);
     if (onSuccess) {
       onSuccess(`Referral slip submitted for ${recipient.name}!`);
     }

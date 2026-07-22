@@ -13,7 +13,7 @@ import {
 import membersData from '../data/members.json';
 import captainsData from '../data/captains.json';
 
-export default function Referrals({ loggedInUser, userType }) {
+export default function Referrals({ loggedInUser, userType, conclaveSyncData }) {
   const [referrals, setReferrals] = useState([]);
   const [activeSubTab, setActiveSubTab] = useState('received'); // 'received' or 'sent'
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -42,11 +42,31 @@ export default function Referrals({ loggedInUser, userType }) {
     );
   }
 
-  // Filter members and captains as potential recipients
+  const myUid = loggedInUser?.uid || loggedInUser?.id;
+  const myName = (loggedInUser?.name || '').toLowerCase();
+
+  // Merge backend newReferralsReceived from conclaveSyncData if available
+  const backendReceived = (conclaveSyncData?.newReferralsReceived || []).map(r => ({
+    id: r.id,
+    fromMemberId: r.fromUserId,
+    fromUserId: r.fromUserId,
+    fromName: r.giverName || 'Member',
+    toMemberId: myUid,
+    toUserId: myUid,
+    toName: loggedInUser?.name,
+    description: r.notes || 'Referral lead shared during seating round',
+    status: 'Pending',
+    date: r.createdAt ? new Date(r.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
+  }));
+
+  const allReferrals = [...referrals, ...backendReceived];
+  const uniqueReferrals = Array.from(new Map(allReferrals.map(item => [item.id, item])).values());
+
+  // Filter partners list for manual referral form
   const allPartners = [
     ...membersData.map(m => ({ ...m, isCaptain: false })),
     ...captainsData.map(c => ({ ...c, isCaptain: true }))
-  ].filter(p => p.id !== loggedInUser?.id);
+  ].filter(p => p.id !== myUid && p.name?.toLowerCase() !== myName);
 
   const filteredPartners = allPartners.filter(p =>
     p.name.toLowerCase().includes(recipientSearch.toLowerCase()) ||
@@ -54,10 +74,20 @@ export default function Referrals({ loggedInUser, userType }) {
   );
 
   // Calculate statistics
-  const givenReferrals = referrals.filter(r => r.fromMemberId === loggedInUser?.id);
-  const receivedReferrals = referrals.filter(r => r.toMemberId === loggedInUser?.id);
-  const connectedCount = referrals.filter(
-    r => (r.fromMemberId === loggedInUser?.id || r.toMemberId === loggedInUser?.id) &&
+  const givenReferrals = uniqueReferrals.filter(r => 
+    r.fromMemberId === myUid || 
+    r.fromUserId === myUid || 
+    (r.fromName && myName && r.fromName.toLowerCase() === myName)
+  );
+
+  const receivedReferrals = uniqueReferrals.filter(r => 
+    r.toMemberId === myUid || 
+    r.toUserId === myUid || 
+    (r.toName && myName && r.toName.toLowerCase() === myName)
+  );
+
+  const connectedCount = uniqueReferrals.filter(
+    r => (r.fromMemberId === myUid || r.fromUserId === myUid || r.toMemberId === myUid || r.toUserId === myUid) &&
       (r.status === 'Connected' || r.status === 'Closed')
   ).length;
 
