@@ -125,7 +125,7 @@ export default function Sidebar({ activeTab, setActiveTab, onLogout, isOpen, onC
               {selectedConclave ? selectedConclave.name : "No Active Conclave"}
             </p>
             <p className="text-[8px] text-zinc-400 font-bold uppercase tracking-wider mt-0.5 truncate">
-              {selectedConclave ? `${selectedConclave.status || 'ACTIVE'} • ${selectedConclave.region || selectedConclave.venue || 'GUNTUR REGION'}` : "N/A • NO REGION"}
+              {selectedConclave ? `${selectedConclave.status || 'ACTIVE'} • ${selectedConclave.region || selectedConclave.venueLocation || '—'}` : "N/A • NO REGION"}
             </p>
           </div>
           <ChevronDown className={`w-3 h-3 text-zinc-400 shrink-0 transition-transform ${showConclaveDropdown ? 'rotate-180' : ''}`} />

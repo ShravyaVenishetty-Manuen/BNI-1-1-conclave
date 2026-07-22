@@ -29,45 +29,50 @@ export default function Snapshot({ searchQuery, selectedConclaveId }) {
           try {
             const res = await api.get(`/admin/conclaves/${c.id}/registrations`);
             const regsList = res.registrations || [];
-            const activeCount = regsList.filter(r => r.isActive !== false && r.status !== 'Inactive').length;
+            // Backend now correctly computes isActive (registered users default to active)
+            const activeCount = regsList.filter(r => r.isActive).length;
             const inactiveCount = regsList.length - activeCount;
-            const captainCount = regsList.filter(r => r.role === 'captain' || r.isCaptain).length;
+            const captainCount = regsList.filter(r => r.role === 'captain').length;
+
+            // Format date from real backend ISO date field
+            const dateFormatted = c.date
+              ? new Date(c.date).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })
+              : null;
 
             return {
               ...c,
-              name: c.name || 'Guntur Central Networking Conclave',
-              dateRange: c.dateRange || c.date || (c.startDate ? `${new Date(c.startDate).toLocaleDateString([], { month: 'short', day: 'numeric' })} - ${new Date(c.endDate || c.startDate).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}` : 'Jul 22 - Jul 25, 2026'),
-              venue: c.venue || c.location || c.venueShort || 'Guntur Convention Centre',
-              region: c.region || c.group || c.regionGroup || 'Guntur Central',
-              totalRegistered: regsList.length || c.registrationCount || c.memberCount || 61,
-              activeMembers: activeCount || regsList.length || c.registrationCount || 61,
+              dateRange: dateFormatted || c.dateRange || '—',
+              venue: c.venueLocation || c.venue || '—',
+              totalRegistered: regsList.length,
+              activeMembers: activeCount,
               inactive: inactiveCount,
-              captains: captainCount || c.captainCount || 12,
-              memberCount: regsList.length || c.registrationCount || 61,
+              captains: captainCount,
+              memberCount: regsList.length,
               participants: regsList.map(r => ({
                 id: r.uid || r.id,
                 name: r.name,
                 category: r.businessCategory || r.category || 'N/A',
-                captain: (r.role === 'captain' || r.isCaptain) ? 'Yes' : 'No',
-                loginStatus: (r.isActive !== false && r.status !== 'Inactive') ? 'Active' : 'Offline',
+                captain: r.role === 'captain' ? 'Yes' : 'No',
+                loginStatus: r.isActive ? 'Active' : 'Offline',
                 included: true,
                 remarks: '—',
-                avatar: r.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+                avatar: (r.name || '?').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
               }))
             };
           } catch (err) {
             console.warn("Failed to load registrations for conclave", c.id, err);
+            const dateFormatted = c.date
+              ? new Date(c.date).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })
+              : null;
             return {
               ...c,
-              name: c.name || 'Guntur Central Networking Conclave',
-              dateRange: c.dateRange || c.date || 'Jul 22 - Jul 25, 2026',
-              venue: c.venue || c.location || 'Guntur Convention Centre',
-              region: c.region || c.group || 'Guntur Central',
-              totalRegistered: c.registrationCount || c.memberCount || 61,
-              activeMembers: c.registrationCount || c.memberCount || 61,
+              dateRange: dateFormatted || c.dateRange || '—',
+              venue: c.venueLocation || c.venue || '—',
+              totalRegistered: c.registrationCount ?? 0,
+              activeMembers: c.registrationCount ?? 0,
               inactive: 0,
-              captains: c.captainCount || 12,
-              memberCount: c.registrationCount || c.memberCount || 61,
+              captains: 0,
+              memberCount: c.registrationCount ?? 0,
               participants: []
             };
           }

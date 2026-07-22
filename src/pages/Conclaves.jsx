@@ -780,18 +780,18 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
               <div className="space-y-2">
                 <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block">Description</span>
                 <p className="text-body-md text-zinc-655 leading-relaxed bg-zinc-50 p-3.5 border border-zinc-100 rounded-xl select-text">
-                  {selectedConclave.description || 'Guntur region official speed-networking conclave session.'}
+                  {selectedConclave.description || '—'}
                 </p>
               </div>
 
               {/* Registration Window Info */}
-              {(selectedConclave.regStartDate || selectedConclave.regEndDate || selectedConclave.dateRange) && (
+              {(selectedConclave.regStartDate || selectedConclave.regEndDate) && (
                 <div className="space-y-2 border-l-2 border-brand-red pl-3 py-0.5">
                   <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block">Registration Period</span>
                   <span className="text-body-sm font-semibold text-zinc-755 block">
-                    {selectedConclave.regStartDate ? selectedConclave.regStartDate : (selectedConclave.dateRange || 'Jul 22, 2026')}
+                    {selectedConclave.regStartDate ?? 'TBD'}
                     <span className="text-zinc-400 mx-2">to</span>
-                    {selectedConclave.regEndDate ? selectedConclave.regEndDate : 'Jul 25, 2026'}
+                    {selectedConclave.regEndDate ?? 'TBD'}
                   </span>
                 </div>
               )}
@@ -801,28 +801,32 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
                 <div className="p-3.5 border border-zinc-100 bg-white rounded-lg shadow-sm">
                   <span className="text-[9px] text-zinc-400 font-bold uppercase block">Region Group</span>
                   <span className="text-body-sm font-bold text-zinc-800 block mt-1">
-                    {selectedConclave.region || selectedConclave.group || selectedConclave.regionGroup || 'Guntur Central'}
+                    {selectedConclave.region || '—'}
                   </span>
                 </div>
                 <div className="p-3.5 border border-zinc-100 bg-white rounded-lg shadow-sm">
                   <span className="text-[9px] text-zinc-400 font-bold uppercase block">Coordinator</span>
                   <div className="flex items-center gap-2 mt-1">
-                    <div className="w-5 h-5 rounded-full bg-brand-red/10 text-brand-red font-bold text-[9px] flex items-center justify-center shrink-0">
-                      {(selectedConclave.coordinator || 'Sanjay Wagle').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
-                    </div>
-                    <span className="text-body-sm font-bold text-zinc-800">{selectedConclave.coordinator || 'Sanjay Wagle'}</span>
+                    {selectedConclave.coordinator && (
+                      <div className="w-5 h-5 rounded-full bg-brand-red/10 text-brand-red font-bold text-[9px] flex items-center justify-center shrink-0">
+                        {selectedConclave.coordinator.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)}
+                      </div>
+                    )}
+                    <span className="text-body-sm font-bold text-zinc-800">{selectedConclave.coordinator || '—'}</span>
                   </div>
                 </div>
                 <div className="p-3.5 border border-zinc-100 bg-white rounded-lg shadow-sm">
                   <span className="text-[9px] text-zinc-400 font-bold uppercase block">Registered Members</span>
                   <span className="text-body-sm font-bold text-zinc-800 block mt-1">
-                    {selectedConclave.memberCount || selectedConclave.registrationCount || 61} <span className="text-zinc-400 font-medium">/ {selectedConclave.memberLimit || 100}</span>
+                    {selectedConclave.memberCount ?? selectedConclave.registrationCount ?? 0}
+                    {selectedConclave.memberLimit ? <span className="text-zinc-400 font-medium"> / {selectedConclave.memberLimit}</span> : null}
                   </span>
                 </div>
                 <div className="p-3.5 border border-zinc-100 bg-white rounded-lg shadow-sm">
                   <span className="text-[9px] text-zinc-400 font-bold uppercase block">Captains Checked</span>
                   <span className="text-body-sm font-bold text-zinc-800 block mt-1">
-                    {selectedConclave.captainCount || 12} <span className="text-zinc-400 font-medium">/ {selectedConclave.captainLimit || 12}</span>
+                    {selectedConclave.captainCount ?? 0}
+                    {selectedConclave.captainLimit ? <span className="text-zinc-400 font-medium"> / {selectedConclave.captainLimit}</span> : null}
                   </span>
                 </div>
               </div>
