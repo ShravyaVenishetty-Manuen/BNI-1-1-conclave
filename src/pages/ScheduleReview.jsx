@@ -43,6 +43,7 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
   });
 
   useEffect(() => {
+    if (!selectedConclaveId) return;   // ← wait until a conclave is selected
     async function loadConclaveDetails() {
       setIsLoadingReview(true);
       try {
@@ -875,16 +876,16 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
                               {member.initials || member.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                             </div>
 
-                            <div className="flex-1 flex items-center justify-between gap-2 min-w-0">
-                              <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                                <span className={`font-bold text-body-sm select-text truncate ${member.conflict ? 'text-brand-red' : 'text-zinc-700'}`} title={member.name}>
+                            <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+                              <div className="flex items-center gap-1">
+                                <span className={`font-bold text-[11px] leading-tight select-text ${member.conflict ? 'text-brand-red' : 'text-zinc-800'}`}>
                                   {member.name}
                                 </span>
                                 {member.conflict && (
                                   <AlertTriangle className="w-3 h-3 text-brand-red shrink-0 animate-pulse" />
                                 )}
                               </div>
-                              <span className={`px-2 py-0.5 rounded text-[8px] font-extrabold uppercase shrink-0 max-w-[120px] truncate ${member.conflict ? 'bg-brand-red/10 text-brand-red' : 'bg-zinc-50 text-zinc-450 border border-zinc-100'}`} title={member.category}>
+                              <span className={`text-[9px] font-extrabold uppercase tracking-wide leading-none ${member.conflict ? 'text-brand-red/80' : 'text-zinc-400'}`}>
                                 {member.category}
                               </span>
                             </div>
