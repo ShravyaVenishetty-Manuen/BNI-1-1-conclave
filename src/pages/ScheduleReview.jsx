@@ -876,15 +876,15 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
                             </div>
 
                             <div className="flex-1 flex items-center justify-between gap-2 min-w-0">
-                              <div className="flex items-center gap-1.5 min-w-0">
-                                <span className={`font-bold text-body-sm select-text ${member.conflict ? 'text-brand-red' : 'text-zinc-700'}`}>
+                              <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                                <span className={`font-bold text-body-sm select-text truncate ${member.conflict ? 'text-brand-red' : 'text-zinc-700'}`} title={member.name}>
                                   {member.name}
                                 </span>
                                 {member.conflict && (
                                   <AlertTriangle className="w-3 h-3 text-brand-red shrink-0 animate-pulse" />
                                 )}
                               </div>
-                              <span className={`px-2 py-0.5 rounded text-[8px] font-extrabold uppercase shrink-0 ${member.conflict ? 'bg-brand-red/10 text-brand-red' : 'bg-zinc-50 text-zinc-450 border border-zinc-100'}`}>
+                              <span className={`px-2 py-0.5 rounded text-[8px] font-extrabold uppercase shrink-0 max-w-[120px] truncate ${member.conflict ? 'bg-brand-red/10 text-brand-red' : 'bg-zinc-50 text-zinc-450 border border-zinc-100'}`} title={member.category}>
                                 {member.category}
                               </span>
                             </div>
