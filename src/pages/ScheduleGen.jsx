@@ -319,13 +319,69 @@ export default function ScheduleGen({ selectedConclaveId }) {
     showToast('Export Downloaded', `Schedule configuration exported (${progress}% complete).`);
   };
 
+  const [showRepeatModal, setShowRepeatModal] = useState(false);
+
+  const repeatPairingDetails = useMemo(() => {
+    if (!selectedConclave || !selectedConclave.schedule || !selectedConclave.schedule.rounds) {
+      return [];
+    }
+
+    const pairMap = new Map();
+
+    selectedConclave.schedule.rounds.forEach((rd) => {
+      const roundNum = rd.round || rd.number;
+      (rd.tables || []).forEach((tbl) => {
+        const tableNum = tbl.tableNumber || tbl.number;
+        const participants = tbl.participants || tbl.members || [];
+        
+        for (let i = 0; i < participants.length; i++) {
+          for (let j = i + 1; j < participants.length; j++) {
+            const m1 = participants[i];
+            const m2 = participants[j];
+            const u1 = m1.uid || m1.id || m1.name;
+            const u2 = m2.uid || m2.id || m2.name;
+
+            if (!u1 || !u2 || u1 === u2) continue;
+
+            const sorted = [m1, m2].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+            const key = `${sorted[0].uid || sorted[0].name}_${sorted[1].uid || sorted[1].name}`;
+
+            if (!pairMap.has(key)) {
+              pairMap.set(key, {
+                member1: sorted[0],
+                member2: sorted[1],
+                occurrences: []
+              });
+            }
+
+            pairMap.get(key).occurrences.push({
+              round: roundNum,
+              tableNumber: tableNum
+            });
+          }
+        }
+      });
+    });
+
+    const repeats = [];
+    pairMap.forEach((val) => {
+      if (val.occurrences.length > 1) {
+        repeats.push(val);
+      }
+    });
+
+    return repeats;
+  }, [selectedConclave]);
+
   const uniqueMeetingsVal = selectedConclave?.scheduleSummary?.coverage !== undefined
     ? Math.round(selectedConclave.scheduleSummary.coverage * 100)
     : Math.min(100, Math.round(90 + (overlapWeight * 0.1) - (progress === 100 ? 0 : 2.5)));
 
-  const repeatedPairingsVal = selectedConclave?.scheduleSummary?.repeatPairings !== undefined
-    ? selectedConclave.scheduleSummary.repeatPairings
-    : Math.max(0, Math.round(10 - (chapterWeight * 0.1)));
+  const repeatedPairingsVal = repeatPairingDetails.length || (
+    selectedConclave?.scheduleSummary?.repeatPairings !== undefined
+      ? selectedConclave.scheduleSummary.repeatPairings
+      : Math.max(0, Math.round(10 - (chapterWeight * 0.1)))
+  );
 
   const diversityVal = selectedConclave?.scheduleSummary?.coverage !== undefined
     ? Math.min(100, Math.round((selectedConclave.scheduleSummary.coverage * 100) - (selectedConclave.scheduleSummary.repeatPairings || 0)))
@@ -625,9 +681,17 @@ export default function ScheduleGen({ selectedConclaveId }) {
               </div>
 
               <div>
-                <div className="flex justify-between mb-1.5 font-bold text-[10px] text-zinc-500">
+                <div className="flex justify-between items-center mb-1.5 font-bold text-[10px] text-zinc-500">
                   <span>Repeated Pairings</span>
-                  <span className="text-zinc-900 font-extrabold">{repeatedPairingsVal}</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-zinc-900 font-extrabold">{repeatedPairingsVal}</span>
+                    <button
+                      onClick={() => setShowRepeatModal(true)}
+                      className="text-[9px] font-extrabold text-brand-red hover:underline cursor-pointer"
+                    >
+                      (View Names)
+                    </button>
+                  </div>
                 </div>
                 <div className="w-full h-2 rounded-full overflow-hidden cursor-pointer">
                   <ResponsiveContainer width="100%" height="100%">
@@ -927,12 +991,16 @@ export default function ScheduleGen({ selectedConclaveId }) {
                         : '98%'} Match Rate
                     </p>
                   </div>
-                  <div>
-                    <p className="text-[10px] text-zinc-400 font-bold uppercase">Repeat Pairs</p>
+                  <div 
+                    onClick={() => setShowRepeatModal(true)}
+                    className="cursor-pointer hover:bg-zinc-50/80 p-1.5 rounded-lg transition-smooth border border-transparent hover:border-zinc-200/60"
+                  >
+                    <div className="flex items-center justify-between">
+                      <p className="text-[10px] text-zinc-400 font-bold uppercase">Repeat Pairs</p>
+                      <span className="text-[9px] font-extrabold text-brand-red">View Names →</span>
+                    </div>
                     <p className="text-body-sm font-bold text-zinc-900 mt-1">
-                      {selectedConclave?.scheduleSummary?.repeatPairings !== undefined
-                        ? selectedConclave.scheduleSummary.repeatPairings
-                        : 0} duplicates
+                      {repeatedPairingsVal} duplicates
                     </p>
                   </div>
                   <div>
@@ -1051,7 +1119,68 @@ export default function ScheduleGen({ selectedConclaveId }) {
         </div>
       )}
 
-      {/* Toast Alert Feedback */}
+      {/* Repeat Pairings Audit Modal */}
+      {showRepeatModal && (
+        <div className="fixed inset-0 z-[100] bg-zinc-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-5 border border-zinc-200">
+            <div className="flex items-center justify-between border-b border-zinc-100 pb-4">
+              <div>
+                <h3 className="text-body-lg font-black text-zinc-900">Repeat Pairings Audit</h3>
+                <p className="text-[11px] text-zinc-400 font-medium">Members seated together more than once across rounds</p>
+              </div>
+              <button
+                onClick={() => setShowRepeatModal(false)}
+                className="p-1.5 rounded-lg hover:bg-zinc-100 text-zinc-400 hover:text-zinc-600 transition-smooth cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="max-h-[60vh] overflow-y-auto space-y-3 pr-1">
+              {repeatPairingDetails.length === 0 ? (
+                <div className="p-8 text-center bg-emerald-50/40 rounded-xl border border-emerald-100 space-y-2">
+                  <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto font-black text-lg">✓</div>
+                  <h4 className="text-body-md font-extrabold text-emerald-900">Zero Repeat Pairings!</h4>
+                  <p className="text-[11px] text-emerald-700">Every member meets 100% unique partners in every single round of this conclave.</p>
+                </div>
+              ) : (
+                repeatPairingDetails.map((pair, idx) => (
+                  <div key={idx} className="p-4 rounded-xl border border-zinc-200/80 bg-zinc-50/50 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black uppercase text-brand-red bg-red-50 px-2 py-0.5 rounded border border-brand-red/10">
+                        {pair.occurrences.length} Times Paired
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 pt-1">
+                      <div className="bg-white p-3 rounded-lg border border-zinc-200/60 shadow-2xs">
+                        <p className="text-[12px] font-black text-zinc-850 truncate">{pair.member1.name}</p>
+                        <p className="text-[10px] text-zinc-450 truncate mt-0.5">{pair.member1.company || 'Member 1'}</p>
+                      </div>
+                      <div className="bg-white p-3 rounded-lg border border-zinc-200/60 shadow-2xs">
+                        <p className="text-[12px] font-black text-zinc-850 truncate">{pair.member2.name}</p>
+                        <p className="text-[10px] text-zinc-450 truncate mt-0.5">{pair.member2.company || 'Member 2'}</p>
+                      </div>
+                    </div>
+                    <div className="text-[10.5px] text-zinc-500 font-medium pt-1">
+                      <span className="font-bold text-zinc-700">Seated Together: </span>
+                      {pair.occurrences.map(o => `Round ${o.round} (Table ${o.tableNumber})`).join(' & ')}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="pt-2 text-right">
+              <button
+                onClick={() => setShowRepeatModal(false)}
+                className="px-5 py-2 bg-zinc-900 hover:bg-zinc-800 text-white font-extrabold text-[12px] rounded-xl transition-smooth cursor-pointer"
+              >
+                Close Audit
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {toast && (
         <div className="fixed bottom-5 right-5 z-[70] bg-zinc-900 text-white text-[11px] font-bold py-2.5 px-4 rounded-lg shadow-xl flex items-center gap-2 border border-zinc-800 animate-slide-up">
           <span className="w-1.5 h-1.5 rounded-full bg-brand-red"></span>
