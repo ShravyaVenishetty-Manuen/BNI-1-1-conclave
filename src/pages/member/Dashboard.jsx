@@ -7,14 +7,16 @@ import {
   Calendar,
   CheckCircle,
   ArrowRight,
-  ArrowUpRight,
-  Activity
+  Activity,
+  Building2
 } from 'lucide-react';
 
 import ReferModal from '../../components/ReferModal';
+import MemberProfileModal from '../../components/MemberProfileModal';
 
 export default function MemberDashboard({ loggedInMember, onTabChange, conclaveSyncData }) {
   const [referTarget, setReferTarget] = useState(null);
+  const [selectedProfileMember, setSelectedProfileMember] = useState(null);
   const [toast, setToast] = useState(null);
   
   const [timeLeft, setTimeLeft] = useState(600);
@@ -40,12 +42,32 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
     };
   }, []);
 
-  const getMemberReferralCount = (name) => {
-    const occupants = conclaveSyncData?.tableOccupants || [];
-    const match = occupants.find(o => o.name.toLowerCase() === name.toLowerCase());
-    if (!match) return { given: 0, received: 0 };
-    const given = referrals.filter(r => r.fromMemberId === match.uid).length;
-    const received = referrals.filter(r => r.toMemberId === match.uid).length;
+  const getMemberReferralCount = (name, uid) => {
+    const targetName = (name || '').toLowerCase();
+    const targetUid = uid || (conclaveSyncData?.tableOccupants || []).find(o => o.name?.toLowerCase() === targetName)?.uid;
+
+    const allRefs = [
+      ...referrals,
+      ...(conclaveSyncData?.newReferralsReceived || []).map(r => ({
+        fromUserId: r.fromUserId,
+        fromMemberId: r.fromUserId,
+        fromName: r.giverName,
+        toUserId: conclaveSyncData?.userUid,
+        toMemberId: conclaveSyncData?.userUid
+      }))
+    ];
+
+    const given = allRefs.filter(r => 
+      (targetUid && (r.fromMemberId === targetUid || r.fromUserId === targetUid)) ||
+      (targetName && r.fromName && r.fromName.toLowerCase() === targetName) ||
+      (targetName && r.giverName && r.giverName.toLowerCase() === targetName)
+    ).length;
+
+    const received = allRefs.filter(r => 
+      (targetUid && (r.toMemberId === targetUid || r.toUserId === targetUid)) ||
+      (targetName && r.toName && r.toName.toLowerCase() === targetName)
+    ).length;
+
     return { given, received };
   };
 
@@ -70,10 +92,10 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
     return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   };
 
-  const memberName = loggedInMember?.name || 'Anjali Sharma';
-  const memberChapter = loggedInMember?.chapter || 'Apex Chapter';
-  const memberCompany = loggedInMember?.company || 'Sharma Ads & Media';
-  const memberCategory = loggedInMember?.category || 'Marketing';
+  const memberName = loggedInMember?.name || 'Member';
+  const memberChapter = loggedInMember?.chapter || 'N/A';
+  const memberCompany = loggedInMember?.company || 'N/A';
+  const memberCategory = loggedInMember?.category || 'N/A';
 
   return (
     <div className="space-y-8 animate-fade-in font-sans pb-16">
@@ -93,6 +115,23 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
           </div>
 
           <div className="space-y-4">
+            {/* Conclave name banner — shows which conclave data is being loaded from backend */}
+            {conclaveSyncData?.conclaveStatus?.title && (
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg">
+                <Building2 className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                <span className="text-[10px] font-black text-blue-700 uppercase tracking-wider">
+                  {conclaveSyncData.conclaveStatus.title}
+                </span>
+                {conclaveSyncData.conclaveStatus.venue && (
+                  <>
+                    <span className="text-blue-300">•</span>
+                    <span className="text-[10px] font-semibold text-blue-500">
+                      {conclaveSyncData.conclaveStatus.venue}
+                    </span>
+                  </>
+                )}
+              </div>
+            )}
             <div>
               <h1 className="text-2xl md:text-3xl font-black text-zinc-955 tracking-tight">Welcome {memberName}</h1>
               <p className="text-xs font-semibold text-zinc-450 mt-1">{memberCompany} • {memberChapter}</p>
@@ -118,14 +157,38 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
               <div className="w-px h-8 bg-zinc-200"></div>
               <div className="flex flex-col">
                 <span className="text-[9px] font-extrabold text-zinc-400 uppercase tracking-widest">Referral Exchange</span>
-                <span className="text-body-sm font-extrabold text-zinc-850 mt-1 select-none flex items-center gap-1.5">
-                  <span className="px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded text-[9.5px] font-bold">
-                    {referrals.filter(r => r.fromMemberId === loggedInMember?.uid || r.fromMemberId === loggedInMember?.id).length} Sent
-                  </span>
-                  <span className="px-1.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-100 rounded text-[9.5px] font-bold">
-                    {referrals.filter(r => r.toMemberId === loggedInMember?.uid || r.toMemberId === loggedInMember?.id).length} Recv
-                  </span>
-                </span>
+                {(() => {
+                  const myUid = loggedInMember?.uid || loggedInMember?.id;
+                  const myName = (loggedInMember?.name || '').toLowerCase();
+                  const allRefs = [
+                    ...referrals,
+                    ...(conclaveSyncData?.newReferralsReceived || []).map(r => ({
+                      fromUserId: r.fromUserId,
+                      fromMemberId: r.fromUserId,
+                      toUserId: myUid,
+                      toMemberId: myUid
+                    }))
+                  ];
+
+                  const sentCount = allRefs.filter(r =>
+                    r.fromMemberId === myUid || r.fromUserId === myUid || (r.fromName && r.fromName.toLowerCase() === myName)
+                  ).length;
+
+                  const recvCount = allRefs.filter(r =>
+                    r.toMemberId === myUid || r.toUserId === myUid || (r.toName && r.toName.toLowerCase() === myName)
+                  ).length;
+
+                  return (
+                    <span className="text-body-sm font-extrabold text-zinc-850 mt-1 select-none flex items-center gap-1.5">
+                      <span className="px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded text-[9.5px] font-bold">
+                        {sentCount} Sent
+                      </span>
+                      <span className="px-1.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-100 rounded text-[9.5px] font-bold">
+                        {recvCount} Recv
+                      </span>
+                    </span>
+                  );
+                })()}
               </div>
             </div>
 
@@ -222,7 +285,14 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
       {/* Today's Schedule Timeline Section */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="font-black text-zinc-900 text-body-md">Today's Schedule</h2>
+          <div>
+            <h2 className="font-black text-zinc-900 text-body-md">Today's Schedule</h2>
+            {conclaveSyncData?.conclaveStatus?.title && (
+              <p className="text-[9.5px] text-zinc-400 font-semibold mt-0.5">
+                Conclave: <span className="text-zinc-600 font-bold">{conclaveSyncData.conclaveStatus.title}</span>
+              </p>
+            )}
+          </div>
           <span
             onClick={() => onTabChange && onTabChange('my-schedule')}
             className="text-brand-red font-black text-[10.5px] uppercase tracking-wider hover:underline cursor-pointer"
@@ -301,7 +371,8 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
               return (
                 <div
                   key={member.uid}
-                  className={`p-4 rounded-xl border transition-smooth group ${member.isCaptain
+                  onClick={() => setSelectedProfileMember(member)}
+                  className={`p-4 rounded-xl border transition-smooth group cursor-pointer hover:border-brand-red/40 ${member.isCaptain
                     ? 'bg-red-50/20 border-brand-red/30 shadow-2xs relative'
                     : 'bg-white border-zinc-200 shadow-2xs'
                     }`}
@@ -333,9 +404,9 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
                         {member.company}
                       </p>
                       <div className="flex gap-2 mt-2 pt-2 border-t border-zinc-100 text-[9px] font-bold text-zinc-400">
-                        <span>Sent: <span className="text-zinc-700">{getMemberReferralCount(member.name).given}</span></span>
+                        <span>Sent: <span className="text-zinc-700">{getMemberReferralCount(member.name, member.uid).given}</span></span>
                         <span>•</span>
-                        <span>Recv: <span className="text-zinc-700">{getMemberReferralCount(member.name).received}</span></span>
+                        <span>Recv: <span className="text-zinc-700">{getMemberReferralCount(member.name, member.uid).received}</span></span>
                       </div>
                     </div>
                   </div>
@@ -431,10 +502,24 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
         </div>
       </div>
 
+      {selectedProfileMember && (
+        <MemberProfileModal
+          member={selectedProfileMember}
+          onClose={() => setSelectedProfileMember(null)}
+          onSendReferral={(m) => setReferTarget({
+            id: m.uid || m.id,
+            name: m.name,
+            company: m.company,
+            category: m.category
+          })}
+        />
+      )}
+
       {referTarget && (
         <ReferModal
           recipient={referTarget}
-          loggedInUser={loggedInMember || { name: 'Anjali Sharma' }}
+          loggedInUser={loggedInMember || { name: 'Member' }}
+          activeConclaveId={conclaveSyncData?.conclaveStatus?.id || conclaveSyncData?.conclaveId || conclaveSyncData?.id}
           onClose={() => setReferTarget(null)}
           onSuccess={(msg) => {
             setToast(msg);

@@ -24,27 +24,116 @@ export default function MemberConclaveHistory({ loggedInMember }) {
   const [showDrawer, setShowDrawer] = useState(false);
   const [selectedConclave, setSelectedConclave] = useState(null);
   const [conclaves, setConclaves] = useState([]);
+  const [industryDistribution, setIndustryDistribution] = useState([]);
 
   useEffect(() => {
     async function loadHistory() {
       try {
         const data = await api.get('/conclaves');
-        const mapped = (Array.isArray(data) ? data : []).map((c) => ({
-          id: c.id,
-          title: c.name || c.title || 'BNI Conclave',
-          location: c.venue || c.venueLocation || 'TBD Venue',
-          date: c.date ? new Date(c.date).toLocaleDateString([], { month: 'short', day: '2-digit', year: 'numeric' }) : 'TBD',
-          year: c.date ? new Date(c.date).getFullYear().toString() : 'All',
-          status: c.status === 'completed' ? 'Completed' : c.status === 'cancelled' ? 'Cancelled' : 'Completed',
-          rounds: c.roundCount || 0,
-        }));
+        const memberUid = loggedInMember?.uid || loggedInMember?.id;
+
+        // Filter ONLY conclaves the member is registered for
+        const registeredOnly = (Array.isArray(data) ? data : []).filter(c => c.isRegistered === true);
+
+        // Get referrals from localStorage
+        const storedRefs = localStorage.getItem('bni_referrals');
+        const referralsList = storedRefs ? JSON.parse(storedRefs) : [];
+
+        // Industry frequency counter
+        const categoryCounts = {};
+        let totalMetCount = 0;
+
+        const mapped = registeredOnly.map((c) => {
+          // Derive dynamic round details if schedule is available
+          let roundDetails = [];
+          if (c.schedule?.rounds && Array.isArray(c.participants)) {
+            const pObj = c.participants.find((p) => p._originalUid === memberUid);
+            if (pObj) {
+              const pId = pObj.id;
+              roundDetails = c.schedule.rounds.map((r) => {
+                const table = r.tables?.find((t) => t.captainId === pId || t.memberIds?.includes(pId));
+                const capObj = table ? c.participants.find((p) => p.id === table.captainId) : null;
+                
+                // Track categories met
+                if (table) {
+                  const allTableMemberIds = [table.captainId, ...(table.memberIds || [])].filter(id => id !== pId);
+                  allTableMemberIds.forEach(mId => {
+                    const seatedPerson = c.participants.find(p => p.id === mId);
+                    if (seatedPerson?.businessCategory) {
+                      const cat = seatedPerson.businessCategory;
+                      categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+                      totalMetCount++;
+                    }
+                  });
+                }
+
+                return {
+                  name: `Round ${r.roundNumber} Seating`,
+                  table: table ? `Table ${table.tableNumber}` : 'Unassigned',
+                  captain: capObj ? capObj.name : 'Unknown',
+                  attendeesCount: table ? (table.memberIds?.length || 0) + 1 : 0
+                };
+              });
+            }
+          }
+
+          const formattedStatus = c.status === 'completed'
+            ? 'Completed'
+            : c.status === 'active' || c.status === 'running'
+            ? 'Active'
+            : c.status === 'cancelled'
+            ? 'Cancelled'
+            : 'Registered';
+
+          // Count referrals given by this user for this conclave
+          const userReferralsGiven = referralsList.filter(
+            r => (r.fromMemberId === memberUid || r.fromMemberId === loggedInMember?.id) &&
+                 (!r.conclaveId || r.conclaveId === c.id)
+          ).length;
+
+          return {
+            id: c.id,
+            title: c.name || c.title || 'BNI Conclave',
+            location: c.venue || c.venueLocation || 'TBD Venue',
+            date: c.date ? new Date(c.date).toLocaleDateString([], { month: 'short', day: '2-digit', year: 'numeric' }) : 'TBD',
+            year: c.date ? new Date(c.date).getFullYear().toString() : 'All',
+            status: formattedStatus,
+            rounds: c.roundCount || 4,
+            details: {
+              subtitle: `${c.venueLocation || c.venue || 'TBD Venue'}`,
+              rounds: roundDetails.length > 0 ? roundDetails : Array.from({ length: c.roundCount || 4 }, (_, i) => ({
+                name: `Round ${i + 1} Seating`,
+                table: `Table 0${i + 1}`,
+                captain: 'Session Captain',
+                attendeesCount: c.personsPerTable || 6
+              })),
+              contacts: (c.roundCount || 4) * ((c.personsPerTable || 6) - 1),
+              referrals: userReferralsGiven,
+              recommendation: userReferralsGiven > 0 ? "High synergy session with active referral flow." : "Session completed. Log referrals given during meetings."
+            }
+          };
+        });
+
+        // Compute top 5 industries
+        const colors = ["bg-brand-red", "bg-red-700", "bg-red-500", "bg-red-300", "bg-red-200"];
+        const topIndustries = Object.entries(categoryCounts)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 5)
+          .map(([name, count], idx) => ({
+            name,
+            count: count,
+            percentage: totalMetCount > 0 ? Math.round((count / totalMetCount) * 100) : 0,
+            color: colors[idx % colors.length]
+          }));
+
+        setIndustryDistribution(topIndustries);
         setConclaves(mapped);
       } catch (err) {
         console.warn('Failed to load conclave history from backend:', err.message);
       }
     }
     loadHistory();
-  }, []);
+  }, [loggedInMember]);
 
   // Filtered conclaves list
   const filteredConclaves = conclaves.filter(conclave => {
@@ -124,7 +213,9 @@ export default function MemberConclaveHistory({ loggedInMember }) {
                 className="h-10 px-3.5 bg-white border border-zinc-250 rounded-lg text-[12px] font-black uppercase tracking-wider text-zinc-600 focus:ring-1 focus:ring-brand-red focus:outline-hidden"
               >
                 <option value="All">All Status</option>
+                <option value="Active">Active</option>
                 <option value="Completed">Completed</option>
+                <option value="Registered">Registered</option>
                 <option value="Cancelled">Cancelled</option>
               </select>
 
@@ -211,53 +302,50 @@ export default function MemberConclaveHistory({ loggedInMember }) {
             <p className="text-[10px] text-zinc-450 font-semibold mt-0.5">Top industries connected in past seating rounds.</p>
 
             <div className="space-y-3.5 pt-2">
-              {[
-                { name: "Information Technology", percentage: 32, count: 23, color: "bg-brand-red" },
-                { name: "Real Estate & Construction", percentage: 24, count: 17, color: "bg-red-700" },
-                { name: "Financial Services", percentage: 18, count: 13, color: "bg-red-500" },
-                { name: "Marketing & Advertising", percentage: 15, count: 11, color: "bg-red-300" },
-                { name: "Healthcare & Pharmaceuticals", percentage: 11, count: 8, color: "bg-red-200" }
-              ].map((ind, idx) => (
-                <div key={idx} className="space-y-1">
-                  <div className="flex justify-between text-[11px] font-black text-zinc-755 leading-none">
-                    <span>{ind.name}</span>
-                    <span className="text-zinc-500 font-extrabold">{ind.count} met ({ind.percentage}%)</span>
+              {industryDistribution.length > 0 ? (
+                industryDistribution.map((ind, idx) => (
+                  <div key={idx} className="space-y-1">
+                    <div className="flex justify-between text-[11px] font-black text-zinc-755 leading-none">
+                      <span>{ind.name}</span>
+                      <span className="text-zinc-500 font-extrabold">{ind.count} met ({ind.percentage}%)</span>
+                    </div>
+                    <div className="w-full bg-zinc-100 rounded-full h-1.5 overflow-hidden">
+                      <div
+                        className={`${ind.color} h-full rounded-full`}
+                        style={{ width: `${ind.percentage}%` }}
+                      />
+                    </div>
                   </div>
-                  <div className="w-full bg-zinc-100 rounded-full h-1.5 overflow-hidden">
-                    <div
-                      className={`${ind.color} h-full rounded-full`}
-                      style={{ width: `${ind.percentage}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p className="text-xs text-zinc-400 font-semibold py-2">No seating connections recorded yet.</p>
+              )}
             </div>
           </section>
 
           {/* Recent Connections Sidebar */}
           <section className="bg-white border border-zinc-200 rounded-xl p-5 shadow-2xs space-y-4">
             <div className="flex justify-between items-center pb-2 border-b border-zinc-100">
-              <h2 className="text-body-sm font-black text-zinc-900">Recent Connections</h2>
-              <span className="text-brand-red font-black text-[9px] uppercase tracking-wider select-none">Top 3</span>
+              <h2 className="text-body-sm font-black text-zinc-900">Conclave Roster</h2>
+              <span className="text-brand-red font-black text-[9px] uppercase tracking-wider select-none">Live</span>
             </div>
 
             <div className="space-y-4">
-              {[
-                { name: "Shalini Sen", title: "Founder, Nexus Tech", initials: "SS" },
-                { name: "Mukul Arya", title: "Lead Architect, ArchiBuild", initials: "MA" },
-                { name: "Priya Sharma", title: "Director, WealthWise", initials: "PS" }
-              ].map((person, idx) => (
-                <div key={idx} className="flex items-center gap-3 group">
-                  <div className="w-9 h-9 rounded-full bg-zinc-50 border border-zinc-200 flex items-center justify-center font-bold text-[10.5px] text-zinc-550 shrink-0 group-hover:border-brand-red/35 transition-smooth select-none">
-                    {person.initials}
+              {conclaves.length > 0 ? (
+                conclaves.slice(0, 3).map((c, idx) => (
+                  <div key={idx} className="flex items-center gap-3 group">
+                    <div className="w-9 h-9 rounded-full bg-zinc-50 border border-zinc-200 flex items-center justify-center font-bold text-[10.5px] text-zinc-550 shrink-0 group-hover:border-brand-red/35 transition-smooth select-none">
+                      {c.title.substring(0, 2).toUpperCase()}
+                    </div>
+                    <div className="flex-grow overflow-hidden">
+                      <p className="text-[12.5px] font-black text-zinc-850 group-hover:text-brand-red transition-smooth truncate leading-none">{c.title}</p>
+                      <p className="text-[10px] text-zinc-450 font-semibold truncate leading-none mt-1">{c.location} • {c.rounds} Rounds</p>
+                    </div>
                   </div>
-                  <div className="flex-grow overflow-hidden">
-                    <p className="text-[12.5px] font-black text-zinc-850 group-hover:text-brand-red transition-smooth truncate leading-none">{person.name}</p>
-                    <p className="text-[10px] text-zinc-450 font-semibold truncate leading-none mt-1">{person.title}</p>
-                  </div>
-
-                </div>
-              ))}
+                ))
+              ) : (
+                <p className="text-xs text-zinc-400 font-semibold py-2 text-center">No past conclaves recorded.</p>
+              )}
             </div>
           </section>
         </aside>

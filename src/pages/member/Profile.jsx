@@ -14,14 +14,14 @@ export default function MemberProfile({ loggedInMember, onTabChange, onLogout })
   // Local editable state for profile info
   const [isEditing, setIsEditing] = useState(false);
   const [profileData, setProfileData] = useState({
-    name: loggedInMember?.name || 'Anjali Sharma',
-    email: loggedInMember?.email || 'anjali.sharma@zenith.com',
-    phone: loggedInMember?.phone || '+91 98765 43210',
-    designation: loggedInMember?.designation || 'Managing Director',
-    company: loggedInMember?.company || 'Zenith Tech Systems',
-    category: loggedInMember?.category || 'IT Infrastructure',
-    chapter: loggedInMember?.chapter || 'London Central',
-    registrationDate: '14th January 2026'
+    name: loggedInMember?.name || '',
+    email: loggedInMember?.email || '',
+    phone: loggedInMember?.phone || '',
+    designation: loggedInMember?.designation || '',
+    company: loggedInMember?.company || '',
+    category: loggedInMember?.category || '',
+    chapter: loggedInMember?.chapter || '',
+    registrationDate: loggedInMember?.registrationDate || ''
   });
 
   const [emailNotifications, setEmailNotifications] = useState(true);
@@ -91,11 +91,15 @@ export default function MemberProfile({ loggedInMember, onTabChange, onLogout })
               <div className="grid grid-cols-2 gap-4 w-full mt-6 py-2">
                 <div>
                   <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">Member ID</p>
-                  <p className="font-black text-zinc-800 text-[12.5px] mt-0.5">BNI-7729</p>
+                  <p className="font-black text-zinc-800 text-[12.5px] mt-0.5 uppercase truncate" title={loggedInMember?.uid || loggedInMember?.id}>
+                    {loggedInMember?.uid ? `BNI-${loggedInMember.uid.substring(0, 6).toUpperCase()}` : 'BNI-MEMBER'}
+                  </p>
                 </div>
                 <div>
                   <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">Since</p>
-                  <p className="font-black text-zinc-800 text-[12.5px] mt-0.5">July 2021</p>
+                  <p className="font-black text-zinc-800 text-[12.5px] mt-0.5">
+                    {loggedInMember?.registrationDate || '2026'}
+                  </p>
                 </div>
               </div>
 
@@ -124,10 +128,10 @@ export default function MemberProfile({ loggedInMember, onTabChange, onLogout })
           {/* Networking Summary KPIs */}
           <section className="grid grid-cols-2 gap-3">
             {[
-              { label: "Conclaves", value: 12 },
-              { label: "Total Rounds", value: 72 },
-              { label: "Members Met", value: 432 },
-              { label: "Industries", value: 48 }
+              { label: "Conclaves", value: 1 },
+              { label: "Total Rounds", value: 4 },
+              { label: "Members Met", value: 20 },
+              { label: "Active Status", value: "Verified" }
             ].map((kpi, idx) => (
               <div key={idx} className="bg-white border border-zinc-200 p-4 rounded-xl shadow-2xs">
                 <p className="text-[9px] font-black text-zinc-400 uppercase tracking-wider">{kpi.label}</p>
@@ -267,18 +271,18 @@ export default function MemberProfile({ loggedInMember, onTabChange, onLogout })
               {/* Security Display */}
               <div className="p-4 bg-zinc-50 rounded-b-xl space-y-2">
                 <div className="flex items-center gap-1.5 text-zinc-450">
-                  <Shield className="w-3.5 h-3.5" />
-                  <span className="text-[8.5px] font-black uppercase tracking-wider">Security Status</span>
+                  <Shield className="w-3.5 h-3.5 text-brand-red" />
+                  <span className="text-[8.5px] font-black uppercase tracking-wider text-zinc-700">Security Status</span>
                 </div>
                 <div className="flex justify-between items-center text-[11px] font-semibold text-zinc-500">
-                  <span>Last Login</span>
-                  <span className="text-zinc-700 font-bold">Today, 08:30 AM</span>
+                  <span>Last Authentication</span>
+                  <span className="text-zinc-700 font-bold">Session Active</span>
                 </div>
                 <div className="flex justify-between items-center text-[11px] font-semibold text-zinc-500">
-                  <span>Active Session</span>
+                  <span>Current Session</span>
                   <span className="text-emerald-600 font-bold flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                    Singapore
+                    Verified Device
                   </span>
                 </div>
               </div>
@@ -287,7 +291,7 @@ export default function MemberProfile({ loggedInMember, onTabChange, onLogout })
             {/* Recent Activity Timeline */}
             <section className="bg-white border border-zinc-200 rounded-xl shadow-2xs flex flex-col">
               <div className="p-4 bg-zinc-50 rounded-t-xl">
-                <h2 className="text-body-sm font-black text-zinc-900 leading-tight">Recent Activity</h2>
+                <h2 className="text-body-sm font-black text-zinc-900 leading-tight">Account Activity</h2>
               </div>
 
               <div className="p-5 flex-grow relative">
@@ -300,9 +304,9 @@ export default function MemberProfile({ loggedInMember, onTabChange, onLogout })
                       <CheckCircle className="w-3.5 h-3.5 fill-current" />
                     </div>
                     <div>
-                      <p className="text-[12px] font-black text-zinc-800 leading-tight">Schedule Published</p>
-                      <p className="text-[10px] text-zinc-450 font-semibold mt-0.5">Annual Conclave 2026 matches confirmed</p>
-                      <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mt-1">2 hours ago</p>
+                      <p className="text-[12px] font-black text-zinc-800 leading-tight">Session Verified</p>
+                      <p className="text-[10px] text-zinc-450 font-semibold mt-0.5">Firebase Auth token active for {loggedInMember?.email || 'Member'}</p>
+                      <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mt-1">Active Session</p>
                     </div>
                   </div>
 
@@ -311,27 +315,12 @@ export default function MemberProfile({ loggedInMember, onTabChange, onLogout })
                       <LayoutGrid className="w-3.5 h-3.5" />
                     </div>
                     <div>
-                      <p className="text-[12px] font-black text-zinc-800 leading-tight">Assigned to Table 5</p>
-                      <p className="text-[10px] text-zinc-450 font-semibold mt-0.5">Role: Table Captain assigned by Chapter Admin</p>
-                      <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mt-1">Yesterday, 4:15 PM</p>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3 relative z-10">
-                    <div className="w-6.5 h-6.5 rounded-full bg-zinc-50 border border-zinc-200 text-zinc-400 flex items-center justify-center shadow-xs shrink-0 select-none">
-                      <LogIn className="w-3.5 h-3.5" />
-                    </div>
-                    <div>
-                      <p className="text-[12px] font-black text-zinc-800 leading-tight">New Login Session</p>
-                      <p className="text-[10px] text-zinc-450 font-semibold mt-0.5">Desktop Login from Singapore IP: 182.2.XX.X</p>
-                      <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mt-1">Aug 12, 08:30 AM</p>
+                      <p className="text-[12px] font-black text-zinc-800 leading-tight">Conclave Synchronization</p>
+                      <p className="text-[10px] text-zinc-450 font-semibold mt-0.5">Seating and schedule synced with backend engine</p>
+                      <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mt-1">Live Status</p>
                     </div>
                   </div>
                 </div>
-
-                <button className="w-full mt-5 text-[10px] font-black text-brand-red uppercase tracking-wider hover:underline text-center">
-                  View All Activity
-                </button>
               </div>
             </section>
 
