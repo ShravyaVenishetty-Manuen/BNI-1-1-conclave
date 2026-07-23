@@ -14,10 +14,38 @@ import {
 import ReferModal from '../../components/ReferModal';
 import MemberProfileModal from '../../components/MemberProfileModal';
 
+import { api } from '../../services/api';
+
 export default function MemberDashboard({ loggedInMember, onTabChange, conclaveSyncData, searchQuery }) {
   const [referTarget, setReferTarget] = useState(null);
   const [selectedProfileMember, setSelectedProfileMember] = useState(null);
   const [toast, setToast] = useState(null);
+  const [isCheckedIn, setIsCheckedIn] = useState(false);
+
+  const handleSelfCheckIn = async () => {
+    const activeConclaveId = 'sku7Q5mTW3t5QeeHZPrO';
+    const myUid = loggedInMember?.uid || loggedInMember?.id;
+    const currentRound = conclaveSyncData?.conclaveStatus?.currentRound || 1;
+
+    try {
+      await api.post(`/conclaves/${activeConclaveId}/sync`, {
+        attendance: [{
+          id: `att_r${currentRound}_${myUid}`,
+          userId: myUid,
+          roundNumber: currentRound,
+          tableNumber: conclaveSyncData?.tableNumber || 1,
+          isPresent: true,
+          markedBy: myUid,
+          timestamp: new Date().toISOString()
+        }]
+      });
+      setIsCheckedIn(true);
+      setToast({ title: 'Attendance Confirmed', desc: `Presence recorded in database for Round ${currentRound}.` });
+      setTimeout(() => setToast(null), 3000);
+    } catch (err) {
+      console.warn("Self check-in failed:", err.message);
+    }
+  };
 
   const filteredOccupants = useMemo(() => {
     const list = conclaveSyncData?.tableOccupants || [];
@@ -222,6 +250,18 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
           </div>
 
           <div className="flex flex-wrap gap-3 pt-6 border-t border-zinc-100 mt-6">
+            <button
+              onClick={handleSelfCheckIn}
+              disabled={isCheckedIn}
+              className={`text-[10px] font-black uppercase tracking-wider px-5 py-2.5 rounded-lg transition-smooth flex items-center gap-1.5 cursor-pointer shadow-sm ${
+                isCheckedIn 
+                  ? 'bg-emerald-600 text-white cursor-default' 
+                  : 'bg-emerald-700 hover:bg-emerald-800 text-white shadow-emerald-700/10'
+              }`}
+            >
+              <CheckCircle className="w-3.5 h-3.5" />
+              {isCheckedIn ? 'Attendance Confirmed' : 'Mark My Attendance'}
+            </button>
             <button
               onClick={() => onTabChange && onTabChange('current-round')}
               className="bg-brand-red hover:bg-red-750 text-white text-[10px] font-black uppercase tracking-wider px-5 py-2.5 rounded-lg transition-smooth flex items-center gap-1.5 cursor-pointer shadow-sm shadow-brand-red/10"

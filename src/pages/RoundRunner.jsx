@@ -77,20 +77,26 @@ export default function RoundRunner({ selectedConclaveId }) {
     return Math.min(100, Math.round(((activeRound - 1) / totalRounds) * 100));
   }, [selectedConclave, activeRound, totalRounds]);
 
-  const [referrals, setReferrals] = useState([]);
+  const [filteredReferrals, setFilteredReferrals] = useState([]);
+  const [attendanceRecords, setAttendanceRecords] = useState([]);
 
   useEffect(() => {
     if (!selectedConclaveId) return;
-    async function loadReferrals() {
+    async function loadReferralsAndAttendance() {
       try {
-        const list = await api.get(`/admin/conclaves/${selectedConclaveId}/referrals`);
-        setReferrals(list || []);
+        const [refData, attData] = await Promise.all([
+          api.get(`/admin/conclaves/${selectedConclaveId}/referrals`).catch(() => []),
+          api.get(`/admin/conclaves/${selectedConclaveId}/attendance`).catch(() => [])
+        ]);
+        if (Array.isArray(refData)) setFilteredReferrals(refData);
+        if (Array.isArray(attData)) setAttendanceRecords(attData);
       } catch (err) {
-        console.error("Failed to load referrals:", err);
+        console.warn("Failed to load conclave activity data:", err.message);
       }
     }
-    loadReferrals();
-    const interval = setInterval(loadReferrals, 5000); // refresh every 5s for live real-time sync
+
+    loadReferralsAndAttendance();
+    const interval = setInterval(loadReferralsAndAttendance, 5000);
     return () => clearInterval(interval);
   }, [selectedConclaveId]);
 
@@ -126,11 +132,6 @@ export default function RoundRunner({ selectedConclaveId }) {
     }
     return [];
   }, [selectedConclave, activeRound]);
-
-  const filteredReferrals = useMemo(() =>
-    referrals.filter(r => r.conclaveId === selectedConclaveId || !r.conclaveId),
-    [referrals, selectedConclaveId]
-  );
 
   const totalReferrals = filteredReferrals.length;
   const connectedReferrals = filteredReferrals.filter(r => r.status === 'Connected').length;

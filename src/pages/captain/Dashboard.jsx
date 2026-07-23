@@ -155,7 +155,7 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
     }));
   };
 
-  const handleSubmitAttendance = () => {
+  const handleSubmitAttendance = async () => {
     if (isLocked) return;
 
     const totalMembers = myTable.members ? myTable.members.length : 0;
@@ -164,6 +164,30 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
     if (checkedCount < totalMembers) {
       showToast('Incomplete Check-In', 'Please record attendance for all assigned members.');
       return;
+    }
+
+    const captainUid = loggedInCaptain?.uid || loggedInCaptain?.id || 'captain';
+    const activeConclaveId = selectedConclaveId || activeConclave?.id;
+    const currentRound = activeConclave?.currentRound || 1;
+
+    if (activeConclaveId) {
+      try {
+        const attendancePayload = Object.entries(attendance).map(([uid, status]) => ({
+          id: `att_r${currentRound}_${uid}`,
+          userId: uid,
+          roundNumber: currentRound,
+          tableNumber: myTable?.tableNumber || 1,
+          isPresent: status === 'present',
+          markedBy: captainUid,
+          timestamp: new Date().toISOString()
+        }));
+
+        await api.post(`/conclaves/${activeConclaveId}/sync`, {
+          attendance: attendancePayload
+        });
+      } catch (err) {
+        console.warn("Backend attendance sync failed:", err.message);
+      }
     }
 
     setIsLocked(true);
