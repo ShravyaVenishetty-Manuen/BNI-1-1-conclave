@@ -160,9 +160,23 @@ export default function Reports({ searchQuery: globalSearchQuery, selectedConcla
 
   // Dynamically resolve Captains list for filters dropdown
   const captainsList = useMemo(() => {
-    const set = new Set(conclaveParticipants.filter(p => p.captain.includes('Captain')).map(p => p.name));
-    return Array.from(set).sort();
-  }, [conclaveParticipants]);
+    const namesSet = new Set();
+    (selectedConclave?.participants || []).forEach(p => {
+      if (p.role === 'captain' || p.isCaptain || p.role === 'CAPTAIN') {
+        if (p.name) namesSet.add(p.name);
+      }
+    });
+    (selectedConclave?.schedule?.rounds || []).forEach(r => {
+      (r.tables || []).forEach(t => {
+        if (t.captainName) namesSet.add(t.captainName);
+        if (t.captainId) {
+          const p = selectedConclave?.participants?.find(part => part.id === t.captainId);
+          if (p?.name) namesSet.add(p.name);
+        }
+      });
+    });
+    return Array.from(namesSet).sort();
+  }, [selectedConclave]);
 
   // Recharts Participation Data (R1 - R6) calculated dynamically
   const barData = useMemo(() => {
@@ -179,13 +193,8 @@ export default function Reports({ searchQuery: globalSearchQuery, selectedConcla
 
   // Recharts Business Diversity Data calculated dynamically
   const donutData = useMemo(() => {
-    if (!selectedConclave || !selectedConclave.participants) {
-      return [
-        { name: 'Finance', value: 0, color: '#af101a' },
-        { name: 'Marketing', value: 0, color: '#bee9ff' },
-        { name: 'Legal', value: 0, color: '#005f7b' },
-        { name: 'Technology', value: 0, color: '#ffe2de' }
-      ];
+    if (!selectedConclave || !selectedConclave.participants || selectedConclave.participants.length === 0) {
+      return [];
     }
     const counts = {};
     selectedConclave.participants.forEach(p => {
@@ -356,12 +365,9 @@ export default function Reports({ searchQuery: globalSearchQuery, selectedConcla
               className="px-4 py-2.5 border border-zinc-200 bg-white rounded-lg text-body-sm font-bold text-zinc-700 transition-smooth cursor-pointer focus:outline-none focus:border-brand-red"
             >
               <option value="all">All Rounds</option>
-              <option value="R1">Round 1</option>
-              <option value="R2">Round 2</option>
-              <option value="R3">Round 3</option>
-              <option value="R4">Round 4</option>
-              <option value="R5">Round 5</option>
-              <option value="R6">Round 6</option>
+              {Array.from({ length: selectedConclave?.roundCount || 4 }).map((_, idx) => (
+                <option key={idx + 1} value={`R${idx + 1}`}>{`Round ${idx + 1}`}</option>
+              ))}
             </select>
           </div>
 

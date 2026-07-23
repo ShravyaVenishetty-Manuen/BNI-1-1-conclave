@@ -311,6 +311,32 @@ export default function App() {
     return () => clearInterval(interval);
   }, [isLoggedIn, userRole]);
 
+  // Fetch real admin profile from backend /api/me
+  useEffect(() => {
+    if (!isLoggedIn || userRole !== 'admin') return;
+    async function loadAdminProfile() {
+      try {
+        const profile = await api.get('/me');
+        if (profile && profile.uid) {
+          setLoggedInAdmin(prev => {
+            const updated = {
+              ...(prev || {}),
+              ...profile,
+              name: profile.name || prev?.name || 'Admin',
+              email: profile.email || prev?.email || '',
+              region: profile.chapter || profile.region || 'Guntur Central'
+            };
+            localStorage.setItem('bni_logged_admin', JSON.stringify(updated));
+            return updated;
+          });
+        }
+      } catch (err) {
+        console.warn("Could not fetch admin profile from backend:", err.message);
+      }
+    }
+    loadAdminProfile();
+  }, [isLoggedIn, userRole]);
+
   useEffect(() => {
     if (!isLoggedIn) {
       window.history.pushState({}, '', '/login');

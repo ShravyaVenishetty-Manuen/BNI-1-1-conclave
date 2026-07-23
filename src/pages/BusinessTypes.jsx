@@ -26,12 +26,6 @@ export default function BusinessTypes({ searchQuery, selectedConclaveId }) {
         const stored = localStorage.getItem('bni_categories');
         if (stored) {
           setCategories(JSON.parse(stored));
-        } else {
-          setCategories([
-            { id: 'BT-001', name: 'Real Estate', description: 'Real estate and property services', status: 'Active' },
-            { id: 'BT-002', name: 'Financial Services', description: 'Finance, investment, insurance', status: 'Active' },
-            { id: 'BT-003', name: 'Technology', description: 'IT, software, cloud', status: 'Active' }
-          ]);
         }
       } catch (err) {
         console.error('Failed to load business types:', err);
@@ -40,6 +34,24 @@ export default function BusinessTypes({ searchQuery, selectedConclaveId }) {
 
     loadCategories();
   }, []);
+
+  useEffect(() => {
+    if (members.length > 0) {
+      const catMap = new Map();
+      members.forEach(m => {
+        const catName = m.category?.trim() || 'General';
+        if (!catMap.has(catName)) {
+          catMap.set(catName, {
+            id: `BT-${String(catMap.size + 1).padStart(3, '0')}`,
+            name: catName,
+            description: `${catName} business category`,
+            status: 'Active'
+          });
+        }
+      });
+      setCategories(Array.from(catMap.values()));
+    }
+  }, [members]);
 
   useEffect(() => {
     if (!selectedConclaveId) return;

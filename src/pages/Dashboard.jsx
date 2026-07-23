@@ -62,10 +62,23 @@ export default function Dashboard({ setActiveTab, selectedConclaveId, setSelecte
     async function loadStats() {
       try {
         const data = await api.get(`/admin/conclaves/${selectedConclaveId}/stats`);
-        setStats(data);
+        if (data) {
+          setStats(data);
+          return;
+        }
       } catch (err) {
-        console.error("Failed to load conclave stats:", err);
+        console.warn("Failed to load conclave stats:", err?.message || err);
       }
+      setStats({
+        counts: {
+          registered: 0,
+          active: 0,
+          captains: 0,
+          members: 0,
+          referrals: 0,
+          attendanceRecords: 0
+        }
+      });
     }
     loadStats();
   }, [selectedConclaveId]);
@@ -373,11 +386,11 @@ export default function Dashboard({ setActiveTab, selectedConclaveId, setSelecte
             <div className="flex flex-wrap gap-x-10 gap-y-4 py-4 border-y border-zinc-200/80 mt-5">
               <div className="space-y-0.5">
                 <p className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider">Members</p>
-                <p className="font-extrabold text-[15px] text-zinc-950 leading-tight mt-1">{totalMembers} / {selectedConclave.memberLimit || 100}</p>
+                <p className="font-extrabold text-[15px] text-zinc-950 leading-tight mt-1">{totalMembers}</p>
               </div>
               <div className="space-y-0.5">
                 <p className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider">Captains</p>
-                <p className="font-extrabold text-[15px] text-zinc-950 leading-tight mt-1">{totalCaptains} / {selectedConclave.captainLimit || 12}</p>
+                <p className="font-extrabold text-[15px] text-zinc-950 leading-tight mt-1">{totalCaptains}</p>
               </div>
               <div className="space-y-0.5">
                 <p className="text-[10px] text-zinc-400 uppercase font-bold tracking-wider">Referrals</p>

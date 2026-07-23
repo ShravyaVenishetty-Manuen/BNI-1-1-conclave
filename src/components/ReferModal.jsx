@@ -50,7 +50,9 @@ export default function ReferModal({ recipient, loggedInUser, activeConclaveId, 
           referrals: [{
             id: refId,
             fromUserId: fromUid,
+            fromName: loggedInUser?.name,
             toUserId: toUid,
+            toName: recipient?.name,
             roundNumber: recipient?.roundNumber || 1,
             notes: description,
             timestamp: new Date().toISOString()

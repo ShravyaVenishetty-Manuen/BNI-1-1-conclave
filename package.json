@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "emulator": "npx firebase-tools emulators:start"
   },
   "dependencies": {
     "canvas-confetti": "^1.6.0",

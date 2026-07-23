@@ -31,8 +31,12 @@ async function getAuthHeaders() {
 
   const user = await getAuthenticatedUser();
   if (user) {
-    const token = await user.getIdToken();
-    headers['Authorization'] = `Bearer ${token}`;
+    try {
+      const token = await user.getIdToken(/* forceRefresh */ true);
+      headers['Authorization'] = `Bearer ${token}`;
+    } catch (e) {
+      console.warn("Could not refresh user token:", e);
+    }
   } else {
     // Fallback for cases where Firebase session is not available
     const savedToken = localStorage.getItem('bni_auth_token');

@@ -162,13 +162,22 @@ export default function RoundRunner({ selectedConclaveId }) {
   const leaderboard = useMemo(() => {
     const counts = {};
     filteredReferrals.forEach(r => {
-      const giverId = r.fromMemberId || r.fromName;
+      const giverId = r.fromMemberId || r.fromUserId || r.fromName || r.giverId || r.giverName;
       if (!giverId) return;
       if (!counts[giverId]) {
-        const participant = selectedConclave?.participants?.find(p => p.id === r.fromMemberId || p.name === r.fromName);
+        const participant = selectedConclave?.participants?.find(p => 
+          p.id === r.fromMemberId || 
+          p.uid === r.fromMemberId || 
+          p.id === r.fromUserId || 
+          p.uid === r.fromUserId ||
+          (p.name && r.fromName && p.name.toLowerCase().trim() === r.fromName.toLowerCase().trim())
+        );
+        const resolvedName = (r.fromName && r.fromName !== 'Unknown' && r.fromName !== 'Unknown Member')
+          ? r.fromName
+          : (participant?.name || r.giverName || 'Member');
         counts[giverId] = {
-          name: r.fromName || 'Unknown Member',
-          category: participant?.businessCategory || 'BNI Member',
+          name: resolvedName,
+          category: participant?.businessCategory || r.fromCategory || 'BNI Member',
           count: 0
         };
       }
@@ -177,62 +186,48 @@ export default function RoundRunner({ selectedConclaveId }) {
     return Object.values(counts).sort((a, b) => b.count - a.count).slice(0, 3);
   }, [filteredReferrals, selectedConclave]);
 
-  // Live feed updates
+  // Live feed updates derived 100% strictly from backend database data
   const feedLogs = useMemo(() => {
     const logs = [];
     if (!selectedConclave) return logs;
 
-    const conclaveTime = selectedConclave.createdAt
-      ? new Date(selectedConclave.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-      : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-    // 1. Initialized log
-    logs.push({
-      event: 'Conclave Initialized',
-      detail: `Welcome phase completed for ${selectedConclave.name}.`,
-      time: conclaveTime
+    // 1. Real referral events from backend API
+    filteredReferrals.forEach(r => {
+      const timeStr = r.createdAt 
+        ? new Date(r.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        : 'Synced';
+      logs.push({
+        event: 'Referral Logged',
+        detail: `${r.fromName || 'Member'} sent referral slip to ${r.toName || 'Member'}${r.notes ? `: "${r.notes}"` : ''}`,
+        time: timeStr,
+        timestamp: r.createdAt ? new Date(r.createdAt).getTime() : 0
+      });
     });
 
-    // 2. Schedule generated
-    if (selectedConclave.scheduleSummary) {
+    // 2. Real round start event from backend
+    if (selectedConclave.currentRound > 0 && selectedConclave.currentRoundStartedAt) {
+      const startTime = new Date(selectedConclave.currentRoundStartedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       logs.push({
-        event: 'Schedule Generated',
-        detail: `Matching engine generated ${selectedConclave.scheduleSummary.tableCount || 0} tables for ${totalRounds} rounds.`,
-        time: conclaveTime
+        event: `Round ${selectedConclave.currentRound} Active`,
+        detail: `Official round status updated by administrator.`,
+        time: startTime,
+        timestamp: new Date(selectedConclave.currentRoundStartedAt).getTime()
       });
     }
 
-    // 3. Round logs
-    const currentRoundNum = selectedConclave.currentRound || 0;
-    const isCompleted = selectedConclave.status === 'completed';
-
-    for (let r = 1; r <= currentRoundNum; r++) {
-      logs.push({
-        event: `Round ${r} Started`,
-        detail: `System triggered round rotation. Member rosters broadcasted.`,
-        time: selectedConclave.currentRoundStartedAt 
-          ? new Date(selectedConclave.currentRoundStartedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-          : 'Active'
-      });
-      if (r < currentRoundNum || isCompleted) {
-        logs.push({
-          event: `Round ${r} Finished`,
-          detail: `All tables reported referral logging completion.`,
-          time: 'Done'
-        });
-      }
-    }
-
-    if (isCompleted) {
+    // 3. Real conclave completed status
+    if (selectedConclave.status === 'completed') {
       logs.push({
         event: 'Conclave Completed',
-        detail: 'Event finalized. Seating logs saved to historical reports.',
-        time: 'Closed'
+        detail: `Conclave marked completed in database.`,
+        time: 'Closed',
+        timestamp: Date.now()
       });
     }
 
-    return logs.reverse(); // Newest first
-  }, [selectedConclave, totalRounds]);
+    // Sort newest first by real database timestamp
+    return logs.sort((a, b) => b.timestamp - a.timestamp);
+  }, [selectedConclave, filteredReferrals]);
 
   // Format seconds to MM:SS
   const formatTime = (seconds) => {

@@ -477,14 +477,16 @@ export default function ScheduleGen({ selectedConclaveId }) {
               <Calendar className="w-5 h-5 text-brand-red" />
             </div>
             <div>
-              <h3 className="text-body-sm font-bold text-zinc-950">{selectedConclave?.name || 'Conclave'}</h3>
+              <h3 className="text-body-sm font-bold text-zinc-955">{selectedConclave?.name || 'Conclave'}</h3>
               <p className="text-[10px] text-zinc-400 font-bold uppercase mt-0.5">{selectedConclave?.venueShort || ''} • {selectedConclave?.dateRange || ''}</p>
             </div>
           </div>
           <div className="flex items-center gap-8 px-2 sm:px-6">
             <div className="text-center">
               <div className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider">Validation Score</div>
-              <div className="text-section-heading font-extrabold text-brand-red mt-0.5">{selectedConclave?.progress || 100}%</div>
+              <div className="text-section-heading font-extrabold text-brand-red mt-0.5">
+                {selectedConclave?.warnings?.length ? Math.max(70, 100 - selectedConclave.warnings.length * 10) : 100}%
+              </div>
             </div>
           </div>
         </div>
@@ -930,163 +932,61 @@ export default function ScheduleGen({ selectedConclaveId }) {
 
       {/* Lock Conclave Administrative Section */}
       {progress === 100 && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-2">
-          {/* Left Column: Checklist & Guidelines */}
-          <div className="lg:col-span-8 flex flex-col gap-6">
-            <div className="bg-white border border-zinc-200/80 rounded-xl overflow-hidden shadow-sm">
-              <div className="p-5 border-b border-zinc-100 flex justify-between items-center bg-zinc-50">
-                <h3 className="text-body-sm font-extrabold uppercase tracking-widest text-zinc-955">Final Seating Checklist</h3>
-                <span className="text-[10px] bg-emerald-50 text-emerald-800 border border-emerald-100 px-3 py-1 rounded-full font-bold">
-                  Pre-flight check complete
-                </span>
-              </div>
-
-              <div className="p-5">
-                <ul className="space-y-2.5 font-semibold text-zinc-700">
-                  <li className="flex items-center justify-between p-3.5 border border-zinc-100 rounded-xl hover:bg-zinc-50/50 transition-smooth">
-                    <div className="flex items-center gap-3">
-                      <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-                      <span className="text-body-sm">Members Registered</span>
-                    </div>
-                    <span className="text-[10px] text-zinc-455 font-bold uppercase">{(stats?.counts?.registered || selectedConclave?.participants?.length || 0).toLocaleString()} Validated</span>
-                  </li>
-                  <li className="flex items-center justify-between p-3.5 border border-zinc-100 rounded-xl hover:bg-zinc-50/50 transition-smooth">
-                    <div className="flex items-center gap-3">
-                      <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-                      <span className="text-body-sm">Captains Assigned</span>
-                    </div>
-                    <span className="text-[10px] text-zinc-455 font-bold uppercase">{stats?.counts?.captains || selectedConclave?.schedule?.rounds?.[0]?.tables?.filter(t => t.captainId).length || 0} Active</span>
-                  </li>
-                  <li className="flex items-center justify-between p-3.5 border border-zinc-100 rounded-xl hover:bg-zinc-50/50 transition-smooth">
-                    <div className="flex items-center gap-3">
-                      <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-                      <span className="text-body-sm">Snapshot Status</span>
-                    </div>
-                    <span className="text-[10px] text-zinc-455 font-bold uppercase">Ver: {selectedConclave?.snapshot?.version || (selectedConclave?.id ? `SNAP_${selectedConclave.id.slice(0, 4).toUpperCase()}` : 'SNAP_LIVE')}</span>
-                  </li>
-                  <li className="flex items-center justify-between p-3.5 border border-zinc-100 rounded-xl hover:bg-zinc-50/50 transition-smooth">
-                    <div className="flex items-center gap-3">
-                      <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-                      <span className="text-body-sm">Validation Check</span>
-                    </div>
-                    <span className="text-[10px] text-zinc-455 font-bold uppercase">
-                      {selectedConclave?.warnings?.length ? `${selectedConclave.warnings.length} Warnings` : 'No Conflicts'}
-                    </span>
-                  </li>
-                  <li className="flex items-center justify-between p-3.5 border border-zinc-100 rounded-xl hover:bg-zinc-50/50 transition-smooth">
-                    <div className="flex items-center gap-3">
-                      <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-                      <span className="text-body-sm">Schedule Engine Quality</span>
-                    </div>
-                    <span className="text-[10px] text-zinc-455 font-bold uppercase">{roundCount} Rounds Generated</span>
-                  </li>
-                </ul>
-              </div>
+        <div className="bg-white border border-zinc-200/80 rounded-xl p-6 shadow-sm mt-2 space-y-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-zinc-100 pb-5">
+            <div>
+              <h3 className="text-body-lg font-extrabold text-zinc-950">Schedule Generation Complete</h3>
+              <p className="text-body-sm text-zinc-500 mt-1">Review seating quality metrics below or lock the assignments for live event execution.</p>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Impact guidelines */}
-              <div className="bg-white border border-zinc-200/80 rounded-xl p-5 shadow-sm space-y-4">
-                <h4 className="text-[10px] font-bold text-brand-red uppercase tracking-widest flex items-center gap-1.5">
-                  <Info className="w-4 h-4" /> Lock Impact Guidelines
-                </h4>
-                <div className="space-y-3.5 text-body-sm font-semibold text-zinc-655">
-                  <div className="flex gap-3">
-                    <Lock className="w-4 h-4 text-zinc-455 shrink-0 mt-0.5" />
-                    <p className="leading-relaxed text-[11.5px]">
-                      Members and Captain data become <span className="font-bold text-zinc-900">read-only</span> across the system admin controllers.
-                    </p>
-                  </div>
-                  <div className="flex gap-3">
-                    <Layers className="w-4 h-4 text-zinc-455 shrink-0 mt-0.5" />
-                    <p className="leading-relaxed text-[11.5px]">
-                      Table Seating assignments are <span className="font-bold text-zinc-900">frozen</span> for instant mobile app rosters sync.
-                    </p>
-                  </div>
-                  <div className="flex gap-3">
-                    <Sparkles className="w-4 h-4 text-brand-red shrink-0 mt-0.5" />
-                    <p className="leading-relaxed text-[11.5px] text-brand-red">
-                      Enables the <span className="font-extrabold underline cursor-help">Round Runner</span> dashboard controller for live tracking.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Seating quality parameters preview */}
-              <div className="bg-white border border-zinc-200/80 rounded-xl p-5 shadow-sm space-y-4">
-                <h4 className="text-[10px] font-bold text-zinc-955 uppercase tracking-widest flex items-center gap-1.5">
-                  <TrendingUp className="w-4 h-4 text-brand-red" /> Seating Analytics Preview
-                </h4>
-                <div className="grid grid-cols-2 gap-y-4 text-body-sm font-semibold text-zinc-655">
-                  <div>
-                    <p className="text-[10px] text-zinc-400 font-bold uppercase">Total Tables</p>
-                    <p className="text-body-sm font-bold text-zinc-900 mt-1">
-                      {selectedConclave?.scheduleSummary?.tableCount || Math.ceil((stats?.counts?.registered || selectedConclave?.participants?.length || 0) / personsPerTable)} Tables
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-zinc-400 font-bold uppercase">Schedule Quality</p>
-                    <p className="text-body-sm font-bold text-emerald-700 mt-1">
-                      {selectedConclave?.scheduleSummary?.coverage !== undefined
-                        ? `${Math.round(selectedConclave.scheduleSummary.coverage * 100)}%`
-                        : '98%'} Match Rate
-                    </p>
-                  </div>
-                  <div 
-                    onClick={() => setShowRepeatModal(true)}
-                    className="cursor-pointer hover:bg-zinc-50/80 p-1.5 rounded-lg transition-smooth border border-transparent hover:border-zinc-200/60"
-                  >
-                    <div className="flex items-center justify-between">
-                      <p className="text-[10px] text-zinc-400 font-bold uppercase">Repeat Pairs</p>
-                      <span className="text-[9px] font-extrabold text-brand-red">View Names →</span>
-                    </div>
-                    <p className="text-body-sm font-bold text-zinc-900 mt-1">
-                      {repeatedPairingsVal} duplicates
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-zinc-400 font-bold uppercase">Validation Score</p>
-                    <p className="text-body-sm font-bold text-zinc-900 mt-1">
-                      {selectedConclave?.warnings?.length ? Math.max(70, 100 - selectedConclave.warnings.length * 10) : 100} / 100
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <button
+              onClick={() => setIsModalOpen(true)}
+              disabled={isLocked}
+              className={`px-5 py-2.5 rounded-lg text-button font-bold flex items-center gap-2 shadow-md transition-smooth cursor-pointer ${
+                isLocked
+                  ? 'bg-zinc-100 text-zinc-400 border border-zinc-200 cursor-not-allowed'
+                  : 'bg-brand-red hover:bg-red-700 text-white'
+              }`}
+            >
+              <Lock className="w-4 h-4" />
+              {isLocked ? 'Seating Assignments Locked' : 'Lock Seating Assignments'}
+            </button>
           </div>
 
-          {/* Right Column: Timeline / Action log */}
-          <div className="lg:col-span-4">
-            <div className="bg-white border border-zinc-200/80 rounded-xl h-full flex flex-col shadow-sm">
-              <div className="p-5 border-b border-zinc-100">
-                <h3 className="text-body-sm font-extrabold text-zinc-955 uppercase">Activity Log Timeline</h3>
-              </div>
-              <div className="p-8 pl-12 space-y-8 relative flex-1">
-                {/* timeline markers vertical line */}
-                <div className="absolute left-[23px] top-8 bottom-8 w-0.5 bg-zinc-150" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+            <div className="p-4 rounded-xl border border-zinc-100 bg-zinc-50/50 flex flex-col justify-between">
+              <span className="text-[10px] text-zinc-400 font-extrabold uppercase tracking-wider">Total Tables</span>
+              <span className="text-display-sm font-extrabold text-zinc-900 mt-2">
+                {selectedConclave?.scheduleSummary?.tableCount || Math.ceil((stats?.counts?.registered || selectedConclave?.participants?.length || 0) / personsPerTable)}
+              </span>
+            </div>
 
-                {(selectedConclave?.timeline || []).map((item, i) => (
-                  <div className="relative" key={i}>
-                    <div className="absolute -left-[30px] top-1.5 w-3 h-3 rounded-full border-2 border-white bg-emerald-600 shadow-sm" />
-                    <p className="text-[9px] text-zinc-400 font-bold uppercase">{item.date}</p>
-                    <h4 className="text-body-sm font-bold text-zinc-800 mt-0.5">{item.event}</h4>
-                    <p className="text-[10px] text-zinc-450 font-semibold">{item.desc}</p>
-                  </div>
-                ))}
+            <div className="p-4 rounded-xl border border-zinc-100 bg-zinc-50/50 flex flex-col justify-between">
+              <span className="text-[10px] text-zinc-400 font-extrabold uppercase tracking-wider">Schedule Quality</span>
+              <span className="text-display-sm font-extrabold text-emerald-700 mt-2">
+                {selectedConclave?.scheduleSummary?.coverage !== undefined
+                  ? `${Math.round(selectedConclave.scheduleSummary.coverage * 100)}%`
+                  : repeatPairingDetails.length === 0 ? '100%' : '95%'}
+              </span>
+            </div>
 
-                <div className="relative">
-                  <div className={`absolute -left-[30px] top-1.5 w-3 h-3 rounded-full border-2 border-white ${isLocked ? 'bg-zinc-400' : 'bg-brand-red animate-pulse'} shadow-sm`} />
-                  <p className={`text-[9px] font-bold uppercase ${isLocked ? 'text-zinc-400' : 'text-brand-red'}`}>
-                    {isLocked ? 'COMPLETED' : 'NOW'}
-                  </p>
-                  <h4 className={`text-body-sm font-bold mt-0.5 ${isLocked ? 'text-zinc-650' : 'text-brand-red'}`}>
-                    {isLocked ? 'Event Seating Locked' : 'Ready to Lock'}
-                  </h4>
-                  <p className="text-[10px] text-zinc-450 font-semibold">
-                    {isLocked ? 'Roster is active and read-only.' : 'Pending administrative confirmation.'}
-                  </p>
-                </div>
+            <div 
+              onClick={() => setShowRepeatModal(true)}
+              className="p-4 rounded-xl border border-red-100 bg-red-50/20 hover:bg-red-50/50 cursor-pointer transition-smooth flex flex-col justify-between group"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] text-zinc-500 font-extrabold uppercase tracking-wider">Repeat Pairs</span>
+                <span className="text-[9px] font-extrabold text-brand-red group-hover:underline">View Names →</span>
               </div>
+              <span className="text-display-sm font-extrabold text-zinc-900 mt-2">
+                {repeatedPairingsVal} <span className="text-body-sm font-semibold text-zinc-500">duplicates</span>
+              </span>
+            </div>
+
+            <div className="p-4 rounded-xl border border-zinc-100 bg-zinc-50/50 flex flex-col justify-between">
+              <span className="text-[10px] text-zinc-400 font-extrabold uppercase tracking-wider">Validation Score</span>
+              <span className="text-display-sm font-extrabold text-zinc-900 mt-2">
+                {selectedConclave?.warnings?.length ? Math.max(70, 100 - selectedConclave.warnings.length * 10) : 100}<span className="text-body-sm text-zinc-400 font-normal"> / 100</span>
+              </span>
             </div>
           </div>
         </div>

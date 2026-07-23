@@ -581,8 +581,8 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
                 <th className="px-5 py-4">Coordinator</th>
                 <th className="px-5 py-4">Date Schedule</th>
                 <th className="px-5 py-4">Venue Location</th>
-                <th className="px-5 py-4 text-center">Members Ratio</th>
-                <th className="px-5 py-4 text-center">Captains Ratio</th>
+                <th className="px-5 py-4 text-center">Members</th>
+                <th className="px-5 py-4 text-center">Captains</th>
                 <th className="px-5 py-4">Status</th>
                 <th className="px-5 py-4">Progress</th>
                 <th className="px-5 py-4 text-right">Actions</th>
@@ -636,10 +636,10 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
                       <td className="px-5 py-4 font-semibold text-zinc-650">{conclave.dateRange}</td>
                       <td className="px-5 py-4 text-zinc-650">{conclave.venueShort}</td>
                       <td className="px-5 py-4 text-center font-bold text-zinc-800">
-                        {conclave.memberCount} <span className="text-zinc-400 font-normal text-xs">/ {conclave.memberLimit}</span>
+                        {conclave.memberCount}
                       </td>
                       <td className="px-5 py-4 text-center font-bold text-zinc-800">
-                        {conclave.captainCount} <span className="text-zinc-400 font-normal text-xs">/ {conclave.captainLimit}</span>
+                        {conclave.captainCount}
                       </td>
                       <td className="px-5 py-4">
                         {conclave.status === 'Running' ? (
