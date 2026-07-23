@@ -52,6 +52,8 @@ export default function ScheduleGen({ selectedConclaveId }) {
           else if (s === 'draft') status = 'Draft';
           else if (s === 'cancelled') status = 'Cancelled';
 
+          const hasSched = Boolean(c.scheduleSummary || c.schedule || ['running', 'completed', 'locked'].includes(s));
+
           return {
             ...c,
             state,
@@ -61,7 +63,7 @@ export default function ScheduleGen({ selectedConclaveId }) {
             startDate,
             dateRange,
             status,
-            progress: s === 'completed' ? 100 : s === 'running' ? 60 : 0
+            progress: hasSched ? 100 : s === 'running' ? 60 : 0
           };
         }));
       } catch (err) {
@@ -106,22 +108,34 @@ export default function ScheduleGen({ selectedConclaveId }) {
   const [checkedQuality, setCheckedQuality] = useState(false);
   const [checkedEdits, setCheckedEdits] = useState(false);
 
-  const isConclaveRunningOrLocked = selectedConclave && ['running', 'completed', 'locked'].includes((selectedConclave.status || '').toLowerCase());
+  const isConclaveRunningOrLocked = Boolean(
+    selectedConclave && (
+      ['running', 'completed', 'locked'].includes((selectedConclave.status || '').toLowerCase()) ||
+      Boolean(selectedConclave.scheduleSummary) ||
+      Boolean(selectedConclave.schedule)
+    )
+  );
 
   const [progress, setProgress] = useState(isConclaveRunningOrLocked ? 100 : 0);
   const [isGenerating, setIsGenerating] = useState(false);
   const [elapsed, setElapsed] = useState(isConclaveRunningOrLocked ? 42 : 0);
-  const [processed, setProcessed] = useState(isConclaveRunningOrLocked ? 1054 : 0);
+  const [processed, setProcessed] = useState(isConclaveRunningOrLocked ? (selectedConclave?.registrationCount || stats?.counts?.registered || 1054) : 0);
   const [currentStep, setCurrentStep] = useState(isConclaveRunningOrLocked ? 'Complete' : 'Idle');
   const [round3Status, setRound3Status] = useState(isConclaveRunningOrLocked ? 'COMPLETED' : 'PENDING');
   const [activeStepIndex, setActiveStepIndex] = useState(isConclaveRunningOrLocked ? 5 : 0);
 
   // Sync state if selected conclave changes
   useEffect(() => {
-    const isRunning = selectedConclave && ['running', 'completed', 'locked'].includes((selectedConclave.status || '').toLowerCase());
+    const isRunning = Boolean(
+      selectedConclave && (
+        ['running', 'completed', 'locked'].includes((selectedConclave.status || '').toLowerCase()) ||
+        Boolean(selectedConclave.scheduleSummary) ||
+        Boolean(selectedConclave.schedule)
+      )
+    );
     setProgress(isRunning ? 100 : 0);
     setElapsed(isRunning ? 42 : 0);
-    setProcessed(isRunning ? 1054 : 0);
+    setProcessed(isRunning ? (selectedConclave?.registrationCount || stats?.counts?.registered || 1054) : 0);
     setCurrentStep(isRunning ? 'Complete' : 'Idle');
     setRound3Status(isRunning ? 'COMPLETED' : 'PENDING');
     setActiveStepIndex(isRunning ? 5 : 0);
@@ -133,7 +147,7 @@ export default function ScheduleGen({ selectedConclaveId }) {
         setRoundCount(selectedConclave.roundCount);
       }
     }
-  }, [selectedConclave]);
+  }, [selectedConclave, stats]);
 
   const [toast, setToast] = useState(null);
   const showToast = (title, desc) => {
@@ -200,6 +214,23 @@ export default function ScheduleGen({ selectedConclaveId }) {
       });
       
       clearInterval(simInterval);
+
+      // Re-fetch conclaves to update local state with generated schedule & scheduleSummary
+      try {
+        const data = await api.get('/admin/conclaves');
+        setConclaves(data.map(c => {
+          const s = (c.status || '').toLowerCase();
+          const hasSched = Boolean(c.scheduleSummary || c.schedule || ['running', 'completed', 'locked'].includes(s));
+          return {
+            ...c,
+            venueShort: (c.venueLocation || c.venue || 'N/A').split(',')[0] || 'N/A',
+            dateRange: c.date ? new Date(c.date).toLocaleDateString([], { month: 'short', day: '2-digit', year: 'numeric' }) : (c.dateRange || 'N/A'),
+            progress: hasSched ? 100 : s === 'running' ? 60 : 0
+          };
+        }));
+      } catch (err) {
+        console.warn("Refetching conclaves failed:", err);
+      }
 
       // Instantly mark completed
       setProgress(100);

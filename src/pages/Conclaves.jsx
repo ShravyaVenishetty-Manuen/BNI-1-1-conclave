@@ -84,7 +84,7 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
             memberLimit: c.memberLimit || 100,
             captainCount: c.captainCount || 0,
             captainLimit: c.captainLimit || 12,
-            progress: s === 'completed' ? 100 : s === 'running' ? 60 : 0
+            progress: (s === 'completed' || s === 'locked' || Boolean(c.scheduleSummary || c.schedule)) ? 100 : s === 'running' ? 60 : 0
           };
         }));
       } catch (err) {
