@@ -36,40 +36,49 @@ export default function ScheduleGen({ selectedConclaveId }) {
       setIsLoading(true);
       try {
         const data = await api.get('/admin/conclaves');
-        setConclaves(data.map(c => {
-          let state = c.state;
-          let country = c.country;
-          const venue = c.venueLocation || c.venue || 'N/A';
-          const venueShort = venue.split(',')[0] || 'N/A';
-          const startDate = c.date || c.startDate || '';
-          const dateRange = c.date ? new Date(c.date).toLocaleDateString([], { month: 'short', day: '2-digit', year: 'numeric' }) : (c.dateRange || 'N/A');
-          
-          let status = c.status;
-          const s = (c.status || '').toLowerCase();
-          if (s === 'registration_open') status = 'Upcoming';
-          else if (s === 'running') status = 'Running';
-          else if (s === 'completed') status = 'Completed';
-          else if (s === 'draft') status = 'Draft';
-          else if (s === 'cancelled') status = 'Cancelled';
+        if (data && data.length > 0) {
+          setConclaves(data.map(c => {
+            let state = c.state;
+            let country = c.country;
+            const venue = c.venueLocation || c.venue || 'N/A';
+            const venueShort = venue.split(',')[0] || 'N/A';
+            const startDate = c.date || c.startDate || '';
+            const dateRange = c.date ? new Date(c.date).toLocaleDateString([], { month: 'short', day: '2-digit', year: 'numeric' }) : (c.dateRange || 'N/A');
+            
+            let status = c.status;
+            const s = (c.status || '').toLowerCase();
+            if (s === 'registration_open') status = 'Upcoming';
+            else if (s === 'running') status = 'Running';
+            else if (s === 'completed') status = 'Completed';
+            else if (s === 'draft') status = 'Draft';
+            else if (s === 'cancelled') status = 'Cancelled';
 
-          const hasSched = Boolean(c.scheduleSummary || c.schedule || ['running', 'completed', 'locked'].includes(s));
+            const hasSched = Boolean(c.scheduleSummary || c.schedule || ['running', 'completed', 'locked'].includes(s));
 
-          return {
-            ...c,
-            state,
-            country,
-            venue,
-            venueShort,
-            startDate,
-            dateRange,
-            status,
-            progress: hasSched ? 100 : s === 'running' ? 60 : 0
-          };
-        }));
+            return {
+              ...c,
+              state,
+              country,
+              venue,
+              venueShort,
+              startDate,
+              dateRange,
+              status,
+              progress: hasSched ? 100 : s === 'running' ? 60 : 0
+            };
+          }));
+          return;
+        }
       } catch (err) {
         console.error("API load failed for conclaves:", err);
       } finally {
         setIsLoading(false);
+      }
+      const stored = localStorage.getItem('bni_conclaves');
+      if (stored) {
+        try {
+          setConclaves(JSON.parse(stored));
+        } catch {}
       }
     }
     loadConclaves();

@@ -53,21 +53,30 @@ export default function Sidebar({ activeTab, setActiveTab, onLogout, isOpen, onC
     async function loadConclaves() {
       try {
         const data = await api.get('/admin/conclaves');
-        setConclaves(data.map(c => {
-          let status = c.status;
-          const s = (c.status || '').toLowerCase();
-          if (s === 'registration_open') status = 'Upcoming';
-          else if (s === 'running') status = 'Running';
-          else if (s === 'completed') status = 'Completed';
-          else if (s === 'draft') status = 'Draft';
-          else if (s === 'cancelled') status = 'Cancelled';
-          return {
-            ...c,
-            status
-          };
-        }));
+        if (data && data.length > 0) {
+          setConclaves(data.map(c => {
+            let status = c.status;
+            const s = (c.status || '').toLowerCase();
+            if (s === 'registration_open') status = 'Upcoming';
+            else if (s === 'running') status = 'Running';
+            else if (s === 'completed') status = 'Completed';
+            else if (s === 'draft') status = 'Draft';
+            else if (s === 'cancelled') status = 'Cancelled';
+            return {
+              ...c,
+              status
+            };
+          }));
+          return;
+        }
       } catch (err) {
         console.warn("Sidebar conclave sync failed:", err.message);
+      }
+      const stored = localStorage.getItem('bni_conclaves');
+      if (stored) {
+        try {
+          setConclaves(JSON.parse(stored));
+        } catch {}
       }
     }
     loadConclaves();
