@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 import Pagination from '../components/Pagination';
 import { api } from '../services/api';
-import initialConclaves from '../data/conclaves_snapshot.json';
 
 export default function Snapshot({ searchQuery, selectedConclaveId }) {
   const [conclaves, setConclaves] = useState([]);
@@ -25,54 +24,58 @@ export default function Snapshot({ searchQuery, selectedConclaveId }) {
       setIsLoadingSnapshot(true);
       try {
         const conclavesList = await api.get('/admin/conclaves');
+
         const updatedConclaves = await Promise.all(conclavesList.map(async (c) => {
           try {
             const res = await api.get(`/admin/conclaves/${c.id}/registrations`);
-            const regsList = res.registrations || [];
-            // Backend now correctly computes isActive (registered users default to active)
-            const activeCount = regsList.filter(r => r.isActive).length;
-            const inactiveCount = regsList.length - activeCount;
-            const captainCount = regsList.filter(r => r.role === 'captain').length;
+            let regsList = Array.isArray(res?.registrations) ? res.registrations : [];
 
-            // Format date from real backend ISO date field
+            const activeCount = regsList.filter(r => Boolean(r.lastLoginAt) && r.isActive !== false).length;
+            const inactiveCount = regsList.length - activeCount;
+            const captainCount = regsList.filter(r => r.role === 'captain' || r.isTableCaptain === true).length;
+
             const dateFormatted = c.date
               ? new Date(c.date).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })
               : null;
 
             return {
               ...c,
-              dateRange: dateFormatted || c.dateRange || '—',
-              venue: c.venueLocation || c.venue || '—',
+              dateRange: dateFormatted || c.dateRange || 'TBD Date',
+              venue: c.venueLocation || c.venue || 'TBD Venue',
               totalRegistered: regsList.length,
               activeMembers: activeCount,
               inactive: inactiveCount,
               captains: captainCount,
               memberCount: regsList.length,
-              participants: regsList.map(r => ({
-                id: r.uid || r.id,
-                name: r.name,
-                category: r.businessCategory || r.category || 'N/A',
-                captain: r.role === 'captain' ? 'Yes' : 'No',
-                loginStatus: r.isActive ? 'Active' : 'Offline',
-                included: true,
-                remarks: '—',
-                avatar: (r.name || '?').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-              }))
+              participants: regsList.map(r => {
+                const displayName = r.name?.trim() || r.uid || 'Unknown Member';
+                const isUserOnline = Boolean(r.lastLoginAt) && r.isActive !== false;
+                return {
+                  id: r.uid || r.id,
+                  name: displayName,
+                  category: r.businessCategory || r.category || 'General',
+                  company: r.company || r.businessName || 'Self Employed',
+                  chapter: r.chapter || 'Peak Performance',
+                  region: r.userRegion || r.region || 'Global BNI Network',
+                  captain: (r.role === 'captain' || r.isTableCaptain === true) ? 'Yes' : 'No',
+                  loginStatus: isUserOnline ? 'Online' : 'Idle',
+                  included: true,
+                  remarks: isUserOnline ? 'Active Participant' : 'Idle',
+                  avatar: displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'M'
+                };
+              })
             };
           } catch (err) {
             console.warn("Failed to load registrations for conclave", c.id, err);
-            const dateFormatted = c.date
-              ? new Date(c.date).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })
-              : null;
             return {
               ...c,
-              dateRange: dateFormatted || c.dateRange || '—',
-              venue: c.venueLocation || c.venue || '—',
-              totalRegistered: c.registrationCount ?? 0,
-              activeMembers: c.registrationCount ?? 0,
+              dateRange: c.dateRange || 'TBD Date',
+              venue: c.venueLocation || c.venue || 'TBD Venue',
+              totalRegistered: 0,
+              activeMembers: 0,
               inactive: 0,
               captains: 0,
-              memberCount: c.registrationCount ?? 0,
+              memberCount: 0,
               participants: []
             };
           }
