@@ -10,8 +10,7 @@ import {
   FileText,
   CheckCircle2
 } from 'lucide-react';
-import membersData from '../data/members.json';
-import captainsData from '../data/captains.json';
+import { api } from '../services/api';
 
 export default function Referrals({ loggedInUser, userType, conclaveSyncData }) {
   const [referrals, setReferrals] = useState([]);
@@ -26,13 +25,23 @@ export default function Referrals({ loggedInUser, userType, conclaveSyncData }) 
   const [referralType, setReferralType] = useState('Inside');
   const [description, setDescription] = useState('');
 
-  // Load referrals on mount
+  // Load referrals on mount, fetch live database records
   useEffect(() => {
-    const stored = localStorage.getItem('bni_referrals');
-    if (stored) {
-      setReferrals(JSON.parse(stored));
-    }
-  }, []);
+    const activeConclaveId = conclaveSyncData?.conclaveStatus?.id || conclaveSyncData?.conclaveId || 'conc_1784874808479';
+    const loadRefs = async () => {
+      try {
+        const liveRefs = await api.get(`/conclaves/${activeConclaveId}/referrals`);
+        if (Array.isArray(liveRefs)) {
+          setReferrals(liveRefs);
+        }
+      } catch (err) {
+        console.warn("Failed to fetch live referrals:", err.message);
+      }
+    };
+    loadRefs();
+    const interval = setInterval(loadRefs, 4000);
+    return () => clearInterval(interval);
+  }, [conclaveSyncData?.conclaveStatus?.id, conclaveSyncData?.conclaveId]);
 
   if (!loggedInUser) {
     return (
@@ -43,7 +52,14 @@ export default function Referrals({ loggedInUser, userType, conclaveSyncData }) 
   }
 
   const myUid = loggedInUser?.uid || loggedInUser?.id;
-  const myName = (loggedInUser?.name || '').toLowerCase();
+  const uids = new Set([
+    loggedInUser?.uid,
+    loggedInUser?.id,
+    loggedInUser?._originalUid,
+    loggedInUser?.email
+  ].filter(Boolean));
+
+  const cleanMyName = (loggedInUser?.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 
   // Merge backend newReferralsReceived from conclaveSyncData if available
   const backendReceived = (conclaveSyncData?.newReferralsReceived || []).map(r => ({
@@ -55,18 +71,26 @@ export default function Referrals({ loggedInUser, userType, conclaveSyncData }) 
     toUserId: myUid,
     toName: loggedInUser?.name,
     description: r.notes || 'Referral lead shared during seating round',
-    status: 'Pending',
+    status: r.status || 'Pending',
     date: r.createdAt ? new Date(r.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
   }));
 
-  const allReferrals = [...referrals, ...backendReceived];
-  const uniqueReferrals = Array.from(new Map(allReferrals.map(item => [item.id, item])).values());
+  const map = new Map();
+  backendReceived.forEach(item => map.set(item.id, item));
+  referrals.forEach(item => {
+    const existing = map.get(item.id);
+    map.set(item.id, existing ? { ...existing, ...item } : item);
+  });
+  const uniqueReferrals = Array.from(map.values());
 
   // Filter partners list for manual referral form
+  const membersData = conclaveSyncData?.members || conclaveSyncData?.registrants || [];
+  const captainsData = conclaveSyncData?.captains || [];
   const allPartners = [
     ...membersData.map(m => ({ ...m, isCaptain: false })),
     ...captainsData.map(c => ({ ...c, isCaptain: true }))
-  ].filter(p => p.id !== myUid && p.name?.toLowerCase() !== myName);
+  ].filter(p => !uids.has(p.id) && !uids.has(p.uid));
+
 
   const filteredPartners = allPartners.filter(p =>
     p.name.toLowerCase().includes(recipientSearch.toLowerCase()) ||
@@ -74,20 +98,28 @@ export default function Referrals({ loggedInUser, userType, conclaveSyncData }) 
   );
 
   // Calculate statistics
-  const givenReferrals = uniqueReferrals.filter(r => 
-    r.fromMemberId === myUid || 
-    r.fromUserId === myUid || 
-    (r.fromName && myName && r.fromName.toLowerCase() === myName)
-  );
+  const givenReferrals = uniqueReferrals.filter(r => {
+    if (r.fromMemberId && uids.has(r.fromMemberId)) return true;
+    if (r.fromUserId && uids.has(r.fromUserId)) return true;
+    if (r.fromName) {
+      const cleanGiver = r.fromName.toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (cleanMyName && (cleanGiver.includes(cleanMyName) || cleanMyName.includes(cleanGiver))) return true;
+    }
+    return false;
+  });
 
-  const receivedReferrals = uniqueReferrals.filter(r => 
-    r.toMemberId === myUid || 
-    r.toUserId === myUid || 
-    (r.toName && myName && r.toName.toLowerCase() === myName)
-  );
+  const receivedReferrals = uniqueReferrals.filter(r => {
+    if (r.toMemberId && uids.has(r.toMemberId)) return true;
+    if (r.toUserId && uids.has(r.toUserId)) return true;
+    if (r.toName) {
+      const cleanReceiver = r.toName.toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (cleanMyName && (cleanReceiver.includes(cleanMyName) || cleanMyName.includes(cleanReceiver))) return true;
+    }
+    return false;
+  });
 
   const connectedCount = uniqueReferrals.filter(
-    r => (r.fromMemberId === myUid || r.fromUserId === myUid || r.toMemberId === myUid || r.toUserId === myUid) &&
+    r => (uids.has(r.fromMemberId) || uids.has(r.fromUserId) || uids.has(r.toMemberId) || uids.has(r.toUserId)) &&
       (r.status === 'Connected' || r.status === 'Closed')
   ).length;
 
@@ -118,7 +150,6 @@ export default function Referrals({ loggedInUser, userType, conclaveSyncData }) 
 
     const updatedList = [newReferral, ...referrals];
     setReferrals(updatedList);
-    localStorage.setItem('bni_referrals', JSON.stringify(updatedList));
 
     // Show toast and reset form
     setToast({ type: 'success', message: `Referral sent successfully to ${selectedRecipient.name}!` });
@@ -127,9 +158,46 @@ export default function Referrals({ loggedInUser, userType, conclaveSyncData }) 
     setRecipientSearch('');
     setDescription('');
     setReferralType('Inside');
+  };
 
-    // Trigger local storage storage event for page updates
-    window.dispatchEvent(new Event('storage'));
+  const handleUpdateStatus = async (refId, newStatus) => {
+    const exists = referrals.some(r => r.id === refId);
+    let updated;
+    if (exists) {
+      updated = referrals.map(r => r.id === refId ? { ...r, status: newStatus } : r);
+    } else {
+      const targetFromUnique = uniqueReferrals.find(r => r.id === refId);
+      if (targetFromUnique) {
+        updated = [{ ...targetFromUnique, status: newStatus }, ...referrals];
+      } else {
+        updated = referrals;
+      }
+    }
+    setReferrals(updated);
+
+    const activeConclaveId = conclaveSyncData?.conclaveStatus?.id || conclaveSyncData?.conclaveId || 'sku7Q5mTW3t5QeeHZPrO';
+    const targetRef = updated.find(r => r.id === refId);
+    if (targetRef && activeConclaveId) {
+      try {
+        await api.post(`/conclaves/${activeConclaveId}/sync`, {
+          referrals: [{
+            id: targetRef.id,
+            fromUserId: targetRef.fromUserId || targetRef.fromMemberId || 'member',
+            toUserId: targetRef.toUserId || targetRef.toMemberId || 'recipient',
+            fromName: targetRef.fromName || '',
+            toName: targetRef.toName || '',
+            status: newStatus,
+            notes: targetRef.description || targetRef.notes || '',
+            roundNumber: Number(targetRef.roundNumber || 1),
+            timestamp: targetRef.createdAt || targetRef.timestamp || new Date().toISOString()
+          }]
+        });
+      } catch (err) {
+        console.warn("Status sync failed:", err.message);
+      }
+    }
+
+    setToast({ type: 'success', message: `Referral marked as ${newStatus}!` });
   };
 
   return (
@@ -161,7 +229,7 @@ export default function Referrals({ loggedInUser, userType, conclaveSyncData }) 
           <p className="text-[11px] font-bold text-zinc-450 uppercase tracking-wide">Referrals Received</p>
           <div className="flex items-end justify-between mt-2">
             <span className="text-2xl font-black text-zinc-900 leading-none">
-              {receivedReferrals.length} <span className="text-zinc-400 text-xs font-semibold">Taken</span>
+              {receivedReferrals.length} <span className="text-zinc-400 text-xs font-semibold">Received</span>
             </span>
             <span className="p-2 bg-blue-50 text-blue-600 rounded-lg border border-blue-100">
               <ArrowDownLeft className="w-4 h-4" />
@@ -172,31 +240,33 @@ export default function Referrals({ loggedInUser, userType, conclaveSyncData }) 
         <div className="bg-white p-5 rounded-xl border border-zinc-200 shadow-2xs flex flex-col justify-between h-24">
           <p className="text-[11px] font-bold text-zinc-450 uppercase tracking-wide">Connected / Closed</p>
           <div className="flex items-end justify-between mt-2">
-            <span className="text-2xl font-black text-zinc-900 leading-none">
+            <span className="text-2xl font-black text-brand-red leading-none">
               {connectedCount} <span className="text-zinc-400 text-xs font-semibold">Successful</span>
             </span>
-            <span className="p-2 bg-zinc-50 text-zinc-650 rounded-lg border border-zinc-200">
+            <span className="p-2 bg-red-50 text-brand-red rounded-lg border border-red-100">
               <CheckCircle2 className="w-4 h-4" />
             </span>
           </div>
         </div>
       </div>
 
-      {/* Main Content Area with Sub-Tabs */}
-      <div className="bg-white rounded-xl border border-zinc-200 shadow-3xs overflow-hidden">
-
-        {/* Sub-tab selection bar */}
-        <div className="flex border-b border-zinc-200 px-5">
+      {/* Tabs list */}
+      <div className="bg-white rounded-xl border border-zinc-200 overflow-hidden shadow-2xs">
+        <div className="flex border-b border-zinc-200 bg-zinc-50/60 p-1.5">
           <button
             onClick={() => setActiveSubTab('received')}
-            className={`py-3.5 text-[12px] font-black uppercase tracking-wider relative cursor-pointer mr-6 transition-smooth ${activeSubTab === 'received' ? 'text-brand-red border-b-2 border-brand-red' : 'text-zinc-450 hover:text-zinc-800'
+            className={`flex-1 py-2.5 text-center text-[11px] font-black uppercase tracking-wider rounded-lg transition-smooth cursor-pointer ${activeSubTab === 'received'
+                ? 'bg-white text-brand-red shadow-2xs border border-zinc-200/80'
+                : 'text-zinc-500 hover:text-zinc-800'
               }`}
           >
             Received Referrals ({receivedReferrals.length})
           </button>
           <button
             onClick={() => setActiveSubTab('sent')}
-            className={`py-3.5 text-[12px] font-black uppercase tracking-wider relative cursor-pointer transition-smooth ${activeSubTab === 'sent' ? 'text-brand-red border-b-2 border-brand-red' : 'text-zinc-450 hover:text-zinc-800'
+            className={`flex-1 py-2.5 text-center text-[11px] font-black uppercase tracking-wider rounded-lg transition-smooth cursor-pointer ${activeSubTab === 'sent'
+                ? 'bg-white text-brand-red shadow-2xs border border-zinc-200/80'
+                : 'text-zinc-500 hover:text-zinc-800'
               }`}
           >
             Sent Referrals ({givenReferrals.length})
@@ -231,14 +301,14 @@ export default function Referrals({ loggedInUser, userType, conclaveSyncData }) 
                     <div className="flex items-center justify-between border-b border-zinc-100 pb-2">
                       <div className="flex items-center gap-2">
                         <div className="w-7 h-7 bg-zinc-100 text-zinc-700 rounded-full flex items-center justify-center text-[10px] font-extrabold shadow-3xs">
-                          {activeSubTab === 'received' ? ref.fromName.split(' ').map(n => n[0]).join('') : ref.toName.split(' ').map(n => n[0]).join('')}
+                          {activeSubTab === 'received' ? (ref.fromName || 'M').split(' ').map(n => n[0]).join('') : (ref.toName || 'M').split(' ').map(n => n[0]).join('')}
                         </div>
                         <div>
                           <p className="text-[11px] font-black text-zinc-850">
-                            {activeSubTab === 'received' ? `From: ${ref.fromName}` : `To: ${ref.toName}`}
+                            {activeSubTab === 'received' ? `From: ${ref.fromName || 'Member'}` : `To: ${ref.toName || 'Member'}`}
                           </p>
                           <span className="text-[8.5px] text-zinc-400 font-extrabold uppercase tracking-wider flex items-center gap-1 mt-0.5">
-                            <Calendar className="w-2.5 h-2.5" /> {ref.date}
+                            <Calendar className="w-2.5 h-2.5" /> {ref.date || 'Today'}
                           </span>
                         </div>
                       </div>
@@ -246,7 +316,7 @@ export default function Referrals({ loggedInUser, userType, conclaveSyncData }) 
 
                     {/* Middle: Message */}
                     <p className="text-[11.5px] font-semibold text-zinc-650 leading-relaxed italic">
-                      "{ref.description}"
+                      "{ref.description || ref.notes || 'Referral lead'}"
                     </p>
                   </div>
 
@@ -255,14 +325,37 @@ export default function Referrals({ loggedInUser, userType, conclaveSyncData }) 
                     <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest">
                       SLIP ID: {ref.id}
                     </span>
-                    <span className={`px-2 py-0.5 rounded-full text-[8.5px] font-black uppercase tracking-wider border ${ref.status === 'Connected'
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-150'
-                        : ref.status === 'Closed'
-                          ? 'bg-zinc-100 text-zinc-600 border-zinc-200'
-                          : 'bg-amber-50 text-amber-700 border-amber-150'
-                      }`}>
-                      {ref.status}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      {((ref.status || '').toLowerCase() === 'connected' || (ref.status || '').toLowerCase() === 'closed' || (ref.status || '').toLowerCase() === 'completed') ? (
+                        <div className="flex items-center gap-1.5">
+                          <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-[9px] font-black uppercase tracking-wider flex items-center gap-1">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Completed
+                          </span>
+                          {activeSubTab === 'received' && (
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateStatus(ref.id, 'Pending')}
+                              title="Revert to Pending"
+                              className="px-2 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-600 rounded-lg text-[9px] font-extrabold transition-smooth cursor-pointer"
+                            >
+                              Undo
+                            </button>
+                          )}
+                        </div>
+                      ) : activeSubTab === 'received' ? (
+                        <button
+                          type="button"
+                          onClick={() => handleUpdateStatus(ref.id, 'Connected')}
+                          className="px-3 py-1 bg-brand-red text-white hover:bg-red-700 rounded-lg text-[9px] font-black uppercase tracking-wider transition-smooth cursor-pointer shadow-3xs flex items-center gap-1"
+                        >
+                          <CheckCircle2 className="w-3 h-3" /> Mark Complete
+                        </button>
+                      ) : (
+                        <span className="px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-[9px] font-black uppercase tracking-wider">
+                          Pending
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -371,8 +464,8 @@ export default function Referrals({ loggedInUser, userType, conclaveSyncData }) 
                     type="button"
                     onClick={() => setReferralType('Inside')}
                     className={`py-2 px-3 text-[11px] font-bold rounded-lg border transition-smooth cursor-pointer ${referralType === 'Inside'
-                        ? 'border-brand-red bg-red-50/5 text-brand-red'
-                        : 'border-zinc-200 hover:border-zinc-300 text-zinc-500'
+                      ? 'border-brand-red bg-red-50/5 text-brand-red'
+                      : 'border-zinc-200 hover:border-zinc-300 text-zinc-500'
                       }`}
                   >
                     Inside (Direct business)
@@ -381,8 +474,8 @@ export default function Referrals({ loggedInUser, userType, conclaveSyncData }) 
                     type="button"
                     onClick={() => setReferralType('Outside')}
                     className={`py-2 px-3 text-[11px] font-bold rounded-lg border transition-smooth cursor-pointer ${referralType === 'Outside'
-                        ? 'border-brand-red bg-red-50/5 text-brand-red'
-                        : 'border-zinc-200 hover:border-zinc-300 text-zinc-500'
+                      ? 'border-brand-red bg-red-50/5 text-brand-red'
+                      : 'border-zinc-200 hover:border-zinc-300 text-zinc-500'
                       }`}
                   >
                     Outside (External client)
