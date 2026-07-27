@@ -57,30 +57,27 @@ export default function Dashboard({ setActiveTab, selectedConclaveId, setSelecte
   }, []);
 
   // Fetch stats for the selected conclave
+  // Fetch stats & live referrals for the selected conclave
   useEffect(() => {
     if (!selectedConclaveId) return;
-    async function loadStats() {
+    async function loadStatsAndReferrals() {
       try {
-        const data = await api.get(`/admin/conclaves/${selectedConclaveId}/stats`);
-        if (data) {
-          setStats(data);
-          return;
+        const [statsData, refData] = await Promise.all([
+          api.get(`/admin/conclaves/${selectedConclaveId}/stats`).catch(() => null),
+          api.get(`/admin/conclaves/${selectedConclaveId}/referrals`).catch(() => null)
+        ]);
+
+        if (statsData) setStats(statsData);
+
+        if (Array.isArray(refData)) {
+          setReferrals(refData);
+          localStorage.setItem('bni_referrals', JSON.stringify(refData));
         }
       } catch (err) {
-        console.warn("Failed to load conclave stats:", err?.message || err);
+        console.warn("Failed to load conclave stats/referrals:", err?.message || err);
       }
-      setStats({
-        counts: {
-          registered: 0,
-          active: 0,
-          captains: 0,
-          members: 0,
-          referrals: 0,
-          attendanceRecords: 0
-        }
-      });
     }
-    loadStats();
+    loadStatsAndReferrals();
   }, [selectedConclaveId]);
 
   // Conclave selector — from props
@@ -117,39 +114,38 @@ export default function Dashboard({ setActiveTab, selectedConclaveId, setSelecte
   }, [stats, selectedConclaveId]);
 
   const filteredReferrals = useMemo(() => {
-    return referrals.filter(r => r.conclaveId === selectedConclaveId);
+    return referrals.filter(r => !r.conclaveId || r.conclaveId === selectedConclaveId);
   }, [referrals, selectedConclaveId]);
 
   const totalReferrals = useMemo(() => {
-    if (stats) return stats.counts.referrals;
-    return filteredReferrals.length;
+    return filteredReferrals.length || (stats ? stats.counts.referrals : 0);
   }, [stats, filteredReferrals]);
 
   const connectedReferrals = useMemo(() => {
-    if (stats) return Math.round(stats.counts.referrals * 0.6);
-    return filteredReferrals.filter(r => r.status === 'Connected').length;
-  }, [stats, filteredReferrals]);
+    return filteredReferrals.filter(r => (r.status || '').toLowerCase() === 'connected').length;
+  }, [filteredReferrals]);
 
   const pendingReferrals = useMemo(() => {
-    if (stats) return Math.round(stats.counts.referrals * 0.3);
-    return filteredReferrals.filter(r => r.status === 'Pending').length;
-  }, [stats, filteredReferrals]);
+    return filteredReferrals.filter(r => !r.status || (r.status || '').toLowerCase() === 'pending').length;
+  }, [filteredReferrals]);
 
   const closedReferrals = useMemo(() => {
-    if (stats) return Math.round(stats.counts.referrals * 0.1);
-    return filteredReferrals.filter(r => r.status === 'Closed').length;
-  }, [stats, filteredReferrals]);
+    return filteredReferrals.filter(r => (r.status || '').toLowerCase() === 'closed').length;
+  }, [filteredReferrals]);
 
   // Top referral givers for this conclave
   const leaderboard = useMemo(() => {
     const counts = {};
     filteredReferrals.forEach(r => {
-      if (!counts[r.fromMemberId]) {
-        counts[r.fromMemberId] = { name: r.fromName, count: 0 };
+      const giverId = r.fromMemberId || r.fromUserId || r.fromName;
+      const giverName = r.fromName || 'BNI Member';
+      if (!giverId) return;
+      if (!counts[giverId]) {
+        counts[giverId] = { name: giverName, count: 0 };
       }
-      counts[r.fromMemberId].count++;
+      counts[giverId].count++;
     });
-    return Object.values(counts).sort((a, b) => b.count - a.count).slice(0, 3);
+    return Object.values(counts).sort((a, b) => b.count - a.count).slice(0, 5);
   }, [filteredReferrals]);
 
   // Status badge styles
