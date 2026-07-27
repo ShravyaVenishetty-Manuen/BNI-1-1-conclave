@@ -20,8 +20,7 @@ import {
 import confetti from 'canvas-confetti';
 import { ResponsiveContainer, PieChart, Pie, BarChart, Bar, Cell, XAxis, YAxis, Tooltip } from 'recharts';
 import { api } from '../services/api';
-import conclavesData from '../data/conclaves.json';
-import referralsJson from '../data/referrals.json';
+
 
 import runnerData from '../data/tables_runner.json';
 const { initialTables, mockRosters } = runnerData;
@@ -65,17 +64,19 @@ export default function RoundRunner({ selectedConclaveId }) {
   const [allTables, setAllTables] = useState(initialTables);
   const setTables = (updater) => setAllTables(updater);
 
-  const activeRound = selectedConclave?.currentRound || 1;
+  const statusLower = (selectedConclave?.status || '').toLowerCase();
+  const isUpcoming = statusLower === 'upcoming' || statusLower === 'draft' || !selectedConclave?.currentRound;
+  const activeRound = isUpcoming ? 0 : (selectedConclave?.currentRound || 0);
 
   const totalRounds = useMemo(() => {
     return selectedConclave?.scheduleSummary?.roundCount || selectedConclave?.roundCount || 4;
   }, [selectedConclave]);
 
   const progressPercent = useMemo(() => {
-    const isConclaveCompleted = (selectedConclave?.status || '').toLowerCase() === 'completed';
-    if (isConclaveCompleted) return 100;
-    return Math.min(100, Math.round(((activeRound - 1) / totalRounds) * 100));
-  }, [selectedConclave, activeRound, totalRounds]);
+    if (statusLower === 'completed') return 100;
+    if (isUpcoming || activeRound === 0) return 0;
+    return Math.min(100, Math.round((activeRound / totalRounds) * 100));
+  }, [selectedConclave, statusLower, isUpcoming, activeRound, totalRounds]);
 
   const [filteredReferrals, setFilteredReferrals] = useState([]);
   const [attendanceRecords, setAttendanceRecords] = useState([]);
@@ -134,13 +135,46 @@ export default function RoundRunner({ selectedConclaveId }) {
   }, [selectedConclave, activeRound]);
 
   const totalReferrals = filteredReferrals.length;
-  const connectedReferrals = filteredReferrals.filter(r => r.status === 'Connected').length;
-  const pendingReferrals = filteredReferrals.filter(r => r.status === 'Pending').length;
-  const closedReferrals = filteredReferrals.filter(r => r.status === 'Closed').length;
+  const connectedReferrals = filteredReferrals.filter(r => (r.status || '').toLowerCase() === 'connected').length;
+  const pendingReferrals = filteredReferrals.filter(r => !r.status || (r.status || '').toLowerCase() === 'pending').length;
+  const closedReferrals = filteredReferrals.filter(r => (r.status || '').toLowerCase() === 'closed').length;
 
-  // Timer States
-  const [timeLeft, setTimeLeft] = useState(765); // 12:45 in seconds
-  const [timerRunning, setTimerRunning] = useState(true);
+  // Timer States (15 minutes per round)
+  const ROUND_DURATION_SECS = 15 * 60; // 900 seconds (15:00)
+  const [timeLeft, setTimeLeft] = useState(ROUND_DURATION_SECS);
+  const [timerRunning, setTimerRunning] = useState(false);
+
+  // Sync real-time dynamic round timer from database status
+  useEffect(() => {
+    if (!selectedConclave || !selectedConclave.currentRound || !selectedConclave.currentRoundStartedAt) {
+      setTimerRunning(false);
+      setTimeLeft(ROUND_DURATION_SECS);
+      return;
+    }
+
+    const rawStart = selectedConclave.currentRoundStartedAt;
+    let startedTime = NaN;
+    if (typeof rawStart === 'object' && rawStart !== null) {
+      if (typeof rawStart._seconds === 'number') startedTime = rawStart._seconds * 1000;
+      else if (typeof rawStart.seconds === 'number') startedTime = rawStart.seconds * 1000;
+      else if (typeof rawStart.toDate === 'function') startedTime = rawStart.toDate().getTime();
+    }
+    if (isNaN(startedTime)) {
+      startedTime = new Date(rawStart).getTime();
+    }
+    if (isNaN(startedTime)) {
+      setTimerRunning(false);
+      setTimeLeft(ROUND_DURATION_SECS);
+      return;
+    }
+
+
+    const elapsed = Math.floor((Date.now() - startedTime) / 1000);
+    const remaining = Math.max(0, ROUND_DURATION_SECS - elapsed);
+
+    setTimeLeft(remaining);
+    setTimerRunning(remaining > 0);
+  }, [selectedConclave]);
 
   const [toast, setToast] = useState(null);
   const showToast = (title, desc) => {
@@ -166,10 +200,10 @@ export default function RoundRunner({ selectedConclaveId }) {
       const giverId = r.fromMemberId || r.fromUserId || r.fromName || r.giverId || r.giverName;
       if (!giverId) return;
       if (!counts[giverId]) {
-        const participant = selectedConclave?.participants?.find(p => 
-          p.id === r.fromMemberId || 
-          p.uid === r.fromMemberId || 
-          p.id === r.fromUserId || 
+        const participant = selectedConclave?.participants?.find(p =>
+          p.id === r.fromMemberId ||
+          p.uid === r.fromMemberId ||
+          p.id === r.fromUserId ||
           p.uid === r.fromUserId ||
           (p.name && r.fromName && p.name.toLowerCase().trim() === r.fromName.toLowerCase().trim())
         );
@@ -194,7 +228,7 @@ export default function RoundRunner({ selectedConclaveId }) {
 
     // 1. Real referral events from backend API
     filteredReferrals.forEach(r => {
-      const timeStr = r.createdAt 
+      const timeStr = r.createdAt
         ? new Date(r.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         : 'Synced';
       logs.push({
@@ -337,13 +371,22 @@ export default function RoundRunner({ selectedConclaveId }) {
                   <p className="text-[8px] font-bold uppercase tracking-wider">Current Stage</p>
                   <p className="text-body-sm font-bold mt-0.5">Round {activeRound} of {totalRounds}</p>
                 </div>
-                <div className="flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-100 rounded-full text-[10px] font-bold uppercase">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                  </span>
-                  Running
-                </div>
+                {isUpcoming ? (
+                  <div className="flex items-center gap-1.5 px-2.5 py-0.5 bg-amber-50 text-amber-800 border border-amber-100 rounded-full text-[10px] font-bold uppercase">
+                    <span className="relative flex h-2 w-2">
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                    </span>
+                    Upcoming (0/{totalRounds})
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-100 rounded-full text-[10px] font-bold uppercase">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    Running
+                  </div>
+                )}
               </div>
 
               <div className="text-left sm:text-right">
