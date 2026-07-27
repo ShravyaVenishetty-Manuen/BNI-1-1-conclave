@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Search,
   ChevronRight,
@@ -32,7 +33,7 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
     async function loadConclaves() {
       setIsLoadingConclaves(true);
       try {
-        const data = await api.get('/admin/conclaves');
+        const data = await api.get('/admin/conclaves?global=true');
         setConclaves(data.map(c => {
           let state = c.state;
           let country = c.country;
@@ -58,17 +59,17 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
 
           const venue = c.venueLocation || c.venue || 'N/A';
           const venueShort = venue.split(',')[0] || 'N/A';
-          const startDate = c.date || c.startDate || '';
-          const dateRange = c.date ? new Date(c.date).toLocaleDateString([], { month: 'short', day: '2-digit', year: 'numeric' }) : (c.dateRange || 'N/A');
-          const coordinator = c.coordinator || 'Sanjay Wagle';
+          const startDate = formatDateForInput(c.date || c.startDate);
+          const dateRange = (typeof c.dateRange === 'string' && c.dateRange) ? c.dateRange : (c.date ? safeRenderString(c.date, 'TBD') : 'TBD');
+          const coordinator = c.coordinator || c.creator || loggedInAdmin?.name || 'Admin';
           
           let status = c.status;
-          const s = (c.status || '').toLowerCase();
-          if (s === 'registration_open') status = 'Upcoming';
-          else if (s === 'running') status = 'Running';
+          const s = (c.status || '').toLowerCase().replace(/_/g, '');
+          if (s === 'running' || s === 'active') status = 'Running';
           else if (s === 'completed') status = 'Completed';
-          else if (s === 'draft') status = 'Draft';
           else if (s === 'cancelled') status = 'Cancelled';
+          else if (s === 'draft') status = 'Draft';
+          else status = 'Upcoming';
 
           return {
             ...c,
@@ -80,7 +81,7 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
             dateRange,
             coordinator,
             status,
-            memberCount: c.registrationCount || c.memberCount || 0,
+            memberCount: c.registrationCount ?? c.memberCount ?? 0,
             memberLimit: c.memberLimit || 100,
             captainCount: c.captainCount || 0,
             captainLimit: c.captainLimit || 12,
@@ -119,6 +120,18 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
   const [countryFilter, setCountryFilter] = useState('All');
   const [sortBy, setSortBy] = useState('DateDesc');
   const [selectedConclave, setSelectedConclave] = useState(null);
+
+  // Lock background body scroll when drawer is open
+  useEffect(() => {
+    if (selectedConclave) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [selectedConclave]);
   const [viewScope, setViewScope] = useState('region'); // 'region' or 'global'
 
   // Checked rows
@@ -194,7 +207,10 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
 
       const matchesStatus = statusFilter === 'All' || c.status === statusFilter;
       const matchesVenue = venueFilter === 'All' || c.venueShort === venueFilter;
-      const matchesViewScope = viewScope === 'global' || c.region?.toLowerCase().includes('guntur');
+      const adminReg = (loggedInAdmin?.region || loggedInAdmin?.scope || '').toLowerCase().trim();
+      const concReg = (c.region || '').toLowerCase().trim();
+
+      const matchesViewScope = viewScope === 'global' || !adminReg || adminReg === 'global' || adminReg.includes('global') || concReg.includes(adminReg) || adminReg.includes(concReg);
       const matchesState = stateFilter === 'All' || c.state === stateFilter;
       const matchesCountry = countryFilter === 'All' || c.country === countryFilter;
 
@@ -211,7 +227,7 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
     }
 
     return result;
-  }, [conclaves, searchVal, statusFilter, venueFilter, stateFilter, countryFilter, sortBy, viewScope]);
+  }, [conclaves, searchVal, statusFilter, venueFilter, stateFilter, countryFilter, sortBy, loggedInAdmin]);
 
   // Paginated list
   const paginatedConclaves = useMemo(() => {
@@ -310,8 +326,63 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
     showToast('Export Selected', `Successfully exported ${selectedList.length} conclaves.`);
   };
 
-  // Create & Edit form handlers
+const parseDate = (val) => {
+  if (!val) return null;
+  if (typeof val === 'object' && val._seconds !== undefined) {
+    return new Date(val._seconds * 1000);
+  }
+  if (typeof val === 'object' && val.seconds !== undefined) {
+    return new Date(val.seconds * 1000);
+  }
+  if (typeof val === 'string' || typeof val === 'number') {
+    const d = new Date(val);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  return null;
+};
+
+const formatDateForInput = (val) => {
+  const d = parseDate(val);
+  return d ? d.toISOString().slice(0, 10) : '';
+};
+
+const safeRenderString = (val, fallback = '') => {
+  if (val === null || val === undefined) return fallback;
+  if (typeof val === 'string' || typeof val === 'number') return String(val);
+  if (typeof val === 'object' && (val._seconds !== undefined || val.seconds !== undefined)) {
+    const d = parseDate(val);
+    return d ? d.toLocaleDateString([], { month: 'short', day: '2-digit', year: 'numeric' }) : fallback;
+  }
+  if (typeof val === 'object') return fallback;
+  return String(val);
+};
+
+  const handleDateChange = (field, val) => {
+    setFormData(prev => {
+      const updated = { ...prev, [field]: val };
+      const start = updated.startDate ? new Date(updated.startDate) : null;
+      const end = updated.endDate ? new Date(updated.endDate) : null;
+
+      let formattedRange = '';
+      if (start && !isNaN(start.getTime())) {
+        const startStr = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        if (end && !isNaN(end.getTime()) && updated.startDate !== updated.endDate) {
+          const endStr = end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+          formattedRange = `${startStr} - ${endStr}`;
+        } else {
+          formattedRange = startStr;
+        }
+      }
+      if (formattedRange) {
+        updated.dateRange = formattedRange;
+      }
+      return updated;
+    });
+  };
+
   const openAddModal = () => {
+    const defaultReg = loggedInAdmin?.region || loggedInAdmin?.scope || 'Guntur Region';
+    const defaultCoord = loggedInAdmin?.name || 'Administrator';
     setFormData({
       name: '',
       venue: '',
@@ -323,102 +394,120 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
       regEndDate: '',
       memberLimit: 500,
       captainLimit: 20,
-      status: 'Draft',
-      region: '',
-      coordinator: '',
+      status: 'Upcoming',
+      region: defaultReg,
+      coordinator: defaultCoord,
       description: ''
     });
     setIsAddModalOpen(true);
   };
 
-  const handleAddSubmit = (e) => {
+  const handleAddSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.name || !formData.venue || !formData.coordinator) {
+    if (!formData.name || !formData.venue) {
       showToast('Validation Error', 'Please fill in all mandatory fields.');
       return;
     }
 
-    const newConclave = {
-      id: `CON-2024-00${Math.floor(100 + Math.random() * 950)}`,
-      name: formData.name,
-      venue: formData.venue,
-      venueShort: formData.venueShort || formData.venue.split(',')[0],
-      dateRange: formData.dateRange || 'TBD',
-      startDate: formData.startDate || new Date().toISOString().slice(0, 10),
-      endDate: formData.endDate || new Date().toISOString().slice(0, 10),
-      regStartDate: formData.regStartDate || '',
-      regEndDate: formData.regEndDate || '',
-      memberCount: 0,
-      memberLimit: Number(formData.memberLimit) || 500,
-      captainCount: 0,
-      captainLimit: Number(formData.captainLimit) || 20,
-      status: formData.status,
-      progress: formData.status === 'Completed' ? 100 : formData.status === 'Running' ? 80 : formData.status === 'Upcoming' ? 40 : 5,
-      region: formData.region || 'Regional',
-      coordinator: formData.coordinator,
-      coordinatorAvatar: formData.coordinator.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
-      description: formData.description || 'No description provided.',
-      timeline: [
-        { event: 'Conclave Created', date: new Date().toLocaleString(), desc: `Workspace initiated by ${formData.coordinator}` }
-      ]
-    };
+    try {
+      const payload = {
+        name: formData.name,
+        venueLocation: formData.venue,
+        date: formData.startDate || new Date().toISOString(),
+        endDate: formData.endDate || undefined,
+        regStartDate: formData.regStartDate || undefined,
+        regEndDate: formData.regEndDate || undefined,
+        dateRange: formData.dateRange || 'TBD',
+        region: formData.region || loggedInAdmin?.region || loggedInAdmin?.scope || 'Guntur Region',
+        coordinator: formData.coordinator || loggedInAdmin?.name || 'Administrator',
+        personsPerTable: Number(formData.personsPerTable) || 7,
+        roundCount: Number(formData.roundCount) || 4
+      };
 
-    setConclaves(prev => [newConclave, ...prev]);
-    setIsAddModalOpen(false);
-    showToast('Conclave Created', `Successfully created ${newConclave.name}.`);
+      await api.post('/admin/conclaves', payload);
+      showToast('Conclave Created', `Successfully created ${formData.name}.`);
+      setIsAddModalOpen(false);
+
+      // Re-fetch fresh conclaves list from backend
+      const freshData = await api.get('/admin/conclaves?global=true');
+      if (Array.isArray(freshData)) {
+        setConclaves(freshData.map(c => ({
+          ...c,
+          venue: c.venueLocation || c.venue || 'N/A',
+          venueShort: (c.venueLocation || c.venue || 'N/A').split(',')[0],
+          dateRange: c.date ? new Date(c.date).toLocaleDateString([], { month: 'short', day: '2-digit', year: 'numeric' }) : 'TBD',
+          startDate: formatDateForInput(c.date || c.startDate),
+          coordinator: c.coordinator || loggedInAdmin?.name || 'Admin',
+          status: c.status || 'Upcoming',
+          progress: c.status === 'Completed' ? 100 : c.status === 'Running' ? 80 : c.status === 'Upcoming' ? 40 : 5
+        })));
+      }
+    } catch (err) {
+      console.error("Failed to create conclave:", err);
+      showToast('Creation Error', err.message || 'Failed to create conclave.');
+    }
   };
 
   const openEditModal = (c) => {
     setFormData({
       id: c.id,
-      name: c.name,
-      venue: c.venue,
-      venueShort: c.venueShort,
-      dateRange: c.dateRange,
-      startDate: c.startDate,
-      endDate: c.endDate,
-      regStartDate: c.regStartDate || '',
-      regEndDate: c.regEndDate || '',
-      memberCount: c.memberCount,
-      memberLimit: c.memberLimit,
-      captainCount: c.captainCount,
-      captainLimit: c.captainLimit,
-      status: c.status,
-      region: c.region,
-      coordinator: c.coordinator,
-      description: c.description
+      name: c.name || '',
+      venue: c.venue || c.venueLocation || '',
+      venueShort: c.venueShort || '',
+      dateRange: c.dateRange || '',
+      startDate: formatDateForInput(c.startDate || c.date),
+      endDate: formatDateForInput(c.endDate),
+      regStartDate: formatDateForInput(c.regStartDate),
+      regEndDate: formatDateForInput(c.regEndDate),
+      memberCount: c.memberCount || 0,
+      memberLimit: c.memberLimit || 500,
+      captainCount: c.captainCount || 0,
+      captainLimit: c.captainLimit || 20,
+      status: c.status || 'Upcoming',
+      region: c.region || '',
+      coordinator: c.coordinator || '',
+      description: c.description || ''
     });
     setIsEditModalOpen(true);
   };
 
-  const handleEditSubmit = (e) => {
+  const handleEditSubmit = async (e) => {
     e.preventDefault();
-    setConclaves(prev => prev.map(c => {
-      if (c.id === formData.id) {
-        return {
+    try {
+      const payload = {
+        name: formData.name,
+        venueLocation: formData.venue,
+        region: formData.region || loggedInAdmin?.region || loggedInAdmin?.scope || 'Guntur Region',
+        coordinator: formData.coordinator || loggedInAdmin?.name || 'Administrator',
+        status: formData.status,
+        dateRange: formData.dateRange,
+        date: formData.startDate || undefined,
+        endDate: formData.endDate || undefined,
+        regStartDate: formData.regStartDate || undefined,
+        regEndDate: formData.regEndDate || undefined,
+        description: formData.description
+      };
+      await api.put(`/admin/conclaves/${formData.id}`, payload);
+      showToast('Conclave Updated', `Successfully updated conclave profile data.`);
+      setIsEditModalOpen(false);
+
+      const freshData = await api.get('/admin/conclaves?global=true');
+      if (Array.isArray(freshData)) {
+        setConclaves(freshData.map(c => ({
           ...c,
-          name: formData.name,
-          venue: formData.venue,
-          venueShort: formData.venueShort || formData.venue.split(',')[0],
-          dateRange: formData.dateRange,
-          startDate: formData.startDate,
-          endDate: formData.endDate,
-          regStartDate: formData.regStartDate,
-          regEndDate: formData.regEndDate,
-          memberLimit: Number(formData.memberLimit),
-          captainLimit: Number(formData.captainLimit),
-          status: formData.status,
-          region: formData.region,
-          coordinator: formData.coordinator,
-          coordinatorAvatar: formData.coordinator.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
-          description: formData.description,
-          progress: formData.status === 'Completed' ? 100 : formData.status === 'Running' ? 85 : formData.status === 'Upcoming' ? 60 : 5
-        };
+          venue: c.venueLocation || c.venue || 'N/A',
+          venueShort: (c.venueLocation || c.venue || 'N/A').split(',')[0],
+          dateRange: c.date ? new Date(c.date).toLocaleDateString([], { month: 'short', day: '2-digit', year: 'numeric' }) : 'TBD',
+          startDate: formatDateForInput(c.date || c.startDate),
+          coordinator: c.coordinator || loggedInAdmin?.name || 'Admin',
+          status: c.status || 'Upcoming',
+          progress: c.status === 'Completed' ? 100 : c.status === 'Running' ? 60 : 0
+        })));
       }
-      return c;
-    }));
-    setIsEditModalOpen(false);
-    showToast('Conclave Updated', `Successfully updated conclave profile data.`);
+    } catch (err) {
+      console.error("Failed to update conclave:", err);
+      showToast('Update Error', err.message || 'Failed to update conclave.');
+    }
   };
 
   // KPI aggregates
@@ -563,7 +652,7 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
       </div>
 
       {/* Conclaves list table */}
-      <div className="bg-white border border-zinc-200/80 rounded-xl overflow-hidden shadow-sm flex flex-col">
+      <div className="bg-white border border-zinc-200/80 rounded-xl shadow-sm flex flex-col">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse min-w-[1000px]">
             <thead>
@@ -597,7 +686,11 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
                 </tr>
               ) : (
                 paginatedConclaves.map((conclave) => {
-                  const isHisCreated = conclave.coordinator === loggedInAdmin?.name;
+                  const isSuperadmin = loggedInAdmin?.role === 'superadmin';
+                  const adminReg = (loggedInAdmin?.region || loggedInAdmin?.scope || '').toLowerCase().trim();
+                  const concReg = (conclave.region || '').toLowerCase().trim();
+                  const matchesRegion = Boolean(adminReg && concReg && (adminReg.includes(concReg) || concReg.includes(adminReg)));
+                  const isHisCreated = isSuperadmin || matchesRegion;
                   return (
                     <tr
                       key={conclave.id}
@@ -616,25 +709,25 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
                       </td>
                       <td className="px-5 py-4">
                         <div className="flex flex-col">
-                          <span className="text-body-sm font-bold text-zinc-900 transition-smooth leading-tight">{conclave.name}</span>
-                          <span className="text-[9px] text-zinc-455 font-bold uppercase mt-0.5">ID: {conclave.id}</span>
+                          <span className="text-body-sm font-bold text-zinc-900 transition-smooth leading-tight">{safeRenderString(conclave.name)}</span>
+                          <span className="text-[9px] text-zinc-455 font-bold uppercase mt-0.5">ID: {safeRenderString(conclave.id)}</span>
                         </div>
                       </td>
                       <td className="px-5 py-4">
                         <span className="px-2 py-0.5 bg-zinc-50 border border-zinc-200 text-zinc-555 text-[10px] font-bold rounded-full whitespace-nowrap">
-                          {conclave.region || 'Guntur Region'}
+                          {safeRenderString(conclave.region, 'Guntur Region')}
                         </span>
                       </td>
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-2">
                           <div className="w-6 h-6 rounded-full bg-brand-red/10 text-brand-red font-bold text-[10px] flex items-center justify-center shrink-0">
-                            {conclave.coordinatorAvatar}
+                            {safeRenderString(conclave.coordinatorAvatar, 'A')}
                           </div>
-                          <span className="font-semibold text-zinc-700">{conclave.coordinator}</span>
+                          <span className="font-semibold text-zinc-700">{safeRenderString(conclave.coordinator)}</span>
                         </div>
                       </td>
-                      <td className="px-5 py-4 font-semibold text-zinc-650">{conclave.dateRange}</td>
-                      <td className="px-5 py-4 text-zinc-650">{conclave.venueShort}</td>
+                      <td className="px-5 py-4 font-semibold text-zinc-650">{safeRenderString(conclave.dateRange, 'TBD')}</td>
+                      <td className="px-5 py-4 text-zinc-650">{safeRenderString(conclave.venueShort, 'N/A')}</td>
                       <td className="px-5 py-4 text-center font-bold text-zinc-800">
                         {conclave.memberCount}
                       </td>
@@ -688,7 +781,7 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
                                   onClick={() => setActiveDropdown(null)}
                                   className="fixed inset-0 z-40 cursor-default"
                                 />
-                                <div className="absolute right-0 mt-1 w-36 bg-white border border-zinc-100 rounded-lg shadow-lg py-1 z-50 text-left animate-fade-in">
+                                <div className="absolute right-0 bottom-full mb-1.5 w-38 bg-white border border-zinc-200 rounded-xl shadow-xl py-1 z-50 text-left animate-scale-up">
                                   <button
                                     onClick={() => {
                                       setSelectedConclave(conclave);
@@ -747,18 +840,20 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
       </div>
 
       {/* Conclave Details Drawer */}
-      <div
-        onClick={() => setSelectedConclave(null)}
-        className={`fixed inset-0 bg-black/40 backdrop-blur-xs z-[55] transition-opacity duration-300 ${selectedConclave ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-          }`}
-      />
+      {createPortal(
+        <>
+          <div
+            onClick={() => setSelectedConclave(null)}
+            className={`fixed inset-0 bg-black/40 backdrop-blur-xs z-[9999] transition-opacity duration-300 ${selectedConclave ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+              }`}
+          />
 
-      <div className={`fixed right-0 top-0 h-screen w-full max-w-[440px] bg-white z-[60] border-l border-zinc-100 shadow-2xl transform transition-transform duration-300 ${selectedConclave ? 'translate-x-0' : 'translate-x-full'
-        }`}>
+          <div className={`fixed right-0 top-0 bottom-0 h-screen w-full max-w-[440px] bg-white border-l border-zinc-100 shadow-2xl transform transition-transform duration-300 flex flex-col overflow-hidden z-[10000] ${selectedConclave ? 'translate-x-0 pointer-events-auto' : 'translate-x-full pointer-events-none'
+            }`}>
         {selectedConclave && (
-          <div className="flex flex-col h-full">
+          <>
             {/* Drawer Header */}
-            <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50">
+            <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50 shrink-0">
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setSelectedConclave(null)}
@@ -774,7 +869,7 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
             </div>
 
             {/* Drawer Body */}
-            <div className="flex-1 overflow-y-auto p-5 space-y-6">
+            <div className="flex-1 overflow-y-auto min-h-0 p-5 space-y-6">
 
               {/* Description */}
               <div className="space-y-2">
@@ -807,12 +902,12 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
                 <div className="p-3.5 border border-zinc-100 bg-white rounded-lg shadow-sm">
                   <span className="text-[9px] text-zinc-400 font-bold uppercase block">Coordinator</span>
                   <div className="flex items-center gap-2 mt-1">
-                    {selectedConclave.coordinator && (
+                    {Boolean(selectedConclave.coordinator) && (
                       <div className="w-5 h-5 rounded-full bg-brand-red/10 text-brand-red font-bold text-[9px] flex items-center justify-center shrink-0">
-                        {selectedConclave.coordinator.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                        {safeRenderString(selectedConclave.coordinator, 'A').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                       </div>
                     )}
-                    <span className="text-body-sm font-bold text-zinc-800">{selectedConclave.coordinator || '—'}</span>
+                    <span className="text-body-sm font-bold text-zinc-800">{safeRenderString(selectedConclave.coordinator, '—')}</span>
                   </div>
                 </div>
                 <div className="p-3.5 border border-zinc-100 bg-white rounded-lg shadow-sm">
@@ -853,22 +948,31 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
             </div>
 
             {/* Drawer Footer Actions */}
-            <div className="p-4 border-t border-zinc-100 bg-zinc-50/50 flex gap-2 shrink-0">
-              <button
-                onClick={() => {
-                  const isHisCreated = selectedConclave?.coordinator === loggedInAdmin?.name;
-                  if (!isHisCreated) return;
-                  openEditModal(selectedConclave);
-                  setSelectedConclave(null);
-                }}
-                disabled={selectedConclave && selectedConclave.coordinator !== loggedInAdmin?.name}
-                className={`flex-1 py-2.5 rounded-lg text-button font-bold transition-smooth shadow-sm ${selectedConclave && selectedConclave.coordinator !== loggedInAdmin?.name
-                  ? 'bg-zinc-100 text-zinc-355 cursor-not-allowed border border-zinc-200/60 opacity-40'
-                  : 'bg-white border border-zinc-100 text-zinc-655 hover:bg-zinc-50 cursor-pointer'
-                  }`}
-              >
-                Edit Conclave
-              </button>
+            <div className="p-4 border-t border-zinc-100 bg-white flex gap-2 shrink-0 shadow-lg">
+              {(() => {
+                const isSuperadmin = loggedInAdmin?.role === 'superadmin';
+                const adminReg = (loggedInAdmin?.region || loggedInAdmin?.scope || '').toLowerCase().trim();
+                const concReg = (selectedConclave?.region || '').toLowerCase().trim();
+                const matchesRegion = Boolean(adminReg && concReg && (adminReg.includes(concReg) || concReg.includes(adminReg)));
+                const canEditSelected = isSuperadmin || matchesRegion;
+                return (
+                  <button
+                    onClick={() => {
+                      if (!canEditSelected) return;
+                      openEditModal(selectedConclave);
+                      setSelectedConclave(null);
+                    }}
+                    disabled={!canEditSelected}
+                    className={`flex-1 py-2.5 rounded-lg text-button font-bold transition-smooth shadow-sm ${
+                      !canEditSelected
+                        ? 'bg-zinc-100 text-zinc-350 border border-zinc-200/60 cursor-not-allowed opacity-50'
+                        : 'bg-white border border-zinc-200 text-zinc-800 hover:bg-zinc-50 cursor-pointer'
+                    }`}
+                  >
+                    Edit Conclave
+                  </button>
+                );
+              })()}
               <button
                 onClick={() => {
                   if (setActiveTab) {
@@ -883,9 +987,12 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
                 View Reports
               </button>
             </div>
-          </div>
+          </>
         )}
       </div>
+    </>,
+    document.body
+  )}
 
       {/* CREATE MODAL */}
       {isAddModalOpen && (
@@ -964,7 +1071,7 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
                   <label className="text-[10px] font-bold uppercase text-zinc-455 block mb-1">Start Date</label>
                   <input
                     value={formData.startDate}
-                    onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
+                    onChange={(e) => handleDateChange('startDate', e.target.value)}
                     className="w-full px-3 py-1.5 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-zinc-50/20"
                     type="date"
                   />
@@ -973,7 +1080,7 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
                   <label className="text-[10px] font-bold uppercase text-zinc-455 block mb-1">End Date</label>
                   <input
                     value={formData.endDate}
-                    onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
+                    onChange={(e) => handleDateChange('endDate', e.target.value)}
                     className="w-full px-3 py-1.5 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-zinc-50/20"
                     type="date"
                   />
@@ -1136,7 +1243,7 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
                   <label className="text-[10px] font-bold uppercase text-zinc-455 block mb-1">Start Date</label>
                   <input
                     value={formData.startDate}
-                    onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
+                    onChange={(e) => handleDateChange('startDate', e.target.value)}
                     className="w-full px-3 py-1.5 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-zinc-50/20"
                     type="date"
                   />
@@ -1145,7 +1252,7 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
                   <label className="text-[10px] font-bold uppercase text-zinc-455 block mb-1">End Date</label>
                   <input
                     value={formData.endDate}
-                    onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
+                    onChange={(e) => handleDateChange('endDate', e.target.value)}
                     className="w-full px-3 py-1.5 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-zinc-50/20"
                     type="date"
                   />
@@ -1264,10 +1371,26 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setConclaves(prev => prev.filter(c => c.id !== deleteTarget.id));
-                  showToast('Conclave Removed', `Successfully deleted ${deleteTarget.name}.`);
-                  setDeleteTarget(null);
+                onClick={async () => {
+                  try {
+                    await api.delete(`/admin/conclaves/${deleteTarget.id}`);
+                    showToast('Conclave Removed', `Successfully deleted ${deleteTarget.name}.`);
+                    setDeleteTarget(null);
+                    const freshData = await api.get('/admin/conclaves?global=true');
+                    if (Array.isArray(freshData)) {
+                      setConclaves(freshData.map(c => ({
+                        ...c,
+                        venue: c.venueLocation || c.venue || 'N/A',
+                        venueShort: (c.venueLocation || c.venue || 'N/A').split(',')[0],
+                        dateRange: c.date ? new Date(c.date).toLocaleDateString([], { month: 'short', day: '2-digit', year: 'numeric' }) : 'TBD',
+                        startDate: c.date ? new Date(c.date).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10),
+                        coordinator: c.coordinator || loggedInAdmin?.name || 'Admin',
+                        status: c.status || 'Upcoming'
+                      })));
+                    }
+                  } catch (err) {
+                    showToast('Delete Error', err.message || 'Failed to delete conclave.');
+                  }
                 }}
                 className="px-3.5 py-1.5 bg-brand-red hover:bg-red-700 text-white text-button rounded-lg transition-smooth cursor-pointer text-[10px] font-bold"
               >
