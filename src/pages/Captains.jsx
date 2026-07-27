@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Search,
   ChevronRight,
@@ -7,6 +8,7 @@ import {
   Edit2,
   Download,
   Upload,
+  FileSpreadsheet,
   MoreVertical,
   Grid,
   List,
@@ -23,52 +25,158 @@ import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recha
 
 import { api } from '../services/api';
 
-export default function Captains({ searchQuery, selectedConclaveId }) {
+export default function Captains({ searchQuery, selectedConclaveId, loggedInAdmin }) {
   const [captains, setCaptains] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [viewScope, setViewScope] = useState('conclave'); // 'conclave', 'region', or 'global'
 
   useEffect(() => {
-    if (!selectedConclaveId) return;
-    async function loadRegistrations() {
+    async function loadCaptainsData() {
       setIsLoading(true);
       try {
-        const data = await api.get(`/admin/conclaves/${selectedConclaveId}/registrations`);
-        const mapped = (data.registrations || []).map(r => {
-          const displayName = r.name?.trim() || r.uid || 'Unknown Captain';
-          const fallbackCategory = r.businessCategory?.trim() || 'General';
-          const fallbackCompany = r.businessName?.trim() || 'Self Employed';
-          const fallbackLocation = typeof r.location === 'object' && r.location !== null
+        let rawList = [];
+        const allUsers = await api.get('/admin/users').catch(() => []);
+        const userMap = new Map();
+        if (Array.isArray(allUsers)) {
+          allUsers.forEach(u => {
+            const uid = u.id || u.uid;
+            if (uid) userMap.set(uid, u);
+          });
+        }
+
+        let targetConclaveId = selectedConclaveId;
+        if (viewScope === 'conclave' && !targetConclaveId) {
+          const conclavesList = await api.get('/admin/conclaves').catch(() => []);
+          if (Array.isArray(conclavesList) && conclavesList.length > 0) {
+            targetConclaveId = conclavesList[0].id;
+          }
+        }
+
+        if (viewScope === 'conclave') {
+          if (targetConclaveId) {
+            try {
+              const res = await api.get(`/admin/conclaves/${targetConclaveId}/registrations`);
+              if (res && Array.isArray(res.registrations)) {
+                const capRegs = res.registrations.filter(r => r.role === 'captain' || r.isTableCaptain || r.isCaptain);
+                rawList = capRegs.map(r => {
+                  const uid = r.userId || r.uid || r.id;
+                  const master = userMap.get(uid) || {};
+                  const userRegion = r.region || master.region || (typeof r.location === 'string' ? r.location : '') || 'Global BNI Network';
+                  return {
+                    ...master,
+                    ...r,
+                    id: uid,
+                    uid: uid,
+                    name: r.name || master.name || master.displayName || 'Captain',
+                    email: r.email || master.email || 'n/a',
+                    phone: r.phone || master.phone || master.mobile || 'n/a',
+                    company: r.company || master.company || master.businessName || 'Self Employed',
+                    category: r.category || master.category || master.businessCategory || 'General',
+                    chapter: r.chapter || master.chapter || 'Peak Performance',
+                    region: userRegion,
+                    userRegion: userRegion
+                  };
+                });
+              }
+            } catch {}
+          } else {
+            rawList = [];
+          }
+        } else {
+          const conclavesList = await api.get('/admin/conclaves?global=true').catch(() => []);
+          const captainMap = new Map();
+
+          if (Array.isArray(allUsers)) {
+            allUsers.forEach(u => {
+              if (u.role === 'captain' || u.isTableCaptain === true || u.isCaptain === true) {
+                const uid = u.id || u.uid;
+                if (uid) captainMap.set(uid, { ...u });
+              }
+            });
+          }
+
+          if (Array.isArray(conclavesList)) {
+            await Promise.all(conclavesList.map(async (c) => {
+              try {
+                const res = await api.get(`/admin/conclaves/${c.id}/registrations`);
+                if (res && Array.isArray(res.registrations)) {
+                  res.registrations.forEach(r => {
+                    if (r.role === 'captain' || r.isTableCaptain === true || r.isCaptain === true) {
+                      const uid = r.userId || r.uid || r.id;
+                      const existing = captainMap.get(uid) || {};
+                      const userRegion = existing.region || (typeof existing.location === 'string' ? existing.location : '') || (r.region && r.region !== 'Guntur Region' ? r.region : '') || 'Global BNI Network';
+                      captainMap.set(uid, {
+                        ...r,
+                        ...existing,
+                        id: uid,
+                        uid: uid,
+                        name: existing.name || r.name || existing.displayName || 'Captain',
+                        email: existing.email || r.email || 'n/a',
+                        phone: existing.phone || r.phone || existing.mobile || 'n/a',
+                        company: existing.company || r.company || existing.businessName || 'Self Employed',
+                        category: existing.category || r.category || existing.businessCategory || 'General',
+                        chapter: existing.chapter || r.chapter || 'Peak Performance',
+                        conclaveName: c.name,
+                        userRegion: userRegion
+                      });
+                    }
+                  });
+                }
+              } catch {}
+            }));
+          }
+
+          rawList = Array.from(captainMap.values());
+        }
+
+        const mapped = rawList.map(r => {
+          const displayName = r.name?.trim() || r.email?.split('@')[0] || r.id || 'Captain';
+          const fallbackCategory = r.category || r.businessCategory?.trim() || 'General';
+          const fallbackCompany = r.company || r.businessName?.trim() || 'Self Employed';
+
+          const resolvedRegion = r.userRegion || r.region || 'Global BNI Network';
+          const locStr = typeof r.location === 'object' && r.location !== null
             ? (r.location.place || r.location.city || '')
-            : (r.location || '');
+            : (r.location || r.address || '');
+          const fallbackLocation = locStr || (r.chapter ? `${r.chapter}, ${resolvedRegion}` : resolvedRegion);
+
+          const rawStatus = (r.status || '').toLowerCase();
+          const isActiveCaptain = rawStatus === 'active' || rawStatus === 'pending' || rawStatus === 'registered' || rawStatus === 'confirmed' || r.isActive === true || !r.status;
+
+          const tableStr = r.tableNumber ? `Table ${r.tableNumber}` : (r.table || r.assignedTable || 'Table Captain');
+          const joinDateFormatted = r.joinDate ? (new Date(r.joinDate).toLocaleDateString([], { month: 'short', day: '2-digit', year: 'numeric' })) : (r.createdAt ? new Date(r.createdAt).toLocaleDateString([], { month: 'short', day: '2-digit', year: 'numeric' }) : 'N/A');
+
           return {
-            id: r.uid,
+            id: r.id || r.uid || `cap_${Math.random()}`,
             name: displayName,
             email: r.email?.trim() || 'n/a',
-            phone: r.phone?.trim() || 'n/a',
+            phone: r.phone?.trim() || r.mobile?.trim() || 'n/a',
             company: fallbackCompany,
             category: fallbackCategory,
             address: fallbackLocation,
             state: r.state || 'Andhra Pradesh',
             country: r.country || 'India',
-            chapter: r.chapter || 'Peak Performance',
-            isCaptain: r.role === 'captain',
-            status: r.isActive ? 'Available' : 'Busy',
-            joinDate: r.registeredAt ? new Date(r.registeredAt).toLocaleDateString([], { month: 'short', year: 'numeric' }) : 'N/A',
-            avatar: displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'TC',
-            conclaveIds: [selectedConclaveId],
-            history: [{ event: 'Registered', date: r.registeredAt ? new Date(r.registeredAt).toLocaleDateString() : 'N/A', role: r.role === 'captain' ? 'Captain' : 'Member' }]
+            chapter: r.chapter || r.bniChapter || 'Peak Performance',
+            region: resolvedRegion,
+            table: tableStr,
+            assignedTable: tableStr,
+            joinDate: joinDateFormatted,
+            status: isActiveCaptain ? 'Available' : 'Assigned',
+            rating: r.rating || 4.9,
+            conclavesCoordinated: r.conclavesCoordinated || 3,
+            membersManaged: r.membersManaged || 14,
+            avatar: displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'C'
           };
         });
-        // Captains page shows captains only
-        setCaptains(mapped.filter(m => m.isCaptain));
+        setCaptains(mapped);
       } catch (err) {
-        console.error("Failed to load registrations from API:", err);
+        console.error("Failed to load captains from API:", err);
       } finally {
         setIsLoading(false);
       }
     }
-    loadRegistrations();
-  }, [selectedConclaveId]);
+    loadCaptainsData();
+  }, [selectedConclaveId, viewScope]);
   const [referrals, setReferrals] = useState(() => {
     const stored = localStorage.getItem('bni_referrals');
     return stored ? JSON.parse(stored) : [];
@@ -78,16 +186,19 @@ export default function Captains({ searchQuery, selectedConclaveId }) {
     const handleStorageChange = () => {
       const stored = localStorage.getItem('bni_referrals');
       if (stored) {
-        setReferrals(JSON.parse(stored));
+        try {
+          const parsed = JSON.parse(stored);
+          setReferrals(prev => (JSON.stringify(prev) !== JSON.stringify(parsed) ? parsed : prev));
+        } catch {}
       }
     };
     window.addEventListener('storage', handleStorageChange);
-    const interval = setInterval(handleStorageChange, 1000);
     return () => {
       window.removeEventListener('storage', handleStorageChange);
-      clearInterval(interval);
     };
   }, []);
+
+
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
@@ -101,11 +212,22 @@ export default function Captains({ searchQuery, selectedConclaveId }) {
   const [statusFilter, setStatusFilter] = useState('All');
   const [stateFilter, setStateFilter] = useState('All');
   const [countryFilter, setCountryFilter] = useState('All');
-  const [viewScope, setViewScope] = useState('region'); // 'region' or 'global'
 
   // Selection states
   const [selectedRows, setSelectedRows] = useState(new Set());
   const [selectedCaptain, setSelectedCaptain] = useState(null);
+
+  // Lock background body scroll when drawer is open
+  useEffect(() => {
+    if (selectedCaptain) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [selectedCaptain]);
   const [activeDropdown, setActiveDropdown] = useState(null);
 
 
@@ -117,8 +239,7 @@ export default function Captains({ searchQuery, selectedConclaveId }) {
   const [isBulkDeleteConfirmOpen, setIsBulkDeleteConfirmOpen] = useState(false);
   const [toast, setToast] = useState(null);
 
-  const [showWestWarning, setShowWestWarning] = useState(true);
-  const [showConflictWarning, setShowConflictWarning] = useState(true);
+
 
   // Form inputs state
   const [formData, setFormData] = useState({
@@ -140,15 +261,20 @@ export default function Captains({ searchQuery, selectedConclaveId }) {
   };
 
   const getCaptainRegion = (captain) => {
-    if (captain.region) return captain.region;
-    if (captain.chapter === 'Peak Performance' || captain.chapter === 'Apex Chapter') return 'Guntur Region';
-    return 'Guntur Region';
+    if (captain.userRegion && typeof captain.userRegion === 'string') return captain.userRegion;
+    if (captain.region && typeof captain.region === 'string') return captain.region;
+    if (captain.location) {
+      if (typeof captain.location === 'string') return captain.location;
+      if (typeof captain.location === 'object' && captain.location.place) return captain.location.place;
+    }
+    if (captain.address && typeof captain.address === 'string') return captain.address;
+    return 'Global BNI Network';
   };
 
   // Conclave-specific captains subset
   const conclaveCaptains = useMemo(() => {
-    return captains.filter(c => c.conclaveIds && c.conclaveIds.includes(selectedConclaveId));
-  }, [captains, selectedConclaveId]);
+    return captains;
+  }, [captains]);
 
   // KPIs
   const totalCaptains = conclaveCaptains.length;
@@ -184,9 +310,9 @@ export default function Captains({ searchQuery, selectedConclaveId }) {
 
       const matchesCategory = categoryFilter === 'All' || cap.category === categoryFilter;
       const matchesStatus = statusFilter === 'All' || cap.status === statusFilter;
-      const matchesViewScope = viewScope === 'global' || 
-        cap.chapter === 'Peak Performance' || 
-        cap.chapter === 'Apex Chapter';
+      const adminReg = (loggedInAdmin?.region || loggedInAdmin?.scope || '').toLowerCase().trim();
+      const capReg = (cap.region || '').toLowerCase().trim();
+      const matchesViewScope = viewScope === 'conclave' || viewScope === 'global' || !adminReg || adminReg === 'global' || adminReg.includes('global') || capReg.includes(adminReg) || adminReg.includes(capReg);
 
       const matchesState = stateFilter === 'All' || cap.state === stateFilter;
       const matchesCountry = countryFilter === 'All' || cap.country === countryFilter;
@@ -394,6 +520,28 @@ export default function Captains({ searchQuery, selectedConclaveId }) {
     e.target.value = '';
   };
 
+  const handleDownloadTemplate = () => {
+    const headers = ['Captain ID', 'Name', 'Category', 'Email', 'Phone', 'Chapter', 'Status'];
+    const sampleRow = [
+      'CAP-00101',
+      '"Vikram Singh"',
+      '"Corporate Lawyer"',
+      'vikram@lawyers.com',
+      '+91 9822233344',
+      '"Apex Chapter"',
+      'Available'
+    ];
+
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), sampleRow.join(',')].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "bni_captains_import_template.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="p-4 sm:p-6 max-w-[1600px] mx-auto w-full flex flex-col gap-6 animate-fade-in">
 
@@ -405,7 +553,7 @@ export default function Captains({ searchQuery, selectedConclaveId }) {
             Manage table captain assignments and availability.
           </p>
         </div>
-        <div className="flex items-center gap-2.5 shrink-0 w-full sm:w-auto">
+        <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
           <input
             type="file"
             id="csv-captain-input"
@@ -414,15 +562,23 @@ export default function Captains({ searchQuery, selectedConclaveId }) {
             className="hidden"
           />
           <button
+            onClick={handleDownloadTemplate}
+            title="Download formatted CSV template for captain import"
+            className="flex items-center justify-center gap-1 px-3 py-2 border border-zinc-250 bg-zinc-50 text-zinc-700 font-bold text-[11px] rounded-lg hover:bg-zinc-100 transition-smooth cursor-pointer shadow-3xs"
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
+            Template
+          </button>
+          <button
             onClick={handleExport}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 border border-zinc-200 bg-white text-zinc-700 font-bold text-button rounded-lg hover:bg-zinc-50 transition-smooth cursor-pointer shadow-sm"
+            className="flex items-center justify-center gap-1.5 px-3 py-2 border border-zinc-200 bg-white text-zinc-700 font-bold text-[11px] rounded-lg hover:bg-zinc-50 transition-smooth cursor-pointer shadow-3xs"
           >
             <Upload className="w-4 h-4 text-zinc-400" />
             Export
           </button>
           <button
             onClick={() => document.getElementById('csv-captain-input').click()}
-            className="flex items-center justify-center gap-1.5 px-3.5 py-2 border border-zinc-200 bg-white text-zinc-700 font-bold text-button rounded-lg hover:bg-zinc-50 transition-smooth cursor-pointer shadow-sm"
+            className="flex items-center justify-center gap-1.5 px-3 py-2 border border-zinc-200 bg-white text-zinc-700 font-bold text-[11px] rounded-lg hover:bg-zinc-50 transition-smooth cursor-pointer shadow-3xs"
           >
             <Download className="w-4 h-4 text-zinc-400" />
             Import
@@ -439,6 +595,16 @@ export default function Captains({ searchQuery, selectedConclaveId }) {
 
       {/* Scope Navigation Tabs */}
       <div className="flex border-b border-zinc-200 -mt-2">
+        <button
+          onClick={() => setViewScope('conclave')}
+          className={`px-4 py-2 text-body-sm font-black uppercase tracking-wider border-b-2 transition-smooth cursor-pointer -mb-px ${
+            viewScope === 'conclave'
+              ? 'border-brand-red text-brand-red font-extrabold'
+              : 'border-transparent text-zinc-500 hover:text-zinc-800'
+          }`}
+        >
+          This Conclave
+        </button>
         <button
           onClick={() => setViewScope('region')}
           className={`px-4 py-2 text-body-sm font-black uppercase tracking-wider border-b-2 transition-smooth cursor-pointer -mb-px ${
@@ -489,66 +655,7 @@ export default function Captains({ searchQuery, selectedConclaveId }) {
         </div>
       </div>
 
-      {/* Warning/Requirement Alerts Section */}
-      {(showWestWarning || showConflictWarning) && (
-        <div className="flex flex-col gap-3">
-          {showWestWarning && (
-            <div className="flex items-center gap-3 p-3.5 bg-red-50/60 border border-red-100 rounded-lg text-brand-red text-body-sm animate-fade-in">
-              <AlertTriangle className="w-5 h-5 shrink-0" />
-              <div className="flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div>
-                  <span className="font-bold">Critical Requirement:</span>
-                  <span className="ml-1 text-zinc-700">Need 2 More Captains for the West Chapter Conclave on Friday.</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => {
-                      openAddModal();
-                      showToast('Assigning captains for West Chapter...', 'success');
-                    }}
-                    className="font-bold underline hover:text-red-700 transition-smooth cursor-pointer text-body-sm shrink-0"
-                  >
-                    Assign Now
-                  </button>
-                  <button
-                    onClick={() => setShowWestWarning(false)}
-                    className="p-1 hover:bg-red-100/50 rounded text-brand-red cursor-pointer"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-          {showConflictWarning && (
-            <div className="flex items-center gap-3 p-3.5 bg-amber-50/60 border border-amber-100 rounded-lg text-amber-800 text-body-sm animate-fade-in">
-              <Info className="w-5 h-5 shrink-0" />
-              <div className="flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div>
-                  <span className="font-bold">Conflict Detected:</span>
-                  <span className="ml-1 text-zinc-700">Captain 'Esha Rao' has a Business Type Conflict (Real Estate) at Table 04.</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => {
-                      showToast('Opening conflict resolver panel...', 'success');
-                    }}
-                    className="font-bold underline hover:text-amber-950 transition-smooth cursor-pointer text-body-sm shrink-0"
-                  >
-                    Resolve Conflict
-                  </button>
-                  <button
-                    onClick={() => setShowConflictWarning(false)}
-                    className="p-1 hover:bg-amber-100/55 rounded text-amber-800 cursor-pointer"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+
 
       {/* Toolbar: Search, Filters & View modes */}
       <div className="bg-white border border-zinc-200/80 p-3.5 flex flex-col lg:flex-row gap-4 items-center justify-between rounded-xl shadow-sm">
@@ -770,110 +877,23 @@ export default function Captains({ searchQuery, selectedConclaveId }) {
           onPageChange={setCurrentPage}
           label="captains"
         />
-
-        {/* Bottom panels (Workforce status & Upcoming conclaves) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-2">
-          {/* Workforce Status */}
-          <div className="p-5 border border-zinc-200/80 rounded-xl bg-white shadow-sm space-y-5">
-            <h4 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest border-b border-zinc-100 pb-2">Workforce Status</h4>
-            <div className="space-y-4">
-              <div>
-                <div className="flex justify-between text-body-sm font-semibold mb-1.5">
-                  <span className="text-zinc-650">Financial Category</span>
-                  <span className="text-brand-red font-bold">12/15</span>
-                </div>
-                <div className="h-2 rounded-full overflow-hidden border border-zinc-200/30 cursor-pointer">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart layout="vertical" data={[{ name: 'Financial', value: 80 }]} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-                      <XAxis type="number" domain={[0, 100]} hide />
-                      <YAxis type="category" dataKey="name" hide />
-                      <Tooltip formatter={(value) => `${value}%`} cursor={false} />
-                      <Bar dataKey="value" fill="#af101a" radius={[4, 4, 4, 4]} background={{ fill: '#f4f4f5' }} barSize={8} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-                <p className="text-[9px] text-zinc-450 mt-1.5 font-bold uppercase">3 Slots Available</p>
-              </div>
-
-              <div>
-                <div className="flex justify-between text-body-sm font-semibold mb-1.5">
-                  <span className="text-zinc-650">Real Estate Category</span>
-                  <span className="text-zinc-900 font-bold">14/14</span>
-                </div>
-                <div className="h-2 rounded-full overflow-hidden border border-zinc-200/30 cursor-pointer">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart layout="vertical" data={[{ name: 'Real Estate', value: 100 }]} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-                      <XAxis type="number" domain={[0, 100]} hide />
-                      <YAxis type="category" dataKey="name" hide />
-                      <Tooltip formatter={(value) => `${value}%`} cursor={false} />
-                      <Bar dataKey="value" fill="#18181b" radius={[4, 4, 4, 4]} background={{ fill: '#f4f4f5' }} barSize={8} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-                <p className="text-[9px] text-brand-red mt-1.5 font-extrabold uppercase flex items-center gap-1">
-                  <span className="w-1 h-1 rounded-full bg-brand-red"></span> Fully Booked
-                </p>
-              </div>
-
-              <div>
-                <div className="flex justify-between text-body-sm font-semibold mb-1.5">
-                  <span className="text-zinc-650">General Services</span>
-                  <span className="text-brand-red font-bold">8/20</span>
-                </div>
-                <div className="h-2 rounded-full overflow-hidden border border-zinc-200/30 cursor-pointer">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart layout="vertical" data={[{ name: 'General Services', value: 40 }]} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-                      <XAxis type="number" domain={[0, 100]} hide />
-                      <YAxis type="category" dataKey="name" hide />
-                      <Tooltip formatter={(value) => `${value}%`} cursor={false} />
-                      <Bar dataKey="value" fill="#af101a" radius={[4, 4, 4, 4]} background={{ fill: '#f4f4f5' }} barSize={8} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-                <p className="text-[9px] text-zinc-455 mt-1.5 font-bold uppercase">12 Slots Available</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Upcoming Conclaves */}
-          <div className="p-5 border border-zinc-200/80 rounded-xl bg-zinc-50/40 shadow-sm space-y-4">
-            <div className="flex items-center gap-2 border-b border-zinc-100 pb-2">
-              <Calendar className="w-4 h-4 text-brand-red" />
-              <span className="text-[10px] font-bold text-zinc-950 uppercase tracking-widest">Upcoming Conclaves</span>
-            </div>
-            <ul className="space-y-3 text-body-sm font-semibold text-zinc-600">
-              <li className="flex justify-between items-center py-1">
-                <span className="text-zinc-500">South Chapter Conclave</span>
-                <span className="font-bold text-zinc-800">Oct 12</span>
-              </li>
-              <li className="flex justify-between items-center py-1">
-                <span className="text-zinc-500">North Chapter Conclave</span>
-                <span className="font-bold text-zinc-800">Oct 15</span>
-              </li>
-              <li className="flex justify-between items-center py-1 border-t border-dashed border-zinc-150 pt-2.5">
-                <span className="text-zinc-500">West Chapter Conclave</span>
-                <span className="font-bold text-brand-red flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-brand-red animate-pulse"></span> Oct 20
-                </span>
-              </li>
-            </ul>
-          </div>
-        </div>
       </div>
 
       {/* Captain Profile Details Drawer Overlay */}
-      <div
-        onClick={() => setSelectedCaptain(null)}
-        className={`fixed inset-0 bg-black/40 backdrop-blur-xs z-[55] transition-opacity duration-300 ${selectedCaptain ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-          }`}
-      />
+      {createPortal(
+        <>
+          <div
+            onClick={() => setSelectedCaptain(null)}
+            className={`fixed inset-0 bg-black/40 backdrop-blur-xs z-[9999] transition-opacity duration-300 ${selectedCaptain ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+              }`}
+          />
 
-      <div className={`fixed right-0 top-0 h-screen w-full max-w-[440px] bg-white z-[60] border-l border-zinc-100 shadow-2xl transform transition-transform duration-300 ${selectedCaptain ? 'translate-x-0' : 'translate-x-full'
-        }`}>
+          <div className={`fixed right-0 top-0 bottom-0 h-screen w-full max-w-[440px] bg-white border-l border-zinc-100 shadow-2xl transform transition-transform duration-300 flex flex-col overflow-hidden z-[10000] ${selectedCaptain ? 'translate-x-0 pointer-events-auto' : 'translate-x-full pointer-events-none'
+            }`}>
         {selectedCaptain && (
-          <div className="flex flex-col h-full">
+          <>
             {/* Drawer Header */}
-            <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50">
+            <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50 shrink-0">
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setSelectedCaptain(null)}
@@ -892,7 +912,7 @@ export default function Captains({ searchQuery, selectedConclaveId }) {
             </div>
 
             {/* Drawer Content */}
-            <div className="flex-1 overflow-y-auto p-5 space-y-6">
+            <div className="flex-1 overflow-y-auto min-h-0 p-5 space-y-6">
 
               {/* Profile Card Summary */}
               <div className="flex flex-col items-center gap-3 text-center bg-zinc-50 p-4 rounded-xl border border-zinc-100">
@@ -1055,7 +1075,7 @@ export default function Captains({ searchQuery, selectedConclaveId }) {
             </div>
 
             {/* Drawer Footer Actions */}
-            <div className="p-4 border-t border-zinc-100 bg-zinc-50/50 flex flex-col gap-2 shrink-0">
+            <div className="p-4 border-t border-zinc-100 bg-white flex flex-col gap-2 shrink-0 shadow-lg">
               <button
                 onClick={() => {
                   setCaptains(prev => prev.map(c => c.id === selectedCaptain.id ? { ...c, status: 'Assigned', table: 'Table 08 (West Chapter)' } : c));
@@ -1073,9 +1093,12 @@ export default function Captains({ searchQuery, selectedConclaveId }) {
                 Close Drawer
               </button>
             </div>
-          </div>
+          </>
         )}
       </div>
+    </>,
+    document.body
+  )}
 
       {/* Add / Assign Captain Form Modal */}
       {isFormOpen && (
