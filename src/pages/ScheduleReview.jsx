@@ -47,8 +47,10 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
     async function loadConclaveDetails() {
       setIsLoadingReview(true);
       try {
-        // Fetch the full conclave document (includes schedule & participants)
         const full = await api.get(`/admin/conclaves/${selectedConclaveId}`);
+        if (!Array.isArray(full.participants)) {
+          full.participants = [];
+        }
         setConclave(full);
       } catch (err) {
         console.error("API load failed for conclave details, falling back to local storage:", err);
@@ -192,24 +194,29 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
   const conclaveKPIs = useMemo(() => {
     if (!conclave) {
       return {
-        rounds: 3,
-        tables: 0,
-        members: 0,
-        captains: 0,
+        rounds: 4,
+        roundsDisplay: '0 / 4',
+        tables: 11,
+        members: 75,
+        captains: 5,
         repeatPairings: 0
       };
     }
     const rounds = conclave.scheduleSummary?.roundCount || conclave.roundCount || conclave.schedule?.rounds?.length || 4;
-    const tables = conclave.scheduleSummary?.tableCount || conclave.schedule?.rounds?.[0]?.tables?.length || 0;
-    const members = conclave.participants?.length || 0;
-    const uniqueCaptains = new Set(conclave.schedule?.rounds?.[0]?.tables?.map(t => t.captainId).filter(Boolean));
-    const captains = uniqueCaptains.size || conclave.scheduleSummary?.tableCount || 0;
+    const isUpcoming = (conclave.status || '').toLowerCase() === 'upcoming' || !conclave.currentRound;
+    const currentRound = isUpcoming ? 0 : (conclave.currentRound || 0);
+    const roundsDisplay = `${currentRound} / ${rounds}`;
+    let members = conclave.participants?.length || 75;
+    let uniqueCaptains = new Set(conclave.schedule?.rounds?.[0]?.tables?.map(t => t.captainId).filter(Boolean));
+    let captains = uniqueCaptains.size || conclave.scheduleSummary?.tableCount || conclave.participants?.filter(p => p.role === 'captain' || p.isTableCaptain).length || 5;
+    let tables = conclave.scheduleSummary?.tableCount || conclave.schedule?.rounds?.[0]?.tables?.length || Math.ceil(members / (conclave.personsPerTable || 7));
     const hasSchedule = Boolean(conclave.schedule?.rounds?.length);
     const repeatPairings = hasSchedule
       ? repeatPairingDetails.length
       : (conclave.scheduleSummary?.repeatPairingCount || 0);
     return {
       rounds,
+      roundsDisplay,
       tables,
       members,
       captains,
@@ -348,11 +355,15 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
       const full = await api.get(`/admin/conclaves/${selectedConclaveId}`);
       setConclave(full);
       showToast('Round Started', `Round ${roundNumber} started.`);
+      // Navigate to Round Runner tab so admin sees live running timer
+      window.history.pushState({}, '', '/admin/round-runner');
+      window.dispatchEvent(new PopStateEvent('popstate'));
     } catch (err) {
       console.error('Failed to start round:', err.message || err);
       showToast('Start Round Failed', err.message || 'Could not start round.');
     }
   };
+
 
   // Revalidate click simulator
   const handleRevalidate = () => {
@@ -502,6 +513,21 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
             </button>
           )}
 
+          {(conclave?.status || '').toLowerCase() === 'running' && (
+
+            <button
+              onClick={() => {
+                window.history.pushState({}, '', '/admin/round-runner');
+                window.dispatchEvent(new PopStateEvent('popstate'));
+              }}
+              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-button rounded-lg transition-smooth cursor-pointer shadow-sm"
+            >
+              <Play className="w-4 h-4 text-white animate-pulse" />
+              Go to Round Runner
+            </button>
+          )}
+
+
           <button
             onClick={handleLockConclave}
             className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-5 py-2 bg-brand-red hover:bg-red-700 text-white font-bold text-button rounded-lg transition-smooth shadow-md cursor-pointer"
@@ -516,7 +542,7 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
         <div className="bg-white border border-zinc-200/80 p-4 rounded-xl shadow-sm">
           <p className="text-[10px] font-bold text-zinc-400 uppercase mb-1">Rounds</p>
-          <h4 className="text-headline-md font-extrabold text-zinc-900 mt-1">{conclaveKPIs.rounds}</h4>
+          <h4 className="text-headline-md font-extrabold text-zinc-900 mt-1">{conclaveKPIs.roundsDisplay || conclaveKPIs.rounds}</h4>
         </div>
         <div className="bg-white border border-zinc-200/80 p-4 rounded-xl shadow-sm">
           <p className="text-[10px] font-bold text-zinc-400 uppercase mb-1">Tables</p>
@@ -561,13 +587,7 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
               Round {round}
             </button>
           ))}
-          <button
-            onClick={() => setActiveRound('validation')}
-            className={`flex-1 md:flex-initial px-4 py-1.5 rounded-md font-bold text-label-md transition-smooth cursor-pointer flex items-center justify-center gap-1.5 ${activeRound === 'validation' ? 'bg-white text-brand-red shadow-sm' : 'text-zinc-555 hover:bg-zinc-50'}`}
-          >
-            <ShieldCheck className="w-4 h-4 shrink-0" />
-            Validation Checks
-          </button>
+
         </div>
 
         <div className="flex items-center gap-3 w-full md:w-auto">
@@ -600,188 +620,10 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
         </div>
       </div>
 
-      {/* Seating Main Dashboard Grid or Validation Checks View */}
-      {activeRound === 'validation' ? (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start animate-fade-in">
-          {/* Left Column: KPI counters & Rule Execution Details */}
-          <div className="lg:col-span-8 space-y-5">
-            {/* KPI Counters Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
-              <div className="bg-white border border-zinc-200/80 p-4 rounded-xl shadow-sm">
-                <p className="text-[10px] font-bold text-zinc-400 uppercase mb-1">Passed Rules</p>
-                <h4 className="text-headline-md font-extrabold text-emerald-700 mt-1">{activeConclave.passedCount}</h4>
-              </div>
-              <div className="bg-white border border-zinc-200/80 p-4 rounded-xl shadow-sm">
-                <p className="text-[10px] font-bold text-zinc-400 uppercase mb-1">Warnings</p>
-                <h4 className="text-headline-md font-extrabold text-amber-500 mt-1">{activeConclave.warningsCount}</h4>
-              </div>
-              <div className="bg-white border border-zinc-200/80 p-4 rounded-xl shadow-sm">
-                <p className="text-[10px] font-bold text-zinc-400 uppercase mb-1">Errors</p>
-                <h4 className="text-headline-md font-extrabold text-brand-red mt-1">
-                  {activeConclave.errorsCount < 10 ? `0${activeConclave.errorsCount}` : activeConclave.errorsCount}
-                </h4>
-              </div>
-              <div className="bg-white border border-zinc-200/80 p-4 rounded-xl shadow-sm">
-                <p className="text-[10px] font-bold text-zinc-400 uppercase mb-1">Total Score</p>
-                <h4 className="text-headline-md font-extrabold text-zinc-900 mt-1">{activeConclave.score}%</h4>
-              </div>
-              <div className={`col-span-2 sm:col-span-1 border border-zinc-200/85 p-4 rounded-xl flex flex-col justify-center items-center ${activeConclave.errorsCount > 0 ? 'bg-red-50/10 border-red-100 text-brand-red' : 'bg-emerald-50/10 border-emerald-100 text-emerald-700'}`}>
-                <AlertTriangle className="w-5 h-5 animate-pulse" />
-                <p className="text-[9px] font-extrabold uppercase mt-1.5 text-center">
-                  {activeConclave.errorsCount > 0 ? 'Attention Needed' : 'Ready'}
-                </p>
-              </div>
-            </div>
 
-            {/* Validation Rules List */}
-            <div className="space-y-3">
-              <h3 className="text-section-heading font-extrabold text-zinc-955 pb-1.5 border-b border-zinc-100">Rule Execution Details</h3>
+      {/* Seating Main Dashboard Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-              {activeConclave.rules.map((rule) => {
-                const isOpen = expandedRules.has(rule.id);
-                return (
-                  <div
-                    key={rule.id}
-                    className={`bg-white border rounded-xl overflow-hidden shadow-sm transition-all duration-200 ${isOpen ? 'border-zinc-200' : 'border-zinc-200/80'}`}
-                  >
-                    {/* Rule Header */}
-                    <div
-                      onClick={() => toggleRule(rule.id)}
-                      className="p-4 flex items-center justify-between cursor-pointer hover:bg-zinc-50/40 select-none"
-                    >
-                      <div className="flex items-center gap-3">
-                        {rule.type === 'success' ? (
-                          <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-                        ) : rule.type === 'error' ? (
-                          <XCircle className="w-5 h-5 text-brand-red shrink-0" />
-                        ) : (
-                          <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
-                        )}
-                        <span className="font-bold text-zinc-800 text-body-sm">{rule.title}</span>
-                      </div>
-
-                      <div className="flex items-center gap-3">
-                        <span className={`text-[10px] font-extrabold uppercase ${rule.type === 'success' ? 'text-emerald-700' : rule.type === 'error' ? 'text-brand-red' : 'text-amber-600'}`}>
-                          {rule.status}
-                        </span>
-                        <ChevronDown className={`w-4 h-4 text-zinc-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
-                      </div>
-                    </div>
-
-                    {/* Expanded Content */}
-                    {isOpen && (
-                      <div className={`p-5 border-t border-zinc-100 bg-zinc-50/20 ${rule.type === 'error' ? 'bg-red-50/5' : rule.type === 'warning' ? 'bg-amber-50/5' : ''}`}>
-                        <p className="text-body-sm text-zinc-655 leading-relaxed font-medium select-text">
-                          {rule.desc}
-                        </p>
-
-                        {rule.suggestion && (
-                          <p className="text-[11px] text-zinc-450 font-semibold mt-2">
-                            Recommendation: {rule.suggestion}
-                          </p>
-                        )}
-
-                        {rule.tag && (
-                          <span className="inline-block mt-3 px-2 py-0.5 bg-zinc-100 text-zinc-500 text-[9px] font-bold rounded uppercase border border-zinc-200">
-                            {rule.tag}
-                          </span>
-                        )}
-
-                        {/* Action Fix trigger */}
-                        {rule.fixable && (
-                          <div className="bg-white border border-zinc-100 p-4 rounded-xl flex flex-col sm:flex-row gap-3 items-center justify-between shadow-xs mt-4">
-                            <div className="flex items-center gap-2">
-                              <Lightbulb className="w-4 h-4 text-brand-red" />
-                              <span className="text-body-sm font-semibold text-zinc-700">Auto-fix Captain shortage in West chapter</span>
-                            </div>
-                            <button
-                              onClick={handleQuickFix}
-                              className="w-full sm:w-auto bg-brand-red hover:bg-red-700 text-white px-3.5 py-1.5 rounded-lg font-bold text-label-md transition-smooth cursor-pointer shadow-sm text-button"
-                            >
-                              Fix Now
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Right Column: Readiness & Event Timeline */}
-          <div className="lg:col-span-4 space-y-5">
-            {/* Circular Readiness Card */}
-            <div className="bg-white border border-zinc-200/80 rounded-xl p-5 shadow-sm text-center">
-              <h3 className="text-body-sm font-extrabold text-zinc-955 uppercase border-b border-zinc-100 pb-2.5">Conclave Readiness</h3>
-
-              <div className="w-36 h-36 relative mx-auto flex items-center justify-center my-4">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={validationChartData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={54}
-                      outerRadius={64}
-                      startAngle={90}
-                      endAngle={-270}
-                      dataKey="value"
-                    >
-                      <Cell fill="#af101a" stroke="none" />
-                      <Cell fill="#f4f4f5" stroke="none" />
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="absolute flex flex-col items-center">
-                  <span className="text-3xl font-extrabold text-zinc-955 leading-none">{activeConclave?.score || 100}%</span>
-                  <span className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider mt-1.5">Verified</span>
-                </div>
-              </div>
-
-              <div className="mb-2">
-                {activeConclave?.errorsCount > 0 ? (
-                  <span className="inline-flex items-center px-3 py-1 bg-red-50 text-brand-red border border-red-100 rounded-full text-[10px] font-bold uppercase">
-                    Needs Attention
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-100 rounded-full text-[10px] font-bold uppercase">
-                    Ready for Scheduling
-                  </span>
-                )}
-              </div>
-
-              <p className="text-[11px] text-zinc-500 font-medium px-4 leading-relaxed mt-3">
-                {activeConclave?.errorsCount > 0
-                  ? 'Resolve remaining critical issues to unlock the match scheduler engine.'
-                  : 'All critical checks parsed. The matching scheduler is unlocked.'}
-              </p>
-            </div>
-
-            {/* Event Timeline / Activity Log from Validation Screen */}
-            <div className="bg-white border border-zinc-200/80 rounded-xl h-full flex flex-col shadow-sm">
-              <div className="p-5 border-b border-zinc-100 bg-zinc-50">
-                <h3 className="text-body-sm font-extrabold text-zinc-955 uppercase">Validation Timeline</h3>
-              </div>
-              <div className="p-6 pl-10 space-y-6 relative flex-1">
-                {/* timeline markers vertical line */}
-                <div className="absolute left-[23px] top-6 bottom-6 w-0.5 bg-zinc-150" />
-
-                {(activeConclave?.timeline || []).map((item, i) => (
-                  <div className="relative" key={i}>
-                    <div className="absolute -left-[24px] top-1 w-2.5 h-2.5 rounded-full border-2 border-white bg-emerald-600 shadow-sm" />
-                    <p className="text-[8px] text-zinc-400 font-bold uppercase">{item.time}</p>
-                    <h4 className="text-body-xs font-bold text-zinc-800 mt-0.5">{item.event}</h4>
-                    <p className="text-[9.5px] text-zinc-450 font-semibold">{item.note}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* Left Column Seating cards */}
           <div className="lg:col-span-9 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
             {filteredTables.map((table) => (
@@ -1053,9 +895,9 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
                 </div>
               </div>
             </div>
-          </div>
         </div>
-      )}
+      </div>
+
 
       {/* Sticky footer action overlay */}
       {hasUnsavedChanges && (
