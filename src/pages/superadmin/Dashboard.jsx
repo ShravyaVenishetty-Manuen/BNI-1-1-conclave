@@ -25,7 +25,7 @@ export default function SuperadminDashboard({ setActiveTab }) {
         const [adminsList, regionsList, conclavesList, membersList] = await Promise.all([
           api.get('/admin/coordinators'),
           api.get('/admin/regions'),
-          api.get('/admin/conclaves'),
+          api.get('/admin/conclaves?global=true'),
           api.get('/admin/users')
         ]);
         setAdmins(adminsList || []);
@@ -230,7 +230,7 @@ export default function SuperadminDashboard({ setActiveTab }) {
             </div>
 
             <div className="divide-y divide-zinc-200 border border-zinc-200 rounded-xl overflow-hidden">
-              {conclaves.filter(c => c.status?.toLowerCase() === 'active').map(conclave => (
+              {conclaves.filter(c => ['active', 'running', 'registration open'].includes(c.status?.toLowerCase())).map(conclave => (
                 <div key={conclave.id} className="p-3.5 bg-white hover:bg-zinc-50/50 transition-colors flex justify-between items-center text-body-sm">
                   <div className="space-y-1">
                     <p className="font-black text-zinc-800 leading-none">{conclave.name || conclave.title || 'Unnamed Conclave'}</p>
@@ -247,7 +247,7 @@ export default function SuperadminDashboard({ setActiveTab }) {
                   </span>
                 </div>
               ))}
-              {conclaves.filter(c => c.status?.toLowerCase() === 'active').length === 0 && (
+              {conclaves.filter(c => ['active', 'running', 'registration open'].includes(c.status?.toLowerCase())).length === 0 && (
                 <p className="text-[11.5px] text-zinc-500 font-semibold p-4 text-center">No active conclaves currently running.</p>
               )}
             </div>
