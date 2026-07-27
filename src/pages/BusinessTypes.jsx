@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Search,
   ChevronRight,
@@ -8,6 +9,7 @@ import {
   Trash2,
   Download,
   Upload,
+  FileSpreadsheet,
   Layers,
   MoreVertical
 } from 'lucide-react';
@@ -15,83 +17,78 @@ import Pagination from '../components/Pagination';
 import SearchableDropdown from '../components/SearchableDropdown';
 import { api } from '../services/api';
 
-export default function BusinessTypes({ searchQuery, selectedConclaveId }) {
+export default function BusinessTypes({ searchQuery, selectedConclaveId, loggedInAdmin }) {
   const [categories, setCategories] = useState([]);
   const [members, setMembers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    async function loadCategories() {
-      try {
-        const stored = localStorage.getItem('bni_categories');
-        if (stored) {
-          setCategories(JSON.parse(stored));
-        }
-      } catch (err) {
-        console.error('Failed to load business types:', err);
-      }
-    }
-
-    loadCategories();
-  }, []);
-
-  useEffect(() => {
-    if (members.length > 0) {
-      const catMap = new Map();
-      members.forEach(m => {
-        const catName = m.category?.trim() || 'General';
-        if (!catMap.has(catName)) {
-          catMap.set(catName, {
-            id: `BT-${String(catMap.size + 1).padStart(3, '0')}`,
-            name: catName,
-            description: `${catName} business category`,
-            status: 'Active'
-          });
-        }
-      });
-      setCategories(Array.from(catMap.values()));
-    }
-  }, [members]);
-
-  useEffect(() => {
-    if (!selectedConclaveId) return;
-    async function loadRegistrations() {
+    async function loadMembersAndCategories() {
       setIsLoading(true);
       try {
-        const data = await api.get(`/admin/conclaves/${selectedConclaveId}/registrations`);
-        const mapped = (data.registrations || []).map(r => {
+        let rawList = [];
+        if (selectedConclaveId) {
+          try {
+            const res = await api.get(`/admin/conclaves/${selectedConclaveId}/registrations`);
+            if (res && Array.isArray(res.registrations)) {
+              rawList = res.registrations;
+            }
+          } catch {}
+        } else {
+          const allUsers = await api.get('/admin/users');
+          if (Array.isArray(allUsers)) {
+            rawList = allUsers;
+          }
+        }
+
+        const mapped = rawList.map(r => {
           const displayName = r.name?.trim() || r.uid || 'Unknown Member';
-          const fallbackCategory = r.businessCategory?.trim() || 'General';
-          const fallbackCompany = r.businessName?.trim() || 'Self Employed';
+          const fallbackCategory = r.category || r.businessCategory?.trim() || 'General';
+          const fallbackCompany = r.company || r.businessName?.trim() || 'Self Employed';
           const fallbackLocation = typeof r.location === 'object' && r.location !== null
             ? (r.location.place || r.location.city || '')
-            : (r.location || '');
+            : (r.location || r.address || '');
           return {
-            id: r.uid,
+            id: r.id || r.uid,
             name: displayName,
             email: r.email?.trim() || 'n/a',
-            phone: r.phone?.trim() || 'n/a',
+            phone: r.phone?.trim() || r.mobile?.trim() || 'n/a',
             company: fallbackCompany,
             category: fallbackCategory,
             address: fallbackLocation,
             state: r.state || 'Andhra Pradesh',
             country: r.country || 'India',
             chapter: r.chapter || 'Peak Performance',
-            isCaptain: r.role === 'captain',
-            status: r.isActive ? 'Active' : 'Inactive',
-            joinDate: r.registeredAt ? new Date(r.registeredAt).toLocaleDateString([], { month: 'short', year: 'numeric' }) : 'N/A',
-            avatar: displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'M',
-            conclaveIds: [selectedConclaveId],
+            region: r.region || 'Vijayawada Region',
+            isCaptain: r.role === 'captain' || r.isTableCaptain === true,
+            status: r.status || (r.isActive ? 'Active' : 'Inactive'),
           };
         });
+
         setMembers(mapped);
+
+        // Derive business categories dynamically from registrations only
+        const catMap = new Map();
+        mapped.forEach(m => {
+          const catName = m.category?.trim() || 'General';
+          if (!catMap.has(catName)) {
+            catMap.set(catName, {
+              id: `BT-${String(catMap.size + 1).padStart(3, '0')}`,
+              name: catName,
+              description: `${catName} Industry Classification`,
+              status: 'Active'
+            });
+          }
+        });
+
+        setCategories(Array.from(catMap.values()));
       } catch (err) {
-        console.error("Failed to load registrations for categories count:", err);
+        console.error("Failed to load registrations for business types:", err);
       } finally {
         setIsLoading(false);
       }
     }
-    loadRegistrations();
+    loadMembersAndCategories();
   }, [selectedConclaveId]);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -104,6 +101,18 @@ export default function BusinessTypes({ searchQuery, selectedConclaveId }) {
   const searchVal = searchTerm;
   const [statusFilter, setStatusFilter] = useState('All');
   const [selectedCategory, setSelectedCategory] = useState(null);
+
+  // Lock background body scroll when drawer is open
+  useEffect(() => {
+    if (selectedCategory) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [selectedCategory]);
   const [selectedRows, setSelectedRows] = useState(new Set());
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [isBulkDeleteConfirmOpen, setIsBulkDeleteConfirmOpen] = useState(false);
@@ -363,6 +372,25 @@ export default function BusinessTypes({ searchQuery, selectedConclaveId }) {
     e.target.value = '';
   };
 
+  const handleDownloadTemplate = () => {
+    const headers = ['Category ID', 'Category Name', 'Description', 'Status'];
+    const sampleRow = [
+      'BT-00101',
+      '"Digital Marketing & SEO"',
+      '"Online growth strategies and social media marketing"',
+      'Active'
+    ];
+
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), sampleRow.join(',')].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "bni_categories_import_template.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="p-4 sm:p-6 max-w-[1600px] mx-auto w-full flex flex-col gap-6 animate-fade-in">
 
@@ -374,7 +402,7 @@ export default function BusinessTypes({ searchQuery, selectedConclaveId }) {
             Manage professional classifications and network categories.
           </p>
         </div>
-        <div className="flex items-center gap-2.5 shrink-0 w-full sm:w-auto">
+        <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
           <input
             type="file"
             id="csv-class-input"
@@ -383,15 +411,23 @@ export default function BusinessTypes({ searchQuery, selectedConclaveId }) {
             className="hidden"
           />
           <button
+            onClick={handleDownloadTemplate}
+            title="Download formatted CSV template for categories import"
+            className="flex items-center justify-center gap-1 px-3 py-2 border border-zinc-250 bg-zinc-50 text-zinc-700 font-bold text-[11px] rounded-lg hover:bg-zinc-100 transition-smooth cursor-pointer shadow-3xs"
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
+            Template
+          </button>
+          <button
             onClick={handleExport}
-            className="flex items-center justify-center gap-1.5 px-3.5 py-2 border border-zinc-200 bg-white text-zinc-700 font-bold text-button rounded-lg hover:bg-zinc-50 transition-smooth cursor-pointer shadow-sm"
+            className="flex items-center justify-center gap-1.5 px-3 py-2 border border-zinc-200 bg-white text-zinc-700 font-bold text-[11px] rounded-lg hover:bg-zinc-50 transition-smooth cursor-pointer shadow-3xs"
           >
             <Upload className="w-4 h-4 text-zinc-400" />
             Export
           </button>
           <button
             onClick={() => document.getElementById('csv-class-input').click()}
-            className="flex items-center justify-center gap-1.5 px-3.5 py-2 border border-zinc-200 bg-white text-zinc-700 font-bold text-button rounded-lg hover:bg-zinc-50 transition-smooth cursor-pointer shadow-sm"
+            className="flex items-center justify-center gap-1.5 px-3 py-2 border border-zinc-200 bg-white text-zinc-700 font-bold text-[11px] rounded-lg hover:bg-zinc-50 transition-smooth cursor-pointer shadow-3xs"
           >
             <Download className="w-4 h-4 text-zinc-400" />
             Import
@@ -600,18 +636,20 @@ export default function BusinessTypes({ searchQuery, selectedConclaveId }) {
       </div>
 
       {/* Details Side Drawer */}
-      <div
-        onClick={() => setSelectedCategory(null)}
-        className={`fixed inset-0 bg-black/40 backdrop-blur-xs z-[55] transition-opacity duration-300 ${selectedCategory ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-          }`}
-      />
+      {createPortal(
+        <>
+          <div
+            onClick={() => setSelectedCategory(null)}
+            className={`fixed inset-0 bg-black/40 backdrop-blur-xs z-[9999] transition-opacity duration-300 ${selectedCategory ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+              }`}
+          />
 
-      <div className={`fixed right-0 top-0 h-screen w-full max-w-[420px] bg-white z-[60] border-l border-zinc-200 shadow-2xl transform transition-transform duration-300 ${selectedCategory ? 'translate-x-0' : 'translate-x-full'
-        }`}>
+          <div className={`fixed right-0 top-0 bottom-0 h-screen w-full max-w-[420px] bg-white border-l border-zinc-200 shadow-2xl transform transition-transform duration-300 flex flex-col overflow-hidden z-[10000] ${selectedCategory ? 'translate-x-0 pointer-events-auto' : 'translate-x-full pointer-events-none'
+            }`}>
         {selectedCategory && (
-          <div className="flex flex-col h-full">
+          <>
             {/* Drawer Header */}
-            <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50">
+            <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50 shrink-0">
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setSelectedCategory(null)}
@@ -630,7 +668,7 @@ export default function BusinessTypes({ searchQuery, selectedConclaveId }) {
             </div>
 
             {/* Drawer Content */}
-            <div className="flex-1 overflow-y-auto p-5 space-y-6">
+            <div className="flex-1 overflow-y-auto min-h-0 p-5 space-y-6">
               {/* Category Card Summary */}
               <div className="flex flex-col items-center gap-3 text-center bg-zinc-50 p-4 rounded-xl border border-zinc-100">
                 <div className="w-16 h-16 rounded-full border-2 border-brand-red/20 p-1 bg-white">
@@ -722,7 +760,7 @@ export default function BusinessTypes({ searchQuery, selectedConclaveId }) {
             </div>
 
             {/* Drawer Footer Actions */}
-            <div className="p-4 border-t border-zinc-100 bg-zinc-50/50 flex flex-col gap-2 shrink-0">
+            <div className="p-4 border-t border-zinc-100 bg-white flex flex-col gap-2 shrink-0 shadow-lg">
               <button
                 onClick={() => showToast(`Manage Assignments for "${selectedCategory.name}" is coming soon!`, 'success')}
                 className="w-full py-2 bg-brand-red hover:bg-red-700 text-white text-button font-bold rounded-lg shadow-sm transition-smooth cursor-pointer"
@@ -736,9 +774,12 @@ export default function BusinessTypes({ searchQuery, selectedConclaveId }) {
                 Close Drawer
               </button>
             </div>
-          </div>
+          </>
         )}
       </div>
+    </>,
+    document.body
+  )}
 
       {/* Add / Edit Category Modal */}
       {isFormOpen && (
