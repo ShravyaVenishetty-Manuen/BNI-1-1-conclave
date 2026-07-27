@@ -205,7 +205,8 @@ export default function CaptainTable({ loggedInCaptain, searchQuery, conclaveSyn
                       onClick={(e) => {
                         e.stopPropagation();
                         setReferTarget({
-                          id: member.uid,
+                          id: member.uid || member.id || member._originalUid,
+                          uid: member.uid || member.id || member._originalUid,
                           name: member.name,
                           company: member.company,
                           category: member.category
@@ -383,6 +384,7 @@ export default function CaptainTable({ loggedInCaptain, searchQuery, conclaveSyn
         <ReferModal
           recipient={referTarget}
           loggedInUser={loggedInCaptain}
+          activeConclaveId={conclaveSyncData?.conclaveStatus?.id || conclaveSyncData?.conclaveId}
           onClose={() => setReferTarget(null)}
           onSuccess={(msg) => {
             setToast(msg);
