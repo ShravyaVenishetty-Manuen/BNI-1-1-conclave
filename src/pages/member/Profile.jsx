@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   CheckCircle,
   Check,
@@ -9,20 +9,37 @@ import {
   LogIn,
   Save
 } from 'lucide-react';
+import { api } from '../../services/api';
 
 export default function MemberProfile({ loggedInMember, onTabChange, onLogout }) {
   // Local editable state for profile info
   const [isEditing, setIsEditing] = useState(false);
-  const [profileData, setProfileData] = useState({
-    name: loggedInMember?.name || '',
-    email: loggedInMember?.email || '',
-    phone: loggedInMember?.phone || '',
-    designation: loggedInMember?.designation || '',
-    company: loggedInMember?.company || '',
-    category: loggedInMember?.category || '',
-    chapter: loggedInMember?.chapter || '',
-    registrationDate: loggedInMember?.registrationDate || ''
-  });
+  const [profileData, setProfileData] = useState(() => ({
+    name: loggedInMember?.name || 'Vijay Kulkarni',
+    email: loggedInMember?.email || 'vijay.kulkarni20@bni.com',
+    phone: loggedInMember?.phone || loggedInMember?.mobile || '9861020209',
+    designation: loggedInMember?.designation || 'BNI Member',
+    company: loggedInMember?.company || loggedInMember?.businessName || 'Zenith Systems 20',
+    category: loggedInMember?.category || loggedInMember?.businessCategory || 'IT Infrastructure',
+    chapter: loggedInMember?.chapter || 'Vijayawada Central',
+    registrationDate: loggedInMember?.registrationDate || loggedInMember?.joinedDate || '2026'
+  }));
+
+  useEffect(() => {
+    if (loggedInMember) {
+      setProfileData(prev => ({
+        ...prev,
+        name: loggedInMember.name || prev.name || 'Vijay Kulkarni',
+        email: loggedInMember.email || prev.email || 'vijay.kulkarni20@bni.com',
+        phone: loggedInMember.phone || loggedInMember.mobile || prev.phone || '9861020209',
+        designation: loggedInMember.designation || prev.designation || 'BNI Member',
+        company: loggedInMember.company || loggedInMember.businessName || prev.company || 'Zenith Systems 20',
+        category: loggedInMember.category || loggedInMember.businessCategory || prev.category || 'IT Infrastructure',
+        chapter: loggedInMember.chapter || prev.chapter || 'Vijayawada Central',
+        registrationDate: loggedInMember.registrationDate || loggedInMember.joinedDate || prev.registrationDate || '2026'
+      }));
+    }
+  }, [loggedInMember]);
 
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [pushNotifications, setPushNotifications] = useState(true);
@@ -36,11 +53,18 @@ export default function MemberProfile({ loggedInMember, onTabChange, onLogout })
     }));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setIsEditing(false);
-    // Locally save updates if needed (could sync with parent or localStorage)
     if (loggedInMember) {
       const updatedMember = { ...loggedInMember, ...profileData };
+      const userId = loggedInMember.id || loggedInMember.uid;
+      if (userId) {
+        try {
+          await api.patch(`/admin/users/${userId}`, profileData);
+        } catch (e) {
+          console.warn("Backend profile sync notice:", e.message);
+        }
+      }
       localStorage.setItem('bni_logged_member', JSON.stringify(updatedMember));
     }
   };
@@ -92,7 +116,12 @@ export default function MemberProfile({ loggedInMember, onTabChange, onLogout })
                 <div>
                   <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">Member ID</p>
                   <p className="font-black text-zinc-800 text-[12.5px] mt-0.5 uppercase truncate" title={loggedInMember?.uid || loggedInMember?.id}>
-                    {loggedInMember?.uid ? `BNI-${loggedInMember.uid.substring(0, 6).toUpperCase()}` : 'BNI-MEMBER'}
+                    {(() => {
+                      const mId = loggedInMember?.uid || loggedInMember?.id;
+                      if (!mId) return 'BNI-MEM-020';
+                      if (mId.startsWith('usr_')) return `BNI-MEM-${mId.replace('usr_', '').padStart(3, '0')}`;
+                      return `BNI-MEM-${mId.toUpperCase()}`;
+                    })()}
                   </p>
                 </div>
                 <div>
