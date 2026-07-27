@@ -13,7 +13,12 @@ import ScheduleReview from './pages/ScheduleReview';
 import RoundRunner from './pages/RoundRunner';
 import Reports from './pages/Reports';
 import Login from './pages/Login';
+import CaptainHeader from './components/CaptainHeader';
 import CaptainDashboard from './pages/captain/Dashboard';
+import CaptainTable from './pages/captain/Table';
+import CaptainCurrentRound from './pages/captain/CurrentRound';
+import CaptainSchedule from './pages/captain/Schedule';
+import CaptainProfile from './pages/captain/Profile';
 import MemberHeader from './components/MemberHeader';
 import MemberDashboard from './pages/member/Dashboard';
 import MemberSchedule from './pages/member/MySchedule';
@@ -23,9 +28,8 @@ import MemberProfile from './pages/member/Profile';
 import MemberRegistrations from './pages/member/Registrations';
 import AdminProfile from './pages/admin/Profile';
 import Referrals from './pages/Referrals';
-import referralsData from './data/referrals.json';
-import conclavesData from './data/conclaves.json';
-import { Sparkles } from 'lucide-react';
+
+import { Sparkles, ShieldAlert, X } from 'lucide-react';
 import SuperadminLayout from './components/SuperadminLayout';
 import { api } from './services/api';
 
@@ -82,6 +86,19 @@ export default function App() {
 
   // Global conclave selector for admin panel - default to current admin's active conclave
   const [selectedConclaveId, setSelectedConclaveId] = useState('');
+
+  // Generation warning — lives at App level so it survives ScheduleGen remounts
+  const [genWarning, setGenWarning] = useState(null);
+  const genWarningTimerRef = useRef(null);
+  const showGenWarning = (warning) => {
+    if (genWarningTimerRef.current) clearTimeout(genWarningTimerRef.current);
+    setGenWarning(warning);
+    genWarningTimerRef.current = setTimeout(() => setGenWarning(null), 30000);
+  };
+  const clearGenWarning = () => {
+    if (genWarningTimerRef.current) clearTimeout(genWarningTimerRef.current);
+    setGenWarning(null);
+  };
 
   useEffect(() => {
     if (!isLoggedIn || userRole !== 'admin') return;
@@ -156,15 +173,7 @@ export default function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, [userRole]);
 
-  // Initialize local storage referrals & conclaves lists
-  useEffect(() => {
-    if (!localStorage.getItem('bni_referrals')) {
-      localStorage.setItem('bni_referrals', JSON.stringify(referralsData));
-    }
-    if (!localStorage.getItem('bni_conclaves')) {
-      localStorage.setItem('bni_conclaves', JSON.stringify(conclavesData));
-    }
-  }, []);
+
 
   // Sync loggedInMember on storage updates
   useEffect(() => {
@@ -286,20 +295,37 @@ export default function App() {
 
         if (profile) {
           const mergedProfile = {
-            ...(loggedInMember || {}),
+            ...(userRole === 'captain' ? (loggedInCaptain || {}) : (loggedInMember || {})),
             ...profile,
-            uid: profile.uid || profile.id || loggedInMember?.uid || loggedInMember?.id,
-            id: profile.id || profile.uid || loggedInMember?.id || loggedInMember?.uid,
+            uid: profile.uid || profile.id,
+            id: profile.id || profile.uid,
           };
-          setMemberProfile(mergedProfile);
-          localStorage.setItem('bni_logged_member', JSON.stringify(mergedProfile));
-          setLoggedInMember(mergedProfile);
+          const jsonStr = JSON.stringify(mergedProfile);
+          if (userRole === 'captain') {
+            if (localStorage.getItem('bni_logged_captain') !== jsonStr) {
+              localStorage.setItem('bni_logged_captain', jsonStr);
+              setLoggedInCaptain(mergedProfile);
+            }
+          } else {
+            if (localStorage.getItem('bni_logged_member') !== jsonStr) {
+              setMemberProfile(mergedProfile);
+              localStorage.setItem('bni_logged_member', jsonStr);
+              setLoggedInMember(mergedProfile);
+            }
+          }
         }
 
-        const active = Array.isArray(list) ? (list.find(c => c.status === 'running' || c.status === 'active') || list[0]) : null;
-        if (active) {
-          const syncResult = await api.post(`/conclaves/${active.id}/sync`, {});
-          setConclaveSyncData(syncResult);
+        const myRegisteredConclave = Array.isArray(list) ? list.find(c => 
+          c.isRegistered && 
+          (c.status === 'running' || c.status === 'active' || c.status === 'scheduled' || c.status === 'upcoming') &&
+          c.status !== 'completed' && c.status !== 'ended' && c.status !== 'locked'
+        ) : null;
+
+        if (myRegisteredConclave) {
+          const syncResult = await api.post(`/conclaves/${myRegisteredConclave.id}/sync`, {});
+          setConclaveSyncData(prev => (JSON.stringify(prev) !== JSON.stringify(syncResult) ? syncResult : prev));
+        } else {
+          setConclaveSyncData(null);
         }
       } catch (err) {
         console.warn("Failed to sync member conclave data:", err.message);
@@ -324,7 +350,7 @@ export default function App() {
               ...profile,
               name: profile.name || prev?.name || 'Admin',
               email: profile.email || prev?.email || '',
-              region: profile.chapter || profile.region || 'Guntur Central'
+              region: profile.region || profile.scope || 'Guntur Region'
             };
             localStorage.setItem('bni_logged_admin', JSON.stringify(updated));
             return updated;
@@ -396,18 +422,73 @@ export default function App() {
     );
   }
 
-  // If logged in as a Captain, render the Captain Dashboard directly
+  // If logged in as a Captain, render the Captain portal layout
   if (userRole === 'captain') {
     return (
-      <CaptainDashboard
-        loggedInCaptain={loggedInCaptain}
-        activeTab={activeTab}
-        onTabChange={handleTabChange}
-        onLogout={handleLogout}
-        conclaveSyncData={conclaveSyncData}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-      />
+      <div className="flex flex-col h-screen w-screen bg-zinc-50 overflow-hidden font-sans">
+        <CaptainHeader
+          loggedInCaptain={loggedInCaptain}
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          onLogout={handleLogout}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+        />
+        <main className="flex-1 overflow-y-auto p-4 md:p-8 max-w-7xl mx-auto w-full">
+          {activeTab === 'dashboard' ? (
+            <CaptainDashboard
+              loggedInCaptain={loggedInCaptain}
+              activeTab={activeTab}
+              onTabChange={handleTabChange}
+              onLogout={handleLogout}
+              conclaveSyncData={conclaveSyncData}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+            />
+          ) : activeTab === 'my-table' ? (
+            <CaptainTable
+              loggedInCaptain={loggedInCaptain}
+              conclaveSyncData={conclaveSyncData}
+              searchQuery={searchQuery}
+            />
+          ) : activeTab === 'current-round' ? (
+            <CaptainCurrentRound
+              loggedInCaptain={loggedInCaptain}
+              conclaveSyncData={conclaveSyncData}
+              searchQuery={searchQuery}
+            />
+          ) : activeTab === 'schedule' ? (
+            <CaptainSchedule
+              loggedInCaptain={loggedInCaptain}
+              conclaveSyncData={conclaveSyncData}
+              searchQuery={searchQuery}
+            />
+          ) : activeTab === 'referrals' ? (
+            <Referrals
+              loggedInUser={loggedInCaptain}
+              userType="captain"
+              conclaveSyncData={conclaveSyncData}
+              searchQuery={searchQuery}
+            />
+          ) : activeTab === 'profile' ? (
+            <CaptainProfile
+              loggedInCaptain={loggedInCaptain}
+              onTabChange={handleTabChange}
+              onLogout={handleLogout}
+            />
+          ) : (
+            <CaptainDashboard
+              loggedInCaptain={loggedInCaptain}
+              activeTab={activeTab}
+              onTabChange={handleTabChange}
+              onLogout={handleLogout}
+              conclaveSyncData={conclaveSyncData}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+            />
+          )}
+        </main>
+      </div>
     );
   }
 
@@ -529,24 +610,44 @@ export default function App() {
           onLogout={handleLogout}
         />
 
+        {/* Generation warning banner — fixed overlay, doesn't affect layout */}
+        {genWarning && activeTab === 'schedule-gen' && (
+          <div
+            role="alert"
+            className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] w-[90vw] max-w-xl flex items-start gap-3 rounded-xl border px-4 py-3.5 shadow-lg ${genWarning.type === 'captain'
+                ? 'bg-amber-50 border-amber-300 text-amber-900'
+                : 'bg-red-50 border-red-300 text-red-900'
+              }`}
+          >
+            <ShieldAlert className={`w-5 h-5 mt-0.5 shrink-0 ${genWarning.type === 'captain' ? 'text-amber-500' : 'text-red-500'}`} />
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-[13px] leading-snug">{genWarning.title}</p>
+              <p className="text-[12px] mt-0.5 leading-relaxed opacity-90">{genWarning.message}</p>
+            </div>
+            <button onClick={clearGenWarning} aria-label="Dismiss warning" className="shrink-0 rounded-md p-1 hover:bg-black/10 transition-colors cursor-pointer">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
         {/* Workspace views router */}
         <main ref={mainRef} className="flex-1 overflow-y-auto bg-zinc-50">
           {activeTab === 'dashboard' ? (
             <Dashboard setActiveTab={handleTabChange} selectedConclaveId={selectedConclaveId} setSelectedConclaveId={setSelectedConclaveId} loggedInAdmin={loggedInAdmin} />
           ) : activeTab === 'members' ? (
-            <Members searchQuery={searchQuery} selectedConclaveId={selectedConclaveId} />
+            <Members searchQuery={searchQuery} selectedConclaveId={selectedConclaveId} loggedInAdmin={loggedInAdmin} />
           ) : activeTab === 'active-users' ? (
-            <ActiveUsers searchQuery={searchQuery} selectedConclaveId={selectedConclaveId} />
+            <ActiveUsers searchQuery={searchQuery} selectedConclaveId={selectedConclaveId} loggedInAdmin={loggedInAdmin} />
           ) : activeTab === 'business-types' ? (
-            <BusinessTypes searchQuery={searchQuery} selectedConclaveId={selectedConclaveId} />
+            <BusinessTypes searchQuery={searchQuery} selectedConclaveId={selectedConclaveId} loggedInAdmin={loggedInAdmin} />
           ) : activeTab === 'captains' ? (
-            <Captains searchQuery={searchQuery} selectedConclaveId={selectedConclaveId} />
+            <Captains searchQuery={searchQuery} selectedConclaveId={selectedConclaveId} loggedInAdmin={loggedInAdmin} />
           ) : activeTab === 'conclaves' ? (
             <Conclaves loggedInAdmin={loggedInAdmin} setActiveTab={handleTabChange} />
           ) : activeTab === 'snapshot' ? (
             <Snapshot selectedConclaveId={selectedConclaveId} />
           ) : activeTab === 'schedule-gen' ? (
-            <ScheduleGen selectedConclaveId={selectedConclaveId} />
+            <ScheduleGen selectedConclaveId={selectedConclaveId} showGenWarning={showGenWarning} clearGenWarning={clearGenWarning} />
           ) : activeTab === 'schedule-review' ? (
             <ScheduleReview setActiveTab={handleTabChange} selectedConclaveId={selectedConclaveId} />
           ) : activeTab === 'round-runner' ? (
