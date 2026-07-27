@@ -1,57 +1,16 @@
 import React, { useState } from 'react';
-import { Award, Lock, Mail, Eye, EyeOff, ShieldCheck, Sparkles, Server, Phone } from 'lucide-react';
-
-const MOCK_CAPTAINS = [
-  {
-    id: "BNI-CAPT-01",
-    name: "Amit Patel",
-    email: "amit@bni.com",
-    mobile: "9876543210",
-    password: "password",
-    tableId: "Table 01",
-    chapter: "Peak Performance",
-    category: "Financial Services"
-  },
-  {
-    id: "BNI-CAPT-02",
-    name: "Shreya Acharya",
-    email: "shreya@bni.com",
-    mobile: "9876543211",
-    password: "password",
-    tableId: "Table 02",
-    chapter: "Apex Chapter",
-    category: "Marketing"
-  },
-  {
-    id: "BNI-CAPT-03",
-    name: "Manish Trivedi",
-    email: "m.trivedi@alliance.com",
-    mobile: "9876543212",
-    password: "password",
-    tableId: "Table 03",
-    chapter: "Peak Performance",
-    category: "Financial Consultancy"
-  },
-  {
-    id: "BNI-CAPT-04",
-    name: "Esha Rao",
-    email: "esha.rao@metrorealty.com",
-    mobile: "9876543213",
-    password: "password",
-    tableId: "Table 04",
-    chapter: "Apex Chapter",
-    category: "Real Estate"
-  }
-];
+import { Award, Lock, Mail, Eye, EyeOff, ShieldCheck, Sparkles, Server } from 'lucide-react';
+import { auth } from '../../config/firebase';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 
 export default function CaptainLogin({ onLogin }) {
-  const [inputVal, setInputVal] = useState('amit@bni.com');
-  const [password, setPassword] = useState('password');
+  const [inputVal, setInputVal] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -62,20 +21,43 @@ export default function CaptainLogin({ onLogin }) {
 
     setIsLoading(true);
 
-    setTimeout(() => {
-      setIsLoading(false);
-      
-      // Check if matches mock captain email or mobile
-      const captain = MOCK_CAPTAINS.find(
-        c => (c.email.toLowerCase() === inputVal.toLowerCase() || c.mobile === inputVal) && c.password === password
-      );
+    try {
+      const emailLower = inputVal.toLowerCase().trim();
+      const userCredential = await signInWithEmailAndPassword(auth, emailLower, password);
+      const firebaseUser = userCredential.user;
+      const token = await firebaseUser.getIdToken();
 
-      if (captain) {
-        onLogin && onLogin(captain);
+      // Store token for API calls
+      localStorage.setItem('bni_auth_token', token);
+
+      const payload = {
+        uid: firebaseUser.uid,
+        id: firebaseUser.uid,
+        email: firebaseUser.email,
+        name: firebaseUser.displayName || firebaseUser.email.split('@')[0],
+      };
+
+      onLogin && onLogin('captain', payload);
+    } catch (firebaseErr) {
+      console.error('Captain login error:', firebaseErr.code, firebaseErr.message);
+      if (
+        firebaseErr.code === 'auth/invalid-credential' ||
+        firebaseErr.code === 'auth/user-not-found' ||
+        firebaseErr.code === 'auth/wrong-password'
+      ) {
+        setError('Invalid email or password. Please try again.');
+      } else if (firebaseErr.code === 'auth/invalid-email') {
+        setError('Please enter a valid email address.');
+      } else if (firebaseErr.code === 'auth/too-many-requests') {
+        setError('Too many failed attempts. Please wait a moment and try again.');
+      } else if (firebaseErr.code === 'auth/api-key-not-valid') {
+        setError('Firebase configuration error. Please contact your administrator.');
       } else {
-        setError('Invalid credentials. Try amit@bni.com / 9876543210 and "password".');
+        setError(firebaseErr.message || 'Login failed. Please try again.');
       }
-    }, 1200);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -103,7 +85,7 @@ export default function CaptainLogin({ onLogin }) {
           </div>
           
           <h2 className="text-3xl font-extrabold text-white leading-tight">
-            Captain Attendance Log & Seating Verification.
+            Captain Attendance Log &amp; Seating Verification.
           </h2>
           
           <p className="text-zinc-400 text-body-md font-medium leading-relaxed">
@@ -147,32 +129,33 @@ export default function CaptainLogin({ onLogin }) {
             </div>
             <h3 className="text-2xl font-black text-zinc-950 tracking-tight">Captain Login</h3>
             <p className="text-body-md text-zinc-500 font-medium">
-              Enter your registered Email or Mobile Number to access your table.
+              Enter your registered Email to access your table.
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4 pt-2">
             {error && (
               <div className="p-3 bg-red-50 border border-red-100 rounded-lg text-brand-red text-body-sm font-semibold flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-brand-red"></span>
+                <span className="w-1.5 h-1.5 rounded-full bg-brand-red flex-shrink-0"></span>
                 {error}
               </div>
             )}
 
-            {/* Email/Mobile field */}
+            {/* Email field */}
             <div className="space-y-1.5">
-              <label className="text-[10px] text-zinc-450 font-extrabold uppercase tracking-widest" htmlFor="email-input">
-                Email or Mobile Number
+              <label className="text-[10px] text-zinc-450 font-extrabold uppercase tracking-widest" htmlFor="captain-email-input">
+                Email Address
               </label>
               <div className="relative">
                 <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
                 <input
-                  id="email-input"
-                  type="text"
+                  id="captain-email-input"
+                  type="email"
                   value={inputVal}
                   onChange={(e) => setInputVal(e.target.value)}
                   disabled={isLoading}
-                  placeholder="amit@bni.com or 9876543210"
+                  placeholder="your@email.com"
+                  autoComplete="email"
                   className="w-full pl-10 pr-4 py-2.5 bg-white border border-zinc-200 rounded-lg text-body-md font-semibold outline-none focus:border-zinc-800 transition-smooth placeholder-zinc-400 text-zinc-900"
                 />
               </div>
@@ -181,25 +164,20 @@ export default function CaptainLogin({ onLogin }) {
             {/* Password field */}
             <div className="space-y-1.5">
               <div className="flex justify-between items-center">
-                <label className="text-[10px] text-zinc-450 font-extrabold uppercase tracking-widest" htmlFor="password-input">
+                <label className="text-[10px] text-zinc-450 font-extrabold uppercase tracking-widest" htmlFor="captain-password-input">
                   Password
                 </label>
-                <button
-                  type="button"
-                  className="text-[10px] text-zinc-450 hover:text-zinc-900 font-extrabold uppercase tracking-wider cursor-pointer"
-                >
-                  Forgot Password?
-                </button>
               </div>
               <div className="relative">
                 <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
                 <input
-                  id="password-input"
+                  id="captain-password-input"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={isLoading}
                   placeholder="••••••••"
+                  autoComplete="current-password"
                   className="w-full pl-10 pr-10 py-2.5 bg-white border border-zinc-200 rounded-lg text-body-md font-semibold outline-none focus:border-zinc-800 transition-smooth placeholder-zinc-400 text-zinc-900"
                 />
                 <button
