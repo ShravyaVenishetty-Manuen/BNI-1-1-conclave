@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   CheckCircle,
   Check,
@@ -13,16 +13,31 @@ import {
 export default function CaptainProfile({ loggedInCaptain, onTabChange, onLogout }) {
   // Local editable state for profile info
   const [isEditing, setIsEditing] = useState(false);
-  const [profileData, setProfileData] = useState({
-    name: loggedInCaptain?.name || 'Captain',
-    email: loggedInCaptain?.email || '',
-    phone: loggedInCaptain?.phone || loggedInCaptain?.mobile || '',
+  const [profileData, setProfileData] = useState(() => ({
+    name: loggedInCaptain?.name || 'Deepak Tiwari',
+    email: loggedInCaptain?.email || 'deepak.tiwari1@bni.com',
+    phone: loggedInCaptain?.phone || loggedInCaptain?.mobile || '+91 98752 77221',
     designation: loggedInCaptain?.designation || 'Table Captain',
-    company: loggedInCaptain?.company || loggedInCaptain?.businessName || '',
-    category: loggedInCaptain?.category || loggedInCaptain?.businessCategory || '',
-    chapter: loggedInCaptain?.chapter || 'BNI Chapter',
+    company: loggedInCaptain?.company || loggedInCaptain?.businessName || 'Prime Realty Group',
+    category: loggedInCaptain?.category || loggedInCaptain?.businessCategory || 'Real Estate',
+    chapter: loggedInCaptain?.chapter || 'Vijayawada Elite',
     registrationDate: loggedInCaptain?.registrationDate || loggedInCaptain?.joinedDate || '2026'
-  });
+  }));
+
+  useEffect(() => {
+    if (loggedInCaptain) {
+      setProfileData(prev => ({
+        ...prev,
+        name: loggedInCaptain.name || prev.name,
+        email: loggedInCaptain.email || prev.email,
+        phone: loggedInCaptain.phone || loggedInCaptain.mobile || prev.phone,
+        designation: loggedInCaptain.designation || prev.designation,
+        company: loggedInCaptain.company || loggedInCaptain.businessName || prev.company,
+        category: loggedInCaptain.category || loggedInCaptain.businessCategory || prev.category,
+        chapter: loggedInCaptain.chapter || prev.chapter,
+      }));
+    }
+  }, [loggedInCaptain]);
 
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [pushNotifications, setPushNotifications] = useState(true);
@@ -95,7 +110,11 @@ export default function CaptainProfile({ loggedInCaptain, onTabChange, onLogout 
                 <div>
                   <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">Captain ID</p>
                   <p className="font-black text-zinc-800 text-[12.5px] mt-0.5 uppercase truncate" title={captainId}>
-                    {captainId ? `BNI-${captainId.substring(0, 6).toUpperCase()}` : 'BNI-CAPT'}
+                    {captainId
+                      ? (captainId.startsWith('usr_') 
+                          ? `BNI-CAPT-${captainId.replace('usr_', '').padStart(3, '0')}` 
+                          : `BNI-${captainId.toUpperCase()}`)
+                      : 'BNI-CAPT-001'}
                   </p>
                 </div>
                 <div>
