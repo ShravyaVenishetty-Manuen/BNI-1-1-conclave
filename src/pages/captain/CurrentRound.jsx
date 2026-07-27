@@ -11,22 +11,34 @@ import {
 } from 'lucide-react';
 
 export default function CurrentRound({ loggedInCaptain, conclaveSyncData }) {
-  const [timeLeft, setTimeLeft] = useState(600);
+  const initialTime = 15 * 60; // 900 seconds (15:00)
+  const [timeLeft, setTimeLeft] = useState(initialTime);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
-  const initialTime = 600; // 10 mins total round simulation
 
   useEffect(() => {
     const startedAt = conclaveSyncData?.conclaveStatus?.currentRoundStartedAt;
-    if (startedAt && conclaveSyncData?.conclaveStatus?.status === 'active') {
+    const status = (conclaveSyncData?.conclaveStatus?.status || '').toLowerCase();
+    const isRunning = status === 'running' || status === 'active';
+
+    if (startedAt && isRunning) {
       const updateTimer = () => {
-        const elapsed = Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000);
+        let startTime = NaN;
+        if (typeof startedAt === 'object' && startedAt !== null) {
+          if (typeof startedAt._seconds === 'number') startTime = startedAt._seconds * 1000;
+          else if (typeof startedAt.seconds === 'number') startTime = startedAt.seconds * 1000;
+          else if (typeof startedAt.toDate === 'function') startTime = startedAt.toDate().getTime();
+        }
+        if (isNaN(startTime)) startTime = new Date(startedAt).getTime();
+        if (isNaN(startTime)) startTime = Date.now();
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
         setTimeLeft(Math.max(0, initialTime - elapsed));
       };
       updateTimer();
       const timer = setInterval(updateTimer, 1000);
       return () => clearInterval(timer);
-    } else {
-      setTimeLeft(600);
+    }
+ else {
+      setTimeLeft(initialTime);
     }
   }, [conclaveSyncData]);
 
