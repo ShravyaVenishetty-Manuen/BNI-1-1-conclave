@@ -56,19 +56,28 @@ export default function AdminProfile({ loggedInAdmin, role = 'admin', onLogout }
   }, []);
 
   useEffect(() => {
-    if (loggedInAdmin) {
-      setProfileData(prev => ({
-        ...prev,
-        name: loggedInAdmin.name || prev.name,
-        email: loggedInAdmin.email || prev.email,
-        phone: loggedInAdmin.phone || prev.phone,
-        designation: loggedInAdmin.designation || prev.designation,
-        organization: loggedInAdmin.organization || prev.organization,
-        region: loggedInAdmin.chapter || loggedInAdmin.region || prev.region,
-        joinedDate: loggedInAdmin.createdAt ? new Date(loggedInAdmin.createdAt).toLocaleDateString([], { month: 'long', year: 'numeric' }) : prev.joinedDate
-      }));
+    async function loadFreshAdminProfile() {
+      try {
+        const fresh = await api.get('/me');
+        if (fresh) {
+          setProfileData({
+            name: fresh.name || loggedInAdmin?.name || 'Administrator',
+            email: fresh.email || loggedInAdmin?.email || 'admin@bni.com',
+            phone: fresh.phone || fresh.mobile || loggedInAdmin?.phone || loggedInAdmin?.mobile || 'Not set',
+            designation: isSuperadmin ? 'Global Administrator' : (fresh.designation || 'Regional Administrator'),
+            organization: isSuperadmin ? 'BNI Global LLC' : (fresh.organizationNode || `BNI India (${fresh.region || 'Guntur Region'})`),
+            region: isSuperadmin ? 'All Regions (Global)' : (fresh.region || fresh.scope || 'Guntur Region'),
+            joinedDate: fresh.createdAt ? new Date(fresh.createdAt).toLocaleDateString([], { month: 'long', year: 'numeric' }) : 'Active Member'
+          });
+        }
+      } catch (err) {
+        console.warn("Failed to fetch fresh admin profile:", err.message);
+      }
     }
-  }, [loggedInAdmin]);
+    if (!isSuperadmin) {
+      loadFreshAdminProfile();
+    }
+  }, [isSuperadmin, loggedInAdmin]);
 
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [pushNotifications, setPushNotifications] = useState(true);
