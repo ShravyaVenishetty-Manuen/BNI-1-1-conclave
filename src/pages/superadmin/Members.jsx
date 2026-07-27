@@ -82,7 +82,7 @@ export default function SuperadminMembers({ searchQuery }) {
       category.toLowerCase().includes(q) ||
       chapter.toLowerCase().includes(q);
 
-    const reg = member.region ? (typeof member.region === 'object' ? (member.region.place || 'Guntur Region') : member.region) : (member.location ? (typeof member.location === 'object' ? (member.location.place || 'Guntur Region') : member.location) : 'Guntur Region');
+    const reg = member.region ? (typeof member.region === 'object' ? (member.region.place || 'Global BNI Network') : member.region) : (member.location ? (typeof member.location === 'object' ? (member.location.place || 'Global BNI Network') : member.location) : 'Global BNI Network');
     const matchesRegion = selectedRegion === 'All' ? true : reg === selectedRegion;
     return matchesSearch && matchesRegion;
   });
@@ -188,7 +188,7 @@ export default function SuperadminMembers({ searchQuery }) {
                   <td className="p-4 text-zinc-500">{member.chapter}</td>
                   <td className="p-4">
                     <span className="px-2.5 py-0.5 bg-zinc-50 border border-zinc-200 text-zinc-550 text-[10px] font-bold rounded-full whitespace-nowrap">
-                      {typeof member.region === 'object' ? (member.region.place || 'Guntur Region') : (member.region || 'Guntur Region')}
+                      {typeof member.region === 'object' ? (member.region.place || 'Global BNI Network') : (member.region || 'Global BNI Network')}
                     </span>
                   </td>
                   <td className="p-4 text-center font-bold text-zinc-800">
@@ -295,7 +295,7 @@ export default function SuperadminMembers({ searchQuery }) {
                   <div className="p-3.5 bg-white border border-zinc-200 rounded-xl shadow-2xs">
                     <span className="text-[9px] font-black text-zinc-400 uppercase tracking-wider block">BNI Region node</span>
                     <span className="text-body-sm font-bold text-zinc-800 mt-1 block truncate">
-                      {typeof activeMember.region === 'object' ? (activeMember.region.place || 'Guntur Region') : (activeMember.region || 'Guntur Region')}
+                      {typeof activeMember.region === 'object' ? (activeMember.region.place || 'Global BNI Network') : (activeMember.region || 'Global BNI Network')}
                     </span>
                   </div>
                 </div>
