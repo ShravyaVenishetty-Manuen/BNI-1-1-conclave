@@ -26,13 +26,12 @@ export default function Header({ searchQuery, setSearchQuery, activeTab, setActi
 
   useEffect(() => {
     const syncNotifs = () => {
-      setNotifications(getNotifications());
+      const fresh = getNotifications();
+      setNotifications(prev => (JSON.stringify(prev) !== JSON.stringify(fresh) ? fresh : prev));
     };
     window.addEventListener('storage', syncNotifs);
-    const interval = setInterval(syncNotifs, 1500);
     return () => {
       window.removeEventListener('storage', syncNotifs);
-      clearInterval(interval);
     };
   }, []);
 
