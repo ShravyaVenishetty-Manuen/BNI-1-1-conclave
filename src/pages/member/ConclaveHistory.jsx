@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Search,
   Calendar,
@@ -109,7 +110,11 @@ export default function MemberConclaveHistory({ loggedInMember }) {
               })),
               contacts: (c.roundCount || 4) * ((c.personsPerTable || 6) - 1),
               referrals: userReferralsGiven,
-              recommendation: userReferralsGiven > 0 ? "High synergy session with active referral flow." : "Session completed. Log referrals given during meetings."
+              recommendation: userReferralsGiven > 0 
+                ? "High synergy session with active referral flow." 
+                : (formattedStatus === 'Active' 
+                    ? "Session in progress. Log referrals given during 1-on-1 meetings." 
+                    : "Session completed. Log referrals given during meetings.")
             }
           };
         });
@@ -351,21 +356,16 @@ export default function MemberConclaveHistory({ loggedInMember }) {
         </aside>
       </div>
 
-      {/* Drawer Overlay */}
-      {showDrawer && selectedConclave && (
-        <div
-          onClick={() => setShowDrawer(false)}
-          className="fixed inset-0 bg-zinc-950/45 backdrop-blur-xs z-50 transition-opacity duration-300 animate-fade-in"
-        />
-      )}
-
-      {/* Detail Drawer Panel */}
-      <div
-        className={`fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-2xl z-55 transition-transform duration-300 border-l border-zinc-200 flex flex-col ${showDrawer && selectedConclave ? 'translate-x-0' : 'translate-x-full'
-          }`}
-      >
-        {selectedConclave && (
-          <>
+      {/* Detail Drawer Panel & Overlay */}
+      {showDrawer && selectedConclave && createPortal(
+        <div className="font-sans">
+          <div
+            onClick={() => setShowDrawer(false)}
+            className="fixed inset-0 bg-zinc-950/45 backdrop-blur-xs z-[998] transition-opacity duration-300 animate-fade-in"
+          />
+          <div
+            className="fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-2xl z-[999] border-l border-zinc-200 flex flex-col animate-slide-left"
+          >
             <div className="p-4 border-b border-zinc-200 flex items-center justify-between bg-zinc-50">
               <div>
                 <h2 className="text-body-md font-black text-zinc-900 leading-tight">Conclave Details</h2>
@@ -452,9 +452,10 @@ export default function MemberConclaveHistory({ loggedInMember }) {
                 Download Attendance Certificate
               </button>
             </div>
-          </>
-        )}
-      </div>
+          </div>
+        </div>,
+        document.body
+      )}
 
     </div>
   );
