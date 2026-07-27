@@ -39,7 +39,6 @@ export default function Registrations({ loggedInMember }) {
     category: '',
     chapter: '',
     mealPreference: 'Veg',
-    tshirtSize: 'L',
     needsAccommodation: 'No',
     specialInstructions: ''
   });
@@ -63,7 +62,7 @@ export default function Registrations({ loggedInMember }) {
           venue: c.venue || c.venueLocation || 'TBD Venue',
           region: c.region || 'Guntur Region',
           startDate: c.date || c.startDate || null,
-          status: c.status === 'running' ? 'Running' : c.status === 'completed' ? 'Completed' : c.status === 'registration_open' ? 'Upcoming' : 'Upcoming',
+          status: c.status ? (c.status.toLowerCase() === 'running' ? 'Running' : c.status.toLowerCase() === 'completed' ? 'Completed' : c.status.toLowerCase().includes('closed') ? 'Registration Closed' : c.status.toLowerCase().includes('open') ? 'Registration Open' : c.status) : 'Upcoming',
           memberCount: c.memberCount || c.registrationCount || 0,
         }));
         setConclaves(mappedConclaves);
@@ -134,10 +133,15 @@ export default function Registrations({ loggedInMember }) {
     if (registeredIds.includes(conclaveId)) return;
 
     try {
-      // API call to register
-      await api.post(`/conclaves/${conclaveId}/register`);
+      const res = await api.post(`/conclaves/${conclaveId}/register`);
+      if (res && res.alreadyRegistered) {
+        showToastMessage(`You are already registered for ${conclaveName}.`, 'info');
+      }
     } catch (err) {
-      console.warn("Backend registration failed, proceeding with local fallback:", err.message);
+      console.error("Backend registration error:", err.message);
+      showToastMessage(err.message || "Failed to register for conclave.", 'error');
+      setIsRegModalOpen(false);
+      return;
     }
 
     // 1. Update Member conclaveIds
@@ -150,7 +154,7 @@ export default function Registrations({ loggedInMember }) {
 
     const updatedConclaves = conclaves.map(c => {
       if (c.id === conclaveId) {
-        return { ...c, memberCount: (c.memberCount || 0) + 1 };
+        return { ...c, isRegistered: true, memberCount: (c.memberCount || 0) + 1 };
       }
       return c;
     });
@@ -172,10 +176,14 @@ export default function Registrations({ loggedInMember }) {
   };
 
   // Handle deregistration action
-  const handleDeregister = (conclaveId, conclaveName) => {
-    const registeredIds = member?.conclaveIds || [];
-    if (!registeredIds.includes(conclaveId)) return;
+  const handleDeregister = async (conclaveId, conclaveName) => {
+    try {
+      await api.delete(`/conclaves/${conclaveId}/register`);
+    } catch (err) {
+      console.warn("Backend deregistration warning:", err.message);
+    }
 
+    const registeredIds = member?.conclaveIds || [];
     const updatedMember = {
       ...member,
       conclaveIds: registeredIds.filter(id => id !== conclaveId)
@@ -185,12 +193,16 @@ export default function Registrations({ loggedInMember }) {
 
     const updatedConclaves = conclaves.map(c => {
       if (c.id === conclaveId) {
-        return { ...c, memberCount: Math.max(0, (c.memberCount || 1) - 1) };
+        return { ...c, isRegistered: false, memberCount: Math.max(0, (c.memberCount || 1) - 1) };
       }
       return c;
     });
     setConclaves(updatedConclaves);
     localStorage.setItem('bni_conclaves', JSON.stringify(updatedConclaves));
+
+    const allRegistrations = JSON.parse(localStorage.getItem('bni_conclave_registrations') || '[]');
+    const filteredRegs = allRegistrations.filter(r => r.conclaveId !== conclaveId);
+    localStorage.setItem('bni_conclave_registrations', JSON.stringify(filteredRegs));
 
     window.dispatchEvent(new Event('storage'));
     showToastMessage(`Cancelled registration for ${conclaveName}.`, 'warning');
@@ -380,10 +392,17 @@ export default function Registrations({ loggedInMember }) {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {filteredConclaves.map(c => {
-            const isRegistered = (member?.conclaveIds || []).includes(c.id);
+            const localRegs = JSON.parse(localStorage.getItem('bni_conclave_registrations') || '[]');
+            const isLocallyRegistered = localRegs.some(r => r.conclaveId === c.id);
+            const isRegistered = Boolean(
+              c.isRegistered || 
+              c.registered ||
+              (member?.conclaveIds || []).includes(c.id) ||
+              isLocallyRegistered
+            );
             const isFull = (c.memberCount || 0) >= (c.memberLimit || 500);
-            const isCompleted = c.status === 'Completed';
-            const isDraft = c.status === 'Draft';
+            const isCompleted = (c.status || '').toLowerCase() === 'completed' || (c.status || '').toLowerCase() === 'ended';
+            const isDraft = (c.status || '').toLowerCase() === 'draft';
             const percentFilled = Math.min(100, Math.round(((c.memberCount || 0) / (c.memberLimit || 500)) * 100));
 
             // Registration window dates logic
@@ -450,15 +469,15 @@ export default function Registrations({ loggedInMember }) {
                 {/* Call-to-action registration action button */}
                 <div className="mt-5 pt-3 border-t border-zinc-100/60 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-1.5">
-                    {isRegistered ? (
+                    {isCompleted ? (
+                      <span className="text-[10px] font-extrabold text-zinc-500 flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-zinc-400" />
+                        {isRegistered ? 'Registered (Completed)' : 'Event Completed'}
+                      </span>
+                    ) : isRegistered ? (
                       <span className="text-[10px] font-extrabold text-emerald-600 flex items-center gap-1">
                         <Check className="w-3 h-3 text-emerald-600" />
                         You are registered
-                      </span>
-                    ) : isCompleted ? (
-                      <span className="text-[10px] font-extrabold text-zinc-400 flex items-center gap-1">
-                        <XCircle className="w-3.5 h-3.5" />
-                        Event Completed
                       </span>
                     ) : isBeforeReg ? (
                       <span className="text-[10px] font-extrabold text-amber-600 flex items-center gap-1">
@@ -483,19 +502,19 @@ export default function Registrations({ loggedInMember }) {
                   </div>
 
                   <div>
-                    {isRegistered ? (
+                    {isCompleted ? (
+                      <button
+                        disabled
+                        className="py-1.5 px-3 bg-zinc-100 text-zinc-400 border border-zinc-200 rounded-lg text-[10px] font-black uppercase tracking-wider cursor-not-allowed opacity-60"
+                      >
+                        {isRegistered ? 'Attended' : 'Completed'}
+                      </button>
+                    ) : isRegistered ? (
                       <button
                         onClick={() => handleDeregister(c.id, c.name)}
                         className="py-1.5 px-3 border border-red-200 text-brand-red rounded-lg text-[10px] font-black uppercase tracking-wider hover:bg-red-50 transition-smooth cursor-pointer"
                       >
                         Cancel Seat
-                      </button>
-                    ) : isCompleted ? (
-                      <button
-                        disabled
-                        className="py-1.5 px-3 bg-zinc-100 text-zinc-350 border border-zinc-200 rounded-lg text-[10px] font-black uppercase tracking-wider cursor-not-allowed opacity-60"
-                      >
-                        Unavailable
                       </button>
                     ) : isBeforeReg ? (
                       <button
@@ -654,7 +673,7 @@ export default function Registrations({ loggedInMember }) {
               </div>
 
               {/* Grid 2: Preferences */}
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-[9.5px] font-bold uppercase text-zinc-450 block mb-1">Meal Preference</label>
                   <select
@@ -665,20 +684,6 @@ export default function Registrations({ loggedInMember }) {
                     <option value="Veg">Veg</option>
                     <option value="Non-Veg">Non-Veg</option>
                     <option value="Jain">Jain</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-[9.5px] font-bold uppercase text-zinc-450 block mb-1">T-Shirt Size</label>
-                  <select
-                    value={regForm.tshirtSize}
-                    onChange={(e) => setRegForm(prev => ({ ...prev, tshirtSize: e.target.value }))}
-                    className="w-full px-2.5 py-1.5 border border-zinc-200 rounded-lg text-[11.5px] focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-white font-semibold text-zinc-700 cursor-pointer"
-                  >
-                    <option value="S">S</option>
-                    <option value="M">M</option>
-                    <option value="L">L</option>
-                    <option value="XL">XL</option>
-                    <option value="XXL">XXL</option>
                   </select>
                 </div>
                 <div>
