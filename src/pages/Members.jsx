@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Search,
   MapPin,
@@ -10,56 +11,162 @@ import {
   MoreVertical,
   Download,
   Upload,
+  FileSpreadsheet,
 } from 'lucide-react';
 import Pagination from '../components/Pagination';
 import SearchableDropdown from '../components/SearchableDropdown';
 import { api } from '../services/api';
 
-export default function Members({ searchQuery, selectedConclaveId }) {
+export default function Members({ searchQuery, selectedConclaveId, loggedInAdmin }) {
   const [members, setMembers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [viewScope, setViewScope] = useState('conclave'); // 'conclave', 'region', or 'global'
 
   useEffect(() => {
-    if (!selectedConclaveId) return;
-    async function loadRegistrations() {
+    async function loadMembersData() {
       setIsLoading(true);
       try {
-        const data = await api.get(`/admin/conclaves/${selectedConclaveId}/registrations`);
-        const mapped = (data.registrations || []).map(r => {
-          const displayName = r.name?.trim() || r.uid || 'Unknown Member';
-          const fallbackCategory = r.businessCategory?.trim() || 'General';
-          const fallbackCompany = r.businessName?.trim() || 'Self Employed';
-          const fallbackLocation = typeof r.location === 'object' && r.location !== null
+        let rawList = [];
+        const allUsers = await api.get('/admin/users').catch(() => []);
+        const userMap = new Map();
+        if (Array.isArray(allUsers)) {
+          allUsers.forEach(u => {
+            const uid = u.id || u.uid;
+            if (uid) userMap.set(uid, u);
+          });
+        }
+
+        let targetConclaveId = selectedConclaveId;
+        if (viewScope === 'conclave' && !targetConclaveId) {
+          const conclavesList = await api.get('/admin/conclaves').catch(() => []);
+          if (Array.isArray(conclavesList) && conclavesList.length > 0) {
+            targetConclaveId = conclavesList[0].id;
+          }
+        }
+
+        if (viewScope === 'conclave') {
+          if (targetConclaveId) {
+            try {
+              const res = await api.get(`/admin/conclaves/${targetConclaveId}/registrations`);
+              if (res && Array.isArray(res.registrations)) {
+                rawList = res.registrations.map(r => {
+                  const uid = r.userId || r.uid || r.id;
+                  const master = userMap.get(uid) || {};
+                  const userRegion = r.region || master.region || (typeof r.location === 'string' ? r.location : '') || 'Global BNI Network';
+                  return {
+                    ...master,
+                    ...r,
+                    id: uid,
+                    uid: uid,
+                    name: r.name || master.name || master.displayName || 'Member',
+                    email: r.email || master.email || 'n/a',
+                    phone: r.phone || master.phone || master.mobile || 'n/a',
+                    company: r.company || master.company || master.businessName || 'Self Employed',
+                    category: r.category || master.category || master.businessCategory || 'General',
+                    chapter: r.chapter || master.chapter || 'Peak Performance',
+                    region: userRegion,
+                    userRegion: userRegion
+                  };
+                });
+              }
+            } catch {}
+          } else {
+            rawList = [];
+          }
+        } else {
+          const conclavesList = await api.get('/admin/conclaves?global=true').catch(() => []);
+          const memberMap = new Map();
+
+          if (Array.isArray(allUsers)) {
+            allUsers.forEach(u => {
+              const uid = u.id || u.uid;
+              if (uid) memberMap.set(uid, { ...u });
+            });
+          }
+
+          if (Array.isArray(conclavesList)) {
+            await Promise.all(conclavesList.map(async (c) => {
+              try {
+                const res = await api.get(`/admin/conclaves/${c.id}/registrations`);
+                if (res && Array.isArray(res.registrations)) {
+                  res.registrations.forEach(r => {
+                    const uid = r.userId || r.uid || r.id;
+                    const existing = memberMap.get(uid) || {};
+                    const userRegion = existing.region || (typeof existing.location === 'string' ? existing.location : '') || (r.region && r.region !== 'Guntur Region' ? r.region : '') || 'Global BNI Network';
+                    memberMap.set(uid, {
+                      ...r,
+                      ...existing,
+                      id: uid,
+                      uid: uid,
+                      name: existing.name || r.name || existing.displayName || 'Member',
+                      email: existing.email || r.email || 'n/a',
+                      phone: existing.phone || r.phone || existing.mobile || 'n/a',
+                      company: existing.company || r.company || existing.businessName || 'Self Employed',
+                      category: existing.category || r.category || existing.businessCategory || 'General',
+                      chapter: existing.chapter || r.chapter || 'Peak Performance',
+                      userRegion: userRegion
+                    });
+                  });
+                }
+              } catch {}
+            }));
+          }
+
+          rawList = Array.from(memberMap.values());
+        }
+
+        const mapped = rawList.map(r => {
+          const displayName = r.name?.trim() || r.email?.split('@')[0] || r.id || 'Member';
+          const fallbackCategory = r.category || r.businessCategory?.trim() || 'General';
+          const fallbackCompany = r.company || r.businessName?.trim() || 'Self Employed';
+
+          const resolvedRegion = r.userRegion || r.region || 'Global BNI Network';
+          const locStr = typeof r.location === 'object' && r.location !== null
             ? (r.location.place || r.location.city || '')
-            : (r.location || '');
+            : (r.location || r.address || '');
+          const fallbackLocation = locStr || (r.chapter ? `${r.chapter}, ${resolvedRegion}` : resolvedRegion);
+
+          const rawStatus = (r.status || '').toLowerCase();
+          const isActiveMember = rawStatus === 'active' || rawStatus === 'pending' || rawStatus === 'registered' || rawStatus === 'confirmed' || r.isActive === true || !r.status;
+
+          const rawDate = r.createdAt || r.registeredAt;
+          const joinDateFormatted = rawDate && !isNaN(new Date(rawDate).getTime())
+            ? new Date(rawDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+            : 'Jan 2026';
+
+          const historyDateFormatted = rawDate && !isNaN(new Date(rawDate).getTime())
+            ? new Date(rawDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })
+            : new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+
           return {
-            id: r.uid,
+            id: r.id || r.uid || `mem_${Math.random()}`,
             name: displayName,
             email: r.email?.trim() || 'n/a',
-            phone: r.phone?.trim() || 'n/a',
+            phone: r.phone?.trim() || r.mobile?.trim() || 'n/a',
             company: fallbackCompany,
             category: fallbackCategory,
             address: fallbackLocation,
             state: r.state || 'Andhra Pradesh',
             country: r.country || 'India',
             chapter: r.chapter || 'Peak Performance',
-            isCaptain: r.role === 'captain',
-            status: r.isActive ? 'Active' : 'Inactive',
-            joinDate: r.registeredAt ? new Date(r.registeredAt).toLocaleDateString([], { month: 'short', year: 'numeric' }) : 'N/A',
+            region: resolvedRegion,
+            isCaptain: r.role === 'captain' || r.isTableCaptain === true,
+            status: isActiveMember ? 'Active' : 'Inactive',
+            joinDate: joinDateFormatted,
             avatar: displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'M',
             conclaveIds: [selectedConclaveId],
-            history: [{ event: 'Registered', date: r.registeredAt ? new Date(r.registeredAt).toLocaleDateString() : 'N/A', role: r.role === 'captain' ? 'Captain' : 'Member' }]
+            history: [{ event: 'Registered', date: historyDateFormatted, role: r.role === 'captain' ? 'Captain' : 'Member' }]
           };
         });
         setMembers(mapped);
       } catch (err) {
-        console.error("Failed to load registrations from API:", err);
+        console.error("Failed to load members from API:", err);
       } finally {
         setIsLoading(false);
       }
     }
-    loadRegistrations();
-  }, [selectedConclaveId]);
+    loadMembersData();
+  }, [selectedConclaveId, viewScope]);
   const [referrals, setReferrals] = useState(() => {
     const stored = localStorage.getItem('bni_referrals');
     return stored ? JSON.parse(stored) : [];
@@ -69,16 +176,19 @@ export default function Members({ searchQuery, selectedConclaveId }) {
     const handleStorageChange = () => {
       const stored = localStorage.getItem('bni_referrals');
       if (stored) {
-        setReferrals(JSON.parse(stored));
+        try {
+          const parsed = JSON.parse(stored);
+          setReferrals(prev => (JSON.stringify(prev) !== JSON.stringify(parsed) ? parsed : prev));
+        } catch {}
       }
     };
     window.addEventListener('storage', handleStorageChange);
-    const interval = setInterval(handleStorageChange, 1000);
     return () => {
       window.removeEventListener('storage', handleStorageChange);
-      clearInterval(interval);
     };
   }, []);
+
+
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
@@ -93,16 +203,26 @@ export default function Members({ searchQuery, selectedConclaveId }) {
   const [statusFilter, setStatusFilter] = useState('All');
   const [stateFilter, setStateFilter] = useState('All');
   const [countryFilter, setCountryFilter] = useState('All');
-  const [viewScope, setViewScope] = useState('region'); // 'region' or 'global'
   const [selectedMember, setSelectedMember] = useState(null);
+
+  // Lock background body scroll when drawer is open
+  useEffect(() => {
+    if (selectedMember) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [selectedMember]);
   const [selectedRows, setSelectedRows] = useState(new Set());
   const [activeDropdown, setActiveDropdown] = useState(null);
 
   const [toast, setToast] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [isBulkDeleteConfirmOpen, setIsBulkDeleteConfirmOpen] = useState(false);
-  const [reassignTarget, setReassignTarget] = useState(null);
-  const [newChapterVal, setNewChapterVal] = useState('Peak Performance');
+
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
@@ -112,10 +232,14 @@ export default function Members({ searchQuery, selectedConclaveId }) {
   };
 
   const getMemberRegion = (member) => {
-    if (member.region) return member.region;
-    if (member.chapter === 'Peak Performance' || member.chapter === 'Apex Chapter') return 'Guntur Region';
-    if (member.chapter === 'Capital Chapter') return 'Hyderabad Region';
-    return 'Guntur Region';
+    if (member.userRegion && typeof member.userRegion === 'string') return member.userRegion;
+    if (member.region && typeof member.region === 'string') return member.region;
+    if (member.location) {
+      if (typeof member.location === 'string') return member.location;
+      if (typeof member.location === 'object' && member.location.place) return member.location.place;
+    }
+    if (member.address && typeof member.address === 'string') return member.address;
+    return 'Global BNI Network';
   };
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -222,8 +346,8 @@ export default function Members({ searchQuery, selectedConclaveId }) {
 
   // Conclave-specific members subset
   const conclaveMembers = useMemo(() => {
-    return members.filter(m => m.conclaveIds && m.conclaveIds.includes(selectedConclaveId));
-  }, [members, selectedConclaveId]);
+    return members;
+  }, [members]);
 
   // Dynamic statistics calculations
   const totalCount = conclaveMembers.length;
@@ -260,17 +384,16 @@ export default function Members({ searchQuery, selectedConclaveId }) {
         (captainFilter === 'Member' && !member.isCaptain);
 
       const matchesStatus = statusFilter === 'All' || member.status === statusFilter;
-
-      const matchesViewScope = viewScope === 'global' || 
-        member.chapter === 'Peak Performance' || 
-        member.chapter === 'Apex Chapter';
+      const adminReg = (loggedInAdmin?.region || loggedInAdmin?.scope || '').toLowerCase().trim();
+      const memberReg = (member.region || getMemberRegion(member) || '').toLowerCase().trim();
+      const matchesViewScope = viewScope === 'conclave' || viewScope === 'global' || !adminReg || adminReg === 'global' || adminReg.includes('global') || memberReg.includes(adminReg) || adminReg.includes(memberReg);
 
       const matchesState = stateFilter === 'All' || member.state === stateFilter;
       const matchesCountry = countryFilter === 'All' || member.country === countryFilter;
 
       return matchesSearch && matchesCategory && matchesCaptain && matchesStatus && matchesViewScope && matchesState && matchesCountry;
     });
-  }, [conclaveMembers, searchVal, categoryFilter, captainFilter, statusFilter, stateFilter, countryFilter, viewScope]);
+  }, [conclaveMembers, searchVal, categoryFilter, captainFilter, statusFilter, stateFilter, countryFilter, viewScope, loggedInAdmin]);
 
   // Paginated members slice
   const paginatedMembers = useMemo(() => {
@@ -423,6 +546,31 @@ export default function Members({ searchQuery, selectedConclaveId }) {
     setSelectedRows(new Set());
   };
 
+  const handleDownloadTemplate = () => {
+    const headers = ['Member ID', 'Name', 'Category', 'Email', 'Phone', 'Role', 'Status', 'Join Date', 'Company', 'Chapter'];
+    const sampleRow = [
+      'BNI-00101',
+      '"Suresh Verma"',
+      '"Interior Designer"',
+      'suresh@verma.com',
+      '+91 9811122233',
+      'Member',
+      'Active',
+      'June 2024',
+      '"Verma Design Studio"',
+      '"Zenith Chapter"'
+    ];
+
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), sampleRow.join(',')].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "bni_members_import_template.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="p-4 sm:p-6 max-w-[1600px] mx-auto w-full flex flex-col gap-6 animate-fade-in">
 
@@ -434,7 +582,7 @@ export default function Members({ searchQuery, selectedConclaveId }) {
             Manage registered BNI members and chapter seating details.
           </p>
         </div>
-        <div className="flex items-center gap-2.5 shrink-0 w-full sm:w-auto">
+        <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
           <input
             type="file"
             id="csv-file-input"
@@ -443,15 +591,23 @@ export default function Members({ searchQuery, selectedConclaveId }) {
             className="hidden"
           />
           <button
+            onClick={handleDownloadTemplate}
+            title="Download formatted CSV template for member import"
+            className="flex items-center justify-center gap-1 px-3 py-2 border border-zinc-250 bg-zinc-50 text-zinc-700 font-bold text-[11px] rounded-lg hover:bg-zinc-100 transition-smooth cursor-pointer shadow-3xs"
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
+            Template
+          </button>
+          <button
             onClick={handleExport}
-            className="flex items-center justify-center gap-1.5 px-3.5 py-2 border border-zinc-200 bg-white text-zinc-700 font-bold text-button rounded-lg hover:bg-zinc-50 transition-smooth cursor-pointer shadow-sm"
+            className="flex items-center justify-center gap-1.5 px-3 py-2 border border-zinc-200 bg-white text-zinc-700 font-bold text-[11px] rounded-lg hover:bg-zinc-50 transition-smooth cursor-pointer shadow-3xs"
           >
             <Upload className="w-4 h-4 text-zinc-400" />
             Export
           </button>
           <button
             onClick={() => document.getElementById('csv-file-input').click()}
-            className="flex items-center justify-center gap-1.5 px-3.5 py-2 border border-zinc-200 bg-white text-zinc-700 font-bold text-button rounded-lg hover:bg-zinc-50 transition-smooth cursor-pointer shadow-sm"
+            className="flex items-center justify-center gap-1.5 px-3 py-2 border border-zinc-200 bg-white text-zinc-700 font-bold text-[11px] rounded-lg hover:bg-zinc-50 transition-smooth cursor-pointer shadow-3xs"
           >
             <Download className="w-4 h-4 text-zinc-400" />
             Import
@@ -468,6 +624,16 @@ export default function Members({ searchQuery, selectedConclaveId }) {
 
       {/* Scope Navigation Tabs */}
       <div className="flex border-b border-zinc-200 -mt-2">
+        <button
+          onClick={() => setViewScope('conclave')}
+          className={`px-4 py-2 text-body-sm font-black uppercase tracking-wider border-b-2 transition-smooth cursor-pointer -mb-px ${
+            viewScope === 'conclave'
+              ? 'border-brand-red text-brand-red font-extrabold'
+              : 'border-transparent text-zinc-500 hover:text-zinc-800'
+          }`}
+        >
+          This Conclave
+        </button>
         <button
           onClick={() => setViewScope('region')}
           className={`px-4 py-2 text-body-sm font-black uppercase tracking-wider border-b-2 transition-smooth cursor-pointer -mb-px ${
@@ -754,19 +920,20 @@ export default function Members({ searchQuery, selectedConclaveId }) {
       </div>
 
       {/* Member Details Drawer overlay */}
-      <div
-        onClick={() => setSelectedMember(null)}
-        className={`fixed inset-0 bg-black/40 backdrop-blur-xs z-[55] transition-opacity duration-300 ${selectedMember ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-          }`}
-      />
+      {createPortal(
+        <>
+          <div
+            onClick={() => setSelectedMember(null)}
+            className={`fixed inset-0 bg-black/40 backdrop-blur-xs z-[9999] transition-opacity duration-300 ${selectedMember ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+              }`}
+          />
 
-      {/* Sliding Drawer component */}
-      <div className={`fixed right-0 top-0 h-screen w-full max-w-[420px] bg-white z-[60] border-l border-zinc-100 shadow-2xl transform transition-transform duration-300 ${selectedMember ? 'translate-x-0' : 'translate-x-full'
-        }`}>
+          <div className={`fixed right-0 top-0 bottom-0 h-screen w-full max-w-[420px] bg-white border-l border-zinc-100 shadow-2xl transform transition-transform duration-300 flex flex-col overflow-hidden z-[10000] ${selectedMember ? 'translate-x-0 pointer-events-auto' : 'translate-x-full pointer-events-none'
+            }`}>
         {selectedMember && (
-          <div className="flex flex-col h-full">
+          <>
             {/* Drawer Header */}
-            <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-white">
+            <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-white shrink-0">
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setSelectedMember(null)}
@@ -785,7 +952,7 @@ export default function Members({ searchQuery, selectedConclaveId }) {
             </div>
 
             {/* Drawer Content */}
-            <div className="flex-1 overflow-y-auto p-5 space-y-6">
+            <div className="flex-1 overflow-y-auto min-h-0 p-5 space-y-6">
 
               {/* Profile Card Summary */}
               <div className="flex flex-col items-center gap-3 text-center bg-white p-4 rounded-xl border border-zinc-200/60 shadow-2xs">
@@ -938,15 +1105,28 @@ export default function Members({ searchQuery, selectedConclaveId }) {
             </div>
 
             {/* Drawer Footer */}
-            <div className="p-4 border-t border-zinc-100 bg-zinc-50/50 flex flex-col gap-2 shrink-0">
+            <div className="p-4 border-t border-zinc-100 bg-white flex flex-col gap-2 shrink-0 shadow-lg">
               <button
-                onClick={() => {
-                  setReassignTarget(selectedMember);
-                  setNewChapterVal(selectedMember.chapter);
+                onClick={async () => {
+                  const newIsCaptain = !selectedMember.isCaptain;
+                  const newRole = newIsCaptain ? 'captain' : 'member';
+                  
+                  try {
+                    await api.post(`/admin/users/${selectedMember.id}/role`, { role: newRole });
+                    if (selectedConclaveId) {
+                      await api.post(`/admin/conclaves/${selectedConclaveId}/registrations/${selectedMember.id}/role`, { role: newRole }).catch(() => {});
+                    }
+                  } catch (err) {
+                    console.error("Failed to update user role:", err);
+                  }
+                  
+                  setMembers(prev => prev.map(m => m.id === selectedMember.id ? { ...m, isCaptain: newIsCaptain, role: newRole } : m));
+                  setSelectedMember(prev => prev ? { ...prev, isCaptain: newIsCaptain, role: newRole } : null);
+                  showToast(`${selectedMember.name}'s role updated to ${newIsCaptain ? 'Table Captain' : 'Member'}.`);
                 }}
-                className="w-full py-2 bg-brand-red hover:bg-red-700 text-white rounded-lg text-button font-bold transition-smooth shadow-sm cursor-pointer"
+                className={`w-full py-2 ${selectedMember.isCaptain ? 'bg-amber-600 hover:bg-amber-700' : 'bg-brand-red hover:bg-red-700'} text-white rounded-lg text-button font-bold transition-smooth shadow-sm cursor-pointer`}
               >
-                Reassign Chapter
+                {selectedMember.isCaptain ? 'Demote to Member' : 'Promote to Table Captain'}
               </button>
               <button
                 onClick={() => setSelectedMember(null)}
@@ -955,9 +1135,12 @@ export default function Members({ searchQuery, selectedConclaveId }) {
                 Close Drawer
               </button>
             </div>
-          </div>
+          </>
         )}
       </div>
+    </>,
+    document.body
+  )}
 
       {/* Add / Edit Member Modal */}
       {isFormOpen && (
@@ -1210,61 +1393,7 @@ export default function Members({ searchQuery, selectedConclaveId }) {
         </div>
       )}
 
-      {/* Reassign Chapter Modal */}
-      {reassignTarget && (
-        <div className="fixed inset-0 z-[65] flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
-          <div className="w-full max-w-sm bg-white rounded-xl border border-zinc-100 shadow-2xl overflow-hidden animate-scale-up">
-            <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-white">
-              <h3 className="text-section-heading font-extrabold text-zinc-955">Reassign Chapter</h3>
-              <button
-                onClick={() => setReassignTarget(null)}
-                className="text-zinc-400 hover:text-zinc-700 font-bold transition-smooth cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="p-5 space-y-4">
-              <div className="bg-white p-3 rounded-lg border border-zinc-200/60 shadow-2xs text-[11px] text-zinc-500 font-medium">
-                Member: <span className="font-bold text-zinc-900">{reassignTarget.name}</span><br />
-                Current: <span className="font-semibold text-zinc-700">{reassignTarget.chapter}</span>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">Target BNI Chapter</label>
-                <select
-                  value={newChapterVal}
-                  onChange={(e) => setNewChapterVal(e.target.value)}
-                  className="w-full px-3 py-2 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-white font-medium text-zinc-700 cursor-pointer animate-none"
-                >
-                  <option value="Peak Performance">Peak Performance</option>
-                  <option value="Apex Chapter">Apex Chapter</option>
-                  <option value="Capital Chapter">Capital Chapter</option>
-                </select>
-              </div>
-              <div className="pt-3 flex justify-end gap-2 border-t border-zinc-100">
-                <button
-                  type="button"
-                  onClick={() => setReassignTarget(null)}
-                  className="px-3.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-button rounded-lg transition-smooth cursor-pointer text-[10px] font-bold border border-zinc-100"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMembers(prev => prev.map(m => m.id === reassignTarget.id ? { ...m, chapter: newChapterVal } : m));
-                    setSelectedMember(prev => prev ? { ...prev, chapter: newChapterVal } : null);
-                    showToast(`Successfully reassigned ${reassignTarget.name} to ${newChapterVal}.`, 'success');
-                    setReassignTarget(null);
-                  }}
-                  className="px-3.5 py-1.5 bg-brand-red hover:bg-red-700 text-white text-button rounded-lg transition-smooth cursor-pointer text-[10px] font-bold"
-                >
-                  Reassign
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+
 
       {/* Floating Bulk Actions Bar */}
       {selectedRows.size > 0 && (
