@@ -9,12 +9,15 @@ import {
 } from 'lucide-react';
 
 export default function MemberSchedule({ loggedInMember, onTabChange, conclaveSyncData }) {
-  const [timeLeft, setTimeLeft] = useState(600);
-  const initialTime = 600; // 10 mins total round duration
+  const initialTime = 15 * 60; // 900 seconds (15:00)
+  const [timeLeft, setTimeLeft] = useState(initialTime);
 
   useEffect(() => {
     const startedAt = conclaveSyncData?.conclaveStatus?.currentRoundStartedAt;
-    if (startedAt && conclaveSyncData?.conclaveStatus?.status === 'active') {
+    const status = (conclaveSyncData?.conclaveStatus?.status || '').toLowerCase();
+    const isRunning = status === 'running' || status === 'active';
+
+    if (startedAt && isRunning) {
       const updateTimer = () => {
         const elapsed = Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000);
         setTimeLeft(Math.max(0, initialTime - elapsed));
@@ -23,7 +26,7 @@ export default function MemberSchedule({ loggedInMember, onTabChange, conclaveSy
       const timer = setInterval(updateTimer, 1000);
       return () => clearInterval(timer);
     } else {
-      setTimeLeft(600);
+      setTimeLeft(initialTime);
     }
   }, [conclaveSyncData]);
 
