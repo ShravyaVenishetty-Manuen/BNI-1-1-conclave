@@ -53,8 +53,8 @@ export default function Sidebar({ activeTab, setActiveTab, onLogout, isOpen, onC
     async function loadConclaves() {
       try {
         const data = await api.get('/admin/conclaves');
-        if (data && data.length > 0) {
-          setConclaves(data.map(c => {
+        if (Array.isArray(data)) {
+          const mapped = data.map(c => {
             let status = c.status;
             const s = (c.status || '').toLowerCase();
             if (s === 'registration_open') status = 'Upcoming';
@@ -66,17 +66,12 @@ export default function Sidebar({ activeTab, setActiveTab, onLogout, isOpen, onC
               ...c,
               status
             };
-          }));
+          });
+          setConclaves(mapped);
           return;
         }
       } catch (err) {
         console.warn("Sidebar conclave sync failed:", err.message);
-      }
-      const stored = localStorage.getItem('bni_conclaves');
-      if (stored) {
-        try {
-          setConclaves(JSON.parse(stored));
-        } catch {}
       }
     }
     loadConclaves();
@@ -84,7 +79,7 @@ export default function Sidebar({ activeTab, setActiveTab, onLogout, isOpen, onC
 
   const activeConclaves = conclaves.filter(c => c.status === 'Running');
   const myConclaves = conclaves;
-  const selectedConclave = conclaves.find(c => c.id === selectedConclaveId) || activeConclaves[0] || myConclaves[0] || null;
+  const selectedConclave = conclaves.find(c => c.id === selectedConclaveId) || activeConclaves[0] || null;
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -175,8 +170,8 @@ export default function Sidebar({ activeTab, setActiveTab, onLogout, isOpen, onC
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
                 className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-left rounded-lg transition-smooth group cursor-pointer ${isActive
-                    ? 'bg-brand-red text-white font-semibold shadow-sm'
-                    : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950'
+                  ? 'bg-brand-red text-white font-semibold shadow-sm'
+                  : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950'
                   }`}
               >
                 <Icon className="w-[18px] h-[18px] shrink-0" />
