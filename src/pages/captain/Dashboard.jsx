@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Award,
   Clock,
@@ -9,15 +9,12 @@ import {
   Bell,
   ArrowRight,
   History,
-  TrendingUp
+  TrendingUp,
+  Check,
+  X
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import CaptainHeader from '../../components/CaptainHeader';
-import Table from './Table';
-import CurrentRound from './CurrentRound';
-import Schedule from './Schedule';
-import Profile from './Profile';
-import Referrals from '../Referrals';
+import { api } from '../../services/api';
 import MemberProfileModal from '../../components/MemberProfileModal';
 
 export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboard', onTabChange, onLogout, conclaveSyncData }) {
@@ -31,20 +28,45 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
     const handleStorageChange = () => {
       const stored = localStorage.getItem('bni_referrals');
       if (stored) {
-        setReferrals(JSON.parse(stored));
+        try {
+          const parsed = JSON.parse(stored);
+          setReferrals(prev => (JSON.stringify(prev) !== JSON.stringify(parsed) ? parsed : prev));
+        } catch {}
       }
     };
     window.addEventListener('storage', handleStorageChange);
-    const interval = setInterval(handleStorageChange, 1000);
     return () => {
       window.removeEventListener('storage', handleStorageChange);
-      clearInterval(interval);
     };
   }, []);
 
+  useEffect(() => {
+    if (conclaveSyncData?.newReferralsReceived && Array.isArray(conclaveSyncData.newReferralsReceived)) {
+      setReferrals(prev => {
+        const map = new Map();
+        prev.forEach(r => map.set(r.id, r));
+        conclaveSyncData.newReferralsReceived.forEach(r => {
+          const existing = map.get(r.id);
+          map.set(r.id, existing ? { ...existing, ...r, status: r.status || existing.status } : r);
+        });
+        const merged = Array.from(map.values());
+        if (JSON.stringify(prev) !== JSON.stringify(merged)) {
+          localStorage.setItem('bni_referrals', JSON.stringify(merged));
+          return merged;
+        }
+        return prev;
+      });
+    }
+  }, [conclaveSyncData?.newReferralsReceived]);
+
   const getMemberReferralCount = (name, uid) => {
-    const targetName = (name || '').toLowerCase();
-    const targetUid = uid || (conclaveSyncData?.tableOccupants || []).find(o => o.name?.toLowerCase() === targetName)?.uid;
+    const targetName = (name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const occupant = (conclaveSyncData?.tableOccupants || []).find(o => 
+      (uid && (o.uid === uid || o.id === uid)) ||
+      (targetName && o.name && o.name.toLowerCase().replace(/[^a-z0-9]/g, '').includes(targetName))
+    );
+
+    const targetUid = uid || occupant?.uid || occupant?.id;
 
     const allRefs = [
       ...referrals,
@@ -53,20 +75,26 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
         fromMemberId: r.fromUserId,
         fromName: r.giverName,
         toUserId: conclaveSyncData?.userUid,
-        toMemberId: conclaveSyncData?.userUid
+        toMemberId: conclaveSyncData?.userUid,
+        status: r.status || 'Pending'
       }))
     ];
 
-    const given = allRefs.filter(r => 
-      (targetUid && (r.fromMemberId === targetUid || r.fromUserId === targetUid)) ||
-      (targetName && r.fromName && r.fromName.toLowerCase() === targetName) ||
-      (targetName && r.giverName && r.giverName.toLowerCase() === targetName)
-    ).length;
+    const given = allRefs.filter(r => {
+      const gName = (r.fromName || r.giverName || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const gId = r.fromMemberId || r.fromUserId;
+      if (targetUid && gId && (gId === targetUid || gId.includes(targetUid) || targetUid.includes(gId))) return true;
+      if (targetName && gName && (gName.includes(targetName) || targetName.includes(gName))) return true;
+      return false;
+    }).length;
 
-    const received = allRefs.filter(r => 
-      (targetUid && (r.toMemberId === targetUid || r.toUserId === targetUid)) ||
-      (targetName && r.toName && r.toName.toLowerCase() === targetName)
-    ).length;
+    const received = allRefs.filter(r => {
+      const rName = (r.toName || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const rId = r.toMemberId || r.toUserId;
+      if (targetUid && rId && (rId === targetUid || rId.includes(targetUid) || targetUid.includes(rId))) return true;
+      if (targetName && rName && (rName.includes(targetName) || targetName.includes(rName))) return true;
+      return false;
+    }).length;
 
     return { given, received };
   };
@@ -78,20 +106,24 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
 
   const displayTable = `Table ${conclaveSyncData?.tableNumber || 'N/A'}`;
 
-  const [secondsLeft, setSecondsLeft] = useState(600);
+  const ROUND_DURATION_SECS = 15 * 60; // 900 seconds (15:00)
+  const [secondsLeft, setSecondsLeft] = useState(ROUND_DURATION_SECS);
 
   useEffect(() => {
     const startedAt = conclaveSyncData?.conclaveStatus?.currentRoundStartedAt;
-    if (startedAt && conclaveSyncData?.conclaveStatus?.status === 'active') {
+    const status = (conclaveSyncData?.conclaveStatus?.status || '').toLowerCase();
+    const isRunning = status === 'running' || status === 'active';
+
+    if (startedAt && isRunning) {
       const updateTimer = () => {
         const elapsed = Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000);
-        setSecondsLeft(Math.max(0, 600 - elapsed));
+        setSecondsLeft(Math.max(0, ROUND_DURATION_SECS - elapsed));
       };
       updateTimer();
       const timer = setInterval(updateTimer, 1000);
       return () => clearInterval(timer);
     } else {
-      setSecondsLeft(600);
+      setSecondsLeft(ROUND_DURATION_SECS);
     }
   }, [conclaveSyncData]);
 
@@ -136,16 +168,24 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
     setTimeout(() => setToast(null), 3000);
   };
 
-  // Initialize attendance state for members
+  // Initialize and sync attendance state for members from live backend sync
   useEffect(() => {
-    if (myTable && myTable.members) {
-      const initialAttendance = {};
-      myTable.members.forEach(m => {
-        initialAttendance[m.id] = 'present'; // Default to present for simulation
+    if (conclaveSyncData?.tableOccupants && Array.isArray(conclaveSyncData.tableOccupants)) {
+      setAttendance(prev => {
+        const next = { ...prev };
+        let changed = false;
+        conclaveSyncData.tableOccupants.forEach(m => {
+          const memberId = m.uid || String(m.id);
+          const val = m.isPresent ? 'present' : (m.isPresent === false ? 'absent' : 'present');
+          if (next[memberId] !== val) {
+            next[memberId] = val;
+            changed = true;
+          }
+        });
+        return changed ? next : prev;
       });
-      setAttendance(initialAttendance);
     }
-  }, [loggedInCaptain]);
+  }, [conclaveSyncData?.tableOccupants]);
 
   const handleToggleAttendance = (memberId, status) => {
     if (isLocked) return;
@@ -167,8 +207,8 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
     }
 
     const captainUid = loggedInCaptain?.uid || loggedInCaptain?.id || 'captain';
-    const activeConclaveId = selectedConclaveId || activeConclave?.id;
-    const currentRound = activeConclave?.currentRound || 1;
+    const activeConclaveId = conclaveSyncData?.conclaveStatus?.id || conclaveSyncData?.conclaveId;
+    const currentRound = conclaveSyncData?.conclaveStatus?.currentRound || 1;
 
     if (activeConclaveId) {
       try {
@@ -203,25 +243,8 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
   const absentCount = Object.values(attendance).filter(s => s === 'absent').length;
 
   return (
-    <div className="min-h-screen bg-zinc-50 flex flex-col font-sans">
-      {/* TopNavBar Header (controls activeSubTab) */}
-      <CaptainHeader
-        loggedInCaptain={loggedInCaptain}
-        activeTab={activeTab}
-        onTabChange={onTabChange}
-        onLogout={onLogout}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-      />
-
-      {/* Main Content Area (full width, no side margins) */}
-      <main className="flex-1 p-4 md:p-8 w-full">
-        <div className="space-y-6">
-
-          {/* Sub-tab view: Dashboard */}
-          {activeTab === 'dashboard' && (
-            <div className="space-y-6 animate-fade-in">
-              {/* Welcome Card */}
+    <div className="space-y-6 animate-fade-in font-sans">
+      {/* Welcome Card */}
               <section className="relative bg-white rounded-xl border border-zinc-200 shadow-2xs overflow-hidden p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
@@ -229,18 +252,18 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
                       {conclaveSyncData?.conclaveStatus?.status === 'active' ? 'LIVE NOW' : 'Conclave Session'}
                     </span>
                     <span className="text-zinc-450 font-semibold text-xs tracking-wider">
-                      ID: {conclaveSyncData?.conclaveStatus?.id || conclaveSyncData?.conclaveId || 'Guntur Region'}
+                      {conclaveSyncData?.conclaveStatus?.id ? `ID: ${conclaveSyncData.conclaveStatus.id}` : 'CONCLAVE'} • {conclaveSyncData?.conclaveStatus?.region || 'Vijayawada Region'}
                     </span>
                   </div>
 
                   <h1 className="text-2xl md:text-3xl font-extrabold text-zinc-950 tracking-tight">
-                    {conclaveSyncData?.conclaveStatus?.name || conclaveSyncData?.conclaveName || 'Guntur central networking conclave'}
+                    {conclaveSyncData?.conclaveStatus?.name || conclaveSyncData?.conclaveStatus?.title || conclaveSyncData?.conclaveName || 'Networking Conclave Session'}
                   </h1>
 
                   <div className="flex flex-wrap gap-4 text-zinc-500 text-[13px] font-medium">
                     <div className="flex items-center gap-1.5">
                       <MapPin className="w-4.5 h-4.5 text-zinc-400" />
-                      <span>{conclaveSyncData?.conclaveStatus?.venue || conclaveSyncData?.venue || 'Venue Location TBD'}</span>
+                      <span>{conclaveSyncData?.conclaveStatus?.venue || conclaveSyncData?.venue || 'Vijayawada Convention Centre'}</span>
                     </div>
                   </div>
                 </div>
@@ -295,24 +318,44 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
                   <p className="text-[11px] font-bold text-zinc-455 uppercase tracking-wide">Referral Exchange</p>
                   <div className="flex items-end justify-between mt-2">
                     {(() => {
-                      const myUid = loggedInCaptain?.uid || loggedInCaptain?.id;
-                      const myName = (loggedInCaptain?.name || '').toLowerCase();
+                      const uids = new Set([
+                        loggedInCaptain?.uid,
+                        loggedInCaptain?.id,
+                        loggedInCaptain?._originalUid,
+                        loggedInCaptain?.email
+                      ].filter(Boolean));
+                      const cleanMyName = (loggedInCaptain?.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
                       const allRefs = [
                         ...referrals,
                         ...(conclaveSyncData?.newReferralsReceived || []).map(r => ({
                           fromUserId: r.fromUserId,
                           fromMemberId: r.fromUserId,
-                          toUserId: myUid,
-                          toMemberId: myUid
+                          fromName: r.giverName,
+                          toUserId: loggedInCaptain?.uid || loggedInCaptain?.id,
+                          toMemberId: loggedInCaptain?.uid || loggedInCaptain?.id
                         }))
                       ];
-                      const givenCount = allRefs.filter(r => 
-                        r.fromMemberId === myUid || r.fromUserId === myUid || (r.fromName && r.fromName.toLowerCase() === myName)
-                      ).length;
 
-                      const takenCount = allRefs.filter(r => 
-                        r.toMemberId === myUid || r.toUserId === myUid || (r.toName && r.toName.toLowerCase() === myName)
-                      ).length;
+                      const givenCount = allRefs.filter(r => {
+                        if (r.fromMemberId && uids.has(r.fromMemberId)) return true;
+                        if (r.fromUserId && uids.has(r.fromUserId)) return true;
+                        if (r.fromName) {
+                          const g = r.fromName.toLowerCase().replace(/[^a-z0-9]/g, '');
+                          if (cleanMyName && (g.includes(cleanMyName) || cleanMyName.includes(g))) return true;
+                        }
+                        return false;
+                      }).length;
+
+                      const takenCount = allRefs.filter(r => {
+                        if (r.toMemberId && uids.has(r.toMemberId)) return true;
+                        if (r.toUserId && uids.has(r.toUserId)) return true;
+                        if (r.toName) {
+                          const rec = r.toName.toLowerCase().replace(/[^a-z0-9]/g, '');
+                          if (cleanMyName && (rec.includes(cleanMyName) || cleanMyName.includes(rec))) return true;
+                        }
+                        return false;
+                      }).length;
 
                       return (
                         <span className="text-body-sm font-black text-zinc-900 leading-none flex items-center gap-1">
@@ -466,6 +509,99 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
                       ))}
                     </div>
                   </section>
+
+                  {/* Table Attendance Checklist Card */}
+                  <section className="bg-white rounded-xl border border-zinc-200 shadow-2xs p-6 space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-100 pb-4">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-body-md font-black text-zinc-900 tracking-tight">Table Attendance Checklist</h3>
+                          <span className="bg-red-50 text-brand-red text-[9px] font-black px-2 py-0.5 rounded border border-red-100 uppercase tracking-widest">
+                            {displayTable}
+                          </span>
+                        </div>
+                        <p className="text-[11.5px] text-zinc-450 font-semibold mt-0.5">
+                          Mark attendance for members seated at your table for Round {conclaveSyncData?.conclaveStatus?.currentRound || 1}.
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <div className="text-right">
+                          <span className="text-[11.5px] font-black text-emerald-700">{presentCount} Present</span>
+                          <span className="text-zinc-300 mx-1.5">•</span>
+                          <span className="text-[11.5px] font-black text-red-600">{absentCount} Absent</span>
+                        </div>
+                        <button
+                          onClick={handleSubmitAttendance}
+                          disabled={isLocked}
+                          className={`px-4 py-2 rounded-lg text-xs font-black transition-smooth shadow-xs flex items-center gap-1.5 cursor-pointer ${
+                            isLocked
+                              ? 'bg-zinc-100 text-zinc-400 border border-zinc-200 cursor-not-allowed'
+                              : 'bg-brand-red text-white hover:bg-red-700'
+                          }`}
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                          {isLocked ? 'Attendance Submitted' : 'Submit Attendance'}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {myTable.members.map((member) => {
+                        const currentStatus = attendance[member.id] || 'present';
+                        const isPresent = currentStatus === 'present';
+                        const isAbsent = currentStatus === 'absent';
+
+                        return (
+                          <div
+                            key={member.id}
+                            className={`p-3.5 rounded-xl border transition-smooth flex items-center justify-between gap-3 ${
+                              isPresent
+                                ? 'bg-emerald-50/40 border-emerald-200/80'
+                                : isAbsent
+                                ? 'bg-red-50/40 border-red-200/80'
+                                : 'bg-white border-zinc-200'
+                            }`}
+                          >
+                            <div className="min-w-0 flex-1">
+                              <h4 className="text-[13px] font-extrabold text-zinc-900 truncate leading-tight">{member.name}</h4>
+                              <p className="text-[11px] text-zinc-450 font-semibold truncate mt-0.5">{member.company}</p>
+                              <span className="inline-block mt-1 bg-zinc-100 text-zinc-600 text-[8.5px] font-black px-1.5 py-0.5 rounded border border-zinc-200/50 uppercase">
+                                {member.category}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-1 shrink-0">
+                              <button
+                                onClick={() => handleToggleAttendance(member.id, 'present')}
+                                disabled={isLocked}
+                                className={`px-2.5 py-1.5 rounded-lg text-[10px] font-black tracking-wider uppercase transition-smooth flex items-center gap-1 cursor-pointer ${
+                                  isPresent
+                                    ? 'bg-emerald-600 text-white shadow-2xs'
+                                    : 'bg-white text-zinc-500 border border-zinc-200 hover:bg-zinc-50'
+                                }`}
+                              >
+                                <Check className="w-3 h-3" />
+                                Present
+                              </button>
+                              <button
+                                onClick={() => handleToggleAttendance(member.id, 'absent')}
+                                disabled={isLocked}
+                                className={`px-2.5 py-1.5 rounded-lg text-[10px] font-black tracking-wider uppercase transition-smooth flex items-center gap-1 cursor-pointer ${
+                                  isAbsent
+                                    ? 'bg-red-600 text-white shadow-2xs'
+                                    : 'bg-white text-zinc-500 border border-zinc-200 hover:bg-zinc-50'
+                                }`}
+                              >
+                                <X className="w-3 h-3" />
+                                Absent
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </section>
                 </div>
 
                 {/* Right Column: Schedule & Activity */}
@@ -539,44 +675,9 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
                       )}
                     </div>
                   </section>
-
-
                 </div>
               </div>
-            </div>
-          )}
 
-          {/* Sub-tab view: My Table Seating Checklist */}
-          {activeTab === 'my-table' && (
-            <Table loggedInCaptain={loggedInCaptain} searchQuery={searchQuery} conclaveSyncData={conclaveSyncData} />
-          )}
-
-          {/* Sub-tab view: Current Round Info */}
-          {activeTab === 'current-round' && (
-            <CurrentRound loggedInCaptain={loggedInCaptain} conclaveSyncData={conclaveSyncData} />
-          )}
-
-          {/* Sub-tab view: Schedule */}
-          {activeTab === 'schedule' && (
-            <Schedule loggedInCaptain={loggedInCaptain} conclaveSyncData={conclaveSyncData} />
-          )}
-
-          {/* Sub-tab view: Referrals Page */}
-          {activeTab === 'referrals' && (
-            <Referrals loggedInUser={loggedInCaptain} userType="captain" conclaveSyncData={conclaveSyncData} />
-          )}
-
-          {/* Sub-tab view: Profile Page */}
-          {activeTab === 'profile' && (
-            <Profile 
-              loggedInCaptain={loggedInCaptain} 
-              onTabChange={onTabChange} 
-              onLogout={onLogout} 
-            />
-          )}
-
-        </div>
-      </main>
 
       {selectedProfileMember && (
         <MemberProfileModal
@@ -593,8 +694,8 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
         <div className="fixed bottom-5 right-5 z-[70] bg-zinc-900 text-white text-[11px] font-bold py-2.5 px-4 rounded-lg shadow-xl flex items-center gap-2 border border-zinc-800 animate-slide-up">
           <span className="w-1.5 h-1.5 rounded-full bg-brand-red animate-pulse"></span>
           <div>
-            <p className="font-bold text-white">{toast.title}</p>
-            <p className="text-zinc-400 mt-0.5">{toast.desc}</p>
+            <p className="font-bold text-white">{typeof toast === 'object' && toast?.title ? toast.title : 'Success!'}</p>
+            <p className="text-zinc-400 mt-0.5">{typeof toast === 'object' && toast?.desc ? toast.desc : (typeof toast === 'string' ? toast : JSON.stringify(toast))}</p>
           </div>
         </div>
       )}
