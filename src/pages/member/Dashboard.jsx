@@ -22,10 +22,27 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
   const [toast, setToast] = useState(null);
   const [isCheckedIn, setIsCheckedIn] = useState(false);
 
+  // Derive check-in status from conclaveSyncData tableOccupants
+  useEffect(() => {
+    if (conclaveSyncData?.tableOccupants && Array.isArray(conclaveSyncData.tableOccupants)) {
+      const myUid = loggedInMember?.id || loggedInMember?.uid || loggedInMember?._originalUid;
+      const myEmail = (loggedInMember?.email || '').toLowerCase();
+      const me = conclaveSyncData.tableOccupants.find(o => 
+        (myUid && (o.uid === myUid || o.id === myUid)) ||
+        (myEmail && (o.uid === myEmail || (o.email && o.email.toLowerCase() === myEmail)))
+      );
+      if (me && me.isPresent) {
+        setIsCheckedIn(true);
+      }
+    }
+  }, [conclaveSyncData?.tableOccupants, loggedInMember]);
+
   const handleSelfCheckIn = async () => {
-    const activeConclaveId = 'sku7Q5mTW3t5QeeHZPrO';
-    const myUid = loggedInMember?.uid || loggedInMember?.id;
+    const activeConclaveId = conclaveSyncData?.conclaveStatus?.id || conclaveSyncData?.conclaveId;
+    const myUid = loggedInMember?.id || loggedInMember?.uid || loggedInMember?._originalUid;
     const currentRound = conclaveSyncData?.conclaveStatus?.currentRound || 1;
+
+    if (!activeConclaveId || !myUid) return;
 
     try {
       await api.post(`/conclaves/${activeConclaveId}/sync`, {
@@ -42,6 +59,7 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
       setIsCheckedIn(true);
       setToast({ title: 'Attendance Confirmed', desc: `Presence recorded in database for Round ${currentRound}.` });
       setTimeout(() => setToast(null), 3000);
+      window.dispatchEvent(new Event('storage'));
     } catch (err) {
       console.warn("Self check-in failed:", err.message);
     }
@@ -57,8 +75,8 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
     });
   }, [conclaveSyncData?.tableOccupants, searchQuery]);
   
-  const [timeLeft, setTimeLeft] = useState(600);
-  const initialTime = 600; // 10 mins total round duration
+  const initialTime = 15 * 60; // 900 seconds (15:00)
+  const [timeLeft, setTimeLeft] = useState(initialTime);
 
   const [referrals, setReferrals] = useState(() => {
     const stored = localStorage.getItem('bni_referrals');
@@ -69,14 +87,15 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
     const handleStorageChange = () => {
       const stored = localStorage.getItem('bni_referrals');
       if (stored) {
-        setReferrals(JSON.parse(stored));
+        try {
+          const parsed = JSON.parse(stored);
+          setReferrals(prev => (JSON.stringify(prev) !== JSON.stringify(parsed) ? parsed : prev));
+        } catch {}
       }
     };
     window.addEventListener('storage', handleStorageChange);
-    const interval = setInterval(handleStorageChange, 1000);
     return () => {
       window.removeEventListener('storage', handleStorageChange);
-      clearInterval(interval);
     };
   }, []);
 
@@ -111,7 +130,10 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
 
   useEffect(() => {
     const startedAt = conclaveSyncData?.conclaveStatus?.currentRoundStartedAt;
-    if (startedAt && conclaveSyncData?.conclaveStatus?.status === 'active') {
+    const status = (conclaveSyncData?.conclaveStatus?.status || '').toLowerCase();
+    const isRunning = status === 'running' || status === 'active';
+
+    if (startedAt && isRunning) {
       const updateTimer = () => {
         const elapsed = Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000);
         setTimeLeft(Math.max(0, initialTime - elapsed));
@@ -120,7 +142,7 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
       const timer = setInterval(updateTimer, 1000);
       return () => clearInterval(timer);
     } else {
-      setTimeLeft(600);
+      setTimeLeft(initialTime);
     }
   }, [conclaveSyncData]);
 
@@ -145,137 +167,164 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
         <div className="col-span-12 lg:col-span-8 bg-white p-6 md:p-8 rounded-xl shadow-2xs border border-zinc-200 relative overflow-hidden flex flex-col justify-between min-h-[300px]">
           <div className="absolute inset-0 opacity-[0.02] pointer-events-none bg-[radial-gradient(#af101a_1px,transparent_1px)] [background-size:16px_16px]"></div>
 
-          <div className="absolute top-4 right-4">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-800 text-[10px] font-black uppercase tracking-wider rounded-full border border-emerald-150 shadow-2xs">
-              <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
-              LIVE ROUND {conclaveSyncData?.conclaveStatus?.currentRound || 0}
-            </span>
-          </div>
-
-          <div className="space-y-4">
-            {/* Conclave name banner — shows which conclave data is being loaded from backend */}
-            {conclaveSyncData?.conclaveStatus?.title && (
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg">
-                <Building2 className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                <span className="text-[10px] font-black text-blue-700 uppercase tracking-wider">
-                  {conclaveSyncData.conclaveStatus.title}
+          {!conclaveSyncData ? (
+            <div className="space-y-5 py-4 my-auto">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-lg text-amber-800">
+                <Info className="w-4 h-4 text-amber-600 shrink-0" />
+                <span className="text-[11px] font-bold">No Active Conclave Registration</span>
+              </div>
+              <div>
+                <h1 className="text-2xl md:text-3xl font-black text-zinc-955 tracking-tight">Welcome {memberName}</h1>
+                <p className="text-xs font-semibold text-zinc-500 mt-1">{memberCompany} • {memberChapter}</p>
+                <p className="text-body-sm text-zinc-600 mt-3 max-w-lg leading-relaxed">
+                  You are not currently registered for any live or upcoming conclave. Browse available conclaves to register and get your table seating schedule.
+                </p>
+              </div>
+              <div className="pt-2">
+                <button
+                  onClick={() => onTabChange && onTabChange('registrations')}
+                  className="px-5 py-2.5 bg-brand-red hover:bg-red-700 text-white font-bold text-button rounded-lg transition-smooth shadow-md cursor-pointer inline-flex items-center gap-2"
+                >
+                  <Calendar className="w-4 h-4" />
+                  Browse &amp; Register Conclaves
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="absolute top-4 right-4">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-800 text-[10px] font-black uppercase tracking-wider rounded-full border border-emerald-150 shadow-2xs">
+                  <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                  LIVE ROUND {conclaveSyncData?.conclaveStatus?.currentRound || 0}
                 </span>
-                {conclaveSyncData.conclaveStatus.venue && (
-                  <>
-                    <span className="text-blue-300">•</span>
-                    <span className="text-[10px] font-semibold text-blue-500">
-                      {conclaveSyncData.conclaveStatus.venue}
+              </div>
+
+              <div className="space-y-4">
+                {/* Conclave name banner — shows which conclave data is being loaded from backend */}
+                {conclaveSyncData?.conclaveStatus?.title && (
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg">
+                    <Building2 className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                    <span className="text-[10px] font-black text-blue-700 uppercase tracking-wider">
+                      {conclaveSyncData.conclaveStatus.title}
                     </span>
-                  </>
+                    {conclaveSyncData.conclaveStatus.venue && (
+                      <>
+                        <span className="text-blue-300">•</span>
+                        <span className="text-[10px] font-semibold text-blue-500">
+                          {conclaveSyncData.conclaveStatus.venue}
+                        </span>
+                      </>
+                    )}
+                  </div>
                 )}
-              </div>
-            )}
-            <div>
-              <h1 className="text-2xl md:text-3xl font-black text-zinc-955 tracking-tight">Welcome {memberName}</h1>
-              <p className="text-xs font-semibold text-zinc-450 mt-1">{memberCompany} • {memberChapter}</p>
-            </div>
-
-            <div className="flex flex-wrap gap-6 items-center pt-2">
-              <div className="flex flex-col">
-                <span className="text-[9px] font-extrabold text-zinc-400 uppercase tracking-widest">Active Session</span>
-                <span className="text-lg font-black text-zinc-900 mt-0.5">Round {conclaveSyncData?.conclaveStatus?.currentRound || 0} of {conclaveSyncData?.mySchedule?.length || 6}</span>
-              </div>
-              <div className="w-px h-8 bg-zinc-200"></div>
-              <div className="flex flex-col">
-                <span className="text-[9px] font-extrabold text-zinc-400 uppercase tracking-widest">Assigned Table</span>
-                <span className="text-lg font-black text-zinc-900 mt-0.5">Table {conclaveSyncData?.tableNumber || 'N/A'}</span>
-              </div>
-              <div className="w-px h-8 bg-zinc-200"></div>
-              <div className="flex flex-col">
-                <span className="text-[9px] font-extrabold text-zinc-400 uppercase tracking-widest">Niche / Category</span>
-                <span className="px-2 py-0.5 bg-red-50 border border-red-100 text-brand-red text-[9px] font-black rounded uppercase mt-1">
-                  {memberCategory}
-                </span>
-              </div>
-              <div className="w-px h-8 bg-zinc-200"></div>
-              <div className="flex flex-col">
-                <span className="text-[9px] font-extrabold text-zinc-400 uppercase tracking-widest">Referral Exchange</span>
-                {(() => {
-                  const myUid = loggedInMember?.uid || loggedInMember?.id;
-                  const myName = (loggedInMember?.name || '').toLowerCase();
-                  const allRefs = [
-                    ...referrals,
-                    ...(conclaveSyncData?.newReferralsReceived || []).map(r => ({
-                      fromUserId: r.fromUserId,
-                      fromMemberId: r.fromUserId,
-                      toUserId: myUid,
-                      toMemberId: myUid
-                    }))
-                  ];
-
-                  const sentCount = allRefs.filter(r =>
-                    r.fromMemberId === myUid || r.fromUserId === myUid || (r.fromName && r.fromName.toLowerCase() === myName)
-                  ).length;
-
-                  const recvCount = allRefs.filter(r =>
-                    r.toMemberId === myUid || r.toUserId === myUid || (r.toName && r.toName.toLowerCase() === myName)
-                  ).length;
-
-                  return (
-                    <span className="text-body-sm font-extrabold text-zinc-850 mt-1 select-none flex items-center gap-1.5">
-                      <span className="px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded text-[9.5px] font-bold">
-                        {sentCount} Sent
-                      </span>
-                      <span className="px-1.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-100 rounded text-[9.5px] font-bold">
-                        {recvCount} Recv
-                      </span>
-                    </span>
-                  );
-                })()}
-              </div>
-            </div>
-
-            <div className="pt-2">
-              <div className="flex justify-between items-end mb-2">
-                <div className="flex flex-col">
-                  <span className="text-[9px] font-extrabold text-zinc-400 uppercase tracking-widest">Time Remaining</span>
-                  <span className="text-2xl font-black text-brand-red mt-0.5 tracking-tighter leading-none">{formatTime(timeLeft)}</span>
+                <div>
+                  <h1 className="text-2xl md:text-3xl font-black text-zinc-955 tracking-tight">Welcome {memberName}</h1>
+                  <p className="text-xs font-semibold text-zinc-450 mt-1">{memberCompany} • {memberChapter}</p>
                 </div>
-                <span className="text-[9.5px] font-bold text-zinc-450">
-                  {Math.floor(((600 - timeLeft) / 600) * 100)}% Completed
-                </span>
-              </div>
-              <div className="w-full bg-zinc-100 rounded-full h-2 overflow-hidden border border-zinc-200/50">
-                <div
-                  className="bg-brand-red h-full rounded-full transition-all duration-1000 ease-out shadow-inner"
-                  style={{ width: `${(timeLeft / 600) * 100}%` }}
-                ></div>
-              </div>
-            </div>
-          </div>
 
-          <div className="flex flex-wrap gap-3 pt-6 border-t border-zinc-100 mt-6">
-            <button
-              onClick={handleSelfCheckIn}
-              disabled={isCheckedIn}
-              className={`text-[10px] font-black uppercase tracking-wider px-5 py-2.5 rounded-lg transition-smooth flex items-center gap-1.5 cursor-pointer shadow-sm ${
-                isCheckedIn 
-                  ? 'bg-emerald-600 text-white cursor-default' 
-                  : 'bg-emerald-700 hover:bg-emerald-800 text-white shadow-emerald-700/10'
-              }`}
-            >
-              <CheckCircle className="w-3.5 h-3.5" />
-              {isCheckedIn ? 'Attendance Confirmed' : 'Mark My Attendance'}
-            </button>
-            <button
-              onClick={() => onTabChange && onTabChange('current-round')}
-              className="bg-brand-red hover:bg-red-750 text-white text-[10px] font-black uppercase tracking-wider px-5 py-2.5 rounded-lg transition-smooth flex items-center gap-1.5 cursor-pointer shadow-sm shadow-brand-red/10"
-            >
-              View Current Round
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onClick={() => onTabChange && onTabChange('my-schedule')}
-              className="bg-white hover:bg-zinc-50 border border-zinc-250 text-zinc-700 text-[10px] font-black uppercase tracking-wider px-5 py-2.5 rounded-lg transition-smooth cursor-pointer"
-            >
-              View Full Schedule
-            </button>
-          </div>
+                <div className="flex flex-wrap gap-6 items-center pt-2">
+                  <div className="flex flex-col">
+                    <span className="text-[9px] font-extrabold text-zinc-400 uppercase tracking-widest">Active Session</span>
+                    <span className="text-lg font-black text-zinc-900 mt-0.5">Round {conclaveSyncData?.conclaveStatus?.currentRound || 0} of {conclaveSyncData?.mySchedule?.length || 6}</span>
+                  </div>
+                  <div className="w-px h-8 bg-zinc-200"></div>
+                  <div className="flex flex-col">
+                    <span className="text-[9px] font-extrabold text-zinc-400 uppercase tracking-widest">Assigned Table</span>
+                    <span className="text-lg font-black text-zinc-900 mt-0.5">Table {conclaveSyncData?.tableNumber || 'N/A'}</span>
+                  </div>
+                  <div className="w-px h-8 bg-zinc-200"></div>
+                  <div className="flex flex-col">
+                    <span className="text-[9px] font-extrabold text-zinc-400 uppercase tracking-widest">Niche / Category</span>
+                    <span className="px-2 py-0.5 bg-red-50 border border-red-100 text-brand-red text-[9px] font-black rounded uppercase mt-1">
+                      {memberCategory}
+                    </span>
+                  </div>
+                  <div className="w-px h-8 bg-zinc-200"></div>
+                  <div className="flex flex-col">
+                    <span className="text-[9px] font-extrabold text-zinc-400 uppercase tracking-widest">Referral Exchange</span>
+                    {(() => {
+                      const myUid = loggedInMember?.uid || loggedInMember?.id;
+                      const myName = (loggedInMember?.name || '').toLowerCase();
+                      const allRefs = [
+                        ...referrals,
+                        ...(conclaveSyncData?.newReferralsReceived || []).map(r => ({
+                          fromUserId: r.fromUserId,
+                          fromMemberId: r.fromUserId,
+                          toUserId: myUid,
+                          toMemberId: myUid
+                        }))
+                      ];
+
+                      const sentCount = allRefs.filter(r =>
+                        r.fromMemberId === myUid || r.fromUserId === myUid || (r.fromName && r.fromName.toLowerCase() === myName)
+                      ).length;
+
+                      const recvCount = allRefs.filter(r =>
+                        r.toMemberId === myUid || r.toUserId === myUid || (r.toName && r.toName.toLowerCase() === myName)
+                      ).length;
+
+                      return (
+                        <span className="text-body-sm font-extrabold text-zinc-850 mt-1 select-none flex items-center gap-1.5">
+                          <span className="px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded text-[9.5px] font-bold">
+                            {sentCount} Sent
+                          </span>
+                          <span className="px-1.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-100 rounded text-[9.5px] font-bold">
+                            {recvCount} Recv
+                          </span>
+                        </span>
+                      );
+                    })()}
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <div className="flex justify-between items-end mb-2">
+                    <div className="flex flex-col">
+                      <span className="text-[9px] font-extrabold text-zinc-400 uppercase tracking-widest">Time Remaining</span>
+                      <span className="text-2xl font-black text-brand-red mt-0.5 tracking-tighter leading-none">{formatTime(timeLeft)}</span>
+                    </div>
+                    <span className="text-[9.5px] font-bold text-zinc-455">
+                      {Math.floor(((600 - timeLeft) / 600) * 100)}% Completed
+                    </span>
+                  </div>
+                  <div className="w-full bg-zinc-100 rounded-full h-2 overflow-hidden border border-zinc-200/50">
+                    <div
+                      className="bg-brand-red h-full rounded-full transition-all duration-1000 ease-out shadow-inner"
+                      style={{ width: `${(timeLeft / 600) * 100}%` }}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-3 pt-6 border-t border-zinc-100 mt-6">
+                <button
+                  onClick={handleSelfCheckIn}
+                  disabled={isCheckedIn}
+                  className={`text-[10px] font-black uppercase tracking-wider px-5 py-2.5 rounded-lg transition-smooth flex items-center gap-1.5 cursor-pointer shadow-sm ${
+                    isCheckedIn 
+                      ? 'bg-emerald-600 text-white cursor-default' 
+                      : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                  }`}
+                >
+                  <CheckCircle className="w-3.5 h-3.5" />
+                  {isCheckedIn ? 'Attendance Confirmed' : 'Mark My Attendance'}
+                </button>
+                <button
+                  onClick={() => onTabChange && onTabChange('round')}
+                  className="text-[10px] font-black uppercase tracking-wider px-5 py-2.5 bg-brand-red hover:bg-red-700 text-white rounded-lg transition-smooth flex items-center gap-1.5 cursor-pointer shadow-sm"
+                >
+                  View Current Round
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => onTabChange && onTabChange('schedule')}
+                  className="text-[10px] font-black uppercase tracking-wider px-5 py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-lg transition-smooth cursor-pointer"
+                >
+                  View Full Schedule
+                </button>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Right: Table Info Card (Takes 4 cols on large screens, stacks on smaller screens) */}
@@ -582,8 +631,8 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
         <div className="fixed bottom-5 right-5 z-[70] bg-zinc-900 text-white text-[11px] font-bold py-2.5 px-4 rounded-lg shadow-xl flex items-center gap-2 border border-zinc-800 animate-slide-up">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
           <div>
-            <p className="font-bold text-white">Success!</p>
-            <p className="text-zinc-400 mt-0.5">{toast}</p>
+            <p className="font-bold text-white">{typeof toast === 'object' && toast?.title ? toast.title : 'Success!'}</p>
+            <p className="text-zinc-400 mt-0.5">{typeof toast === 'object' && toast?.desc ? toast.desc : (typeof toast === 'string' ? toast : JSON.stringify(toast))}</p>
           </div>
         </div>
       )}
