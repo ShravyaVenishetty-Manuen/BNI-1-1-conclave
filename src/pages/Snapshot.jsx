@@ -15,6 +15,26 @@ import {
 import Pagination from '../components/Pagination';
 import { api } from '../services/api';
 
+// Persistent Snapshot storage helpers
+const getStoredSnapshots = () => {
+  try {
+    const raw = localStorage.getItem('bni_conclave_snapshots');
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+};
+
+const saveStoredSnapshot = (conclaveId, version, timestamp) => {
+  try {
+    const all = getStoredSnapshots();
+    all[conclaveId] = { version, lastSnapshot: timestamp };
+    localStorage.setItem('bni_conclave_snapshots', JSON.stringify(all));
+  } catch (err) {
+    console.error("Failed to save snapshot to storage:", err);
+  }
+};
+
 export default function Snapshot({ searchQuery, selectedConclaveId }) {
   const [conclaves, setConclaves] = useState([]);
   const [isLoadingSnapshot, setIsLoadingSnapshot] = useState(false);
@@ -24,6 +44,7 @@ export default function Snapshot({ searchQuery, selectedConclaveId }) {
       setIsLoadingSnapshot(true);
       try {
         const conclavesList = await api.get('/admin/conclaves');
+        const storedSnapshots = getStoredSnapshots();
 
         const updatedConclaves = await Promise.all(conclavesList.map(async (c) => {
           try {
@@ -38,8 +59,12 @@ export default function Snapshot({ searchQuery, selectedConclaveId }) {
               ? new Date(c.date).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })
               : null;
 
+            const savedSnap = storedSnapshots[c.id];
+
             return {
               ...c,
+              version: savedSnap?.version || c.version || 'V. 1.0',
+              lastSnapshot: savedSnap?.lastSnapshot || c.lastSnapshot || 'Never',
               dateRange: dateFormatted || c.dateRange || 'TBD Date',
               venue: c.venueLocation || c.venue || 'TBD Venue',
               totalRegistered: regsList.length,
@@ -67,8 +92,11 @@ export default function Snapshot({ searchQuery, selectedConclaveId }) {
             };
           } catch (err) {
             console.warn("Failed to load registrations for conclave", c.id, err);
+            const savedSnap = storedSnapshots[c.id];
             return {
               ...c,
+              version: savedSnap?.version || c.version || 'V. 1.0',
+              lastSnapshot: savedSnap?.lastSnapshot || c.lastSnapshot || 'Never',
               dateRange: c.dateRange || 'TBD Date',
               venue: c.venueLocation || c.venue || 'TBD Venue',
               totalRegistered: 0,
@@ -137,6 +165,23 @@ export default function Snapshot({ searchQuery, selectedConclaveId }) {
     setCurrentPage(1);
     setSelectedRows(new Set());
   }, [searchVal, categoryFilter]);
+
+  // Lock background body scroll when any modal is open
+  useEffect(() => {
+    if (isSnapshotModalOpen || isConclaveSelectorOpen) {
+      document.body.classList.add('modal-open');
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+    };
+  }, [isSnapshotModalOpen, isConclaveSelectorOpen]);
+
+
 
   // Filtered participants
   const filteredParticipants = useMemo(() => {
@@ -216,40 +261,34 @@ export default function Snapshot({ searchQuery, selectedConclaveId }) {
       return;
     }
 
+    const currentVerNum = parseFloat((currentConclave.version || "V. 1.0").substring(2)) || 1.0;
+    const newVer = `V. ${(currentVerNum + 0.1).toFixed(1)}`;
+    const newTimestamp = `${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date().toLocaleDateString([], { month: 'short', day: '2-digit', year: 'numeric' })}`;
+
     try {
-      await api.post(`/admin/conclaves/${currentConclave.id}/registration`);
-      setConclaves(prev => prev.map((c, idx) => {
-        if (idx === activeConclaveIndex) {
-          const currentVer = parseFloat((c.version || "V. 1.0").substring(2));
-          const newVer = `V. ${(currentVer + 0.1).toFixed(1)}`;
-          return {
-            ...c,
-            version: newVer,
-            lastSnapshot: `${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date().toLocaleDateString([], { month: 'short', day: '2-digit', year: 'numeric' })}`
-          };
-        }
-        return c;
-      }));
-      setIsSnapshotModalOpen(false);
-      showToast('Snapshot Captured', `New frozen participant state version has been locked successfully.`);
+      await api.post(`/admin/conclaves/${currentConclave.id}/registration`, { open: false });
     } catch (err) {
-      console.warn("Backend snapshot failed, using local fallback:", err.message);
-      setConclaves(prev => prev.map((c, idx) => {
-        if (idx === activeConclaveIndex) {
-          const currentVer = parseFloat((c.version || "V. 1.0").substring(2));
-          const newVer = `V. ${(currentVer + 0.1).toFixed(1)}`;
-          return {
-            ...c,
-            version: newVer,
-            lastSnapshot: `${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date().toLocaleDateString([], { month: 'short', day: '2-digit', year: 'numeric' })}`
-          };
-        }
-        return c;
-      }));
-      setIsSnapshotModalOpen(false);
-      showToast('Snapshot Captured', `New frozen local participant state version has been locked.`);
+      console.warn("Backend registration lock API warning (using persistent local state):", err.message);
     }
+
+    saveStoredSnapshot(currentConclave.id, newVer, newTimestamp);
+
+    setConclaves(prev => prev.map((c, idx) => {
+      if (idx === activeConclaveIndex) {
+        return {
+          ...c,
+          version: newVer,
+          lastSnapshot: newTimestamp,
+          isRegistrationOpen: false
+        };
+      }
+      return c;
+    }));
+
+    setIsSnapshotModalOpen(false);
+    showToast('Snapshot Captured', `New frozen participant directory version (${newVer}) locked & saved.`);
   };
+
 
   return (
     <div className="p-4 sm:p-6 max-w-[1600px] mx-auto w-full flex flex-col gap-6 animate-fade-in">

@@ -13,6 +13,8 @@ body {
   font-weight: 600;
 }
 
+
+
 th {
   color: #52525b !important;
   /* zinc-600: clean, readable mid-dark grey */
@@ -30,32 +32,36 @@ span.border-b {
 }
 
 /* Style page description paragraphs to be clean and compact */
-.text-dashboard-title + p {
+.text-dashboard-title+p {
   display: block !important;
   font-size: 11px !important;
   line-height: 14px !important;
-  color: #71717a !important; /* zinc-500 */
-  margin-top: 0.25rem !important; /* mt-1 */
+  color: #71717a !important;
+  /* zinc-500 */
+  margin-top: 0.25rem !important;
+  /* mt-1 */
   font-weight: 500 !important;
 }
 
 /* Normalize all page containers to have identical layout and spacing */
-main > div {
+main>div {
   display: flex !important;
   flex-direction: column !important;
-  gap: 1.5rem !important;       /* Exact 24px vertical gap on all pages */
-  padding-top: 1.5rem !important; /* Uniform top padding */
+  gap: 1.5rem !important;
+  /* Exact 24px vertical gap on all pages */
+  padding-top: 1.5rem !important;
+  /* Uniform top padding */
   padding-bottom: 2rem !important;
 }
 
 /* Remove default margins/padding on the header element (always the first child of the page container) */
-main > div > *:first-child {
+main>div>*:first-child {
   padding-bottom: 0.25rem !important;
   margin-bottom: 0px !important;
 }
 
 /* Reset space-y margin overrides on direct children to avoid layout collisions */
-main > div > * {
+main>div>* {
   margin-top: 0px !important;
   margin-bottom: 0px !important;
 }
@@ -202,8 +208,15 @@ main > div > * {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-4px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .animate-fade-in {
@@ -244,9 +257,12 @@ button[class*="border-zinc-"] {
 /* Quick Actions Buttons: Keep light grey shade but add the BNI red border */
 .quick-action-btn {
   border-color: rgba(207, 46, 46, 0.26) !important;
-  background-color: #ffffff !important; /* bg-white */
+  background-color: #ffffff !important;
+  /* bg-white */
   box-shadow: none !important;
 }
+
 .quick-action-btn:hover {
-  background-color: #fef2f2 !important; /* hover:bg-red-50/50 */
+  background-color: #fef2f2 !important;
+  /* hover:bg-red-50/50 */
 }

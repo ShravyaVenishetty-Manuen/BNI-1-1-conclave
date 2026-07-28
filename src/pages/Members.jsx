@@ -69,7 +69,7 @@ export default function Members({ searchQuery, selectedConclaveId, loggedInAdmin
                   };
                 });
               }
-            } catch {}
+            } catch { }
           } else {
             rawList = [];
           }
@@ -108,7 +108,7 @@ export default function Members({ searchQuery, selectedConclaveId, loggedInAdmin
                     });
                   });
                 }
-              } catch {}
+              } catch { }
             }));
           }
 
@@ -179,7 +179,7 @@ export default function Members({ searchQuery, selectedConclaveId, loggedInAdmin
         try {
           const parsed = JSON.parse(stored);
           setReferrals(prev => (JSON.stringify(prev) !== JSON.stringify(parsed) ? parsed : prev));
-        } catch {}
+        } catch { }
       }
     };
     window.addEventListener('storage', handleStorageChange);
@@ -205,24 +205,34 @@ export default function Members({ searchQuery, selectedConclaveId, loggedInAdmin
   const [countryFilter, setCountryFilter] = useState('All');
   const [selectedMember, setSelectedMember] = useState(null);
 
-  // Lock background body scroll when drawer is open
-  useEffect(() => {
-    if (selectedMember) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [selectedMember]);
-  const [selectedRows, setSelectedRows] = useState(new Set());
-  const [activeDropdown, setActiveDropdown] = useState(null);
-
-  const [toast, setToast] = useState(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingMember, setEditingMember] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [isBulkDeleteConfirmOpen, setIsBulkDeleteConfirmOpen] = useState(false);
 
+  // Lock background body scroll when drawer or modal is open
+  useEffect(() => {
+    if (selectedMember || isFormOpen || editingMember || deleteTarget || isBulkDeleteConfirmOpen) {
+      document.body.classList.add('modal-open');
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+    };
+  }, [selectedMember, isFormOpen, editingMember, deleteTarget, isBulkDeleteConfirmOpen]);
+
+
+
+  const [selectedRows, setSelectedRows] = useState(new Set());
+  const [activeDropdown, setActiveDropdown] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
+  const [toast, setToast] = useState(null);
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
@@ -232,26 +242,21 @@ export default function Members({ searchQuery, selectedConclaveId, loggedInAdmin
   };
 
   const getMemberRegion = (member) => {
-    if (member.userRegion && typeof member.userRegion === 'string') return member.userRegion;
-    if (member.region && typeof member.region === 'string') return member.region;
-    if (member.location) {
+    if (member?.userRegion && typeof member.userRegion === 'string') return member.userRegion;
+    if (member?.region && typeof member.region === 'string') return member.region;
+    if (member?.location) {
       if (typeof member.location === 'string') return member.location;
       if (typeof member.location === 'object' && member.location.place) return member.location.place;
     }
-    if (member.address && typeof member.address === 'string') return member.address;
+    if (member?.address && typeof member.address === 'string') return member.address;
     return 'Global BNI Network';
   };
-
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
 
   // Reset to first page when search or filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchVal, categoryFilter, captainFilter, statusFilter, stateFilter, countryFilter, viewScope]);
 
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingMember, setEditingMember] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     category: 'Real Estate',
@@ -626,31 +631,28 @@ export default function Members({ searchQuery, selectedConclaveId, loggedInAdmin
       <div className="flex border-b border-zinc-200 -mt-2">
         <button
           onClick={() => setViewScope('conclave')}
-          className={`px-4 py-2 text-body-sm font-black uppercase tracking-wider border-b-2 transition-smooth cursor-pointer -mb-px ${
-            viewScope === 'conclave'
-              ? 'border-brand-red text-brand-red font-extrabold'
-              : 'border-transparent text-zinc-500 hover:text-zinc-800'
-          }`}
+          className={`px-4 py-2 text-body-sm font-black uppercase tracking-wider border-b-2 transition-smooth cursor-pointer -mb-px ${viewScope === 'conclave'
+            ? 'border-brand-red text-brand-red font-extrabold'
+            : 'border-transparent text-zinc-500 hover:text-zinc-800'
+            }`}
         >
           This Conclave
         </button>
         <button
           onClick={() => setViewScope('region')}
-          className={`px-4 py-2 text-body-sm font-black uppercase tracking-wider border-b-2 transition-smooth cursor-pointer -mb-px ${
-            viewScope === 'region'
-              ? 'border-brand-red text-brand-red font-extrabold'
-              : 'border-transparent text-zinc-500 hover:text-zinc-800'
-          }`}
+          className={`px-4 py-2 text-body-sm font-black uppercase tracking-wider border-b-2 transition-smooth cursor-pointer -mb-px ${viewScope === 'region'
+            ? 'border-brand-red text-brand-red font-extrabold'
+            : 'border-transparent text-zinc-500 hover:text-zinc-800'
+            }`}
         >
           My Region
         </button>
         <button
           onClick={() => setViewScope('global')}
-          className={`px-4 py-2 text-body-sm font-black uppercase tracking-wider border-b-2 transition-smooth cursor-pointer -mb-px ${
-            viewScope === 'global'
-              ? 'border-brand-red text-brand-red font-extrabold'
-              : 'border-transparent text-zinc-500 hover:text-zinc-800'
-          }`}
+          className={`px-4 py-2 text-body-sm font-black uppercase tracking-wider border-b-2 transition-smooth cursor-pointer -mb-px ${viewScope === 'global'
+            ? 'border-brand-red text-brand-red font-extrabold'
+            : 'border-transparent text-zinc-500 hover:text-zinc-800'
+            }`}
         >
           Global Network
         </button>
@@ -930,217 +932,216 @@ export default function Members({ searchQuery, selectedConclaveId, loggedInAdmin
 
           <div className={`fixed right-0 top-0 bottom-0 h-screen w-full max-w-[420px] bg-white border-l border-zinc-100 shadow-2xl transform transition-transform duration-300 flex flex-col overflow-hidden z-[10000] ${selectedMember ? 'translate-x-0 pointer-events-auto' : 'translate-x-full pointer-events-none'
             }`}>
-        {selectedMember && (
-          <>
-            {/* Drawer Header */}
-            <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-white shrink-0">
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setSelectedMember(null)}
-                  className="p-1.5 hover:bg-zinc-200 rounded-lg text-zinc-400 hover:text-zinc-700 transition-smooth cursor-pointer"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-                <h3 className="text-section-heading font-extrabold text-zinc-955">Member Details</h3>
-              </div>
-              <button
-                onClick={() => openEditModal(selectedMember)}
-                className="p-1.5 hover:bg-zinc-200 rounded-lg text-brand-red hover:bg-brand-red/5 transition-smooth cursor-pointer"
-              >
-                <Edit className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Drawer Content */}
-            <div className="flex-1 overflow-y-auto min-h-0 p-5 space-y-6">
-
-              {/* Profile Card Summary */}
-              <div className="flex flex-col items-center gap-3 text-center bg-white p-4 rounded-xl border border-zinc-200/60 shadow-2xs">
-                <div className="w-20 h-20 rounded-full border-2 border-brand-red/20 p-1 bg-white">
-                  <div className="w-full h-full rounded-full bg-brand-red/10 text-brand-red font-bold text-xl flex items-center justify-center shadow-inner">
-                    {selectedMember.avatar}
-                  </div>
-                </div>
-                <div>
-                  <h4 className="text-headline-md font-bold text-zinc-950 leading-tight">{selectedMember.name}</h4>
-                  <p className="text-body-text text-zinc-500 font-semibold">{selectedMember.company}</p>
-                  <div className="flex gap-2 mt-2.5 justify-center">
-                    {selectedMember.isCaptain ? (
-                      <span className="px-2.5 py-0.5 border border-brand-red/35 text-brand-red bg-brand-red/5 font-extrabold rounded-md text-[9px] uppercase tracking-wide">
-                        Captain
-                      </span>
-                    ) : (
-                      <span className="px-2.5 py-0.5 border border-zinc-200 text-zinc-500 bg-white font-semibold rounded-md text-[9px] uppercase tracking-wide">
-                        Member
-                      </span>
-                    )}
-                    {selectedMember.status === 'Active' ? (
-                      <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-100 rounded-md text-[9px] font-extrabold uppercase">
-                        Active
-                      </span>
-                    ) : (
-                      <span className="px-2.5 py-0.5 bg-zinc-100 text-zinc-500 border border-zinc-200 rounded-md text-[9px] font-semibold uppercase">
-                        Inactive
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex gap-2.5 mt-3 justify-center border-t border-zinc-100 pt-2.5 w-full">
-                    <span className="px-2 py-1 bg-zinc-50 border border-zinc-150 rounded-lg text-[9.5px] font-bold text-zinc-600">
-                      Sent: {referrals.filter(r => r.fromMemberId === selectedMember.id).length}
-                    </span>
-                    <span className="px-2 py-1 bg-zinc-50 border border-zinc-150 rounded-lg text-[9.5px] font-bold text-zinc-600">
-                      Received: {referrals.filter(r => r.toMemberId === selectedMember.id).length}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Member Info details */}
-              <section className="space-y-3">
-                <h5 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest border-b border-zinc-100 pb-1.5">Member Information</h5>
-                <div className="grid grid-cols-2 gap-3.5">
-                  <div>
-                    <span className="text-[10px] text-zinc-400 font-bold uppercase block">Member ID</span>
-                    <span className="text-body-sm font-bold text-zinc-800">{selectedMember.id}</span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-zinc-400 font-bold uppercase block">BNI Chapter</span>
-                    <span className="text-body-sm font-bold text-zinc-800">{selectedMember.chapter}</span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-zinc-400 font-bold uppercase block">Classification</span>
-                    <span className="text-body-sm font-bold text-zinc-800">{selectedMember.category}</span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-zinc-400 font-bold uppercase block">Join Date</span>
-                    <span className="text-body-sm font-bold text-zinc-800">{selectedMember.joinDate}</span>
-                  </div>
-                </div>
-              </section>
-
-              {/* Contact Details */}
-              <section className="space-y-4">
-                <h5 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest border-b border-zinc-100 pb-1.5">Contact Details</h5>
-                <div className="space-y-3">
+            {selectedMember && (
+              <>
+                {/* Drawer Header */}
+                <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-white shrink-0">
                   <div className="flex items-center gap-3">
-                    <span className="p-1.5 bg-zinc-100 text-zinc-500 rounded-lg flex items-center justify-center">
-                      <Mail className="w-4 h-4" />
-                    </span>
-                    <div>
-                      <span className="text-[10px] text-zinc-400 font-semibold block">Email Address</span>
-                      <span className="text-body-sm font-bold text-zinc-800 select-all">{selectedMember.email}</span>
-                    </div>
+                    <button
+                      onClick={() => setSelectedMember(null)}
+                      className="p-1.5 hover:bg-zinc-200 rounded-lg text-zinc-400 hover:text-zinc-700 transition-smooth cursor-pointer"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                    <h3 className="text-section-heading font-extrabold text-zinc-955">Member Details</h3>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="p-1.5 bg-zinc-100 text-zinc-500 rounded-lg flex items-center justify-center">
-                      <Phone className="w-4 h-4" />
-                    </span>
-                    <div>
-                      <span className="text-[10px] text-zinc-400 font-semibold block">Mobile Number</span>
-                      <span className="text-body-sm font-bold text-zinc-800 select-all">{selectedMember.phone}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <span className="p-1.5 bg-zinc-100 text-zinc-500 rounded-lg flex items-center justify-center mt-0.5">
-                      <MapPin className="w-4 h-4" />
-                    </span>
-                    <div>
-                      <span className="text-[10px] text-zinc-400 font-semibold block">Office Location</span>
-                      <span className="text-body-sm font-bold text-zinc-800 select-all">{selectedMember.address}</span>
-                    </div>
-                  </div>
+                  <button
+                    onClick={() => openEditModal(selectedMember)}
+                    className="p-1.5 hover:bg-zinc-200 rounded-lg text-brand-red hover:bg-brand-red/5 transition-smooth cursor-pointer"
+                  >
+                    <Edit className="w-4 h-4" />
+                  </button>
                 </div>
-              </section>
 
-              {/* Conclave History */}
-              <section className="space-y-3.5">
-                <h5 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest border-b border-zinc-100 pb-1.5">Conclave Activity</h5>
-                <div className="relative pl-3 space-y-5 border-l border-zinc-100 ml-1.5">
-                  {selectedMember.history.map((hist, idx) => (
-                    <div key={idx} className="relative">
-                      <div className={`absolute -left-[17.5px] top-1 w-2.5 h-2.5 rounded-full border-2 border-white shadow-sm ${idx === 0 ? 'bg-brand-red' : 'bg-zinc-300'
-                        }`} />
-                      <div className="flex flex-col gap-0.5">
-                        <span className="text-caption font-bold text-zinc-800 leading-tight">{hist.event}</span>
-                        <span className="text-[10px] text-zinc-500 font-medium">{hist.date} • {hist.role}</span>
+                {/* Drawer Content */}
+                <div className="flex-1 overflow-y-auto min-h-0 p-5 space-y-6">
+
+                  {/* Profile Card Summary */}
+                  <div className="flex flex-col items-center gap-3 text-center bg-white p-4 rounded-xl border border-zinc-200/60 shadow-2xs">
+                    <div className="w-20 h-20 rounded-full border-2 border-brand-red/20 p-1 bg-white">
+                      <div className="w-full h-full rounded-full bg-brand-red/10 text-brand-red font-bold text-xl flex items-center justify-center shadow-inner">
+                        {selectedMember.avatar}
                       </div>
                     </div>
-                  ))}
-                </div>
-              </section>
+                    <div>
+                      <h4 className="text-headline-md font-bold text-zinc-950 leading-tight">{selectedMember.name}</h4>
+                      <p className="text-body-text text-zinc-500 font-semibold">{selectedMember.company}</p>
+                      <div className="flex gap-2 mt-2.5 justify-center">
+                        {selectedMember.isCaptain ? (
+                          <span className="px-2.5 py-0.5 border border-brand-red/35 text-brand-red bg-brand-red/5 font-extrabold rounded-md text-[9px] uppercase tracking-wide">
+                            Captain
+                          </span>
+                        ) : (
+                          <span className="px-2.5 py-0.5 border border-zinc-200 text-zinc-500 bg-white font-semibold rounded-md text-[9px] uppercase tracking-wide">
+                            Member
+                          </span>
+                        )}
+                        {selectedMember.status === 'Active' ? (
+                          <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-100 rounded-md text-[9px] font-extrabold uppercase">
+                            Active
+                          </span>
+                        ) : (
+                          <span className="px-2.5 py-0.5 bg-zinc-100 text-zinc-500 border border-zinc-200 rounded-md text-[9px] font-semibold uppercase">
+                            Inactive
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex gap-2.5 mt-3 justify-center border-t border-zinc-100 pt-2.5 w-full">
+                        <span className="px-2 py-1 bg-zinc-50 border border-zinc-150 rounded-lg text-[9.5px] font-bold text-zinc-600">
+                          Sent: {referrals.filter(r => r.fromMemberId === selectedMember.id).length}
+                        </span>
+                        <span className="px-2 py-1 bg-zinc-50 border border-zinc-150 rounded-lg text-[9.5px] font-bold text-zinc-600">
+                          Received: {referrals.filter(r => r.toMemberId === selectedMember.id).length}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
 
-              {/* Referral History */}
-              <section className="space-y-3.5">
-                <h5 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest border-b border-zinc-100 pb-1.5">Referral History</h5>
-                <div className="border border-zinc-200 rounded-xl overflow-hidden divide-y divide-zinc-200">
-                  {referrals.filter(r => r.fromMemberId === selectedMember.id || r.toMemberId === selectedMember.id).length === 0 ? (
-                    <p className="p-4 text-center text-[10.5px] text-zinc-400 font-semibold bg-white">No referrals logged for this member.</p>
-                  ) : (
-                    referrals.filter(r => r.fromMemberId === selectedMember.id || r.toMemberId === selectedMember.id).map(ref => {
-                      const isGiven = ref.fromMemberId === selectedMember.id;
-                      return (
-                        <div key={ref.id} className="p-3 bg-white hover:bg-zinc-50/50 transition-colors text-body-sm">
-                          <div className="flex justify-between items-start">
-                            <p className="font-black text-zinc-800 text-[11.5px]">
-                              {isGiven ? `Given to: ${ref.toName}` : `Received from: ${ref.fromName}`}
-                            </p>
-                            <span className={`px-1.5 py-0.5 text-[8px] font-extrabold rounded border ${
-                              ref.status === 'Connected'
-                                ? 'bg-emerald-50 text-emerald-700 border-emerald-150'
-                                : ref.status === 'Closed'
-                                ? 'bg-zinc-150 text-zinc-650 border-zinc-250'
-                                : 'bg-amber-50 text-amber-700 border-amber-150'
-                            }`}>
-                              {ref.status}
-                            </span>
-                          </div>
-                          <p className="text-[11px] font-semibold text-zinc-500 mt-1 italic">"{ref.description}"</p>
-                          <span className="text-[8px] text-zinc-400 font-extrabold uppercase mt-1 block">{ref.date}</span>
+                  {/* Member Info details */}
+                  <section className="space-y-3">
+                    <h5 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest border-b border-zinc-100 pb-1.5">Member Information</h5>
+                    <div className="grid grid-cols-2 gap-3.5">
+                      <div>
+                        <span className="text-[10px] text-zinc-400 font-bold uppercase block">Member ID</span>
+                        <span className="text-body-sm font-bold text-zinc-800">{selectedMember.id}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-zinc-400 font-bold uppercase block">BNI Chapter</span>
+                        <span className="text-body-sm font-bold text-zinc-800">{selectedMember.chapter}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-zinc-400 font-bold uppercase block">Classification</span>
+                        <span className="text-body-sm font-bold text-zinc-800">{selectedMember.category}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-zinc-400 font-bold uppercase block">Join Date</span>
+                        <span className="text-body-sm font-bold text-zinc-800">{selectedMember.joinDate}</span>
+                      </div>
+                    </div>
+                  </section>
+
+                  {/* Contact Details */}
+                  <section className="space-y-4">
+                    <h5 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest border-b border-zinc-100 pb-1.5">Contact Details</h5>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <span className="p-1.5 bg-zinc-100 text-zinc-500 rounded-lg flex items-center justify-center">
+                          <Mail className="w-4 h-4" />
+                        </span>
+                        <div>
+                          <span className="text-[10px] text-zinc-400 font-semibold block">Email Address</span>
+                          <span className="text-body-sm font-bold text-zinc-800 select-all">{selectedMember.email}</span>
                         </div>
-                      );
-                    })
-                  )}
-                </div>
-              </section>
-            </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="p-1.5 bg-zinc-100 text-zinc-500 rounded-lg flex items-center justify-center">
+                          <Phone className="w-4 h-4" />
+                        </span>
+                        <div>
+                          <span className="text-[10px] text-zinc-400 font-semibold block">Mobile Number</span>
+                          <span className="text-body-sm font-bold text-zinc-800 select-all">{selectedMember.phone}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <span className="p-1.5 bg-zinc-100 text-zinc-500 rounded-lg flex items-center justify-center mt-0.5">
+                          <MapPin className="w-4 h-4" />
+                        </span>
+                        <div>
+                          <span className="text-[10px] text-zinc-400 font-semibold block">Office Location</span>
+                          <span className="text-body-sm font-bold text-zinc-800 select-all">{selectedMember.address}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </section>
 
-            {/* Drawer Footer */}
-            <div className="p-4 border-t border-zinc-100 bg-white flex flex-col gap-2 shrink-0 shadow-lg">
-              <button
-                onClick={async () => {
-                  const newIsCaptain = !selectedMember.isCaptain;
-                  const newRole = newIsCaptain ? 'captain' : 'member';
-                  
-                  try {
-                    await api.post(`/admin/users/${selectedMember.id}/role`, { role: newRole });
-                    if (selectedConclaveId) {
-                      await api.post(`/admin/conclaves/${selectedConclaveId}/registrations/${selectedMember.id}/role`, { role: newRole }).catch(() => {});
-                    }
-                  } catch (err) {
-                    console.error("Failed to update user role:", err);
-                  }
-                  
-                  setMembers(prev => prev.map(m => m.id === selectedMember.id ? { ...m, isCaptain: newIsCaptain, role: newRole } : m));
-                  setSelectedMember(prev => prev ? { ...prev, isCaptain: newIsCaptain, role: newRole } : null);
-                  showToast(`${selectedMember.name}'s role updated to ${newIsCaptain ? 'Table Captain' : 'Member'}.`);
-                }}
-                className={`w-full py-2 ${selectedMember.isCaptain ? 'bg-amber-600 hover:bg-amber-700' : 'bg-brand-red hover:bg-red-700'} text-white rounded-lg text-button font-bold transition-smooth shadow-sm cursor-pointer`}
-              >
-                {selectedMember.isCaptain ? 'Demote to Member' : 'Promote to Table Captain'}
-              </button>
-              <button
-                onClick={() => setSelectedMember(null)}
-                className="w-full py-2 bg-white border border-zinc-100 text-zinc-650 hover:bg-zinc-50 rounded-lg text-button font-bold transition-smooth shadow-sm cursor-pointer"
-              >
-                Close Drawer
-              </button>
-            </div>
-          </>
-        )}
-      </div>
-    </>,
-    document.body
-  )}
+                  {/* Conclave History */}
+                  <section className="space-y-3.5">
+                    <h5 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest border-b border-zinc-100 pb-1.5">Conclave Activity</h5>
+                    <div className="relative pl-3 space-y-5 border-l border-zinc-100 ml-1.5">
+                      {selectedMember.history.map((hist, idx) => (
+                        <div key={idx} className="relative">
+                          <div className={`absolute -left-[17.5px] top-1 w-2.5 h-2.5 rounded-full border-2 border-white shadow-sm ${idx === 0 ? 'bg-brand-red' : 'bg-zinc-300'
+                            }`} />
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-caption font-bold text-zinc-800 leading-tight">{hist.event}</span>
+                            <span className="text-[10px] text-zinc-500 font-medium">{hist.date} • {hist.role}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+
+                  {/* Referral History */}
+                  <section className="space-y-3.5">
+                    <h5 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest border-b border-zinc-100 pb-1.5">Referral History</h5>
+                    <div className="border border-zinc-200 rounded-xl overflow-hidden divide-y divide-zinc-200">
+                      {referrals.filter(r => r.fromMemberId === selectedMember.id || r.toMemberId === selectedMember.id).length === 0 ? (
+                        <p className="p-4 text-center text-[10.5px] text-zinc-400 font-semibold bg-white">No referrals logged for this member.</p>
+                      ) : (
+                        referrals.filter(r => r.fromMemberId === selectedMember.id || r.toMemberId === selectedMember.id).map(ref => {
+                          const isGiven = ref.fromMemberId === selectedMember.id;
+                          return (
+                            <div key={ref.id} className="p-3 bg-white hover:bg-zinc-50/50 transition-colors text-body-sm">
+                              <div className="flex justify-between items-start">
+                                <p className="font-black text-zinc-800 text-[11.5px]">
+                                  {isGiven ? `Given to: ${ref.toName}` : `Received from: ${ref.fromName}`}
+                                </p>
+                                <span className={`px-1.5 py-0.5 text-[8px] font-extrabold rounded border ${ref.status === 'Connected'
+                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-150'
+                                  : ref.status === 'Closed'
+                                    ? 'bg-zinc-150 text-zinc-650 border-zinc-250'
+                                    : 'bg-amber-50 text-amber-700 border-amber-150'
+                                  }`}>
+                                  {ref.status}
+                                </span>
+                              </div>
+                              <p className="text-[11px] font-semibold text-zinc-500 mt-1 italic">"{ref.description}"</p>
+                              <span className="text-[8px] text-zinc-400 font-extrabold uppercase mt-1 block">{ref.date}</span>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  </section>
+                </div>
+
+                {/* Drawer Footer */}
+                <div className="p-4 border-t border-zinc-100 bg-white flex flex-col gap-2 shrink-0 shadow-lg">
+                  <button
+                    onClick={async () => {
+                      const newIsCaptain = !selectedMember.isCaptain;
+                      const newRole = newIsCaptain ? 'captain' : 'member';
+
+                      try {
+                        await api.post(`/admin/users/${selectedMember.id}/role`, { role: newRole });
+                        if (selectedConclaveId) {
+                          await api.post(`/admin/conclaves/${selectedConclaveId}/registrations/${selectedMember.id}/role`, { role: newRole }).catch(() => { });
+                        }
+                      } catch (err) {
+                        console.error("Failed to update user role:", err);
+                      }
+
+                      setMembers(prev => prev.map(m => m.id === selectedMember.id ? { ...m, isCaptain: newIsCaptain, role: newRole } : m));
+                      setSelectedMember(prev => prev ? { ...prev, isCaptain: newIsCaptain, role: newRole } : null);
+                      showToast(`${selectedMember.name}'s role updated to ${newIsCaptain ? 'Table Captain' : 'Member'}.`);
+                    }}
+                    className={`w-full py-2 ${selectedMember.isCaptain ? 'bg-amber-600 hover:bg-amber-700' : 'bg-brand-red hover:bg-red-700'} text-white rounded-lg text-button font-bold transition-smooth shadow-sm cursor-pointer`}
+                  >
+                    {selectedMember.isCaptain ? 'Demote to Member' : 'Promote to Table Captain'}
+                  </button>
+                  <button
+                    onClick={() => setSelectedMember(null)}
+                    className="w-full py-2 bg-white border border-zinc-100 text-zinc-650 hover:bg-zinc-50 rounded-lg text-button font-bold transition-smooth shadow-sm cursor-pointer"
+                  >
+                    Close Drawer
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </>,
+        document.body
+      )}
 
       {/* Add / Edit Member Modal */}
       {isFormOpen && (

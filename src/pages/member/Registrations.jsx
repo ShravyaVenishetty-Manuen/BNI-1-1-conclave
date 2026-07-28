@@ -31,6 +31,23 @@ export default function Registrations({ loggedInMember }) {
 
   const [isRegModalOpen, setIsRegModalOpen] = useState(false);
   const [selectedConclaveForReg, setSelectedConclaveForReg] = useState(null);
+
+  // Lock background body scroll when modal is open
+  useEffect(() => {
+    if (isRegModalOpen) {
+      document.body.classList.add('modal-open');
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+    };
+  }, [isRegModalOpen]);
+
+
   const [regForm, setRegForm] = useState({
     name: '',
     email: '',

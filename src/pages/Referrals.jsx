@@ -18,6 +18,23 @@ export default function Referrals({ loggedInUser, userType, conclaveSyncData }) 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [toast, setToast] = useState(null);
 
+  // Lock background body scroll when modal is open
+  useEffect(() => {
+    if (isModalOpen) {
+      document.body.classList.add('modal-open');
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+    };
+  }, [isModalOpen]);
+
+
+
   // Form states
   const [recipientSearch, setRecipientSearch] = useState('');
   const [selectedRecipient, setSelectedRecipient] = useState(null);

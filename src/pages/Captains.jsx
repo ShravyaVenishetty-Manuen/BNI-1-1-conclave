@@ -78,7 +78,7 @@ export default function Captains({ searchQuery, selectedConclaveId, loggedInAdmi
                   };
                 });
               }
-            } catch {}
+            } catch { }
           } else {
             rawList = [];
           }
@@ -122,7 +122,7 @@ export default function Captains({ searchQuery, selectedConclaveId, loggedInAdmi
                     }
                   });
                 }
-              } catch {}
+              } catch { }
             }));
           }
 
@@ -189,7 +189,7 @@ export default function Captains({ searchQuery, selectedConclaveId, loggedInAdmi
         try {
           const parsed = JSON.parse(stored);
           setReferrals(prev => (JSON.stringify(prev) !== JSON.stringify(parsed) ? parsed : prev));
-        } catch {}
+        } catch { }
       }
     };
     window.addEventListener('storage', handleStorageChange);
@@ -597,31 +597,28 @@ export default function Captains({ searchQuery, selectedConclaveId, loggedInAdmi
       <div className="flex border-b border-zinc-200 -mt-2">
         <button
           onClick={() => setViewScope('conclave')}
-          className={`px-4 py-2 text-body-sm font-black uppercase tracking-wider border-b-2 transition-smooth cursor-pointer -mb-px ${
-            viewScope === 'conclave'
+          className={`px-4 py-2 text-body-sm font-black uppercase tracking-wider border-b-2 transition-smooth cursor-pointer -mb-px ${viewScope === 'conclave'
               ? 'border-brand-red text-brand-red font-extrabold'
               : 'border-transparent text-zinc-500 hover:text-zinc-800'
-          }`}
+            }`}
         >
           This Conclave
         </button>
         <button
           onClick={() => setViewScope('region')}
-          className={`px-4 py-2 text-body-sm font-black uppercase tracking-wider border-b-2 transition-smooth cursor-pointer -mb-px ${
-            viewScope === 'region'
+          className={`px-4 py-2 text-body-sm font-black uppercase tracking-wider border-b-2 transition-smooth cursor-pointer -mb-px ${viewScope === 'region'
               ? 'border-brand-red text-brand-red font-extrabold'
               : 'border-transparent text-zinc-500 hover:text-zinc-800'
-          }`}
+            }`}
         >
           My Region
         </button>
         <button
           onClick={() => setViewScope('global')}
-          className={`px-4 py-2 text-body-sm font-black uppercase tracking-wider border-b-2 transition-smooth cursor-pointer -mb-px ${
-            viewScope === 'global'
+          className={`px-4 py-2 text-body-sm font-black uppercase tracking-wider border-b-2 transition-smooth cursor-pointer -mb-px ${viewScope === 'global'
               ? 'border-brand-red text-brand-red font-extrabold'
               : 'border-transparent text-zinc-500 hover:text-zinc-800'
-          }`}
+            }`}
         >
           Global Network
         </button>
@@ -890,215 +887,214 @@ export default function Captains({ searchQuery, selectedConclaveId, loggedInAdmi
 
           <div className={`fixed right-0 top-0 bottom-0 h-screen w-full max-w-[440px] bg-white border-l border-zinc-100 shadow-2xl transform transition-transform duration-300 flex flex-col overflow-hidden z-[10000] ${selectedCaptain ? 'translate-x-0 pointer-events-auto' : 'translate-x-full pointer-events-none'
             }`}>
-        {selectedCaptain && (
-          <>
-            {/* Drawer Header */}
-            <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50 shrink-0">
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setSelectedCaptain(null)}
-                  className="p-1.5 hover:bg-zinc-200 rounded-lg text-zinc-400 hover:text-zinc-700 transition-smooth cursor-pointer"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-                <h3 className="text-section-heading font-extrabold text-zinc-950">Captain Profile</h3>
-              </div>
-              <button
-                onClick={() => openEditModal(selectedCaptain)}
-                className="p-1.5 hover:bg-zinc-200 rounded-lg text-brand-red hover:bg-brand-red/5 transition-smooth cursor-pointer"
-              >
-                <Edit2 className="w-4 h-4" />
-              </button>
-            </div>
+            {selectedCaptain && (
+              <>
+                {/* Drawer Header */}
+                <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50 shrink-0">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setSelectedCaptain(null)}
+                      className="p-1.5 hover:bg-zinc-200 rounded-lg text-zinc-400 hover:text-zinc-700 transition-smooth cursor-pointer"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                    <h3 className="text-section-heading font-extrabold text-zinc-950">Captain Profile</h3>
+                  </div>
+                  <button
+                    onClick={() => openEditModal(selectedCaptain)}
+                    className="p-1.5 hover:bg-zinc-200 rounded-lg text-brand-red hover:bg-brand-red/5 transition-smooth cursor-pointer"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+                </div>
 
-            {/* Drawer Content */}
-            <div className="flex-1 overflow-y-auto min-h-0 p-5 space-y-6">
+                {/* Drawer Content */}
+                <div className="flex-1 overflow-y-auto min-h-0 p-5 space-y-6">
 
-              {/* Profile Card Summary */}
-              <div className="flex flex-col items-center gap-3 text-center bg-zinc-50 p-4 rounded-xl border border-zinc-100">
-                <div className="w-20 h-20 rounded-lg border-2 border-brand-red/20 p-1 bg-white overflow-hidden shrink-0 shadow-sm">
-                  {selectedCaptain.image ? (
-                    <img className="w-full h-full object-cover rounded-md" src={selectedCaptain.image} alt={selectedCaptain.name} />
-                  ) : (
-                    <div className="w-full h-full rounded-md bg-brand-red/10 text-brand-red font-bold text-xl flex items-center justify-center">
-                      {selectedCaptain.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                  {/* Profile Card Summary */}
+                  <div className="flex flex-col items-center gap-3 text-center bg-zinc-50 p-4 rounded-xl border border-zinc-100">
+                    <div className="w-20 h-20 rounded-lg border-2 border-brand-red/20 p-1 bg-white overflow-hidden shrink-0 shadow-sm">
+                      {selectedCaptain.image ? (
+                        <img className="w-full h-full object-cover rounded-md" src={selectedCaptain.image} alt={selectedCaptain.name} />
+                      ) : (
+                        <div className="w-full h-full rounded-md bg-brand-red/10 text-brand-red font-bold text-xl flex items-center justify-center">
+                          {selectedCaptain.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-                <div>
-                  <h4 className="text-headline-md font-bold text-zinc-950 leading-tight">{selectedCaptain.name}</h4>
-                  <p className="text-[10px] font-mono text-zinc-450 font-bold uppercase mt-1">ID: {selectedCaptain.id}</p>
+                    <div>
+                      <h4 className="text-headline-md font-bold text-zinc-950 leading-tight">{selectedCaptain.name}</h4>
+                      <p className="text-[10px] font-mono text-zinc-450 font-bold uppercase mt-1">ID: {selectedCaptain.id}</p>
 
-                  <div className="flex gap-2 mt-2.5 justify-center">
-                    {selectedCaptain.status === 'Available' ? (
-                      <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-100 rounded-md text-[9px] font-extrabold uppercase">
-                        Available
-                      </span>
-                    ) : selectedCaptain.status === 'Assigned' ? (
-                      <span className="px-2.5 py-0.5 bg-red-50 text-brand-red border border-red-100 rounded-md text-[9px] font-extrabold uppercase">
-                        Assigned
-                      </span>
-                    ) : (
-                      <span className="px-2.5 py-0.5 bg-zinc-100 text-zinc-500 border border-zinc-100 rounded-md text-[9px] font-semibold uppercase">
-                        Busy
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex gap-2.5 mt-3 justify-center border-t border-zinc-100 pt-2.5 w-full">
-                    <span className="px-2 py-1 bg-zinc-50 border border-zinc-200 rounded-lg text-[9.5px] font-bold text-zinc-650">
-                      Sent: {referrals.filter(r => r.fromMemberId === selectedCaptain.id).length}
-                    </span>
-                    <span className="px-2 py-1 bg-zinc-50 border border-zinc-200 rounded-lg text-[9.5px] font-bold text-zinc-650">
-                      Received: {referrals.filter(r => r.toMemberId === selectedCaptain.id).length}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Metrics Info */}
-              <div className="grid grid-cols-2 gap-3.5">
-                <div className="p-3.5 border border-zinc-100 bg-white rounded-lg shadow-sm">
-                  <span className="text-[9px] text-zinc-400 font-bold uppercase block">Business Type</span>
-                  <span className="text-body-sm font-bold text-zinc-800 block mt-1">{selectedCaptain.category}</span>
-                </div>
-                <div className="p-3.5 border border-zinc-100 bg-white rounded-lg shadow-sm">
-                  <span className="text-[9px] text-zinc-400 font-bold uppercase block">Join Date</span>
-                  <span className="text-body-sm font-bold text-zinc-800 block mt-1">{selectedCaptain.joinDate}</span>
-                </div>
-              </div>
-
-              {/* Contact Info */}
-              <section className="space-y-3">
-                <h5 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest border-b border-zinc-100 pb-1.5">Contact Details</h5>
-                <div className="flex items-center gap-3 py-1">
-                  <Mail className="w-4 h-4 text-zinc-400 shrink-0" />
-                  <div>
-                    <span className="text-[9px] text-zinc-400 font-bold uppercase block">Email Address</span>
-                    <span className="text-body-sm font-bold text-zinc-850 select-all">{selectedCaptain.email}</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 py-1">
-                  <Layers className="w-4 h-4 text-zinc-400 shrink-0" />
-                  <div>
-                    <span className="text-[9px] text-zinc-400 font-bold uppercase block">Table Assignment</span>
-                    <span className="text-body-sm font-bold text-zinc-850">{selectedCaptain.table}</span>
-                  </div>
-                </div>
-              </section>
-
-              {/* Activity Timeline */}
-              {selectedCaptain.timeline && selectedCaptain.timeline.length > 0 && (
-                <section className="space-y-3.5">
-                  <h5 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest border-b border-zinc-100 pb-1.5">Activity Timeline</h5>
-                  <div className="relative pl-3 space-y-5 border-l border-zinc-100 ml-1.5 mt-2">
-                    {selectedCaptain.timeline.map((t, idx) => (
-                      <div key={idx} className="relative">
-                        <div className={`absolute -left-[17.5px] top-1 w-2.5 h-2.5 rounded-full border-2 border-white shadow-sm ${idx === 0 ? 'bg-brand-red' : 'bg-zinc-350'
-                          }`} />
-                        <div className="flex flex-col gap-0.5">
-                          <span className="text-body-sm font-bold text-zinc-800 leading-tight">{t.event}</span>
-                          <span className="text-[9px] text-zinc-500 font-semibold">{t.date} • {t.note}</span>
-                        </div>
+                      <div className="flex gap-2 mt-2.5 justify-center">
+                        {selectedCaptain.status === 'Available' ? (
+                          <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-100 rounded-md text-[9px] font-extrabold uppercase">
+                            Available
+                          </span>
+                        ) : selectedCaptain.status === 'Assigned' ? (
+                          <span className="px-2.5 py-0.5 bg-red-50 text-brand-red border border-red-100 rounded-md text-[9px] font-extrabold uppercase">
+                            Assigned
+                          </span>
+                        ) : (
+                          <span className="px-2.5 py-0.5 bg-zinc-100 text-zinc-500 border border-zinc-100 rounded-md text-[9px] font-semibold uppercase">
+                            Busy
+                          </span>
+                        )}
                       </div>
-                    ))}
+                      <div className="flex gap-2.5 mt-3 justify-center border-t border-zinc-100 pt-2.5 w-full">
+                        <span className="px-2 py-1 bg-zinc-50 border border-zinc-200 rounded-lg text-[9.5px] font-bold text-zinc-650">
+                          Sent: {referrals.filter(r => r.fromMemberId === selectedCaptain.id).length}
+                        </span>
+                        <span className="px-2 py-1 bg-zinc-50 border border-zinc-200 rounded-lg text-[9.5px] font-bold text-zinc-650">
+                          Received: {referrals.filter(r => r.toMemberId === selectedCaptain.id).length}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                </section>
-              )}
 
-              {/* Conclave Rating History Table */}
-              {selectedCaptain.history && selectedCaptain.history.length > 0 && (
-                <section className="space-y-3">
-                  <h5 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest border-b border-zinc-100 pb-1.5">Conclave History</h5>
-                  <div className="border border-zinc-100 rounded-lg overflow-hidden bg-white mt-2">
-                    <table className="w-full text-left text-body-sm border-collapse">
-                      <thead className="bg-zinc-50 border-b border-zinc-100 text-[10px] font-bold text-zinc-450 uppercase">
-                        <tr>
-                          <th className="px-4 py-2">Conclave</th>
-                          <th className="px-4 py-2">Table</th>
-                          <th className="px-4 py-2 text-right">Rating</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-zinc-50 font-semibold text-zinc-650">
-                        {selectedCaptain.history.map((hist, idx) => (
-                          <tr key={idx} className="hover:bg-zinc-50/20">
-                            <td className="px-4 py-2.5 text-zinc-800">{hist.conclave}</td>
-                            <td className="px-4 py-2.5 font-mono">{hist.table}</td>
-                            <td className="px-4 py-2.5 text-right text-brand-red">
-                              {Array.from({ length: 5 }).map((_, i) => (
-                                <Star
-                                  key={i}
-                                  className={`inline w-3 h-3 ${i < hist.rating ? 'fill-brand-red text-brand-red' : 'text-zinc-200'}`}
-                                />
-                              ))}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                  {/* Metrics Info */}
+                  <div className="grid grid-cols-2 gap-3.5">
+                    <div className="p-3.5 border border-zinc-100 bg-white rounded-lg shadow-sm">
+                      <span className="text-[9px] text-zinc-400 font-bold uppercase block">Business Type</span>
+                      <span className="text-body-sm font-bold text-zinc-800 block mt-1">{selectedCaptain.category}</span>
+                    </div>
+                    <div className="p-3.5 border border-zinc-100 bg-white rounded-lg shadow-sm">
+                      <span className="text-[9px] text-zinc-400 font-bold uppercase block">Join Date</span>
+                      <span className="text-body-sm font-bold text-zinc-800 block mt-1">{selectedCaptain.joinDate}</span>
+                    </div>
                   </div>
-                </section>
-              )}
 
-              {/* Referral History */}
-              <section className="space-y-3.5">
-                <h5 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest border-b border-zinc-100 pb-1.5">Referral History</h5>
-                <div className="border border-zinc-200 rounded-xl overflow-hidden divide-y divide-zinc-200">
-                  {referrals.filter(r => r.fromMemberId === selectedCaptain.id || r.toMemberId === selectedCaptain.id).length === 0 ? (
-                    <p className="p-4 text-center text-[10.5px] text-zinc-400 font-semibold bg-white">No referrals logged for this captain.</p>
-                  ) : (
-                    referrals.filter(r => r.fromMemberId === selectedCaptain.id || r.toMemberId === selectedCaptain.id).map(ref => {
-                      const isGiven = ref.fromMemberId === selectedCaptain.id;
-                      return (
-                        <div key={ref.id} className="p-3 bg-white hover:bg-zinc-50/50 transition-colors text-body-sm">
-                          <div className="flex justify-between items-start">
-                            <p className="font-black text-zinc-800 text-[11.5px]">
-                              {isGiven ? `Given to: ${ref.toName}` : `Received from: ${ref.fromName}`}
-                            </p>
-                            <span className={`px-1.5 py-0.5 text-[8px] font-extrabold rounded border ${
-                              ref.status === 'Connected'
-                                ? 'bg-emerald-50 text-emerald-700 border-emerald-150'
-                                : ref.status === 'Closed'
-                                ? 'bg-zinc-150 text-zinc-650 border-zinc-250'
-                                : 'bg-amber-50 text-amber-700 border-amber-150'
-                            }`}>
-                              {ref.status}
-                            </span>
+                  {/* Contact Info */}
+                  <section className="space-y-3">
+                    <h5 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest border-b border-zinc-100 pb-1.5">Contact Details</h5>
+                    <div className="flex items-center gap-3 py-1">
+                      <Mail className="w-4 h-4 text-zinc-400 shrink-0" />
+                      <div>
+                        <span className="text-[9px] text-zinc-400 font-bold uppercase block">Email Address</span>
+                        <span className="text-body-sm font-bold text-zinc-850 select-all">{selectedCaptain.email}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 py-1">
+                      <Layers className="w-4 h-4 text-zinc-400 shrink-0" />
+                      <div>
+                        <span className="text-[9px] text-zinc-400 font-bold uppercase block">Table Assignment</span>
+                        <span className="text-body-sm font-bold text-zinc-850">{selectedCaptain.table}</span>
+                      </div>
+                    </div>
+                  </section>
+
+                  {/* Activity Timeline */}
+                  {selectedCaptain.timeline && selectedCaptain.timeline.length > 0 && (
+                    <section className="space-y-3.5">
+                      <h5 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest border-b border-zinc-100 pb-1.5">Activity Timeline</h5>
+                      <div className="relative pl-3 space-y-5 border-l border-zinc-100 ml-1.5 mt-2">
+                        {selectedCaptain.timeline.map((t, idx) => (
+                          <div key={idx} className="relative">
+                            <div className={`absolute -left-[17.5px] top-1 w-2.5 h-2.5 rounded-full border-2 border-white shadow-sm ${idx === 0 ? 'bg-brand-red' : 'bg-zinc-350'
+                              }`} />
+                            <div className="flex flex-col gap-0.5">
+                              <span className="text-body-sm font-bold text-zinc-800 leading-tight">{t.event}</span>
+                              <span className="text-[9px] text-zinc-500 font-semibold">{t.date} • {t.note}</span>
+                            </div>
                           </div>
-                          <p className="text-[11px] font-semibold text-zinc-555 mt-1 italic font-medium">"{ref.description}"</p>
-                          <span className="text-[8px] text-zinc-400 font-extrabold uppercase mt-1 block">{ref.date}</span>
-                        </div>
-                      );
-                    })
+                        ))}
+                      </div>
+                    </section>
                   )}
-                </div>
-              </section>
-            </div>
 
-            {/* Drawer Footer Actions */}
-            <div className="p-4 border-t border-zinc-100 bg-white flex flex-col gap-2 shrink-0 shadow-lg">
-              <button
-                onClick={() => {
-                  setCaptains(prev => prev.map(c => c.id === selectedCaptain.id ? { ...c, status: 'Assigned', table: 'Table 08 (West Chapter)' } : c));
-                  setSelectedCaptain(prev => prev ? { ...prev, status: 'Assigned', table: 'Table 08 (West Chapter)' } : null);
-                  showToast(`Assigned ${selectedCaptain.name} to West Chapter Table 08.`, 'success');
-                }}
-                className="w-full py-2 bg-brand-red hover:bg-red-700 text-white rounded-lg text-button font-bold transition-smooth shadow-sm cursor-pointer"
-              >
-                Assign to Current Conclave
-              </button>
-              <button
-                onClick={() => setSelectedCaptain(null)}
-                className="w-full py-2 bg-white border border-zinc-100 text-zinc-650 hover:bg-zinc-50 rounded-lg text-button font-bold transition-smooth shadow-sm cursor-pointer"
-              >
-                Close Drawer
-              </button>
-            </div>
-          </>
-        )}
-      </div>
-    </>,
-    document.body
-  )}
+                  {/* Conclave Rating History Table */}
+                  {selectedCaptain.history && selectedCaptain.history.length > 0 && (
+                    <section className="space-y-3">
+                      <h5 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest border-b border-zinc-100 pb-1.5">Conclave History</h5>
+                      <div className="border border-zinc-100 rounded-lg overflow-hidden bg-white mt-2">
+                        <table className="w-full text-left text-body-sm border-collapse">
+                          <thead className="bg-zinc-50 border-b border-zinc-100 text-[10px] font-bold text-zinc-450 uppercase">
+                            <tr>
+                              <th className="px-4 py-2">Conclave</th>
+                              <th className="px-4 py-2">Table</th>
+                              <th className="px-4 py-2 text-right">Rating</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-zinc-50 font-semibold text-zinc-650">
+                            {selectedCaptain.history.map((hist, idx) => (
+                              <tr key={idx} className="hover:bg-zinc-50/20">
+                                <td className="px-4 py-2.5 text-zinc-800">{hist.conclave}</td>
+                                <td className="px-4 py-2.5 font-mono">{hist.table}</td>
+                                <td className="px-4 py-2.5 text-right text-brand-red">
+                                  {Array.from({ length: 5 }).map((_, i) => (
+                                    <Star
+                                      key={i}
+                                      className={`inline w-3 h-3 ${i < hist.rating ? 'fill-brand-red text-brand-red' : 'text-zinc-200'}`}
+                                    />
+                                  ))}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  )}
+
+                  {/* Referral History */}
+                  <section className="space-y-3.5">
+                    <h5 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest border-b border-zinc-100 pb-1.5">Referral History</h5>
+                    <div className="border border-zinc-200 rounded-xl overflow-hidden divide-y divide-zinc-200">
+                      {referrals.filter(r => r.fromMemberId === selectedCaptain.id || r.toMemberId === selectedCaptain.id).length === 0 ? (
+                        <p className="p-4 text-center text-[10.5px] text-zinc-400 font-semibold bg-white">No referrals logged for this captain.</p>
+                      ) : (
+                        referrals.filter(r => r.fromMemberId === selectedCaptain.id || r.toMemberId === selectedCaptain.id).map(ref => {
+                          const isGiven = ref.fromMemberId === selectedCaptain.id;
+                          return (
+                            <div key={ref.id} className="p-3 bg-white hover:bg-zinc-50/50 transition-colors text-body-sm">
+                              <div className="flex justify-between items-start">
+                                <p className="font-black text-zinc-800 text-[11.5px]">
+                                  {isGiven ? `Given to: ${ref.toName}` : `Received from: ${ref.fromName}`}
+                                </p>
+                                <span className={`px-1.5 py-0.5 text-[8px] font-extrabold rounded border ${ref.status === 'Connected'
+                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-150'
+                                    : ref.status === 'Closed'
+                                      ? 'bg-zinc-150 text-zinc-650 border-zinc-250'
+                                      : 'bg-amber-50 text-amber-700 border-amber-150'
+                                  }`}>
+                                  {ref.status}
+                                </span>
+                              </div>
+                              <p className="text-[11px] font-semibold text-zinc-555 mt-1 italic font-medium">"{ref.description}"</p>
+                              <span className="text-[8px] text-zinc-400 font-extrabold uppercase mt-1 block">{ref.date}</span>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  </section>
+                </div>
+
+                {/* Drawer Footer Actions */}
+                <div className="p-4 border-t border-zinc-100 bg-white flex flex-col gap-2 shrink-0 shadow-lg">
+                  <button
+                    onClick={() => {
+                      setCaptains(prev => prev.map(c => c.id === selectedCaptain.id ? { ...c, status: 'Assigned', table: 'Table 08 (West Chapter)' } : c));
+                      setSelectedCaptain(prev => prev ? { ...prev, status: 'Assigned', table: 'Table 08 (West Chapter)' } : null);
+                      showToast(`Assigned ${selectedCaptain.name} to West Chapter Table 08.`, 'success');
+                    }}
+                    className="w-full py-2 bg-brand-red hover:bg-red-700 text-white rounded-lg text-button font-bold transition-smooth shadow-sm cursor-pointer"
+                  >
+                    Assign to Current Conclave
+                  </button>
+                  <button
+                    onClick={() => setSelectedCaptain(null)}
+                    className="w-full py-2 bg-white border border-zinc-100 text-zinc-650 hover:bg-zinc-50 rounded-lg text-button font-bold transition-smooth shadow-sm cursor-pointer"
+                  >
+                    Close Drawer
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </>,
+        document.body
+      )}
 
       {/* Add / Assign Captain Form Modal */}
       {isFormOpen && (

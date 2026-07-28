@@ -144,6 +144,23 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
 
+  // Lock background body scroll when any modal is open
+  useEffect(() => {
+    if (isAddModalOpen || isEditModalOpen || deleteTarget || isBulkDeleteOpen) {
+      document.body.classList.add('modal-open');
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+    };
+  }, [isAddModalOpen, isEditModalOpen, deleteTarget, isBulkDeleteOpen]);
+
+
+
   // Form states
   const [formData, setFormData] = useState({
     name: '',

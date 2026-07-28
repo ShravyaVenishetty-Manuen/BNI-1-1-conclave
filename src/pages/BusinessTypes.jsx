@@ -33,7 +33,7 @@ export default function BusinessTypes({ searchQuery, selectedConclaveId, loggedI
             if (res && Array.isArray(res.registrations)) {
               rawList = res.registrations;
             }
-          } catch {}
+          } catch { }
         } else {
           const allUsers = await api.get('/admin/users');
           if (Array.isArray(allUsers)) {
@@ -646,140 +646,140 @@ export default function BusinessTypes({ searchQuery, selectedConclaveId, loggedI
 
           <div className={`fixed right-0 top-0 bottom-0 h-screen w-full max-w-[420px] bg-white border-l border-zinc-200 shadow-2xl transform transition-transform duration-300 flex flex-col overflow-hidden z-[10000] ${selectedCategory ? 'translate-x-0 pointer-events-auto' : 'translate-x-full pointer-events-none'
             }`}>
-        {selectedCategory && (
-          <>
-            {/* Drawer Header */}
-            <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50 shrink-0">
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setSelectedCategory(null)}
-                  className="p-1.5 hover:bg-zinc-200 rounded-lg text-zinc-400 hover:text-zinc-700 transition-smooth cursor-pointer"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-                <h3 className="text-section-heading font-extrabold text-zinc-950">Category Details</h3>
-              </div>
-              <button
-                onClick={() => openEditModal(selectedCategory)}
-                className="p-1.5 hover:bg-zinc-200 rounded-lg text-brand-red hover:bg-brand-red/5 transition-smooth cursor-pointer"
-              >
-                <Edit2 className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Drawer Content */}
-            <div className="flex-1 overflow-y-auto min-h-0 p-5 space-y-6">
-              {/* Category Card Summary */}
-              <div className="flex flex-col items-center gap-3 text-center bg-zinc-50 p-4 rounded-xl border border-zinc-100">
-                <div className="w-16 h-16 rounded-full border-2 border-brand-red/20 p-1 bg-white">
-                  <div className="w-full h-full rounded-full bg-brand-red/10 text-brand-red font-bold text-lg flex items-center justify-center shadow-inner">
-                    <Layers className="w-5 h-5" />
+            {selectedCategory && (
+              <>
+                {/* Drawer Header */}
+                <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50 shrink-0">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setSelectedCategory(null)}
+                      className="p-1.5 hover:bg-zinc-200 rounded-lg text-zinc-400 hover:text-zinc-700 transition-smooth cursor-pointer"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                    <h3 className="text-section-heading font-extrabold text-zinc-950">Category Details</h3>
                   </div>
+                  <button
+                    onClick={() => openEditModal(selectedCategory)}
+                    className="p-1.5 hover:bg-zinc-200 rounded-lg text-brand-red hover:bg-brand-red/5 transition-smooth cursor-pointer"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
                 </div>
-                <div>
-                  <h4 className="text-headline-md font-bold text-zinc-950 leading-tight">{selectedCategory.name}</h4>
-                  <p className="text-[10px] font-mono text-zinc-400 font-bold mt-1">ID: {selectedCategory.id}</p>
-                  <div className="flex gap-2 mt-2 justify-center">
-                    {selectedCategory.status === 'Active' ? (
-                      <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-100 rounded-md text-[9px] font-extrabold uppercase">
-                        Active
-                      </span>
-                    ) : (
-                      <span className="px-2.5 py-0.5 bg-zinc-100 text-zinc-500 border border-zinc-200 rounded-md text-[9px] font-semibold uppercase">
-                        Inactive
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
 
-              {/* Description Details */}
-              <section className="space-y-3">
-                <h5 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest border-b border-zinc-100 pb-1.5">Description</h5>
-                <p className="text-body-sm text-zinc-500 leading-relaxed">{selectedCategory.description}</p>
-              </section>
-
-              {/* Performance metrics */}
-              <section className="space-y-3">
-                <h5 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest border-b border-zinc-100 pb-1.5">Growth Performance</h5>
-                <div className="grid grid-cols-2 gap-3.5">
-                  <div className="bg-zinc-50/50 p-4 rounded-xl border border-zinc-100">
-                    <span className="text-[10px] text-zinc-400 font-bold uppercase block">Members</span>
-                    <span className="text-headline-lg font-bold text-zinc-950 block mt-1">{selectedCategory.memberCount}</span>
-                  </div>
-                  <div className="bg-zinc-50/50 p-4 rounded-xl border border-zinc-100">
-                    <span className="text-[10px] text-zinc-400 font-bold uppercase block">Growth Rate</span>
-                    <span className="text-headline-lg font-bold text-brand-red block mt-1">{selectedCategory.growth}</span>
-                  </div>
-                </div>
-              </section>
-
-              {/* Usage analytics chart */}
-              <section className="space-y-3.5">
-                <h5 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest border-b border-zinc-100 pb-1.5">Usage Frequency (6mo)</h5>
-                <div className="w-full h-24 bg-white flex items-end px-2 gap-1.5 pb-2 border-b border-zinc-100 mt-2.5">
-                  {selectedCategory.usage.map((height, i) => (
-                    <div
-                      key={i}
-                      style={{ height: `${height}%` }}
-                      className={`flex-1 transition-smooth rounded-t-sm hover:bg-brand-red/30 cursor-pointer ${i === 5 ? 'bg-brand-red' : 'bg-zinc-100'
-                        }`}
-                    />
-                  ))}
-                </div>
-                <div className="flex justify-between px-1 text-[9px] font-bold text-zinc-350 uppercase">
-                  <span>Sep</span>
-                  <span>Oct</span>
-                  <span>Nov</span>
-                  <span>Dec</span>
-                  <span>Jan</span>
-                  <span className="text-brand-red">Feb</span>
-                </div>
-              </section>
-
-              {/* Top Chapters */}
-              {selectedCategory.chapters.length > 0 && (
-                <section className="space-y-3">
-                  <div className="flex items-center justify-between border-b border-zinc-100 pb-1.5">
-                    <h5 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Top Chapters</h5>
-                    <span className="text-[9px] font-bold text-brand-red uppercase">Region Peak</span>
-                  </div>
-                  <div className="space-y-1">
-                    {selectedCategory.chapters.map((ch, idx) => (
-                      <div key={idx} className="flex items-center justify-between py-2 px-2.5 rounded-lg hover:bg-zinc-50 transition-smooth group">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-1.5 h-1.5 rounded-full bg-zinc-200 group-hover:bg-brand-red transition-colors" />
-                          <span className="text-body-sm text-zinc-700 font-semibold">{ch.name}</span>
-                        </div>
-                        <span className="text-body-sm font-bold font-mono text-zinc-400">{ch.members}</span>
+                {/* Drawer Content */}
+                <div className="flex-1 overflow-y-auto min-h-0 p-5 space-y-6">
+                  {/* Category Card Summary */}
+                  <div className="flex flex-col items-center gap-3 text-center bg-zinc-50 p-4 rounded-xl border border-zinc-100">
+                    <div className="w-16 h-16 rounded-full border-2 border-brand-red/20 p-1 bg-white">
+                      <div className="w-full h-full rounded-full bg-brand-red/10 text-brand-red font-bold text-lg flex items-center justify-center shadow-inner">
+                        <Layers className="w-5 h-5" />
                       </div>
-                    ))}
+                    </div>
+                    <div>
+                      <h4 className="text-headline-md font-bold text-zinc-950 leading-tight">{selectedCategory.name}</h4>
+                      <p className="text-[10px] font-mono text-zinc-400 font-bold mt-1">ID: {selectedCategory.id}</p>
+                      <div className="flex gap-2 mt-2 justify-center">
+                        {selectedCategory.status === 'Active' ? (
+                          <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-100 rounded-md text-[9px] font-extrabold uppercase">
+                            Active
+                          </span>
+                        ) : (
+                          <span className="px-2.5 py-0.5 bg-zinc-100 text-zinc-500 border border-zinc-200 rounded-md text-[9px] font-semibold uppercase">
+                            Inactive
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </section>
-              )}
-            </div>
 
-            {/* Drawer Footer Actions */}
-            <div className="p-4 border-t border-zinc-100 bg-white flex flex-col gap-2 shrink-0 shadow-lg">
-              <button
-                onClick={() => showToast(`Manage Assignments for "${selectedCategory.name}" is coming soon!`, 'success')}
-                className="w-full py-2 bg-brand-red hover:bg-red-700 text-white text-button font-bold rounded-lg shadow-sm transition-smooth cursor-pointer"
-              >
-                Manage Assignments
-              </button>
-              <button
-                onClick={() => setSelectedCategory(null)}
-                className="w-full py-2 bg-white border border-zinc-100 text-zinc-650 hover:bg-zinc-50 text-button font-bold rounded-lg shadow-sm transition-smooth cursor-pointer"
-              >
-                Close Drawer
-              </button>
-            </div>
-          </>
-        )}
-      </div>
-    </>,
-    document.body
-  )}
+                  {/* Description Details */}
+                  <section className="space-y-3">
+                    <h5 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest border-b border-zinc-100 pb-1.5">Description</h5>
+                    <p className="text-body-sm text-zinc-500 leading-relaxed">{selectedCategory.description}</p>
+                  </section>
+
+                  {/* Performance metrics */}
+                  <section className="space-y-3">
+                    <h5 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest border-b border-zinc-100 pb-1.5">Growth Performance</h5>
+                    <div className="grid grid-cols-2 gap-3.5">
+                      <div className="bg-zinc-50/50 p-4 rounded-xl border border-zinc-100">
+                        <span className="text-[10px] text-zinc-400 font-bold uppercase block">Members</span>
+                        <span className="text-headline-lg font-bold text-zinc-950 block mt-1">{selectedCategory.memberCount}</span>
+                      </div>
+                      <div className="bg-zinc-50/50 p-4 rounded-xl border border-zinc-100">
+                        <span className="text-[10px] text-zinc-400 font-bold uppercase block">Growth Rate</span>
+                        <span className="text-headline-lg font-bold text-brand-red block mt-1">{selectedCategory.growth}</span>
+                      </div>
+                    </div>
+                  </section>
+
+                  {/* Usage analytics chart */}
+                  <section className="space-y-3.5">
+                    <h5 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest border-b border-zinc-100 pb-1.5">Usage Frequency (6mo)</h5>
+                    <div className="w-full h-24 bg-white flex items-end px-2 gap-1.5 pb-2 border-b border-zinc-100 mt-2.5">
+                      {selectedCategory.usage.map((height, i) => (
+                        <div
+                          key={i}
+                          style={{ height: `${height}%` }}
+                          className={`flex-1 transition-smooth rounded-t-sm hover:bg-brand-red/30 cursor-pointer ${i === 5 ? 'bg-brand-red' : 'bg-zinc-100'
+                            }`}
+                        />
+                      ))}
+                    </div>
+                    <div className="flex justify-between px-1 text-[9px] font-bold text-zinc-350 uppercase">
+                      <span>Sep</span>
+                      <span>Oct</span>
+                      <span>Nov</span>
+                      <span>Dec</span>
+                      <span>Jan</span>
+                      <span className="text-brand-red">Feb</span>
+                    </div>
+                  </section>
+
+                  {/* Top Chapters */}
+                  {selectedCategory.chapters.length > 0 && (
+                    <section className="space-y-3">
+                      <div className="flex items-center justify-between border-b border-zinc-100 pb-1.5">
+                        <h5 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Top Chapters</h5>
+                        <span className="text-[9px] font-bold text-brand-red uppercase">Region Peak</span>
+                      </div>
+                      <div className="space-y-1">
+                        {selectedCategory.chapters.map((ch, idx) => (
+                          <div key={idx} className="flex items-center justify-between py-2 px-2.5 rounded-lg hover:bg-zinc-50 transition-smooth group">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-1.5 h-1.5 rounded-full bg-zinc-200 group-hover:bg-brand-red transition-colors" />
+                              <span className="text-body-sm text-zinc-700 font-semibold">{ch.name}</span>
+                            </div>
+                            <span className="text-body-sm font-bold font-mono text-zinc-400">{ch.members}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+                  )}
+                </div>
+
+                {/* Drawer Footer Actions */}
+                <div className="p-4 border-t border-zinc-100 bg-white flex flex-col gap-2 shrink-0 shadow-lg">
+                  <button
+                    onClick={() => showToast(`Manage Assignments for "${selectedCategory.name}" is coming soon!`, 'success')}
+                    className="w-full py-2 bg-brand-red hover:bg-red-700 text-white text-button font-bold rounded-lg shadow-sm transition-smooth cursor-pointer"
+                  >
+                    Manage Assignments
+                  </button>
+                  <button
+                    onClick={() => setSelectedCategory(null)}
+                    className="w-full py-2 bg-white border border-zinc-100 text-zinc-650 hover:bg-zinc-50 text-button font-bold rounded-lg shadow-sm transition-smooth cursor-pointer"
+                  >
+                    Close Drawer
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </>,
+        document.body
+      )}
 
       {/* Add / Edit Category Modal */}
       {isFormOpen && (

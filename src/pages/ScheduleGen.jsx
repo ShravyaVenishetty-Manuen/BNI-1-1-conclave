@@ -123,6 +123,23 @@ export default function ScheduleGen({ selectedConclaveId, showGenWarning, clearG
   const [checkedQuality, setCheckedQuality] = useState(false);
   const [checkedEdits, setCheckedEdits] = useState(false);
 
+  // Lock background body scroll when modal is open
+  useEffect(() => {
+    if (isModalOpen) {
+      document.body.classList.add('modal-open');
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.classList.remove('modal-open');
+      document.body.style.overflow = '';
+    };
+  }, [isModalOpen]);
+
+
+
   const isConclaveRunningOrLocked = Boolean(
     selectedConclave && (
       ['running', 'completed', 'locked'].includes((selectedConclave.status || '').toLowerCase()) ||

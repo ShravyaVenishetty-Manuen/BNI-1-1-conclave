@@ -649,7 +649,8 @@ export default function App() {
           ) : activeTab === 'conclaves' ? (
             <Conclaves loggedInAdmin={loggedInAdmin} setActiveTab={handleTabChange} />
           ) : activeTab === 'snapshot' ? (
-            <Snapshot selectedConclaveId={selectedConclaveId} />
+            <Snapshot selectedConclaveId={selectedConclaveId} searchQuery={searchQuery} />
+
           ) : activeTab === 'schedule-gen' ? (
             <ScheduleGen selectedConclaveId={selectedConclaveId} showGenWarning={showGenWarning} clearGenWarning={clearGenWarning} />
           ) : activeTab === 'schedule-review' ? (
