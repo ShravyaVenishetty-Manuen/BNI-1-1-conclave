@@ -19,7 +19,7 @@ import SuperadminAdmins from '../pages/superadmin/Admins';
 import SuperadminConclaves from '../pages/superadmin/Conclaves';
 import SuperadminMembers from '../pages/superadmin/Members';
 import AdminProfile from '../pages/admin/Profile';
-import { getNotifications, addNotification } from '../utils/notifications';
+import { getNotifications, addNotification, saveNotifications } from '../utils/notifications';
 import { api } from '../services/api';
 
 export default function SuperadminLayout({
@@ -31,10 +31,12 @@ export default function SuperadminLayout({
   searchQuery,
   setSearchQuery
 }) {
+  const SUPERADMIN_UID = 'superadmin';
+
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const profileDropdownRef = useRef(null);
-  const [notifications, setNotifications] = useState(getNotifications);
+  const [notifications, setNotifications] = useState(() => getNotifications({ userUid: SUPERADMIN_UID, isSuperAdmin: true }));
 
   const dropdownRef = useRef(null);
 
@@ -54,14 +56,14 @@ export default function SuperadminLayout({
 
   useEffect(() => {
     const syncNotifs = () => {
-      const fresh = getNotifications();
+      const fresh = getNotifications({ userUid: SUPERADMIN_UID, isSuperAdmin: true });
       setNotifications(prev => (JSON.stringify(prev) !== JSON.stringify(fresh) ? fresh : prev));
     };
+    syncNotifs();
     window.addEventListener('storage', syncNotifs);
-    return () => {
-      window.removeEventListener('storage', syncNotifs);
-    };
+    return () => window.removeEventListener('storage', syncNotifs);
   }, []);
+
 
   // Poll conclaves to notify superadmin about coordinator actions
   useEffect(() => {
@@ -76,7 +78,8 @@ export default function SuperadminLayout({
             addNotification(
               'Conclave Scheduled',
               `Coordinator ${conclave.creator} scheduled conclave "${conclave.name}" in region "${conclave.region || 'Guntur Region'}".`,
-              'info'
+              'info',
+              { uid: SUPERADMIN_UID, isSuperAdmin: true, conclaveId: conclave.id, region: conclave.region }
             );
             notifiedList.push(conclave.id);
             updated = true;
@@ -101,19 +104,19 @@ export default function SuperadminLayout({
   const markAllAsRead = () => {
     const updated = notifications.map(n => ({ ...n, unread: false }));
     setNotifications(updated);
-    localStorage.setItem('bni_notifications', JSON.stringify(updated));
+    saveNotifications(SUPERADMIN_UID, updated);
   };
 
   const removeNotification = (id) => {
     const updated = notifications.filter(n => n.id !== id);
     setNotifications(updated);
-    localStorage.setItem('bni_notifications', JSON.stringify(updated));
+    saveNotifications(SUPERADMIN_UID, updated);
   };
 
   const toggleReadStatus = (id) => {
     const updated = notifications.map(n => n.id === id ? { ...n, unread: !n.unread } : n);
     setNotifications(updated);
-    localStorage.setItem('bni_notifications', JSON.stringify(updated));
+    saveNotifications(SUPERADMIN_UID, updated);
   };
 
   const navItems = [

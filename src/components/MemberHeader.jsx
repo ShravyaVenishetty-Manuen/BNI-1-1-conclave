@@ -1,17 +1,21 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Search, Bell, X, Check, Award, Clock, Users } from 'lucide-react';
-import { getNotifications } from '../utils/notifications';
+import { getNotifications, markAllRead } from '../utils/notifications';
 
 export default function MemberHeader({
   loggedInMember,
+  conclaveSyncData,
   activeTab,
   onTabChange,
   onLogout,
   searchQuery,
   setSearchQuery
 }) {
+  const userUid = loggedInMember?.uid || loggedInMember?.id || loggedInMember?.email;
+  const conclaveId = conclaveSyncData?.conclaveStatus?.id || conclaveSyncData?.conclaveId;
+
   const [showNotifications, setShowNotifications] = useState(false);
-  const [notifications, setNotifications] = useState(getNotifications);
+  const [notifications, setNotifications] = useState(() => getNotifications({ userUid, conclaveId }));
 
   const dropdownRef = useRef(null);
 
@@ -27,22 +31,23 @@ export default function MemberHeader({
 
   useEffect(() => {
     const syncNotifs = () => {
-      const fresh = getNotifications();
+      const fresh = getNotifications({ userUid, conclaveId });
       setNotifications(prev => (JSON.stringify(prev) !== JSON.stringify(fresh) ? fresh : prev));
     };
+    syncNotifs();
     window.addEventListener('storage', syncNotifs);
-    return () => {
-      window.removeEventListener('storage', syncNotifs);
-    };
-  }, []);
+    return () => window.removeEventListener('storage', syncNotifs);
+  }, [userUid, conclaveId]);
 
   const unreadCount = notifications.filter(n => n.unread).length;
 
   const markAllRead = () => {
-    const updated = notifications.map(n => ({ ...n, unread: false }));
-    setNotifications(updated);
-    localStorage.setItem('bni_notifications', JSON.stringify(updated));
+    markAllRead({ userUid });
+    setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
   };
+
+
+
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard' },

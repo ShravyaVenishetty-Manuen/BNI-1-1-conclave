@@ -315,16 +315,16 @@ export default function App() {
           }
         }
 
-        const myRegisteredConclave = Array.isArray(list) ? list.find(c => 
-          c.isRegistered && 
-          (c.status === 'running' || c.status === 'active' || c.status === 'scheduled' || c.status === 'upcoming') &&
-          c.status !== 'completed' && c.status !== 'ended' && c.status !== 'locked'
+        const myRegisteredConclave = Array.isArray(list) ? (
+          list.find(c => c.isRegistered && (c.status === 'running' || c.status === 'active')) ||
+          list.find(c => c.isRegistered)
         ) : null;
 
         if (myRegisteredConclave) {
           const syncResult = await api.post(`/conclaves/${myRegisteredConclave.id}/sync`, {});
           setConclaveSyncData(prev => (JSON.stringify(prev) !== JSON.stringify(syncResult) ? syncResult : prev));
-        } else {
+        }
+ else {
           setConclaveSyncData(null);
         }
       } catch (err) {
@@ -428,6 +428,7 @@ export default function App() {
       <div className="flex flex-col h-screen w-screen bg-zinc-50 overflow-hidden font-sans">
         <CaptainHeader
           loggedInCaptain={loggedInCaptain}
+          conclaveSyncData={conclaveSyncData}
           activeTab={activeTab}
           onTabChange={handleTabChange}
           onLogout={handleLogout}
@@ -498,6 +499,7 @@ export default function App() {
       <div className="flex flex-col h-screen w-screen bg-zinc-50 overflow-hidden font-sans">
         <MemberHeader
           loggedInMember={loggedInMember}
+          conclaveSyncData={conclaveSyncData}
           activeTab={activeTab}
           onTabChange={handleTabChange}
           onLogout={handleLogout}
@@ -607,8 +609,10 @@ export default function App() {
           setActiveTab={handleTabChange}
           onMenuClick={() => setIsSidebarOpen(true)}
           loggedInAdmin={loggedInAdmin}
+          selectedConclaveId={selectedConclaveId}
           onLogout={handleLogout}
         />
+
 
         {/* Generation warning banner — fixed overlay, doesn't affect layout */}
         {genWarning && activeTab === 'schedule-gen' && (

@@ -1,12 +1,22 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Search, Bell, X, Check, AlertTriangle, AlertCircle, Sparkles, Menu } from 'lucide-react';
-import { getNotifications } from '../utils/notifications';
+import { getNotifications, markAllRead } from '../utils/notifications';
 
-export default function Header({ searchQuery, setSearchQuery, activeTab, setActiveTab, onMenuClick, loggedInAdmin, onLogout }) {
+export default function Header({ searchQuery, setSearchQuery, activeTab, setActiveTab, onMenuClick, loggedInAdmin, onLogout, selectedConclaveId }) {
+
+  const adminUid = loggedInAdmin?.uid || loggedInAdmin?.id || loggedInAdmin?.email;
+  const adminRegion = loggedInAdmin?.region || 'Guntur Region';
+  const isSuperAdmin = loggedInAdmin?.role === 'superadmin' || adminRegion === 'Global';
+
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const profileDropdownRef = useRef(null);
-  const [notifications, setNotifications] = useState(getNotifications);
+  const [notifications, setNotifications] = useState(() => getNotifications({
+    userUid: adminUid,
+    conclaveId: selectedConclaveId,
+    region: adminRegion,
+    isSuperAdmin
+  }));
 
   const dropdownRef = useRef(null);
 
@@ -26,30 +36,39 @@ export default function Header({ searchQuery, setSearchQuery, activeTab, setActi
 
   useEffect(() => {
     const syncNotifs = () => {
-      const fresh = getNotifications();
+      const fresh = getNotifications({
+        userUid: adminUid,
+        conclaveId: selectedConclaveId,
+        region: adminRegion,
+        isSuperAdmin
+      });
       setNotifications(prev => (JSON.stringify(prev) !== JSON.stringify(fresh) ? fresh : prev));
     };
+    syncNotifs();
     window.addEventListener('storage', syncNotifs);
-    return () => {
-      window.removeEventListener('storage', syncNotifs);
-    };
-  }, []);
+    return () => window.removeEventListener('storage', syncNotifs);
+  }, [adminUid, selectedConclaveId, adminRegion, isSuperAdmin]);
 
   const unreadCount = notifications.filter(n => n.unread).length;
 
   const markAllAsRead = () => {
-    const updated = notifications.map(n => ({ ...n, unread: false }));
-    setNotifications(updated);
-    localStorage.setItem('bni_notifications', JSON.stringify(updated));
+    markAllRead({ userUid: adminUid });
+    setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
   };
 
+
   const removeNotification = (id) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
+    const updated = notifications.filter(n => n.id !== id);
+    setNotifications(updated);
+    saveNotifications(adminUid, updated);
   };
 
   const toggleReadStatus = (id) => {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, unread: !n.unread } : n));
+    const updated = notifications.map(n => n.id === id ? { ...n, unread: !n.unread } : n);
+    setNotifications(updated);
+    saveNotifications(adminUid, updated);
   };
+
 
   return (
     <header className="w-full sticky top-0 z-40 bg-white border-b border-red-100 flex justify-between items-center px-4 sm:px-8 h-14 shrink-0 font-sans">

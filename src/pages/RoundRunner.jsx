@@ -15,11 +15,15 @@ import {
   Pause,
   RotateCcw,
   RefreshCw,
-  Send
+  Send,
+  Bell,
+  BellOff,
+  Volume2
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { ResponsiveContainer, PieChart, Pie, BarChart, Bar, Cell, XAxis, YAxis, Tooltip } from 'recharts';
 import { api } from '../services/api';
+
 
 
 import runnerData from '../data/tables_runner.json';
@@ -182,6 +186,41 @@ export default function RoundRunner({ selectedConclaveId }) {
     setTimeout(() => setToast(null), 3000);
   };
 
+  // Audio chime state
+  const [isSoundEnabled, setIsSoundEnabled] = useState(true);
+  const lastChimeRef = useRef(null);
+
+  // Web Audio API chime synthesizer (realistic brass bell gong sound, zero MP3 dependency)
+  const playBellSound = (mode = 'chime') => {
+    if (!isSoundEnabled) return;
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const now = ctx.currentTime;
+
+      const freqs = mode === 'double' ? [523.25, 659.25, 783.99] : mode === 'single' ? [659.25] : [659.25, 987.77];
+      freqs.forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.18);
+
+        gain.gain.setValueAtTime(0.35, now + idx * 0.18);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.18 + 1.8);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(now + idx * 0.18);
+        osc.stop(now + idx * 0.18 + 2.0);
+      });
+    } catch (err) {
+      console.warn("Could not play bell sound:", err);
+    }
+  };
+
   // Timer Tick Interval
   useEffect(() => {
     let timer = null;
@@ -192,6 +231,22 @@ export default function RoundRunner({ selectedConclaveId }) {
     }
     return () => clearInterval(timer);
   }, [timerRunning, timeLeft]);
+
+  // Play bell chime every 5 minutes (300s) during running timer
+  useEffect(() => {
+    if (!timerRunning || timeLeft <= 0) return;
+
+    const fiveMinInSecs = 5 * 60; // 300 seconds
+    const elapsedSecs = ROUND_DURATION_SECS - timeLeft;
+
+    // Trigger at 5 mins, 10 mins, and round completion (15 mins)
+    if (elapsedSecs > 0 && elapsedSecs % fiveMinInSecs === 0 && lastChimeRef.current !== elapsedSecs) {
+      lastChimeRef.current = elapsedSecs;
+      playBellSound(elapsedSecs === ROUND_DURATION_SECS ? 'double' : 'chime');
+      showToast('Bell Chime', `5-Minute Round Interval (${Math.floor(elapsedSecs / 60)} mins)`);
+    }
+  }, [timeLeft, timerRunning]);
+
 
   // Top 3 referrals leaderboard
   const leaderboard = useMemo(() => {
@@ -459,9 +514,33 @@ export default function RoundRunner({ selectedConclaveId }) {
         {/* Right Column: Big Seating Timer card — same height as KPI card */}
         <div className="lg:col-span-4 flex flex-col">
           <div className="bg-white border border-zinc-200/80 rounded-xl p-5 shadow-sm flex-1 flex flex-col">
-            <h3 className="text-body-sm font-extrabold text-zinc-950 uppercase border-b border-zinc-100 pb-2.5 flex-shrink-0">
-              Round Seating Timer
-            </h3>
+            <div className="flex justify-between items-center border-b border-zinc-100 pb-2.5 flex-shrink-0">
+
+              <h3 className="text-body-sm font-extrabold text-zinc-955 uppercase">
+                Round Seating Timer
+              </h3>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => playBellSound('chime')}
+                  title="Test 5-Minute Bell Sound"
+                  className="px-2 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded text-[9.5px] font-bold flex items-center gap-1 hover:bg-amber-100 transition-smooth cursor-pointer"
+                >
+                  <Volume2 className="w-3 h-3" />
+                  Test Bell
+                </button>
+                <button
+                  onClick={() => setIsSoundEnabled(!isSoundEnabled)}
+                  title={isSoundEnabled ? "Mute Bell Sound" : "Enable Bell Sound"}
+                  className={`p-1 rounded border transition-smooth cursor-pointer ${isSoundEnabled
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    : 'bg-zinc-100 text-zinc-400 border-zinc-200'
+                    }`}
+                >
+                  {isSoundEnabled ? <Bell className="w-3.5 h-3.5" /> : <BellOff className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+            </div>
+
             <div className="flex-1 flex flex-col items-center justify-center bg-zinc-50/40 rounded-xl border border-dashed border-zinc-200 mt-4">
               <div className="text-[45px] leading-none text-brand-red font-black tracking-tighter timer-glow select-none mb-4">
                 {formatTime(timeLeft)}

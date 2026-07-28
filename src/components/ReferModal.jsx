@@ -76,9 +76,24 @@ export default function ReferModal({ recipient, loggedInUser, activeConclaveId, 
       console.warn("Backend sync failed for referral (stored locally):", err.message);
     }
 
-    // Push local notification & trigger storage event
-    addNotification('Referral Sent', `Submitted referral lead slip for ${recipient?.name || 'Recipient'}.`, 'success');
-    window.dispatchEvent(new Event('storage'));
+    // Push notification to sender's feed
+    addNotification(
+      'Referral Sent',
+      `Submitted referral lead slip for ${recipient?.name || 'Recipient'}.`,
+      'success',
+      { senderUid: fromUid, targetUid: fromUid, conclaveId: conclaveIdToUse }
+    );
+
+    // Push notification to recipient's feed
+    if (toUid && toUid !== fromUid) {
+      addNotification(
+        'New Referral Received',
+        `You received a new referral lead slip from ${loggedInUser?.name || 'a member'}.`,
+        'info',
+        { senderUid: fromUid, targetUid: toUid, conclaveId: conclaveIdToUse }
+      );
+    }
+
 
     setIsSubmitting(false);
     if (onSuccess) {

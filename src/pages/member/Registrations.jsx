@@ -208,6 +208,18 @@ export default function Registrations({ loggedInMember }) {
     showToastMessage(`Cancelled registration for ${conclaveName}.`, 'warning');
   };
 
+  // Helper to determine if current member is registered for a conclave
+  const isConclaveRegistered = (c) => {
+    const localRegs = JSON.parse(localStorage.getItem('bni_conclave_registrations') || '[]');
+    const isLocallyRegistered = localRegs.some(r => r.conclaveId === c.id);
+    return Boolean(
+      c.isRegistered ||
+      c.registered ||
+      (member?.conclaveIds || []).includes(c.id) ||
+      isLocallyRegistered
+    );
+  };
+
   // Filtered conclaves list
   const filteredConclaves = useMemo(() => {
     return conclaves.filter(c => {
@@ -218,7 +230,7 @@ export default function Registrations({ loggedInMember }) {
 
       const matchesRegion = regionFilter === 'All' || c.region === regionFilter;
       const matchesStatus = statusFilter === 'All' || c.status === statusFilter;
-      const matchesRegistered = !showRegisteredOnly || (member?.conclaveIds || []).includes(c.id);
+      const matchesRegistered = !showRegisteredOnly || isConclaveRegistered(c);
 
       const matchesMonth = monthFilter === 'All' || (() => {
         if (!c.startDate) return false;
@@ -239,12 +251,13 @@ export default function Registrations({ loggedInMember }) {
 
   // Calculations for quick stats
   const registeredCount = useMemo(() => {
-    return conclaves.filter(c => (member?.conclaveIds || []).includes(c.id)).length;
+    return conclaves.filter(c => isConclaveRegistered(c)).length;
   }, [conclaves, member]);
 
   const upcomingCount = useMemo(() => {
     return conclaves.filter(c => c.status === 'Running' || c.status === 'Upcoming').length;
   }, [conclaves]);
+
 
   return (
     <div className="space-y-6 sm:space-y-8 font-sans pb-10">
