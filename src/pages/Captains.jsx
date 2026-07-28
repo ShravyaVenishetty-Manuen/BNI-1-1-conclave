@@ -2,7 +2,6 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Search,
-  ChevronRight,
   Plus,
   X,
   Edit2,
@@ -10,18 +9,12 @@ import {
   Upload,
   FileSpreadsheet,
   MoreVertical,
-  Grid,
-  List,
   Mail,
-  AlertTriangle,
-  Info,
-  Calendar,
   Layers,
   Star
 } from 'lucide-react';
 import Pagination from '../components/Pagination';
 import SearchableDropdown from '../components/SearchableDropdown';
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 
 import { api } from '../services/api';
 
@@ -598,8 +591,8 @@ export default function Captains({ searchQuery, selectedConclaveId, loggedInAdmi
         <button
           onClick={() => setViewScope('conclave')}
           className={`px-4 py-2 text-body-sm font-black uppercase tracking-wider border-b-2 transition-smooth cursor-pointer -mb-px ${viewScope === 'conclave'
-              ? 'border-brand-red text-brand-red font-extrabold'
-              : 'border-transparent text-zinc-500 hover:text-zinc-800'
+            ? 'border-brand-red text-brand-red font-extrabold'
+            : 'border-transparent text-zinc-500 hover:text-zinc-800'
             }`}
         >
           This Conclave
@@ -607,8 +600,8 @@ export default function Captains({ searchQuery, selectedConclaveId, loggedInAdmi
         <button
           onClick={() => setViewScope('region')}
           className={`px-4 py-2 text-body-sm font-black uppercase tracking-wider border-b-2 transition-smooth cursor-pointer -mb-px ${viewScope === 'region'
-              ? 'border-brand-red text-brand-red font-extrabold'
-              : 'border-transparent text-zinc-500 hover:text-zinc-800'
+            ? 'border-brand-red text-brand-red font-extrabold'
+            : 'border-transparent text-zinc-500 hover:text-zinc-800'
             }`}
         >
           My Region
@@ -616,8 +609,8 @@ export default function Captains({ searchQuery, selectedConclaveId, loggedInAdmi
         <button
           onClick={() => setViewScope('global')}
           className={`px-4 py-2 text-body-sm font-black uppercase tracking-wider border-b-2 transition-smooth cursor-pointer -mb-px ${viewScope === 'global'
-              ? 'border-brand-red text-brand-red font-extrabold'
-              : 'border-transparent text-zinc-500 hover:text-zinc-800'
+            ? 'border-brand-red text-brand-red font-extrabold'
+            : 'border-transparent text-zinc-500 hover:text-zinc-800'
             }`}
         >
           Global Network
@@ -1052,10 +1045,10 @@ export default function Captains({ searchQuery, selectedConclaveId, loggedInAdmi
                                   {isGiven ? `Given to: ${ref.toName}` : `Received from: ${ref.fromName}`}
                                 </p>
                                 <span className={`px-1.5 py-0.5 text-[8px] font-extrabold rounded border ${ref.status === 'Connected'
-                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-150'
-                                    : ref.status === 'Closed'
-                                      ? 'bg-zinc-150 text-zinc-650 border-zinc-250'
-                                      : 'bg-amber-50 text-amber-700 border-amber-150'
+                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-150'
+                                  : ref.status === 'Closed'
+                                    ? 'bg-zinc-150 text-zinc-650 border-zinc-250'
+                                    : 'bg-amber-50 text-amber-700 border-amber-150'
                                   }`}>
                                   {ref.status}
                                 </span>
