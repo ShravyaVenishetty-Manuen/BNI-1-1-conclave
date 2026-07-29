@@ -18,14 +18,33 @@ export default function AdminProfile({ loggedInAdmin, role = 'admin', onLogout }
 
   // Local editable state for profile info
   const [isEditing, setIsEditing] = useState(false);
-  const [profileData, setProfileData] = useState({
-    name: isSuperadmin ? 'Superadmin' : (loggedInAdmin?.name || 'Administrator'),
-    email: isSuperadmin ? 'superadmin@bni.com' : (loggedInAdmin?.email || 'admin@bni.com'),
-    phone: loggedInAdmin?.phone || '+91 98888 77777',
-    designation: isSuperadmin ? 'Global Administrator' : 'Regional Administrator',
-    organization: isSuperadmin ? 'BNI Global LLC' : 'BNI India (Guntur Region)',
-    region: isSuperadmin ? 'All Regions (Global)' : (loggedInAdmin?.chapter || loggedInAdmin?.region || 'Guntur Central'),
-    joinedDate: loggedInAdmin?.createdAt ? new Date(loggedInAdmin.createdAt).toLocaleDateString([], { month: 'long', year: 'numeric' }) : 'Active Member'
+  const [profileData, setProfileData] = useState(() => {
+    if (isSuperadmin) {
+      const saved = localStorage.getItem('bni_superadmin_profile');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {}
+      }
+      return {
+        name: loggedInAdmin?.name || 'Superadmin',
+        email: loggedInAdmin?.email || 'superadmin@bni.com',
+        phone: loggedInAdmin?.phone || '+91 98888 77777',
+        designation: 'Global Administrator',
+        organization: 'BNI Global LLC',
+        region: 'All Regions (Global)',
+        joinedDate: 'Active Member'
+      };
+    }
+    return {
+      name: loggedInAdmin?.name || 'Administrator',
+      email: loggedInAdmin?.email || 'admin@bni.com',
+      phone: loggedInAdmin?.phone || '+91 98888 77777',
+      designation: 'Regional Administrator',
+      organization: 'BNI India (Guntur Region)',
+      region: loggedInAdmin?.chapter || loggedInAdmin?.region || 'Guntur Central',
+      joinedDate: loggedInAdmin?.createdAt ? new Date(loggedInAdmin.createdAt).toLocaleDateString([], { month: 'long', year: 'numeric' }) : 'Active Member'
+    };
   });
 
   const [conclavesCount, setConclavesCount] = useState(0);
@@ -119,17 +138,17 @@ export default function AdminProfile({ loggedInAdmin, role = 'admin', onLogout }
   // KPIs from real backend
   const kpis = isSuperadmin
     ? [
-        { label: "Active Regions", value: 1 },
-        { label: "Total Conclaves", value: conclavesCount },
-        { label: "Regional Admins", value: 1 },
-        { label: "System Uptime", value: "99.9%" }
-      ]
+      { label: "Active Regions", value: 1 },
+      { label: "Total Conclaves", value: conclavesCount },
+      { label: "Regional Admins", value: 1 },
+      { label: "System Uptime", value: "99.9%" }
+    ]
     : [
-        { label: "Conclaves Coordinated", value: conclavesCount },
-        { label: "Active Captains", value: captainsCount },
-        { label: "Table Assignments", value: tableSlotsCount },
-        { label: "Conflicts Resolved", value: 0 }
-      ];
+      { label: "Conclaves Coordinated", value: conclavesCount },
+      { label: "Active Captains", value: captainsCount },
+      { label: "Table Assignments", value: tableSlotsCount },
+      { label: "Conflicts Resolved", value: 0 }
+    ];
 
   // Activities list from real backend status
   const activities = useMemo(() => {
@@ -147,7 +166,7 @@ export default function AdminProfile({ loggedInAdmin, role = 'admin', onLogout }
         <div>
           <h1 className="text-2xl md:text-3xl font-black text-zinc-955 tracking-tight">System Profile &amp; Settings</h1>
           <p className="text-xs text-zinc-500 font-semibold mt-1">
-            {isSuperadmin 
+            {isSuperadmin
               ? "View global server health status, security credentials, and administration parameters."
               : "Manage your administrative details, regional preferences, and conclave coordination logs."
             }
@@ -280,10 +299,6 @@ export default function AdminProfile({ loggedInAdmin, role = 'admin', onLogout }
 
         </div>
       </div>
-
-    </div>
-  );
-}
 
     </div>
   );

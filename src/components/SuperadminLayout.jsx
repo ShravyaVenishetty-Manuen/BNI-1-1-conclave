@@ -33,6 +33,14 @@ export default function SuperadminLayout({
 }) {
   const SUPERADMIN_UID = 'superadmin';
 
+  const [superadminProfile, setSuperadminProfile] = useState(() => {
+    const saved = localStorage.getItem('bni_superadmin_profile');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return { name: 'Superadmin', email: 'superadmin@bni.com', organization: 'BNI Global LLC' };
+  });
+
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const profileDropdownRef = useRef(null);
@@ -58,6 +66,11 @@ export default function SuperadminLayout({
     const syncNotifs = () => {
       const fresh = getNotifications({ userUid: SUPERADMIN_UID, isSuperAdmin: true });
       setNotifications(prev => (JSON.stringify(prev) !== JSON.stringify(fresh) ? fresh : prev));
+
+      const savedProf = localStorage.getItem('bni_superadmin_profile');
+      if (savedProf) {
+        try { setSuperadminProfile(JSON.parse(savedProf)); } catch (e) {}
+      }
     };
     syncNotifs();
     window.addEventListener('storage', syncNotifs);
@@ -346,11 +359,11 @@ export default function SuperadminLayout({
                 className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
               >
                 <div className="w-8 h-8 rounded-full bg-zinc-900 flex items-center justify-center font-black text-[11px] text-white select-none">
-                  SA
+                  {(superadminProfile.name || 'Superadmin').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
                 </div>
                 <div className="hidden md:block text-left">
-                  <p className="text-[11.5px] font-black text-zinc-850 leading-tight">Superadmin</p>
-                  <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider mt-0.5">BNI Global</p>
+                  <p className="text-[11.5px] font-black text-zinc-850 leading-tight">{superadminProfile.name || 'Superadmin'}</p>
+                  <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider mt-0.5">{superadminProfile.organization || 'BNI Global'}</p>
                 </div>
               </button>
 
@@ -358,7 +371,7 @@ export default function SuperadminLayout({
                 <div className="absolute right-0 mt-2 w-48 bg-white border border-zinc-200 rounded-xl shadow-xl z-50 py-1 text-zinc-700 animate-fade-in font-medium">
                   <div className="px-4 py-2 border-b border-zinc-100">
                     <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">Signed in as</p>
-                    <p className="text-body-sm font-extrabold text-zinc-800 truncate mt-0.5">Superadmin</p>
+                    <p className="text-body-sm font-extrabold text-zinc-800 truncate mt-0.5">{superadminProfile.name || 'Superadmin'}</p>
                   </div>
 
                   <button
@@ -399,7 +412,7 @@ export default function SuperadminLayout({
           ) : activeTab === 'members' ? (
             <SuperadminMembers searchQuery={searchQuery} />
           ) : activeTab === 'profile' ? (
-            <AdminProfile loggedInAdmin={null} role="superadmin" onLogout={onLogout} />
+            <AdminProfile loggedInAdmin={superadminProfile} role="superadmin" onLogout={onLogout} />
           ) : (
             <div className="p-8 text-center text-zinc-400">View not found</div>
           )}
