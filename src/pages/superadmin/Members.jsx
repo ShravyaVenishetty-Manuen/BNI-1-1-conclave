@@ -9,7 +9,7 @@ import { api } from '../../services/api';
 export default function SuperadminMembers({ searchQuery }) {
   const [selectedRegion, setSelectedRegion] = useState('All');
   const [activeMember, setActiveMember] = useState(null);
-  
+
   const [referrals, setReferrals] = useState(() => {
     const stored = localStorage.getItem('bni_referrals');
     return stored ? JSON.parse(stored) : [];
@@ -368,13 +368,12 @@ export default function SuperadminMembers({ searchQuery }) {
                               <p className="font-black text-zinc-800">
                                 {isGiven ? `Given to: ${ref.toName}` : `Received from: ${ref.fromName}`}
                               </p>
-                              <span className={`px-1.5 py-0.5 text-[8px] font-extrabold rounded border ${
-                                ref.status === 'Connected'
+                              <span className={`px-1.5 py-0.5 text-[8px] font-extrabold rounded border ${ref.status === 'Connected'
                                   ? 'bg-emerald-50 text-emerald-700 border-emerald-150'
                                   : ref.status === 'Closed'
-                                  ? 'bg-zinc-150 text-zinc-650 border-zinc-250'
-                                  : 'bg-amber-50 text-amber-700 border-amber-150'
-                              }`}>
+                                    ? 'bg-zinc-150 text-zinc-650 border-zinc-250'
+                                    : 'bg-amber-50 text-amber-700 border-amber-150'
+                                }`}>
                                 {ref.status}
                               </span>
                             </div>

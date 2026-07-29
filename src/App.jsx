@@ -635,7 +635,8 @@ export default function App() {
         )}
 
         {/* Workspace views router */}
-        <main ref={mainRef} className="flex-1 overflow-y-auto bg-zinc-50">
+        <main ref={mainRef} className="flex-1 overflow-y-auto bg-zinc-50 relative min-h-full">
+
           {activeTab === 'dashboard' ? (
             <Dashboard setActiveTab={handleTabChange} selectedConclaveId={selectedConclaveId} setSelectedConclaveId={setSelectedConclaveId} loggedInAdmin={loggedInAdmin} />
           ) : activeTab === 'members' ? (

@@ -1012,8 +1012,8 @@ const safeRenderString = (val, fallback = '') => {
   )}
 
       {/* CREATE MODAL */}
-      {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
+      {isAddModalOpen && createPortal(
+        <div className="fixed top-14 left-0 lg:left-[220px] right-0 bottom-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
           <form onSubmit={handleAddSubmit} className="w-full max-w-lg bg-white rounded-xl border border-zinc-100 shadow-2xl overflow-hidden animate-scale-up">
             <div className="p-5 border-b border-zinc-100 bg-zinc-50 flex justify-between items-center">
               <h3 className="font-extrabold text-zinc-950 text-body-sm">Create New Conclave</h3>
@@ -1021,6 +1021,7 @@ const safeRenderString = (val, fallback = '') => {
                 <X className="w-4 h-4" />
               </button>
             </div>
+
 
             <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
               <div className="grid grid-cols-2 gap-4">
@@ -1185,12 +1186,13 @@ const safeRenderString = (val, fallback = '') => {
               </button>
             </div>
           </form>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* EDIT MODAL */}
-      {isEditModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
+      {isEditModalOpen && createPortal(
+        <div className="fixed top-14 left-0 lg:left-[220px] right-0 bottom-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
           <form onSubmit={handleEditSubmit} className="w-full max-w-lg bg-white rounded-xl border border-zinc-100 shadow-2xl overflow-hidden animate-scale-up">
             <div className="p-5 border-b border-zinc-100 bg-zinc-50 flex justify-between items-center">
               <h3 className="font-extrabold text-zinc-950 text-body-sm">Edit Conclave Profile</h3>
@@ -1356,12 +1358,13 @@ const safeRenderString = (val, fallback = '') => {
               </button>
             </div>
           </form>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* REMOVE SINGLE CONCLAVE CONFIRMATION */}
-      {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
+      {deleteTarget && createPortal(
+        <div className="fixed top-14 left-0 lg:left-[220px] right-0 bottom-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
           <div className="w-full max-w-sm bg-white rounded-xl border border-zinc-100 shadow-2xl p-5 space-y-4 animate-scale-up">
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 rounded-full bg-brand-red/10 text-brand-red flex items-center justify-center shrink-0 mt-0.5">
@@ -1415,12 +1418,13 @@ const safeRenderString = (val, fallback = '') => {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* BULK REMOVE CONFIRMATION */}
-      {isBulkDeleteOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
+      {isBulkDeleteOpen && createPortal(
+        <div className="fixed top-14 left-0 lg:left-[220px] right-0 bottom-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
           <div className="w-full max-w-sm bg-white rounded-xl border border-zinc-100 shadow-2xl p-5 space-y-4 animate-scale-up">
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 rounded-full bg-brand-red/10 text-brand-red flex items-center justify-center shrink-0 mt-0.5">
@@ -1455,7 +1459,8 @@ const safeRenderString = (val, fallback = '') => {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Floating Bulk Actions Footer */}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Plus,
   Edit,
@@ -502,13 +503,13 @@ export default function SuperadminAdmins({ searchQuery }) {
       )}
 
       {/* Admin detail drawer */}
-      {activeAdmin && (
+      {activeAdmin && createPortal(
         <>
           <div
             onClick={() => setActiveAdmin(null)}
-            className="fixed inset-0 bg-black/50 z-[55] transition-opacity duration-300"
+            className="fixed top-14 left-0 lg:left-[220px] right-0 bottom-0 bg-black/40 backdrop-blur-xs z-[55] transition-opacity duration-300"
           />
-          <div className="fixed inset-y-0 right-0 w-full max-w-lg bg-white shadow-xl z-[60] p-6 overflow-y-auto border-l border-zinc-200 animate-slide-in flex flex-col justify-between">
+          <div className="fixed top-14 right-0 bottom-0 w-full max-w-lg bg-white shadow-xl z-[60] p-6 overflow-y-auto border-l border-zinc-200 animate-slide-in flex flex-col justify-between">
             {(() => {
               const adminName = activeAdmin.name || activeAdmin.email?.split('@')[0] || 'Unnamed Admin';
               const adminRegion = activeAdmin.region || (activeAdmin.email?.includes('admin') || activeAdmin.email?.includes('super') ? 'Global (Superadmin)' : 'Guntur Region');
@@ -624,17 +625,18 @@ export default function SuperadminAdmins({ searchQuery }) {
               );
             })()}
           </div>
-        </>
+        </>,
+        document.body
       )}
 
       {/* Region detail drawer */}
-      {activeRegion && (
+      {activeRegion && createPortal(
         <>
           <div
             onClick={() => setActiveRegion(null)}
-            className="fixed inset-0 bg-black/50 z-[55] transition-opacity duration-300"
+            className="fixed top-14 left-0 lg:left-[220px] right-0 bottom-0 bg-black/40 backdrop-blur-xs z-[55] transition-opacity duration-300"
           />
-          <div className="fixed inset-y-0 right-0 w-full max-w-lg bg-white shadow-xl z-[60] p-6 overflow-y-auto border-l border-zinc-200 animate-slide-in flex flex-col justify-between">
+          <div className="fixed top-14 right-0 bottom-0 w-full max-w-lg bg-white shadow-xl z-[60] p-6 overflow-y-auto border-l border-zinc-200 animate-slide-in flex flex-col justify-between">
             <div className="space-y-6">
               <div className="flex justify-between items-center pb-4 border-b border-zinc-200">
                 <div>
@@ -708,17 +710,14 @@ export default function SuperadminAdmins({ searchQuery }) {
               </button>
             </div>
           </div>
-        </>
+        </>,
+        document.body
       )}
 
       {/* Admin Form Modal */}
-      {showAdminModal && (
-        <div className="fixed inset-0 z-55 flex items-center justify-center p-4">
-          <div
-            onClick={() => setShowAdminModal(false)}
-            className="fixed inset-0 bg-black/50 transition-opacity duration-300"
-          />
-          <div className="bg-white border border-zinc-250 rounded-xl shadow-xl w-full max-w-md relative z-10 overflow-hidden animate-fade-in">
+      {showAdminModal && createPortal(
+        <div className="fixed top-14 left-0 lg:left-[220px] right-0 bottom-0 z-55 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white border border-zinc-250 rounded-xl shadow-xl w-full max-w-md relative z-10 overflow-hidden animate-scale-up">
             <div className="p-4 border-b border-zinc-200 flex justify-between items-center bg-zinc-50">
               <h3 className="text-body-md font-black text-zinc-900 leading-tight">
                 {editingAdmin ? 'Edit Regional Admin' : 'Add Regional Admin'}
@@ -811,17 +810,14 @@ export default function SuperadminAdmins({ searchQuery }) {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Region Form Modal */}
-      {showRegionModal && (
-        <div className="fixed inset-0 z-55 flex items-center justify-center p-4">
-          <div
-            onClick={() => setShowRegionModal(false)}
-            className="fixed inset-0 bg-black/50 transition-opacity duration-300"
-          />
-          <div className="bg-white border border-zinc-250 rounded-xl shadow-xl w-full max-w-md relative z-10 overflow-hidden animate-fade-in">
+      {showRegionModal && createPortal(
+        <div className="fixed top-14 left-0 lg:left-[220px] right-0 bottom-0 z-55 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white border border-zinc-250 rounded-xl shadow-xl w-full max-w-md relative z-10 overflow-hidden animate-scale-up">
             <div className="p-4 border-b border-zinc-200 flex justify-between items-center bg-zinc-50">
               <h3 className="text-body-md font-black text-zinc-900 leading-tight">
                 {editingRegion ? 'Edit BNI Region' : 'Add BNI Region'}
@@ -899,17 +895,14 @@ export default function SuperadminAdmins({ searchQuery }) {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Reset Password Modal */}
-      {resetPasswordTarget && (
-        <div className="fixed inset-0 z-55 flex items-center justify-center p-4">
-          <div
-            onClick={() => setResetPasswordTarget(null)}
-            className="fixed inset-0 bg-black/50 transition-opacity duration-300"
-          />
-          <div className="bg-white border border-zinc-250 rounded-xl shadow-xl w-full max-w-md relative z-10 overflow-hidden animate-fade-in">
+      {resetPasswordTarget && createPortal(
+        <div className="fixed top-14 left-0 lg:left-[220px] right-0 bottom-0 z-55 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white border border-zinc-250 rounded-xl shadow-xl w-full max-w-md relative z-10 overflow-hidden animate-scale-up">
             <div className="p-4 border-b border-zinc-200 flex justify-between items-center bg-zinc-50">
               <h3 className="text-body-md font-black text-zinc-900 leading-tight">
                 {isPasswordResetDone ? (isNewAdminCreation ? 'Coordinator Created Successfully' : 'Password Reset Successful') : 'Reset Administrator Password'}
@@ -1009,7 +1002,8 @@ export default function SuperadminAdmins({ searchQuery }) {
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Live Toast Notifications */}
@@ -1030,8 +1024,8 @@ export default function SuperadminAdmins({ searchQuery }) {
       )}
 
       {/* Confirmation Modal */}
-      {confirmModal && (
-        <div className="fixed inset-0 bg-black/45 backdrop-blur-xs flex items-center justify-center z-[100] animate-fade-in">
+      {confirmModal && createPortal(
+        <div className="fixed top-14 left-0 lg:left-[220px] right-0 bottom-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-[100] animate-fade-in">
           <div className="bg-white rounded-xl border border-zinc-200 shadow-xl max-w-sm w-full p-5 space-y-4 animate-scale-up">
             <div className="flex gap-3 items-start">
               <div className="p-2 bg-red-50 text-brand-red rounded-lg">
@@ -1060,7 +1054,8 @@ export default function SuperadminAdmins({ searchQuery }) {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>

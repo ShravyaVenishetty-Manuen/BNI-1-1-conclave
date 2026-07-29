@@ -1144,11 +1144,11 @@ export default function Members({ searchQuery, selectedConclaveId, loggedInAdmin
       )}
 
       {/* Add / Edit Member Modal */}
-      {isFormOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
+      {isFormOpen && createPortal(
+        <div className="fixed top-14 left-0 lg:left-[220px] right-0 bottom-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
           <div className="w-full max-w-lg bg-white rounded-xl border border-zinc-100 shadow-2xl overflow-hidden animate-scale-up">
             {/* Modal Header */}
-            <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-white">
+            <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50">
               <h3 className="text-section-heading font-extrabold text-zinc-950">
                 {editingMember ? 'Edit Member Profile' : 'Add New Member'}
               </h3>
@@ -1308,12 +1308,13 @@ export default function Members({ searchQuery, selectedConclaveId, loggedInAdmin
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Delete Confirmation Modal */}
-      {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
+      {deleteTarget && createPortal(
+        <div className="fixed top-14 left-0 lg:left-[220px] right-0 bottom-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
           <div className="w-full max-w-sm bg-white rounded-xl border border-zinc-100 shadow-2xl p-5 space-y-4 animate-scale-up">
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 rounded-full bg-brand-red/10 text-brand-red flex items-center justify-center shrink-0 mt-0.5">
@@ -1351,12 +1352,13 @@ export default function Members({ searchQuery, selectedConclaveId, loggedInAdmin
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Bulk Delete Confirmation Modal */}
-      {isBulkDeleteConfirmOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
+      {isBulkDeleteConfirmOpen && createPortal(
+        <div className="fixed top-14 left-0 lg:left-[220px] right-0 bottom-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
           <div className="w-full max-w-sm bg-white rounded-xl border border-zinc-100 shadow-2xl p-5 space-y-4 animate-scale-up">
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 rounded-full bg-brand-red/10 text-brand-red flex items-center justify-center shrink-0 mt-0.5">
@@ -1381,7 +1383,7 @@ export default function Members({ searchQuery, selectedConclaveId, loggedInAdmin
                 type="button"
                 onClick={() => {
                   setMembers(prev => prev.filter(m => !selectedRows.has(m.id)));
-                  showToast(`Successfully deleted ${selectedRows.size} selected members.`, 'success');
+                  showToast(`Successfully deleted ${selectedRows.size} members.`, 'success');
                   setSelectedRows(new Set());
                   setIsBulkDeleteConfirmOpen(false);
                 }}
@@ -1391,8 +1393,10 @@ export default function Members({ searchQuery, selectedConclaveId, loggedInAdmin
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
+
 
 
 
