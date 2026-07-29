@@ -5,6 +5,18 @@
 
 @theme {
   --color-brand-red: #cf2e2e;
+  --color-zinc-55: #f7f7f8;
+  --color-zinc-150: #ececec;
+  --color-zinc-250: #e2e2e5;
+  --color-zinc-450: #71717a;
+  --color-zinc-455: #52525b;
+  --color-zinc-505: #52525b;
+  --color-zinc-550: #3f3f46;
+  --color-zinc-650: #3f3f46;
+  --color-zinc-750: #27272a;
+  --color-zinc-755: #27272a;
+  --color-zinc-850: #18181b;
+  --color-zinc-955: #09090b;
   --font-display: "Hanken Grotesk", sans-serif;
   --font-sans: "Plus Jakarta Sans", sans-serif;
 }
