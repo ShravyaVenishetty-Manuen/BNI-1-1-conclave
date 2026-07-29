@@ -36,6 +36,21 @@ export default function AdminProfile({ loggedInAdmin, role = 'admin', onLogout }
         joinedDate: 'Active Member'
       };
     }
+    const saved = localStorage.getItem('bni_logged_admin');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return {
+          name: parsed.name || loggedInAdmin?.name || 'Administrator',
+          email: parsed.email || loggedInAdmin?.email || 'admin@bni.com',
+          phone: parsed.phone || parsed.mobile || loggedInAdmin?.phone || '+91 98888 77777',
+          designation: parsed.designation || 'Regional Administrator',
+          organization: parsed.organization || 'BNI India (Guntur Region)',
+          region: parsed.region || loggedInAdmin?.chapter || loggedInAdmin?.region || 'Guntur Central',
+          joinedDate: parsed.joinedDate || (loggedInAdmin?.createdAt ? new Date(loggedInAdmin.createdAt).toLocaleDateString([], { month: 'long', year: 'numeric' }) : 'Active Member')
+        };
+      } catch (e) {}
+    }
     return {
       name: loggedInAdmin?.name || 'Administrator',
       email: loggedInAdmin?.email || 'admin@bni.com',
@@ -79,24 +94,23 @@ export default function AdminProfile({ loggedInAdmin, role = 'admin', onLogout }
       try {
         const fresh = await api.get('/me');
         if (fresh) {
-          setProfileData({
-            name: fresh.name || loggedInAdmin?.name || 'Administrator',
-            email: fresh.email || loggedInAdmin?.email || 'admin@bni.com',
-            phone: fresh.phone || fresh.mobile || loggedInAdmin?.phone || loggedInAdmin?.mobile || 'Not set',
-            designation: isSuperadmin ? 'Global Administrator' : (fresh.designation || 'Regional Administrator'),
-            organization: isSuperadmin ? 'BNI Global LLC' : (fresh.organizationNode || `BNI India (${fresh.region || 'Guntur Region'})`),
-            region: isSuperadmin ? 'All Regions (Global)' : (fresh.region || fresh.scope || 'Guntur Region'),
-            joinedDate: fresh.createdAt ? new Date(fresh.createdAt).toLocaleDateString([], { month: 'long', year: 'numeric' }) : 'Active Member'
-          });
+          setProfileData(prev => ({
+            ...prev,
+            name: fresh.name || prev.name,
+            email: fresh.email || prev.email,
+            phone: fresh.phone || fresh.mobile || prev.phone,
+            designation: isSuperadmin ? 'Global Administrator' : (fresh.designation || prev.designation),
+            organization: isSuperadmin ? 'BNI Global LLC' : (fresh.organizationNode || fresh.organization || prev.organization),
+            region: isSuperadmin ? 'All Regions (Global)' : (fresh.region || fresh.scope || prev.region),
+            joinedDate: fresh.createdAt ? new Date(fresh.createdAt).toLocaleDateString([], { month: 'long', year: 'numeric' }) : prev.joinedDate
+          }));
         }
       } catch (err) {
         console.warn("Failed to fetch fresh admin profile:", err.message);
       }
     }
-    if (!isSuperadmin) {
-      loadFreshAdminProfile();
-    }
-  }, [isSuperadmin, loggedInAdmin]);
+    loadFreshAdminProfile();
+  }, [isSuperadmin]);
 
   const handleInputChange = (field, value) => {
     setProfileData(prev => ({
@@ -107,19 +121,17 @@ export default function AdminProfile({ loggedInAdmin, role = 'admin', onLogout }
 
   const handleSave = async () => {
     setIsEditing(false);
+    try {
+      await api.put('/me', profileData);
+    } catch (e) {
+      console.warn("Backend profile save notice:", e.message);
+    }
+
     if (isSuperadmin) {
       localStorage.setItem('bni_superadmin_profile', JSON.stringify(profileData));
-    } else if (loggedInAdmin) {
-      const updatedAdmin = { ...loggedInAdmin, ...profileData };
+    } else {
+      const updatedAdmin = { ...(loggedInAdmin || {}), ...profileData };
       localStorage.setItem('bni_logged_admin', JSON.stringify(updatedAdmin));
-      const adminId = loggedInAdmin.id || loggedInAdmin.uid;
-      if (adminId) {
-        try {
-          await api.patch(`/admin/users/${adminId}`, profileData);
-        } catch (e) {
-          console.warn("Backend admin profile update notice:", e.message);
-        }
-      }
     }
     window.dispatchEvent(new Event('storage'));
   };

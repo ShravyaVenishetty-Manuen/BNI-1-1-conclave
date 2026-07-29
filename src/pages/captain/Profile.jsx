@@ -25,19 +25,25 @@ export default function CaptainProfile({ loggedInCaptain, onTabChange, onLogout 
   }));
 
   useEffect(() => {
-    if (loggedInCaptain) {
-      setProfileData(prev => ({
-        ...prev,
-        name: loggedInCaptain.name || prev.name,
-        email: loggedInCaptain.email || prev.email,
-        phone: loggedInCaptain.phone || loggedInCaptain.mobile || prev.phone,
-        designation: loggedInCaptain.designation || prev.designation,
-        company: loggedInCaptain.company || loggedInCaptain.businessName || prev.company,
-        category: loggedInCaptain.category || loggedInCaptain.businessCategory || prev.category,
-        chapter: loggedInCaptain.chapter || prev.chapter,
-      }));
+    async function loadFreshProfile() {
+      try {
+        const fresh = await api.get('/me');
+        if (fresh) {
+          setProfileData(prev => ({
+            ...prev,
+            name: fresh.name || prev.name,
+            email: fresh.email || prev.email,
+            phone: fresh.phone || fresh.mobile || prev.phone,
+            designation: fresh.designation || prev.designation,
+            company: fresh.company || fresh.businessName || prev.company,
+            category: fresh.category || fresh.businessCategory || prev.category,
+            chapter: fresh.chapter || prev.chapter
+          }));
+        }
+      } catch (e) {}
     }
-  }, [loggedInCaptain]);
+    loadFreshProfile();
+  }, []);
 
   const handleInputChange = (field, value) => {
     setProfileData(prev => ({
@@ -48,29 +54,14 @@ export default function CaptainProfile({ loggedInCaptain, onTabChange, onLogout 
 
   const handleSave = async () => {
     setIsEditing(false);
+    try {
+      await api.put('/me', profileData);
+    } catch (e) {
+      console.warn("Backend profile sync notice:", e.message);
+    }
+
     const updatedCaptain = { ...(loggedInCaptain || {}), ...profileData };
     localStorage.setItem('bni_logged_captain', JSON.stringify(updatedCaptain));
-
-    try {
-      const membersRaw = localStorage.getItem('bni_members');
-      if (membersRaw) {
-        const membersList = JSON.parse(membersRaw);
-        const captainId = loggedInCaptain?.id || loggedInCaptain?.uid;
-        if (Array.isArray(membersList) && captainId) {
-          const updatedList = membersList.map(m => (m.id === captainId || m.uid === captainId) ? { ...m, ...profileData } : m);
-          localStorage.setItem('bni_members', JSON.stringify(updatedList));
-        }
-      }
-    } catch (e) {}
-
-    const userId = loggedInCaptain?.id || loggedInCaptain?.uid;
-    if (userId) {
-      try {
-        await api.patch(`/admin/users/${userId}`, profileData);
-      } catch (e) {
-        console.warn("Backend captain profile sync notice:", e.message);
-      }
-    }
     window.dispatchEvent(new Event('storage'));
   };
 

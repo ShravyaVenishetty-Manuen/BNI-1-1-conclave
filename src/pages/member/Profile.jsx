@@ -26,20 +26,26 @@ export default function MemberProfile({ loggedInMember, onTabChange, onLogout })
   }));
 
   useEffect(() => {
-    if (loggedInMember) {
-      setProfileData(prev => ({
-        ...prev,
-        name: loggedInMember.name || prev.name || 'Vijay Kulkarni',
-        email: loggedInMember.email || prev.email || 'vijay.kulkarni20@bni.com',
-        phone: loggedInMember.phone || loggedInMember.mobile || prev.phone || '9861020209',
-        designation: loggedInMember.designation || prev.designation || 'BNI Member',
-        company: loggedInMember.company || loggedInMember.businessName || prev.company || 'Zenith Systems 20',
-        category: loggedInMember.category || loggedInMember.businessCategory || prev.category || 'IT Infrastructure',
-        chapter: loggedInMember.chapter || prev.chapter || 'Vijayawada Central',
-        registrationDate: loggedInMember.registrationDate || loggedInMember.joinedDate || prev.registrationDate || '2026'
-      }));
+    async function loadFreshProfile() {
+      try {
+        const fresh = await api.get('/me');
+        if (fresh) {
+          setProfileData(prev => ({
+            ...prev,
+            name: fresh.name || prev.name,
+            email: fresh.email || prev.email,
+            phone: fresh.phone || fresh.mobile || prev.phone,
+            designation: fresh.designation || prev.designation,
+            company: fresh.company || fresh.businessName || prev.company,
+            category: fresh.category || fresh.businessCategory || prev.category,
+            chapter: fresh.chapter || prev.chapter,
+            registrationDate: fresh.createdAt ? new Date(fresh.createdAt).toLocaleDateString([], { month: 'long', year: 'numeric' }) : prev.registrationDate
+          }));
+        }
+      } catch (e) {}
     }
-  }, [loggedInMember]);
+    loadFreshProfile();
+  }, []);
 
   const handleInputChange = (field, value) => {
     setProfileData(prev => ({
@@ -50,29 +56,14 @@ export default function MemberProfile({ loggedInMember, onTabChange, onLogout })
 
   const handleSave = async () => {
     setIsEditing(false);
+    try {
+      await api.put('/me', profileData);
+    } catch (e) {
+      console.warn("Backend profile sync notice:", e.message);
+    }
+
     const updatedMember = { ...(loggedInMember || {}), ...profileData };
     localStorage.setItem('bni_logged_member', JSON.stringify(updatedMember));
-
-    try {
-      const membersRaw = localStorage.getItem('bni_members');
-      if (membersRaw) {
-        const membersList = JSON.parse(membersRaw);
-        const memberId = loggedInMember?.id || loggedInMember?.uid;
-        if (Array.isArray(membersList) && memberId) {
-          const updatedList = membersList.map(m => (m.id === memberId || m.uid === memberId) ? { ...m, ...profileData } : m);
-          localStorage.setItem('bni_members', JSON.stringify(updatedList));
-        }
-      }
-    } catch (e) {}
-
-    const userId = loggedInMember?.id || loggedInMember?.uid;
-    if (userId) {
-      try {
-        await api.patch(`/admin/users/${userId}`, profileData);
-      } catch (e) {
-        console.warn("Backend profile sync notice:", e.message);
-      }
-    }
     window.dispatchEvent(new Event('storage'));
   };
 
