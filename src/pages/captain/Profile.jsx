@@ -46,13 +46,32 @@ export default function CaptainProfile({ loggedInCaptain, onTabChange, onLogout 
     }));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setIsEditing(false);
-    // Save to localStorage under bni_logged_captain
-    if (loggedInCaptain) {
-      const updatedCaptain = { ...loggedInCaptain, ...profileData };
-      localStorage.setItem('bni_logged_captain', JSON.stringify(updatedCaptain));
+    const updatedCaptain = { ...(loggedInCaptain || {}), ...profileData };
+    localStorage.setItem('bni_logged_captain', JSON.stringify(updatedCaptain));
+
+    try {
+      const membersRaw = localStorage.getItem('bni_members');
+      if (membersRaw) {
+        const membersList = JSON.parse(membersRaw);
+        const captainId = loggedInCaptain?.id || loggedInCaptain?.uid;
+        if (Array.isArray(membersList) && captainId) {
+          const updatedList = membersList.map(m => (m.id === captainId || m.uid === captainId) ? { ...m, ...profileData } : m);
+          localStorage.setItem('bni_members', JSON.stringify(updatedList));
+        }
+      }
+    } catch (e) {}
+
+    const userId = loggedInCaptain?.id || loggedInCaptain?.uid;
+    if (userId) {
+      try {
+        await api.patch(`/admin/users/${userId}`, profileData);
+      } catch (e) {
+        console.warn("Backend captain profile sync notice:", e.message);
+      }
     }
+    window.dispatchEvent(new Event('storage'));
   };
 
   const displayInitials = (profileData.name || 'Captain')

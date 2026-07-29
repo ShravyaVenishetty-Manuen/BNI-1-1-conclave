@@ -50,18 +50,30 @@ export default function MemberProfile({ loggedInMember, onTabChange, onLogout })
 
   const handleSave = async () => {
     setIsEditing(false);
-    if (loggedInMember) {
-      const updatedMember = { ...loggedInMember, ...profileData };
-      const userId = loggedInMember.id || loggedInMember.uid;
-      if (userId) {
-        try {
-          await api.patch(`/admin/users/${userId}`, profileData);
-        } catch (e) {
-          console.warn("Backend profile sync notice:", e.message);
+    const updatedMember = { ...(loggedInMember || {}), ...profileData };
+    localStorage.setItem('bni_logged_member', JSON.stringify(updatedMember));
+
+    try {
+      const membersRaw = localStorage.getItem('bni_members');
+      if (membersRaw) {
+        const membersList = JSON.parse(membersRaw);
+        const memberId = loggedInMember?.id || loggedInMember?.uid;
+        if (Array.isArray(membersList) && memberId) {
+          const updatedList = membersList.map(m => (m.id === memberId || m.uid === memberId) ? { ...m, ...profileData } : m);
+          localStorage.setItem('bni_members', JSON.stringify(updatedList));
         }
       }
-      localStorage.setItem('bni_logged_member', JSON.stringify(updatedMember));
+    } catch (e) {}
+
+    const userId = loggedInMember?.id || loggedInMember?.uid;
+    if (userId) {
+      try {
+        await api.patch(`/admin/users/${userId}`, profileData);
+      } catch (e) {
+        console.warn("Backend profile sync notice:", e.message);
+      }
     }
+    window.dispatchEvent(new Event('storage'));
   };
 
   const displayInitials = profileData.name

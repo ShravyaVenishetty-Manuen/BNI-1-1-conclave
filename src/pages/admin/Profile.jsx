@@ -79,11 +79,6 @@ export default function AdminProfile({ loggedInAdmin, role = 'admin', onLogout }
     }
   }, [isSuperadmin, loggedInAdmin]);
 
-  const [emailNotifications, setEmailNotifications] = useState(true);
-  const [pushNotifications, setPushNotifications] = useState(true);
-  const [language, setLanguage] = useState('English (US)');
-  const [timeFormat, setTimeFormat] = useState('12-Hour (AM/PM)');
-
   const handleInputChange = (field, value) => {
     setProfileData(prev => ({
       ...prev,
@@ -93,15 +88,21 @@ export default function AdminProfile({ loggedInAdmin, role = 'admin', onLogout }
 
   const handleSave = async () => {
     setIsEditing(false);
-    try {
-      await api.put('/me', profileData).catch(() => null);
-    } catch (e) {}
     if (isSuperadmin) {
       localStorage.setItem('bni_superadmin_profile', JSON.stringify(profileData));
     } else if (loggedInAdmin) {
       const updatedAdmin = { ...loggedInAdmin, ...profileData };
       localStorage.setItem('bni_logged_admin', JSON.stringify(updatedAdmin));
+      const adminId = loggedInAdmin.id || loggedInAdmin.uid;
+      if (adminId) {
+        try {
+          await api.patch(`/admin/users/${adminId}`, profileData);
+        } catch (e) {
+          console.warn("Backend admin profile update notice:", e.message);
+        }
+      }
     }
+    window.dispatchEvent(new Event('storage'));
   };
 
   const displayInitials = (profileData.name || 'Admin')
@@ -277,136 +278,12 @@ export default function AdminProfile({ loggedInAdmin, role = 'admin', onLogout }
             </div>
           </section>
 
-          {/* Preferences & Activity Logs */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-            {/* Admin Preferences */}
-            <section className="bg-white border border-zinc-200 rounded-xl shadow-2xs flex flex-col justify-between">
-              <div>
-                <div className="p-4 bg-zinc-50 rounded-t-xl">
-                  <h2 className="text-body-sm font-black text-zinc-900 leading-tight">System Preferences</h2>
-                </div>
-
-                <div className="p-5 space-y-4.5">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-[12px] font-black text-zinc-800 leading-none">Email Notifications</p>
-                      <p className="text-[10px] text-zinc-450 font-semibold mt-1">Audit log summaries</p>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer select-none">
-                      <input
-                        type="checkbox"
-                        checked={emailNotifications}
-                        onChange={(e) => setEmailNotifications(e.target.checked)}
-                        className="sr-only peer"
-                      />
-                      <div className="w-9 h-5 bg-zinc-200 rounded-full peer peer-focus:ring-0 dark:bg-zinc-200 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-red"></div>
-                    </label>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-[12px] font-black text-zinc-800 leading-none">Push Notifications</p>
-                      <p className="text-[10px] text-zinc-450 font-semibold mt-1">Conflict alerts &amp; logins</p>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer select-none">
-                      <input
-                        type="checkbox"
-                        checked={pushNotifications}
-                        onChange={(e) => setPushNotifications(e.target.checked)}
-                        className="sr-only peer"
-                      />
-                      <div className="w-9 h-5 bg-zinc-200 rounded-full peer peer-focus:ring-0 dark:bg-zinc-200 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-red"></div>
-                    </label>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3 pt-2">
-                    <div>
-                      <label className="block text-[9.5px] font-black text-zinc-400 uppercase tracking-wider mb-1">Language</label>
-                      <select
-                        value={language}
-                        onChange={(e) => setLanguage(e.target.value)}
-                        className="w-full h-9 bg-zinc-50 border border-zinc-200 rounded px-2 text-[11px] font-semibold text-zinc-750 focus:ring-1 focus:ring-brand-red focus:border-brand-red outline-hidden"
-                      >
-                        <option>English (US)</option>
-                        <option>Hindi</option>
-                        <option>Telugu</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-[9.5px] font-black text-zinc-400 uppercase tracking-wider mb-1">Time Format</label>
-                      <select
-                        value={timeFormat}
-                        onChange={(e) => setTimeFormat(e.target.value)}
-                        className="w-full h-9 bg-zinc-50 border border-zinc-200 rounded px-2 text-[11px] font-semibold text-zinc-755 focus:ring-1 focus:ring-brand-red focus:border-brand-red outline-hidden"
-                      >
-                        <option>12-Hour (AM/PM)</option>
-                        <option>24-Hour</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Security Display */}
-              <div className="p-4 bg-zinc-50 rounded-b-xl space-y-2">
-                <div className="flex items-center gap-1.5 text-zinc-450">
-                  <Shield className="w-3.5 h-3.5" />
-                  <span className="text-[8.5px] font-black uppercase tracking-wider">Audit Security Log</span>
-                </div>
-                <div className="flex justify-between items-center text-[11px] font-semibold text-zinc-500">
-                  <span>Last Login IP</span>
-                  <span className="text-zinc-700 font-bold">122.180.XX.XX</span>
-                </div>
-                <div className="flex justify-between items-center text-[11px] font-semibold text-zinc-500">
-                  <span>SSL Cipher Status</span>
-                  <span className="text-emerald-600 font-bold flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                    AES-256 Active
-                  </span>
-                </div>
-              </div>
-            </section>
-
-            {/* Admin Audit activity timeline */}
-            <section className="bg-white border border-zinc-200 rounded-xl shadow-2xs flex flex-col">
-              <div className="p-4 bg-zinc-50 rounded-t-xl">
-                <h2 className="text-body-sm font-black text-zinc-900 leading-tight">Admin Action Timeline</h2>
-              </div>
-
-              <div className="p-5 flex-grow relative">
-                {/* Vertical timeline track line */}
-                <div className="absolute left-[27px] top-6 bottom-6 w-px bg-zinc-200 z-0"></div>
-
-                <div className="space-y-5">
-                  {activities.map((act, idx) => (
-                    <div key={idx} className="flex gap-3 relative z-10">
-                      <div className={`w-6.5 h-6.5 rounded-full border flex items-center justify-center shadow-xs shrink-0 select-none ${
-                        act.success 
-                          ? 'bg-red-50 border-brand-red text-brand-red'
-                          : 'bg-zinc-50 border-zinc-200 text-zinc-400'
-                      }`}>
-                        {act.success ? <CheckCircle className="w-3.5 h-3.5 fill-current" /> : <Settings className="w-3.5 h-3.5" />}
-                      </div>
-                      <div>
-                        <p className="text-[12px] font-black text-zinc-800 leading-tight">{act.title}</p>
-                        <p className="text-[10px] text-zinc-450 font-semibold mt-0.5 leading-snug">{act.desc}</p>
-                        <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mt-1">{act.time}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <button className="w-full mt-5 text-[10px] font-black text-brand-red uppercase tracking-wider hover:underline text-center">
-                  View Audit Logs
-                </button>
-              </div>
-            </section>
-
-          </div>
-
         </div>
       </div>
+
+    </div>
+  );
+}
 
     </div>
   );

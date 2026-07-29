@@ -67,6 +67,22 @@ export default function App() {
     return data ? JSON.parse(data) : null;
   });
 
+  useEffect(() => {
+    const syncLoggedUser = () => {
+      const adminData = localStorage.getItem('bni_logged_admin');
+      if (adminData) setLoggedInAdmin(JSON.parse(adminData));
+
+      const captainData = localStorage.getItem('bni_logged_captain');
+      if (captainData) setLoggedInCaptain(JSON.parse(captainData));
+
+      const memberData = localStorage.getItem('bni_logged_member');
+      if (memberData) setLoggedInMember(JSON.parse(memberData));
+    };
+
+    window.addEventListener('storage', syncLoggedUser);
+    return () => window.removeEventListener('storage', syncLoggedUser);
+  }, []);
+
   // Read active tab path directly from window URL pathname
   const [activeTab, setActiveTab] = useState(() => {
     const path = window.location.pathname.replace(/^\/|\/$/g, '');
