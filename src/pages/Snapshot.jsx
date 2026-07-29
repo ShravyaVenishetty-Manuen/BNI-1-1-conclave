@@ -37,12 +37,22 @@ const saveStoredSnapshot = (conclaveId, version, timestamp) => {
 };
 
 export default function Snapshot({ searchQuery, selectedConclaveId }) {
-  const [conclaves, setConclaves] = useState([]);
+  const [conclaves, setConclaves] = useState(() => {
+    const cached = localStorage.getItem('bni_snapshot_conclaves_cache');
+    if (cached) {
+      try { return JSON.parse(cached); } catch (e) {}
+    }
+    const adminCached = localStorage.getItem('bni_admin_conclaves_cache');
+    if (adminCached) {
+      try { return JSON.parse(adminCached); } catch (e) {}
+    }
+    return [];
+  });
   const [isLoadingSnapshot, setIsLoadingSnapshot] = useState(false);
 
   useEffect(() => {
     async function loadSnapshot() {
-      setIsLoadingSnapshot(true);
+      setIsLoadingSnapshot(false);
       try {
         const conclavesList = await api.get('/admin/conclaves');
         const storedSnapshots = getStoredSnapshots();
@@ -110,9 +120,9 @@ export default function Snapshot({ searchQuery, selectedConclaveId }) {
           }
         }));
         setConclaves(updatedConclaves);
+        localStorage.setItem('bni_snapshot_conclaves_cache', JSON.stringify(updatedConclaves));
       } catch (err) {
         console.error("API load failed, using local storage fallback:", err);
-        setConclaves(initialConclaves);
       } finally {
         setIsLoadingSnapshot(false);
       }

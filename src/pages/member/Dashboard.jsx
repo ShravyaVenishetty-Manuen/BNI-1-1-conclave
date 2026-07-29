@@ -16,7 +16,25 @@ import MemberProfileModal from '../../components/MemberProfileModal';
 
 import { api } from '../../services/api';
 
-export default function MemberDashboard({ loggedInMember, onTabChange, conclaveSyncData, searchQuery }) {
+export default function MemberDashboard({ loggedInMember, onTabChange, conclaveSyncData: propConclaveSyncData, searchQuery }) {
+  const [syncData, setSyncData] = useState(() => {
+    if (propConclaveSyncData) return propConclaveSyncData;
+    const cached = localStorage.getItem('bni_conclave_sync_data_cache');
+    if (cached) {
+      try { return JSON.parse(cached); } catch (e) {}
+    }
+    return null;
+  });
+
+  useEffect(() => {
+    if (propConclaveSyncData) {
+      setSyncData(propConclaveSyncData);
+      localStorage.setItem('bni_conclave_sync_data_cache', JSON.stringify(propConclaveSyncData));
+    }
+  }, [propConclaveSyncData]);
+
+  const conclaveSyncData = syncData || propConclaveSyncData;
+
   const [referTarget, setReferTarget] = useState(null);
   const [selectedProfileMember, setSelectedProfileMember] = useState(null);
   const [toast, setToast] = useState(null);

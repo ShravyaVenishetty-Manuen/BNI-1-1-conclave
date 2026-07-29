@@ -37,16 +37,32 @@ export default function Dashboard({ setActiveTab, selectedConclaveId, setSelecte
     return () => window.removeEventListener('storage', sync);
   }, []);
 
-  const [conclaves, setConclaves] = useState([]);
-  const [stats, setStats] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [conclaves, setConclaves] = useState(() => {
+    const cached = localStorage.getItem('bni_admin_conclaves_cache');
+    if (cached) {
+      try { return JSON.parse(cached); } catch (e) {}
+    }
+    return [];
+  });
+  const [stats, setStats] = useState(() => {
+    const cached = localStorage.getItem('bni_admin_stats_cache');
+    if (cached) {
+      try { return JSON.parse(cached); } catch (e) {}
+    }
+    return null;
+  });
+  const [isLoading, setIsLoading] = useState(false);
 
   // Fetch conclaves
   useEffect(() => {
     async function loadConclaves() {
+      setIsLoading(false);
       try {
         const data = await api.get('/admin/conclaves');
-        setConclaves(data || []);
+        if (Array.isArray(data)) {
+          setConclaves(data);
+          localStorage.setItem('bni_admin_conclaves_cache', JSON.stringify(data));
+        }
       } catch (err) {
         console.error("Failed to load conclaves:", err);
       } finally {
@@ -67,7 +83,10 @@ export default function Dashboard({ setActiveTab, selectedConclaveId, setSelecte
           api.get(`/admin/conclaves/${selectedConclaveId}/referrals`).catch(() => null)
         ]);
 
-        if (statsData) setStats(statsData);
+        if (statsData) {
+          setStats(statsData);
+          localStorage.setItem('bni_admin_stats_cache', JSON.stringify(statsData));
+        }
 
         if (Array.isArray(refData)) {
           setReferrals(refData);

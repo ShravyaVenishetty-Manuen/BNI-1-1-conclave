@@ -10,7 +10,25 @@ import {
   X
 } from 'lucide-react';
 
-export default function CurrentRound({ loggedInCaptain, conclaveSyncData }) {
+export default function CurrentRound({ loggedInCaptain, conclaveSyncData: propConclaveSyncData }) {
+  const [syncData, setSyncData] = useState(() => {
+    if (propConclaveSyncData) return propConclaveSyncData;
+    const cached = localStorage.getItem('bni_conclave_sync_data_cache');
+    if (cached) {
+      try { return JSON.parse(cached); } catch (e) {}
+    }
+    return null;
+  });
+
+  useEffect(() => {
+    if (propConclaveSyncData) {
+      setSyncData(propConclaveSyncData);
+      localStorage.setItem('bni_conclave_sync_data_cache', JSON.stringify(propConclaveSyncData));
+    }
+  }, [propConclaveSyncData]);
+
+  const conclaveSyncData = syncData || propConclaveSyncData;
+
   const initialTime = 15 * 60; // 900 seconds (15:00)
   const [timeLeft, setTimeLeft] = useState(initialTime);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
@@ -50,6 +68,56 @@ export default function CurrentRound({ loggedInCaptain, conclaveSyncData }) {
 
   const participants = conclaveSyncData?.tableOccupants || [];
   const categories = [...new Set(participants.map(p => p.category))];
+  const conclaveStatus = (conclaveSyncData?.conclaveStatus?.status || '').toLowerCase();
+  const isCompleted = conclaveStatus === 'completed';
+
+  if (isCompleted) {
+    return (
+      <div className="space-y-6 animate-fade-in font-sans">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-zinc-200 pb-5">
+          <div className="space-y-1">
+            <h1 className="text-2xl font-black text-zinc-955 tracking-tight mt-1">Conclave Completed</h1>
+            <p className="text-xs text-zinc-450 font-semibold">This 1-on-1 Conclave session has concluded successfully.</p>
+          </div>
+          <span className="px-3 py-1 bg-emerald-50 text-emerald-800 font-black text-[10px] uppercase tracking-wider rounded-full border border-emerald-150 flex items-center gap-1.5 shadow-2xs">
+            <Check className="w-3.5 h-3.5 text-emerald-600" />
+            Conclave Concluded
+          </span>
+        </div>
+
+        <div className="bg-white border border-zinc-200 rounded-xl p-8 text-center space-y-4 shadow-2xs">
+          <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto border border-emerald-100 shadow-xs">
+            <Award className="w-8 h-8" />
+          </div>
+          <div>
+            <h2 className="text-xl font-black text-zinc-900">All Networking Rounds Complete</h2>
+            <p className="text-xs text-zinc-500 max-w-md mx-auto mt-1 leading-relaxed">
+              Thank you, <strong className="text-zinc-800">{loggedInCaptain?.name || 'Captain'}</strong>! All scheduled 1-on-1 networking rounds for Table #{conclaveSyncData?.tableNumber || 'N/A'} have been completed.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto pt-4">
+            <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-xl">
+              <p className="text-[9px] font-black text-zinc-400 uppercase tracking-wider">Total Rounds</p>
+              <p className="text-lg font-black text-zinc-850 mt-0.5">{conclaveSyncData?.conclaveStatus?.totalRounds || 4} Completed</p>
+            </div>
+            <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-xl">
+              <p className="text-[9px] font-black text-zinc-400 uppercase tracking-wider">Table Occupancy</p>
+              <p className="text-lg font-black text-zinc-850 mt-0.5">{participants.length} Members</p>
+            </div>
+            <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-xl">
+              <p className="text-[9px] font-black text-zinc-400 uppercase tracking-wider">Categories</p>
+              <p className="text-lg font-black text-zinc-850 mt-0.5">{categories.length} Represented</p>
+            </div>
+            <div className="p-4 bg-zinc-50 border border-zinc-200 rounded-xl">
+              <p className="text-[9px] font-black text-zinc-400 uppercase tracking-wider">Status</p>
+              <p className="text-lg font-black text-emerald-600 mt-0.5">Archived</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-fade-in font-sans">

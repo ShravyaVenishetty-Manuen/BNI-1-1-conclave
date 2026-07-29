@@ -9,7 +9,25 @@ import {
 import ReferModal from '../../components/ReferModal';
 import MemberProfileModal from '../../components/MemberProfileModal';
 
-export default function MemberCurrentRound({ loggedInMember, onTabChange, conclaveSyncData, searchQuery }) {
+export default function MemberCurrentRound({ loggedInMember, onTabChange, conclaveSyncData: propConclaveSyncData, searchQuery }) {
+  const [syncData, setSyncData] = useState(() => {
+    if (propConclaveSyncData) return propConclaveSyncData;
+    const cached = localStorage.getItem('bni_conclave_sync_data_cache');
+    if (cached) {
+      try { return JSON.parse(cached); } catch (e) {}
+    }
+    return null;
+  });
+
+  useEffect(() => {
+    if (propConclaveSyncData) {
+      setSyncData(propConclaveSyncData);
+      localStorage.setItem('bni_conclave_sync_data_cache', JSON.stringify(propConclaveSyncData));
+    }
+  }, [propConclaveSyncData]);
+
+  const conclaveSyncData = syncData || propConclaveSyncData;
+
   const [referTarget, setReferTarget] = useState(null);
   const [selectedProfileMember, setSelectedProfileMember] = useState(null);
   const [toast, setToast] = useState(null);
@@ -298,7 +316,7 @@ export default function MemberCurrentRound({ loggedInMember, onTabChange, concla
                     className="p-4 border border-zinc-200/85 hover:border-brand-red/40 rounded-xl transition-smooth group bg-white flex flex-col justify-between cursor-pointer"
                   >
                     <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-zinc-50 border border-zinc-200 flex items-center justify-center font-bold text-xs text-zinc-500 shrink-0 transition-colors select-none">
+                      <div className="w-10 h-10 rounded-full bg-red-50 border border-red-100 text-brand-red font-black text-xs flex items-center justify-center shrink-0 shadow-2xs select-none">
                         {initials}
                       </div>
                       <div className="min-w-0 flex-1">

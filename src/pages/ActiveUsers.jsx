@@ -32,13 +32,19 @@ import {
 import { api } from '../services/api';
 
 export default function ActiveUsers({ searchQuery, selectedConclaveId }) {
-  const [sessions, setSessions] = useState([]);
+  const [sessions, setSessions] = useState(() => {
+    const cached = localStorage.getItem('bni_active_users_cache');
+    if (cached) {
+      try { return JSON.parse(cached); } catch (e) {}
+    }
+    return [];
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
     async function loadSessions() {
-      setIsLoading(true);
+      setIsLoading(false);
       try {
         let rawList = [];
         let autoLogoutHours = 4;
@@ -100,6 +106,7 @@ export default function ActiveUsers({ searchQuery, selectedConclaveId }) {
           };
         });
         setSessions(mapped);
+        localStorage.setItem('bni_active_users_cache', JSON.stringify(mapped));
       } catch (err) {
         console.error("Failed to load registrations for active sessions:", err);
       } finally {

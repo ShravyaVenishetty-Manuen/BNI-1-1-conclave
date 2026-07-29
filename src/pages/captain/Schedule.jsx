@@ -1,7 +1,24 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Check, Play, ArrowRight, Award, Shield, PhoneCall, BookOpen } from 'lucide-react';
 
-export default function CaptainSchedule({ loggedInCaptain, conclaveSyncData }) {
+export default function CaptainSchedule({ loggedInCaptain, conclaveSyncData: propConclaveSyncData }) {
+  const [syncData, setSyncData] = useState(() => {
+    if (propConclaveSyncData) return propConclaveSyncData;
+    const cached = localStorage.getItem('bni_conclave_sync_data_cache');
+    if (cached) {
+      try { return JSON.parse(cached); } catch (e) {}
+    }
+    return null;
+  });
+
+  useEffect(() => {
+    if (propConclaveSyncData) {
+      setSyncData(propConclaveSyncData);
+      localStorage.setItem('bni_conclave_sync_data_cache', JSON.stringify(propConclaveSyncData));
+    }
+  }, [propConclaveSyncData]);
+
+  const conclaveSyncData = syncData || propConclaveSyncData;
   const scheduleItems = conclaveSyncData?.mySchedule || [];
   const currentRoundNum = conclaveSyncData?.conclaveStatus?.currentRound || 0;
 
@@ -18,9 +35,16 @@ export default function CaptainSchedule({ loggedInCaptain, conclaveSyncData }) {
         </div>
         
         <div className="flex gap-2">
-          <span className="bg-red-50 text-brand-red px-3 py-1 rounded-full text-[10px] font-black tracking-wider uppercase border border-red-100 shadow-2xs">
-            Round {currentRoundNum} Active
-          </span>
+          {conclaveSyncData?.conclaveStatus?.status?.toLowerCase() === 'completed' ? (
+            <span className="bg-emerald-50 text-emerald-800 px-3 py-1 rounded-full text-[10px] font-black tracking-wider uppercase border border-emerald-150 shadow-2xs flex items-center gap-1.5">
+              <Check className="w-3.5 h-3.5 text-emerald-600" />
+              Conclave Completed
+            </span>
+          ) : (
+            <span className="bg-red-50 text-brand-red px-3 py-1 rounded-full text-[10px] font-black tracking-wider uppercase border border-red-100 shadow-2xs">
+              Round {currentRoundNum} Active
+            </span>
+          )}
         </div>
       </div>
 

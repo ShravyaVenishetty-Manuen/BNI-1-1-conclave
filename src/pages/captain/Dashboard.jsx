@@ -17,7 +17,25 @@ import confetti from 'canvas-confetti';
 import { api } from '../../services/api';
 import MemberProfileModal from '../../components/MemberProfileModal';
 
-export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboard', onTabChange, onLogout, conclaveSyncData }) {
+export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboard', onTabChange, onLogout, conclaveSyncData: propConclaveSyncData }) {
+  const [syncData, setSyncData] = useState(() => {
+    if (propConclaveSyncData) return propConclaveSyncData;
+    const cached = localStorage.getItem('bni_conclave_sync_data_cache');
+    if (cached) {
+      try { return JSON.parse(cached); } catch (e) {}
+    }
+    return null;
+  });
+
+  useEffect(() => {
+    if (propConclaveSyncData) {
+      setSyncData(propConclaveSyncData);
+      localStorage.setItem('bni_conclave_sync_data_cache', JSON.stringify(propConclaveSyncData));
+    }
+  }, [propConclaveSyncData]);
+
+  const conclaveSyncData = syncData || propConclaveSyncData;
+
   const [selectedProfileMember, setSelectedProfileMember] = useState(null);
   const [referrals, setReferrals] = useState(() => {
     const stored = localStorage.getItem('bni_referrals');
@@ -182,7 +200,11 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
             changed = true;
           }
         });
-        return changed ? next : prev;
+        if (changed) {
+          localStorage.setItem('bni_captain_attendance_cache', JSON.stringify(next));
+          return next;
+        }
+        return prev;
       });
     }
   }, [conclaveSyncData?.tableOccupants]);

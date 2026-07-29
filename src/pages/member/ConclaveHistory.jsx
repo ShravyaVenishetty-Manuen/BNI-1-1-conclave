@@ -24,7 +24,13 @@ export default function MemberConclaveHistory({ loggedInMember }) {
   const [selectedStatus, setSelectedStatus] = useState('All');
   const [showDrawer, setShowDrawer] = useState(false);
   const [selectedConclave, setSelectedConclave] = useState(null);
-  const [conclaves, setConclaves] = useState([]);
+  const [conclaves, setConclaves] = useState(() => {
+    const cached = localStorage.getItem('bni_member_history_cache');
+    if (cached) {
+      try { return JSON.parse(cached); } catch (e) {}
+    }
+    return [];
+  });
   const [industryDistribution, setIndustryDistribution] = useState([]);
 
   useEffect(() => {
@@ -133,6 +139,7 @@ export default function MemberConclaveHistory({ loggedInMember }) {
 
         setIndustryDistribution(topIndustries);
         setConclaves(mapped);
+        localStorage.setItem('bni_member_history_cache', JSON.stringify(mapped));
       } catch (err) {
         console.warn('Failed to load conclave history from backend:', err.message);
       }

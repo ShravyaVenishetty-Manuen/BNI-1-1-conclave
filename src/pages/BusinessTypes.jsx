@@ -18,13 +18,19 @@ import SearchableDropdown from '../components/SearchableDropdown';
 import { api } from '../services/api';
 
 export default function BusinessTypes({ searchQuery, selectedConclaveId, loggedInAdmin }) {
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState(() => {
+    const cached = localStorage.getItem('bni_admin_categories_cache');
+    if (cached) {
+      try { return JSON.parse(cached); } catch (e) {}
+    }
+    return [];
+  });
   const [members, setMembers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     async function loadMembersAndCategories() {
-      setIsLoading(true);
+      setIsLoading(false);
       try {
         let rawList = [];
         if (selectedConclaveId) {
@@ -81,7 +87,9 @@ export default function BusinessTypes({ searchQuery, selectedConclaveId, loggedI
           }
         });
 
-        setCategories(Array.from(catMap.values()));
+        const catList = Array.from(catMap.values());
+        setCategories(catList);
+        localStorage.setItem('bni_admin_categories_cache', JSON.stringify(catList));
       } catch (err) {
         console.error("Failed to load registrations for business types:", err);
       } finally {

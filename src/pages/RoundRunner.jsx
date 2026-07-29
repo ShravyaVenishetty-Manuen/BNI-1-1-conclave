@@ -30,14 +30,23 @@ import runnerData from '../data/tables_runner.json';
 const { initialTables, mockRosters } = runnerData;
 
 export default function RoundRunner({ selectedConclaveId }) {
-  const [conclaves, setConclaves] = useState([]);
+  const [conclaves, setConclaves] = useState(() => {
+    const cached = localStorage.getItem('bni_admin_conclaves_cache');
+    if (cached) {
+      try { return JSON.parse(cached); } catch (e) {}
+    }
+    return [];
+  });
   const [stats, setStats] = useState(null);
 
   useEffect(() => {
     async function loadConclaves() {
       try {
         const data = await api.get('/admin/conclaves');
-        setConclaves(data);
+        if (Array.isArray(data)) {
+          setConclaves(data);
+          localStorage.setItem('bni_admin_conclaves_cache', JSON.stringify(data));
+        }
       } catch (err) {
         console.error("Failed to load conclaves:", err);
       }

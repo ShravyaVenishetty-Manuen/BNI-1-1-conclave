@@ -19,13 +19,19 @@ import SearchableDropdown from '../components/SearchableDropdown';
 import { api } from '../services/api';
 
 export default function Captains({ searchQuery, selectedConclaveId, loggedInAdmin }) {
-  const [captains, setCaptains] = useState([]);
+  const [captains, setCaptains] = useState(() => {
+    const cached = localStorage.getItem('bni_admin_captains_cache');
+    if (cached) {
+      try { return JSON.parse(cached); } catch (e) {}
+    }
+    return [];
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [viewScope, setViewScope] = useState('conclave'); // 'conclave', 'region', or 'global'
 
   useEffect(() => {
     async function loadCaptainsData() {
-      setIsLoading(true);
+      setIsLoading(false);
       try {
         let rawList = [];
         const allUsers = await api.get('/admin/users').catch(() => []);
@@ -50,26 +56,27 @@ export default function Captains({ searchQuery, selectedConclaveId, loggedInAdmi
             try {
               const res = await api.get(`/admin/conclaves/${targetConclaveId}/registrations`);
               if (res && Array.isArray(res.registrations)) {
-                const capRegs = res.registrations.filter(r => r.role === 'captain' || r.isTableCaptain || r.isCaptain);
-                rawList = capRegs.map(r => {
-                  const uid = r.userId || r.uid || r.id;
-                  const master = userMap.get(uid) || {};
-                  const userRegion = r.region || master.region || (typeof r.location === 'string' ? r.location : '') || 'Global BNI Network';
-                  return {
-                    ...master,
-                    ...r,
-                    id: uid,
-                    uid: uid,
-                    name: r.name || master.name || master.displayName || 'Captain',
-                    email: r.email || master.email || 'n/a',
-                    phone: r.phone || master.phone || master.mobile || 'n/a',
-                    company: r.company || master.company || master.businessName || 'Self Employed',
-                    category: r.category || master.category || master.businessCategory || 'General',
-                    chapter: r.chapter || master.chapter || 'Peak Performance',
-                    region: userRegion,
-                    userRegion: userRegion
-                  };
-                });
+                rawList = res.registrations
+                  .filter(r => r.role === 'captain' || r.isTableCaptain === true)
+                  .map(r => {
+                    const uid = r.userId || r.uid || r.id;
+                    const master = userMap.get(uid) || {};
+                    const userRegion = r.region || master.region || (typeof r.location === 'string' ? r.location : '') || 'Global BNI Network';
+                    return {
+                      ...master,
+                      ...r,
+                      id: uid,
+                      uid: uid,
+                      name: r.name || master.name || master.displayName || 'Captain',
+                      email: r.email || master.email || 'n/a',
+                      phone: r.phone || master.phone || master.mobile || 'n/a',
+                      company: r.company || master.company || master.businessName || 'Self Employed',
+                      category: r.category || master.category || master.businessCategory || 'General',
+                      chapter: r.chapter || master.chapter || 'Peak Performance',
+                      region: userRegion,
+                      userRegion: userRegion
+                    };
+                  });
               }
             } catch { }
           } else {
@@ -81,9 +88,9 @@ export default function Captains({ searchQuery, selectedConclaveId, loggedInAdmi
 
           if (Array.isArray(allUsers)) {
             allUsers.forEach(u => {
-              if (u.role === 'captain' || u.isTableCaptain === true || u.isCaptain === true) {
-                const uid = u.id || u.uid;
-                if (uid) captainMap.set(uid, { ...u });
+              const uid = u.id || u.uid;
+              if (uid && (u.role === 'captain' || u.isTableCaptain === true)) {
+                captainMap.set(uid, { ...u });
               }
             });
           }
@@ -94,7 +101,7 @@ export default function Captains({ searchQuery, selectedConclaveId, loggedInAdmi
                 const res = await api.get(`/admin/conclaves/${c.id}/registrations`);
                 if (res && Array.isArray(res.registrations)) {
                   res.registrations.forEach(r => {
-                    if (r.role === 'captain' || r.isTableCaptain === true || r.isCaptain === true) {
+                    if (r.role === 'captain' || r.isTableCaptain === true) {
                       const uid = r.userId || r.uid || r.id;
                       const existing = captainMap.get(uid) || {};
                       const userRegion = existing.region || (typeof existing.location === 'string' ? existing.location : '') || (r.region && r.region !== 'Guntur Region' ? r.region : '') || 'Global BNI Network';
@@ -109,7 +116,6 @@ export default function Captains({ searchQuery, selectedConclaveId, loggedInAdmi
                         company: existing.company || r.company || existing.businessName || 'Self Employed',
                         category: existing.category || r.category || existing.businessCategory || 'General',
                         chapter: existing.chapter || r.chapter || 'Peak Performance',
-                        conclaveName: c.name,
                         userRegion: userRegion
                       });
                     }
@@ -134,9 +140,8 @@ export default function Captains({ searchQuery, selectedConclaveId, loggedInAdmi
           const fallbackLocation = locStr || (r.chapter ? `${r.chapter}, ${resolvedRegion}` : resolvedRegion);
 
           const rawStatus = (r.status || '').toLowerCase();
-          const isActiveCaptain = rawStatus === 'active' || rawStatus === 'pending' || rawStatus === 'registered' || rawStatus === 'confirmed' || r.isActive === true || !r.status;
-
-          const tableStr = r.tableNumber ? `Table ${r.tableNumber}` : (r.table || r.assignedTable || 'Table Captain');
+          const isActiveCaptain = rawStatus === 'active' || rawStatus === 'available' || rawStatus === 'confirmed' || r.isActive === true || !r.status;
+          const tableStr = r.table || r.assignedTable || (r.tableNumber ? `Table ${r.tableNumber}` : 'Table 1');
           const joinDateFormatted = r.joinDate ? (new Date(r.joinDate).toLocaleDateString([], { month: 'short', day: '2-digit', year: 'numeric' })) : (r.createdAt ? new Date(r.createdAt).toLocaleDateString([], { month: 'short', day: '2-digit', year: 'numeric' }) : 'N/A');
 
           return {
@@ -162,6 +167,7 @@ export default function Captains({ searchQuery, selectedConclaveId, loggedInAdmi
           };
         });
         setCaptains(mapped);
+        localStorage.setItem('bni_admin_captains_cache', JSON.stringify(mapped));
       } catch (err) {
         console.error("Failed to load captains from API:", err);
       } finally {

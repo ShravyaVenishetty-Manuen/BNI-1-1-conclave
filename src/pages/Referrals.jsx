@@ -13,7 +13,13 @@ import {
 import { api } from '../services/api';
 
 export default function Referrals({ loggedInUser, userType, conclaveSyncData }) {
-  const [referrals, setReferrals] = useState([]);
+  const [referrals, setReferrals] = useState(() => {
+    const cached = localStorage.getItem('bni_referrals');
+    if (cached) {
+      try { return JSON.parse(cached); } catch (e) {}
+    }
+    return [];
+  });
   const [activeSubTab, setActiveSubTab] = useState('received'); // 'received' or 'sent'
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [toast, setToast] = useState(null);
@@ -50,6 +56,7 @@ export default function Referrals({ loggedInUser, userType, conclaveSyncData }) 
         const liveRefs = await api.get(`/conclaves/${activeConclaveId}/referrals`);
         if (Array.isArray(liveRefs)) {
           setReferrals(liveRefs);
+          localStorage.setItem('bni_referrals', JSON.stringify(liveRefs));
         }
       } catch (err) {
         console.warn("Failed to fetch live referrals:", err.message);

@@ -18,13 +18,19 @@ import SearchableDropdown from '../components/SearchableDropdown';
 import { api } from '../services/api';
 
 export default function Members({ searchQuery, selectedConclaveId, loggedInAdmin }) {
-  const [members, setMembers] = useState([]);
+  const [members, setMembers] = useState(() => {
+    const cached = localStorage.getItem('bni_admin_members_cache');
+    if (cached) {
+      try { return JSON.parse(cached); } catch (e) {}
+    }
+    return [];
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [viewScope, setViewScope] = useState('conclave'); // 'conclave', 'region', or 'global'
 
   useEffect(() => {
     async function loadMembersData() {
-      setIsLoading(true);
+      setIsLoading(false);
       try {
         let rawList = [];
         const allUsers = await api.get('/admin/users').catch(() => []);
@@ -159,6 +165,7 @@ export default function Members({ searchQuery, selectedConclaveId, loggedInAdmin
           };
         });
         setMembers(mapped);
+        localStorage.setItem('bni_admin_members_cache', JSON.stringify(mapped));
       } catch (err) {
         console.error("Failed to load members from API:", err);
       } finally {

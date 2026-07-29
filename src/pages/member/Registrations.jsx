@@ -17,7 +17,13 @@ import SearchableDropdown from '../../components/SearchableDropdown';
 import { api } from '../../services/api';
 
 export default function Registrations({ loggedInMember }) {
-  const [conclaves, setConclaves] = useState([]);
+  const [conclaves, setConclaves] = useState(() => {
+    const cached = localStorage.getItem('bni_conclaves');
+    if (cached) {
+      try { return JSON.parse(cached); } catch (e) {}
+    }
+    return [];
+  });
 
   const [member, setMember] = useState(loggedInMember || null);
 

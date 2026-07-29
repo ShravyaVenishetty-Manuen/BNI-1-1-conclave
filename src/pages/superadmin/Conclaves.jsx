@@ -11,20 +11,38 @@ export default function SuperadminConclaves({ searchQuery }) {
   const [selectedStatus, setSelectedStatus] = useState('All');
   const [selectedRegion, setSelectedRegion] = useState('All');
   const [activeConclave, setActiveConclave] = useState(null);
-  const [conclaves, setConclaves] = useState([]);
-  const [regions, setRegions] = useState([]);
+  const [conclaves, setConclaves] = useState(() => {
+    const cached = localStorage.getItem('bni_superadmin_conclaves_cache');
+    if (cached) {
+      try { return JSON.parse(cached); } catch (e) {}
+    }
+    return [];
+  });
+  const [regions, setRegions] = useState(() => {
+    const cached = localStorage.getItem('bni_superadmin_regions_cache');
+    if (cached) {
+      try { return JSON.parse(cached); } catch (e) {}
+    }
+    return [];
+  });
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     async function loadData() {
-      setIsLoading(true);
+      setIsLoading(false);
       try {
         const [conclavesList, regionsList] = await Promise.all([
-          api.get('/admin/conclaves?global=true'),
-          api.get('/admin/regions')
+          api.get('/admin/conclaves?global=true').catch(() => []),
+          api.get('/admin/regions').catch(() => [])
         ]);
-        setConclaves(conclavesList || []);
-        setRegions(regionsList || []);
+        if (Array.isArray(conclavesList)) {
+          setConclaves(conclavesList);
+          localStorage.setItem('bni_superadmin_conclaves_cache', JSON.stringify(conclavesList));
+        }
+        if (Array.isArray(regionsList)) {
+          setRegions(regionsList);
+          localStorage.setItem('bni_superadmin_regions_cache', JSON.stringify(regionsList));
+        }
       } catch (err) {
         console.error("Failed to load conclaves/regions:", err);
       } finally {

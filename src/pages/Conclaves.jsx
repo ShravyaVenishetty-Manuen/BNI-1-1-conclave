@@ -2,23 +2,11 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Search,
-  ChevronRight,
   X,
   Download,
-  Upload,
   Plus,
   MoreVertical,
-  Calendar,
-  MapPin,
-  Users,
-  Award,
-  Layers,
-  ArrowRight,
   Trash2,
-  Edit2,
-  CheckCircle2,
-  Clock,
-  Play
 } from 'lucide-react';
 import Pagination from '../components/Pagination';
 import { ResponsiveContainer, BarChart, Bar, XAxis } from 'recharts';
@@ -26,15 +14,21 @@ import SearchableDropdown from '../components/SearchableDropdown';
 import { api } from '../services/api';
 
 export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) {
-  const [conclaves, setConclaves] = useState([]);
+  const [conclaves, setConclaves] = useState(() => {
+    const cached = localStorage.getItem('bni_admin_conclaves_cache');
+    if (cached) {
+      try { return JSON.parse(cached); } catch (e) { }
+    }
+    return [];
+  });
   const [isLoadingConclaves, setIsLoadingConclaves] = useState(false);
 
   useEffect(() => {
     async function loadConclaves() {
-      setIsLoadingConclaves(true);
+      setIsLoadingConclaves(false);
       try {
         const data = await api.get('/admin/conclaves?global=true');
-        setConclaves(data.map(c => {
+        const mapped = data.map(c => {
           let state = c.state;
           let country = c.country;
           if (!state || !country) {
@@ -62,7 +56,7 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
           const startDate = formatDateForInput(c.date || c.startDate);
           const dateRange = (typeof c.dateRange === 'string' && c.dateRange) ? c.dateRange : (c.date ? safeRenderString(c.date, 'TBD') : 'TBD');
           const coordinator = c.coordinator || c.creator || loggedInAdmin?.name || 'Admin';
-          
+
           let status = c.status;
           const s = (c.status || '').toLowerCase().replace(/_/g, '');
           if (s === 'running' || s === 'active') status = 'Running';
@@ -87,10 +81,11 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
             captainLimit: c.captainLimit || 12,
             progress: (s === 'completed' || s === 'locked' || Boolean(c.scheduleSummary || c.schedule)) ? 100 : s === 'running' ? 60 : 0
           };
-        }));
+        });
+        setConclaves(mapped);
+        localStorage.setItem('bni_admin_conclaves_cache', JSON.stringify(mapped));
       } catch (err) {
         console.error("Failed to load conclaves from API:", err);
-        setConclaves([]);
       } finally {
         setIsLoadingConclaves(false);
       }
@@ -343,36 +338,36 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
     showToast('Export Selected', `Successfully exported ${selectedList.length} conclaves.`);
   };
 
-const parseDate = (val) => {
-  if (!val) return null;
-  if (typeof val === 'object' && val._seconds !== undefined) {
-    return new Date(val._seconds * 1000);
-  }
-  if (typeof val === 'object' && val.seconds !== undefined) {
-    return new Date(val.seconds * 1000);
-  }
-  if (typeof val === 'string' || typeof val === 'number') {
-    const d = new Date(val);
-    return isNaN(d.getTime()) ? null : d;
-  }
-  return null;
-};
+  const parseDate = (val) => {
+    if (!val) return null;
+    if (typeof val === 'object' && val._seconds !== undefined) {
+      return new Date(val._seconds * 1000);
+    }
+    if (typeof val === 'object' && val.seconds !== undefined) {
+      return new Date(val.seconds * 1000);
+    }
+    if (typeof val === 'string' || typeof val === 'number') {
+      const d = new Date(val);
+      return isNaN(d.getTime()) ? null : d;
+    }
+    return null;
+  };
 
-const formatDateForInput = (val) => {
-  const d = parseDate(val);
-  return d ? d.toISOString().slice(0, 10) : '';
-};
-
-const safeRenderString = (val, fallback = '') => {
-  if (val === null || val === undefined) return fallback;
-  if (typeof val === 'string' || typeof val === 'number') return String(val);
-  if (typeof val === 'object' && (val._seconds !== undefined || val.seconds !== undefined)) {
+  const formatDateForInput = (val) => {
     const d = parseDate(val);
-    return d ? d.toLocaleDateString([], { month: 'short', day: '2-digit', year: 'numeric' }) : fallback;
-  }
-  if (typeof val === 'object') return fallback;
-  return String(val);
-};
+    return d ? d.toISOString().slice(0, 10) : '';
+  };
+
+  const safeRenderString = (val, fallback = '') => {
+    if (val === null || val === undefined) return fallback;
+    if (typeof val === 'string' || typeof val === 'number') return String(val);
+    if (typeof val === 'object' && (val._seconds !== undefined || val.seconds !== undefined)) {
+      const d = parseDate(val);
+      return d ? d.toLocaleDateString([], { month: 'short', day: '2-digit', year: 'numeric' }) : fallback;
+    }
+    if (typeof val === 'object') return fallback;
+    return String(val);
+  };
 
   const handleDateChange = (field, val) => {
     setFormData(prev => {
@@ -867,149 +862,148 @@ const safeRenderString = (val, fallback = '') => {
 
           <div className={`fixed right-0 top-0 bottom-0 h-screen w-full max-w-[440px] bg-white border-l border-zinc-100 shadow-2xl transform transition-transform duration-300 flex flex-col overflow-hidden z-[10000] ${selectedConclave ? 'translate-x-0 pointer-events-auto' : 'translate-x-full pointer-events-none'
             }`}>
-        {selectedConclave && (
-          <>
-            {/* Drawer Header */}
-            <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50 shrink-0">
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setSelectedConclave(null)}
-                  className="p-1.5 hover:bg-zinc-200 rounded-lg text-zinc-400 hover:text-zinc-700 transition-smooth cursor-pointer"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-                <div>
-                  <h3 className="text-section-heading font-extrabold text-zinc-950">Conclave Details</h3>
-                  <span className="text-[10px] text-zinc-400 font-bold uppercase mt-0.5">ID: {selectedConclave.id}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Drawer Body */}
-            <div className="flex-1 overflow-y-auto min-h-0 p-5 space-y-6">
-
-              {/* Description */}
-              <div className="space-y-2">
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block">Description</span>
-                <p className="text-body-md text-zinc-655 leading-relaxed bg-zinc-50 p-3.5 border border-zinc-100 rounded-xl select-text">
-                  {selectedConclave.description || '—'}
-                </p>
-              </div>
-
-              {/* Registration Window Info */}
-              {(selectedConclave.regStartDate || selectedConclave.regEndDate) && (
-                <div className="space-y-2 border-l-2 border-brand-red pl-3 py-0.5">
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block">Registration Period</span>
-                  <span className="text-body-sm font-semibold text-zinc-755 block">
-                    {selectedConclave.regStartDate ?? 'TBD'}
-                    <span className="text-zinc-400 mx-2">to</span>
-                    {selectedConclave.regEndDate ?? 'TBD'}
-                  </span>
-                </div>
-              )}
-
-              {/* Grid Metadata */}
-              <div className="grid grid-cols-2 gap-3.5">
-                <div className="p-3.5 border border-zinc-100 bg-white rounded-lg shadow-sm">
-                  <span className="text-[9px] text-zinc-400 font-bold uppercase block">Region Group</span>
-                  <span className="text-body-sm font-bold text-zinc-800 block mt-1">
-                    {selectedConclave.region || '—'}
-                  </span>
-                </div>
-                <div className="p-3.5 border border-zinc-100 bg-white rounded-lg shadow-sm">
-                  <span className="text-[9px] text-zinc-400 font-bold uppercase block">Coordinator</span>
-                  <div className="flex items-center gap-2 mt-1">
-                    {Boolean(selectedConclave.coordinator) && (
-                      <div className="w-5 h-5 rounded-full bg-brand-red/10 text-brand-red font-bold text-[9px] flex items-center justify-center shrink-0">
-                        {safeRenderString(selectedConclave.coordinator, 'A').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
-                      </div>
-                    )}
-                    <span className="text-body-sm font-bold text-zinc-800">{safeRenderString(selectedConclave.coordinator, '—')}</span>
+            {selectedConclave && (
+              <>
+                {/* Drawer Header */}
+                <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50 shrink-0">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setSelectedConclave(null)}
+                      className="p-1.5 hover:bg-zinc-200 rounded-lg text-zinc-400 hover:text-zinc-700 transition-smooth cursor-pointer"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                    <div>
+                      <h3 className="text-section-heading font-extrabold text-zinc-950">Conclave Details</h3>
+                      <span className="text-[10px] text-zinc-400 font-bold uppercase mt-0.5">ID: {selectedConclave.id}</span>
+                    </div>
                   </div>
                 </div>
-                <div className="p-3.5 border border-zinc-100 bg-white rounded-lg shadow-sm">
-                  <span className="text-[9px] text-zinc-400 font-bold uppercase block">Registered Members</span>
-                  <span className="text-body-sm font-bold text-zinc-800 block mt-1">
-                    {selectedConclave.memberCount ?? selectedConclave.registrationCount ?? 0}
-                    {selectedConclave.memberLimit ? <span className="text-zinc-400 font-medium"> / {selectedConclave.memberLimit}</span> : null}
-                  </span>
-                </div>
-                <div className="p-3.5 border border-zinc-100 bg-white rounded-lg shadow-sm">
-                  <span className="text-[9px] text-zinc-400 font-bold uppercase block">Captains Checked</span>
-                  <span className="text-body-sm font-bold text-zinc-800 block mt-1">
-                    {selectedConclave.captainCount ?? 0}
-                    {selectedConclave.captainLimit ? <span className="text-zinc-400 font-medium"> / {selectedConclave.captainLimit}</span> : null}
-                  </span>
-                </div>
-              </div>
 
-              {/* Timeline list */}
-              {selectedConclave.timeline && selectedConclave.timeline.length > 0 && (
-                <div className="space-y-3.5">
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block border-b border-zinc-100 pb-1.5">Activity Timeline</span>
-                  <div className="relative pl-3 space-y-5 border-l border-zinc-100 ml-1.5 mt-2">
-                    {selectedConclave.timeline.map((t, idx) => (
-                      <div key={idx} className="relative">
-                        <div className={`absolute -left-[17.5px] top-1 w-2.5 h-2.5 rounded-full border-2 border-white shadow-sm ${idx === 0 ? 'bg-brand-red' : 'bg-zinc-350'
-                          }`} />
-                        <div className="flex flex-col gap-0.5">
-                          <span className="text-body-sm font-bold text-zinc-800 leading-tight">{t.event}</span>
-                          <span className="text-[9px] text-zinc-500 font-semibold">{t.date} • {t.desc}</span>
-                        </div>
-                      </div>
-                    ))}
+                {/* Drawer Body */}
+                <div className="flex-1 overflow-y-auto min-h-0 p-5 space-y-6">
+
+                  {/* Description */}
+                  <div className="space-y-2">
+                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block">Description</span>
+                    <p className="text-body-md text-zinc-655 leading-relaxed bg-zinc-50 p-3.5 border border-zinc-100 rounded-xl select-text">
+                      {selectedConclave.description || '—'}
+                    </p>
                   </div>
+
+                  {/* Registration Window Info */}
+                  {(selectedConclave.regStartDate || selectedConclave.regEndDate) && (
+                    <div className="space-y-2 border-l-2 border-brand-red pl-3 py-0.5">
+                      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block">Registration Period</span>
+                      <span className="text-body-sm font-semibold text-zinc-755 block">
+                        {selectedConclave.regStartDate ?? 'TBD'}
+                        <span className="text-zinc-400 mx-2">to</span>
+                        {selectedConclave.regEndDate ?? 'TBD'}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Grid Metadata */}
+                  <div className="grid grid-cols-2 gap-3.5">
+                    <div className="p-3.5 border border-zinc-100 bg-white rounded-lg shadow-sm">
+                      <span className="text-[9px] text-zinc-400 font-bold uppercase block">Region Group</span>
+                      <span className="text-body-sm font-bold text-zinc-800 block mt-1">
+                        {selectedConclave.region || '—'}
+                      </span>
+                    </div>
+                    <div className="p-3.5 border border-zinc-100 bg-white rounded-lg shadow-sm">
+                      <span className="text-[9px] text-zinc-400 font-bold uppercase block">Coordinator</span>
+                      <div className="flex items-center gap-2 mt-1">
+                        {Boolean(selectedConclave.coordinator) && (
+                          <div className="w-5 h-5 rounded-full bg-brand-red/10 text-brand-red font-bold text-[9px] flex items-center justify-center shrink-0">
+                            {safeRenderString(selectedConclave.coordinator, 'A').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                          </div>
+                        )}
+                        <span className="text-body-sm font-bold text-zinc-800">{safeRenderString(selectedConclave.coordinator, '—')}</span>
+                      </div>
+                    </div>
+                    <div className="p-3.5 border border-zinc-100 bg-white rounded-lg shadow-sm">
+                      <span className="text-[9px] text-zinc-400 font-bold uppercase block">Registered Members</span>
+                      <span className="text-body-sm font-bold text-zinc-800 block mt-1">
+                        {selectedConclave.memberCount ?? selectedConclave.registrationCount ?? 0}
+                        {selectedConclave.memberLimit ? <span className="text-zinc-400 font-medium"> / {selectedConclave.memberLimit}</span> : null}
+                      </span>
+                    </div>
+                    <div className="p-3.5 border border-zinc-100 bg-white rounded-lg shadow-sm">
+                      <span className="text-[9px] text-zinc-400 font-bold uppercase block">Captains Checked</span>
+                      <span className="text-body-sm font-bold text-zinc-800 block mt-1">
+                        {selectedConclave.captainCount ?? 0}
+                        {selectedConclave.captainLimit ? <span className="text-zinc-400 font-medium"> / {selectedConclave.captainLimit}</span> : null}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Timeline list */}
+                  {selectedConclave.timeline && selectedConclave.timeline.length > 0 && (
+                    <div className="space-y-3.5">
+                      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block border-b border-zinc-100 pb-1.5">Activity Timeline</span>
+                      <div className="relative pl-3 space-y-5 border-l border-zinc-100 ml-1.5 mt-2">
+                        {selectedConclave.timeline.map((t, idx) => (
+                          <div key={idx} className="relative">
+                            <div className={`absolute -left-[17.5px] top-1 w-2.5 h-2.5 rounded-full border-2 border-white shadow-sm ${idx === 0 ? 'bg-brand-red' : 'bg-zinc-350'
+                              }`} />
+                            <div className="flex flex-col gap-0.5">
+                              <span className="text-body-sm font-bold text-zinc-800 leading-tight">{t.event}</span>
+                              <span className="text-[9px] text-zinc-500 font-semibold">{t.date} • {t.desc}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                 </div>
-              )}
 
-            </div>
-
-            {/* Drawer Footer Actions */}
-            <div className="p-4 border-t border-zinc-100 bg-white flex gap-2 shrink-0 shadow-lg">
-              {(() => {
-                const isSuperadmin = loggedInAdmin?.role === 'superadmin';
-                const adminReg = (loggedInAdmin?.region || loggedInAdmin?.scope || '').toLowerCase().trim();
-                const concReg = (selectedConclave?.region || '').toLowerCase().trim();
-                const matchesRegion = Boolean(adminReg && concReg && (adminReg.includes(concReg) || concReg.includes(adminReg)));
-                const canEditSelected = isSuperadmin || matchesRegion;
-                return (
+                {/* Drawer Footer Actions */}
+                <div className="p-4 border-t border-zinc-100 bg-white flex gap-2 shrink-0 shadow-lg">
+                  {(() => {
+                    const isSuperadmin = loggedInAdmin?.role === 'superadmin';
+                    const adminReg = (loggedInAdmin?.region || loggedInAdmin?.scope || '').toLowerCase().trim();
+                    const concReg = (selectedConclave?.region || '').toLowerCase().trim();
+                    const matchesRegion = Boolean(adminReg && concReg && (adminReg.includes(concReg) || concReg.includes(adminReg)));
+                    const canEditSelected = isSuperadmin || matchesRegion;
+                    return (
+                      <button
+                        onClick={() => {
+                          if (!canEditSelected) return;
+                          openEditModal(selectedConclave);
+                          setSelectedConclave(null);
+                        }}
+                        disabled={!canEditSelected}
+                        className={`flex-1 py-2.5 rounded-lg text-button font-bold transition-smooth shadow-sm ${!canEditSelected
+                            ? 'bg-zinc-100 text-zinc-350 border border-zinc-200/60 cursor-not-allowed opacity-50'
+                            : 'bg-white border border-zinc-200 text-zinc-800 hover:bg-zinc-50 cursor-pointer'
+                          }`}
+                      >
+                        Edit Conclave
+                      </button>
+                    );
+                  })()}
                   <button
                     onClick={() => {
-                      if (!canEditSelected) return;
-                      openEditModal(selectedConclave);
+                      if (setActiveTab) {
+                        setActiveTab('reports');
+                      } else {
+                        showToast('Fetching reports...', 'Starting file generation.');
+                      }
                       setSelectedConclave(null);
                     }}
-                    disabled={!canEditSelected}
-                    className={`flex-1 py-2.5 rounded-lg text-button font-bold transition-smooth shadow-sm ${
-                      !canEditSelected
-                        ? 'bg-zinc-100 text-zinc-350 border border-zinc-200/60 cursor-not-allowed opacity-50'
-                        : 'bg-white border border-zinc-200 text-zinc-800 hover:bg-zinc-50 cursor-pointer'
-                    }`}
+                    className="flex-1 py-2.5 bg-brand-red hover:bg-red-700 text-white rounded-lg text-button font-bold transition-smooth shadow-sm cursor-pointer"
                   >
-                    Edit Conclave
+                    View Reports
                   </button>
-                );
-              })()}
-              <button
-                onClick={() => {
-                  if (setActiveTab) {
-                    setActiveTab('reports');
-                  } else {
-                    showToast('Fetching reports...', 'Starting file generation.');
-                  }
-                  setSelectedConclave(null);
-                }}
-                className="flex-1 py-2.5 bg-brand-red hover:bg-red-700 text-white rounded-lg text-button font-bold transition-smooth shadow-sm cursor-pointer"
-              >
-                View Reports
-              </button>
-            </div>
-          </>
-        )}
-      </div>
-    </>,
-    document.body
-  )}
+                </div>
+              </>
+            )}
+          </div>
+        </>,
+        document.body
+      )}
 
       {/* CREATE MODAL */}
       {isAddModalOpen && createPortal(

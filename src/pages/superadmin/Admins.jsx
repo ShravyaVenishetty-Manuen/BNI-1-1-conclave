@@ -20,8 +20,20 @@ export default function SuperadminAdmins({ searchQuery }) {
   const [subTab, setSubTab] = useState('admins'); // 'admins' or 'regions'
 
   // Local state for interactive CRUD
-  const [admins, setAdmins] = useState([]);
-  const [regions, setRegions] = useState([]);
+  const [admins, setAdmins] = useState(() => {
+    const cached = localStorage.getItem('bni_superadmin_admins_cache');
+    if (cached) {
+      try { return JSON.parse(cached); } catch (e) {}
+    }
+    return [];
+  });
+  const [regions, setRegions] = useState(() => {
+    const cached = localStorage.getItem('bni_superadmin_regions_cache');
+    if (cached) {
+      try { return JSON.parse(cached); } catch (e) {}
+    }
+    return [];
+  });
   const [conclaves, setConclaves] = useState([]);
   const [members, setMembers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -64,16 +76,22 @@ export default function SuperadminAdmins({ searchQuery }) {
   };
 
   const loadData = async () => {
-    setIsLoading(true);
+    setIsLoading(false);
     try {
       const [adminsList, regionsList, conclavesList, membersList] = await Promise.all([
-        api.get('/admin/coordinators'),
-        api.get('/admin/regions'),
-        api.get('/admin/conclaves'),
-        api.get('/admin/users')
+        api.get('/admin/coordinators').catch(() => []),
+        api.get('/admin/regions').catch(() => []),
+        api.get('/admin/conclaves').catch(() => []),
+        api.get('/admin/users').catch(() => [])
       ]);
-      setAdmins(adminsList || []);
-      setRegions(regionsList || []);
+      if (Array.isArray(adminsList)) {
+        setAdmins(adminsList);
+        localStorage.setItem('bni_superadmin_admins_cache', JSON.stringify(adminsList));
+      }
+      if (Array.isArray(regionsList)) {
+        setRegions(regionsList);
+        localStorage.setItem('bni_superadmin_regions_cache', JSON.stringify(regionsList));
+      }
       setConclaves(conclavesList || []);
       setMembers(membersList || []);
     } catch (err) {

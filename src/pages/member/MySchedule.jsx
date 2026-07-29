@@ -8,7 +8,25 @@ import {
   Coffee,
 } from 'lucide-react';
 
-export default function MemberSchedule({ loggedInMember, onTabChange, conclaveSyncData }) {
+export default function MemberSchedule({ loggedInMember, onTabChange, conclaveSyncData: propConclaveSyncData }) {
+  const [syncData, setSyncData] = useState(() => {
+    if (propConclaveSyncData) return propConclaveSyncData;
+    const cached = localStorage.getItem('bni_conclave_sync_data_cache');
+    if (cached) {
+      try { return JSON.parse(cached); } catch (e) {}
+    }
+    return null;
+  });
+
+  useEffect(() => {
+    if (propConclaveSyncData) {
+      setSyncData(propConclaveSyncData);
+      localStorage.setItem('bni_conclave_sync_data_cache', JSON.stringify(propConclaveSyncData));
+    }
+  }, [propConclaveSyncData]);
+
+  const conclaveSyncData = syncData || propConclaveSyncData;
+
   const initialTime = 15 * 60; // 900 seconds (15:00)
   const [timeLeft, setTimeLeft] = useState(initialTime);
 

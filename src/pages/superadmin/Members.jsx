@@ -30,20 +30,38 @@ export default function SuperadminMembers({ searchQuery }) {
     };
   }, []);
 
-  const [members, setMembers] = useState([]);
-  const [regions, setRegions] = useState([]);
+  const [members, setMembers] = useState(() => {
+    const cached = localStorage.getItem('bni_superadmin_members_cache');
+    if (cached) {
+      try { return JSON.parse(cached); } catch (e) {}
+    }
+    return [];
+  });
+  const [regions, setRegions] = useState(() => {
+    const cached = localStorage.getItem('bni_superadmin_regions_cache');
+    if (cached) {
+      try { return JSON.parse(cached); } catch (e) {}
+    }
+    return [];
+  });
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     async function loadMembersAndRegions() {
-      setIsLoading(true);
+      setIsLoading(false);
       try {
         const [membersData, regionsData] = await Promise.all([
-          api.get('/admin/users'),
-          api.get('/admin/regions')
+          api.get('/admin/users').catch(() => []),
+          api.get('/admin/regions').catch(() => [])
         ]);
-        setMembers(membersData || []);
-        setRegions(regionsData || []);
+        if (Array.isArray(membersData)) {
+          setMembers(membersData);
+          localStorage.setItem('bni_superadmin_members_cache', JSON.stringify(membersData));
+        }
+        if (Array.isArray(regionsData)) {
+          setRegions(regionsData);
+          localStorage.setItem('bni_superadmin_regions_cache', JSON.stringify(regionsData));
+        }
       } catch (err) {
         console.error("Failed to load global members/regions:", err);
       } finally {

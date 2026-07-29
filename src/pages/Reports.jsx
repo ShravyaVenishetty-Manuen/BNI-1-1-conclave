@@ -32,14 +32,29 @@ import {
 const initialMembers = [];
 
 export default function Reports({ searchQuery: globalSearchQuery, selectedConclaveId }) {
-  const [conclaves, setConclaves] = useState([]);
-  const [stats, setStats] = useState(null);
+  const [conclaves, setConclaves] = useState(() => {
+    const cached = localStorage.getItem('bni_admin_conclaves_cache');
+    if (cached) {
+      try { return JSON.parse(cached); } catch (e) {}
+    }
+    return [];
+  });
+  const [stats, setStats] = useState(() => {
+    const cached = localStorage.getItem('bni_admin_stats_cache');
+    if (cached) {
+      try { return JSON.parse(cached); } catch (e) {}
+    }
+    return null;
+  });
 
   useEffect(() => {
     async function loadConclaves() {
       try {
         const data = await api.get('/admin/conclaves');
-        setConclaves(data);
+        if (Array.isArray(data)) {
+          setConclaves(data);
+          localStorage.setItem('bni_admin_conclaves_cache', JSON.stringify(data));
+        }
       } catch (err) {
         console.error("Failed to load conclaves:", err);
       }

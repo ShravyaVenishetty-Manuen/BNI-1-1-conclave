@@ -1,11 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { ArrowRight, Shield, X, Award } from 'lucide-react';
 
 import ReferModal from '../../components/ReferModal';
 import MemberProfileModal from '../../components/MemberProfileModal';
 
-export default function CaptainTable({ loggedInCaptain, searchQuery, conclaveSyncData }) {
+export default function CaptainTable({ loggedInCaptain, searchQuery, conclaveSyncData: propConclaveSyncData }) {
+  const [syncData, setSyncData] = useState(() => {
+    if (propConclaveSyncData) return propConclaveSyncData;
+    const cached = localStorage.getItem('bni_conclave_sync_data_cache');
+    if (cached) {
+      try { return JSON.parse(cached); } catch (e) {}
+    }
+    return null;
+  });
+
+  useEffect(() => {
+    if (propConclaveSyncData) {
+      setSyncData(propConclaveSyncData);
+      localStorage.setItem('bni_conclave_sync_data_cache', JSON.stringify(propConclaveSyncData));
+    }
+  }, [propConclaveSyncData]);
+
+  const conclaveSyncData = syncData || propConclaveSyncData;
+
   const [selectedRound, setSelectedRound] = useState(() => conclaveSyncData?.conclaveStatus?.currentRound || 1);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [referTarget, setReferTarget] = useState(null);
@@ -173,7 +191,7 @@ export default function CaptainTable({ loggedInCaptain, searchQuery, conclaveSyn
                     className="bg-white p-4.5 rounded-xl border border-zinc-200 hover:border-brand-red/40 shadow-2xs flex flex-col justify-between gap-4 transition-smooth cursor-pointer"
                   >
                     <div className="flex items-start gap-3.5">
-                      <div className="w-11 h-11 rounded-lg bg-zinc-50 border border-zinc-200 flex items-center justify-center font-bold text-sm text-zinc-455 shrink-0 shadow-inner">
+                      <div className="w-11 h-11 rounded-full bg-red-50 border border-red-100 font-black text-xs text-brand-red flex items-center justify-center shrink-0 shadow-2xs select-none">
                         {initials}
                       </div>
 

@@ -30,7 +30,13 @@ import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pi
 import { api } from '../services/api';
 
 export default function ScheduleReview({ setActiveTab, searchQuery: globalSearchQuery, selectedConclaveId }) {
-  const [conclave, setConclave] = useState(null);
+  const [conclave, setConclave] = useState(() => {
+    const cached = localStorage.getItem('bni_schedule_review_conclave_cache');
+    if (cached) {
+      try { return JSON.parse(cached); } catch (e) {}
+    }
+    return null;
+  });
   const [isLoadingReview, setIsLoadingReview] = useState(false);
   const [localTables, setLocalTables] = useState([]);
   const [activeRound, setActiveRound] = useState(() => {
@@ -52,6 +58,7 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
           full.participants = [];
         }
         setConclave(full);
+        localStorage.setItem('bni_schedule_review_conclave_cache', JSON.stringify(full));
       } catch (err) {
         console.error("API load failed for conclave details, falling back to local storage:", err);
         const stored = localStorage.getItem('bni_conclaves');

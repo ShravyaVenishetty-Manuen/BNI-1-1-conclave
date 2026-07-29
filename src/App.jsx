@@ -293,8 +293,20 @@ export default function App() {
     setIsSidebarOpen(false);
   };
 
-  const [conclaveSyncData, setConclaveSyncData] = useState(null);
-  const [memberConclaves, setMemberConclaves] = useState([]);
+  const [conclaveSyncData, setConclaveSyncData] = useState(() => {
+    const cached = localStorage.getItem('bni_conclave_sync_data_cache');
+    if (cached) {
+      try { return JSON.parse(cached); } catch (e) {}
+    }
+    return null;
+  });
+  const [memberConclaves, setMemberConclaves] = useState(() => {
+    const cached = localStorage.getItem('bni_member_conclaves_cache');
+    if (cached) {
+      try { return JSON.parse(cached); } catch (e) {}
+    }
+    return [];
+  });
   const [memberProfile, setMemberProfile] = useState(null);
 
   useEffect(() => {
@@ -307,7 +319,10 @@ export default function App() {
           api.get('/me').catch(() => null),
         ]);
 
-        setMemberConclaves(Array.isArray(list) ? list : []);
+        if (Array.isArray(list)) {
+          setMemberConclaves(list);
+          localStorage.setItem('bni_member_conclaves_cache', JSON.stringify(list));
+        }
 
         if (profile) {
           const mergedProfile = {
@@ -338,9 +353,12 @@ export default function App() {
 
         if (myRegisteredConclave) {
           const syncResult = await api.post(`/conclaves/${myRegisteredConclave.id}/sync`, {});
-          setConclaveSyncData(prev => (JSON.stringify(prev) !== JSON.stringify(syncResult) ? syncResult : prev));
-        }
- else {
+          if (syncResult) {
+            localStorage.setItem('bni_conclave_sync_data_cache', JSON.stringify(syncResult));
+            setConclaveSyncData(prev => (JSON.stringify(prev) !== JSON.stringify(syncResult) ? syncResult : prev));
+          }
+        } else {
+          localStorage.removeItem('bni_conclave_sync_data_cache');
           setConclaveSyncData(null);
         }
       } catch (err) {

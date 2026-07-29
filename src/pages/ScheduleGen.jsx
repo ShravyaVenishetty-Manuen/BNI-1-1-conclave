@@ -27,16 +27,26 @@ import { api } from '../services/api';
 
 export default function ScheduleGen({ selectedConclaveId, showGenWarning, clearGenWarning }) {
   // Read locked state from local storage conclaves
-  const [conclaves, setConclaves] = useState([]);
+  const [conclaves, setConclaves] = useState(() => {
+    const cached = localStorage.getItem('bni_schedule_gen_conclaves_cache');
+    if (cached) {
+      try { return JSON.parse(cached); } catch (e) {}
+    }
+    const adminCached = localStorage.getItem('bni_admin_conclaves_cache');
+    if (adminCached) {
+      try { return JSON.parse(adminCached); } catch (e) {}
+    }
+    return [];
+  });
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     async function loadConclaves() {
-      setIsLoading(true);
+      setIsLoading(false);
       try {
         const data = await api.get('/admin/conclaves');
         if (data && data.length > 0) {
-          setConclaves(data.map(c => {
+          const mapped = data.map(c => {
             let state = c.state;
             let country = c.country;
             const venue = c.venueLocation || c.venue || 'N/A';
@@ -65,7 +75,9 @@ export default function ScheduleGen({ selectedConclaveId, showGenWarning, clearG
               status,
               progress: hasSched ? 100 : s === 'running' ? 60 : 0
             };
-          }));
+          });
+          setConclaves(mapped);
+          localStorage.setItem('bni_schedule_gen_conclaves_cache', JSON.stringify(mapped));
           return;
         }
       } catch (err) {
@@ -91,7 +103,13 @@ export default function ScheduleGen({ selectedConclaveId, showGenWarning, clearG
     return s.charAt(0).toUpperCase() + s.slice(1);
   };
 
-  const [stats, setStats] = useState(null);
+  const [stats, setStats] = useState(() => {
+    const cached = localStorage.getItem('bni_admin_stats_cache');
+    if (cached) {
+      try { return JSON.parse(cached); } catch (e) {}
+    }
+    return null;
+  });
 
   useEffect(() => {
     async function loadStatsAndMembers() {
@@ -105,13 +123,15 @@ export default function ScheduleGen({ selectedConclaveId, showGenWarning, clearG
 
         const distinctCatCount = new Set((allUsers || []).map(u => u.category?.trim() || u.businessCategory?.trim()).filter(Boolean)).size || 0;
 
-        setStats({
+        const updatedStats = {
           counts: {
             registered: registeredCount,
             captains: captainsCount,
             businessTypes: distinctCatCount
           }
-        });
+        };
+        setStats(updatedStats);
+        localStorage.setItem('bni_admin_stats_cache', JSON.stringify(updatedStats));
       } catch (err) {
         console.error("Failed to load conclave stats:", err);
       }

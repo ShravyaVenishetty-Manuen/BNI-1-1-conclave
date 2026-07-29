@@ -13,32 +13,42 @@ import {
 export default function CaptainProfile({ loggedInCaptain, onTabChange, onLogout }) {
   // Local editable state for profile info
   const [isEditing, setIsEditing] = useState(false);
-  const [profileData, setProfileData] = useState(() => ({
-    name: loggedInCaptain?.name || 'Deepak Tiwari',
-    email: loggedInCaptain?.email || 'deepak.tiwari1@bni.com',
-    phone: loggedInCaptain?.phone || loggedInCaptain?.mobile || '+91 98752 77221',
-    designation: loggedInCaptain?.designation || 'Table Captain',
-    company: loggedInCaptain?.company || loggedInCaptain?.businessName || 'Prime Realty Group',
-    category: loggedInCaptain?.category || loggedInCaptain?.businessCategory || 'Real Estate',
-    chapter: loggedInCaptain?.chapter || 'Vijayawada Elite',
-    registrationDate: loggedInCaptain?.registrationDate || loggedInCaptain?.joinedDate || '2026'
-  }));
+  const [profileData, setProfileData] = useState(() => {
+    const cached = localStorage.getItem('bni_captain_profile_cache');
+    if (cached) {
+      try { return JSON.parse(cached); } catch (e) {}
+    }
+    return {
+      name: loggedInCaptain?.name || 'Deepak Tiwari',
+      email: loggedInCaptain?.email || 'deepak.tiwari1@bni.com',
+      phone: loggedInCaptain?.phone || loggedInCaptain?.mobile || '+91 98752 77221',
+      designation: loggedInCaptain?.designation || 'Table Captain',
+      company: loggedInCaptain?.company || loggedInCaptain?.businessName || 'Prime Realty Group',
+      category: loggedInCaptain?.category || loggedInCaptain?.businessCategory || 'Real Estate',
+      chapter: loggedInCaptain?.chapter || 'Vijayawada Elite',
+      registrationDate: loggedInCaptain?.registrationDate || loggedInCaptain?.joinedDate || '2026'
+    };
+  });
 
   useEffect(() => {
     async function loadFreshProfile() {
       try {
         const fresh = await api.get('/me');
         if (fresh) {
-          setProfileData(prev => ({
-            ...prev,
-            name: fresh.name || prev.name,
-            email: fresh.email || prev.email,
-            phone: fresh.phone || fresh.mobile || prev.phone,
-            designation: fresh.designation || prev.designation,
-            company: fresh.company || fresh.businessName || prev.company,
-            category: fresh.category || fresh.businessCategory || prev.category,
-            chapter: fresh.chapter || prev.chapter
-          }));
+          setProfileData(prev => {
+            const updated = {
+              ...prev,
+              name: fresh.name || prev.name,
+              email: fresh.email || prev.email,
+              phone: fresh.phone || fresh.mobile || prev.phone,
+              designation: fresh.designation || prev.designation,
+              company: fresh.company || fresh.businessName || prev.company,
+              category: fresh.category || fresh.businessCategory || prev.category,
+              chapter: fresh.chapter || prev.chapter
+            };
+            localStorage.setItem('bni_captain_profile_cache', JSON.stringify(updated));
+            return updated;
+          });
         }
       } catch (e) {}
     }
