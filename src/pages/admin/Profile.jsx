@@ -13,53 +13,33 @@ import {
 } from 'lucide-react';
 import { api } from '../../services/api';
 
+const formatJoinedDate = (rawDate) => {
+  if (!rawDate) return 'Active Member';
+  if (typeof rawDate === 'string' && (rawDate === 'Invalid Date' || rawDate.includes('Invalid Date'))) {
+    return 'Active Member';
+  }
+  try {
+    const d = new Date(rawDate);
+    if (!isNaN(d.getTime())) {
+      return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    }
+  } catch (e) {}
+  return typeof rawDate === 'string' && rawDate.trim() ? rawDate : 'Active Member';
+};
+
 export default function AdminProfile({ loggedInAdmin, role = 'admin', onLogout }) {
   const isSuperadmin = role === 'superadmin';
 
   // Local editable state for profile info
   const [isEditing, setIsEditing] = useState(false);
-  const [profileData, setProfileData] = useState(() => {
-    if (isSuperadmin) {
-      const saved = localStorage.getItem('bni_superadmin_profile');
-      if (saved) {
-        try {
-          return JSON.parse(saved);
-        } catch (e) {}
-      }
-      return {
-        name: loggedInAdmin?.name || 'Superadmin',
-        email: loggedInAdmin?.email || 'superadmin@bni.com',
-        phone: loggedInAdmin?.phone || '+91 98888 77777',
-        designation: 'Global Administrator',
-        organization: 'BNI Global LLC',
-        region: 'All Regions (Global)',
-        joinedDate: 'Active Member'
-      };
-    }
-    const saved = localStorage.getItem('bni_logged_admin');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        return {
-          name: parsed.name || loggedInAdmin?.name || 'Administrator',
-          email: parsed.email || loggedInAdmin?.email || 'admin@bni.com',
-          phone: parsed.phone || parsed.mobile || loggedInAdmin?.phone || '+91 98888 77777',
-          designation: parsed.designation || 'Regional Administrator',
-          organization: parsed.organization || 'BNI India (Guntur Region)',
-          region: parsed.region || loggedInAdmin?.chapter || loggedInAdmin?.region || 'Guntur Central',
-          joinedDate: parsed.joinedDate || (loggedInAdmin?.createdAt ? new Date(loggedInAdmin.createdAt).toLocaleDateString([], { month: 'long', year: 'numeric' }) : 'Active Member')
-        };
-      } catch (e) {}
-    }
-    return {
-      name: loggedInAdmin?.name || 'Administrator',
-      email: loggedInAdmin?.email || 'admin@bni.com',
-      phone: loggedInAdmin?.phone || '+91 98888 77777',
-      designation: 'Regional Administrator',
-      organization: 'BNI India (Guntur Region)',
-      region: loggedInAdmin?.chapter || loggedInAdmin?.region || 'Guntur Central',
-      joinedDate: loggedInAdmin?.createdAt ? new Date(loggedInAdmin.createdAt).toLocaleDateString([], { month: 'long', year: 'numeric' }) : 'Active Member'
-    };
+  const [profileData, setProfileData] = useState({
+    name: loggedInAdmin?.name || (isSuperadmin ? 'Superadmin' : 'Administrator'),
+    email: loggedInAdmin?.email || (isSuperadmin ? 'superadmin@bni.com' : 'admin@bni.com'),
+    phone: loggedInAdmin?.phone || loggedInAdmin?.mobile || '+91 98888 77777',
+    designation: isSuperadmin ? 'Global Administrator' : 'Regional Administrator',
+    organization: isSuperadmin ? 'BNI Global LLC' : 'BNI India (Guntur Region)',
+    region: isSuperadmin ? 'All Regions (Global)' : (loggedInAdmin?.chapter || loggedInAdmin?.region || 'Guntur Central'),
+    joinedDate: formatJoinedDate(loggedInAdmin?.createdAt)
   });
 
   const [conclavesCount, setConclavesCount] = useState(0);
@@ -95,14 +75,13 @@ export default function AdminProfile({ loggedInAdmin, role = 'admin', onLogout }
         const fresh = await api.get('/me');
         if (fresh) {
           setProfileData(prev => ({
-            ...prev,
             name: fresh.name || prev.name,
             email: fresh.email || prev.email,
             phone: fresh.phone || fresh.mobile || prev.phone,
             designation: isSuperadmin ? 'Global Administrator' : (fresh.designation || prev.designation),
             organization: isSuperadmin ? 'BNI Global LLC' : (fresh.organizationNode || fresh.organization || prev.organization),
             region: isSuperadmin ? 'All Regions (Global)' : (fresh.region || fresh.scope || prev.region),
-            joinedDate: fresh.createdAt ? new Date(fresh.createdAt).toLocaleDateString([], { month: 'long', year: 'numeric' }) : prev.joinedDate
+            joinedDate: formatJoinedDate(fresh.createdAt || prev.joinedDate)
           }));
         }
       } catch (err) {
