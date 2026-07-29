@@ -6,7 +6,7 @@
 const STORAGE_KEY = 'bni_conclave_notifications_v3';
 
 // Fetch raw notification list from localStorage (with fallback & initial seeding)
-function getRawNotifications() {
+export function getRawNotifications() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
@@ -45,7 +45,7 @@ function getRawNotifications() {
 }
 
 // Save raw notification list to localStorage
-function saveRawNotifications(list) {
+export function saveRawNotifications(list) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(list.slice(0, 200)));
     window.dispatchEvent(new Event('storage'));

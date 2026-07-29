@@ -19,7 +19,7 @@ import SuperadminAdmins from '../pages/superadmin/Admins';
 import SuperadminConclaves from '../pages/superadmin/Conclaves';
 import SuperadminMembers from '../pages/superadmin/Members';
 import AdminProfile from '../pages/admin/Profile';
-import { getNotifications, addNotification, saveNotifications } from '../utils/notifications';
+import { getNotifications, addNotification, markAllRead, removeNotification as removeNotifApi, getRawNotifications, saveRawNotifications } from '../utils/notifications';
 import { api } from '../services/api';
 
 export default function SuperadminLayout({
@@ -102,21 +102,28 @@ export default function SuperadminLayout({
   const unreadCount = notifications.filter(n => n.unread).length;
 
   const markAllAsRead = () => {
-    const updated = notifications.map(n => ({ ...n, unread: false }));
-    setNotifications(updated);
-    saveNotifications(SUPERADMIN_UID, updated);
+    markAllRead({ userUid: SUPERADMIN_UID });
+    setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
   };
 
   const removeNotification = (id) => {
-    const updated = notifications.filter(n => n.id !== id);
-    setNotifications(updated);
-    saveNotifications(SUPERADMIN_UID, updated);
+    removeNotifApi(id);
+    setNotifications(prev => prev.filter(n => n.id !== id));
   };
 
   const toggleReadStatus = (id) => {
-    const updated = notifications.map(n => n.id === id ? { ...n, unread: !n.unread } : n);
-    setNotifications(updated);
-    saveNotifications(SUPERADMIN_UID, updated);
+    const rawList = getRawNotifications();
+    const updatedRaw = rawList.map(item => {
+      if (item.id === id) {
+        const readBy = Array.isArray(item.readBy) ? item.readBy : [];
+        const isRead = readBy.includes(SUPERADMIN_UID);
+        const newReadBy = isRead ? readBy.filter(u => u !== SUPERADMIN_UID) : [...readBy, SUPERADMIN_UID];
+        return { ...item, readBy: newReadBy };
+      }
+      return item;
+    });
+    saveRawNotifications(updatedRaw);
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, unread: !n.unread } : n));
   };
 
   const navItems = [

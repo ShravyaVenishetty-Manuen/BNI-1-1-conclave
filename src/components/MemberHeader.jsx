@@ -41,7 +41,7 @@ export default function MemberHeader({
 
   const unreadCount = notifications.filter(n => n.unread).length;
 
-  const markAllRead = () => {
+  const markAllAsRead = () => {
     markAllRead({ userUid });
     setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
   };
@@ -145,7 +145,7 @@ export default function MemberHeader({
                   </div>
                   {unreadCount > 0 && (
                     <button
-                      onClick={markAllRead}
+                      onClick={markAllAsRead}
                       className="text-[9px] font-black text-brand-red hover:underline uppercase tracking-wider cursor-pointer"
                     >
                       Mark all read
