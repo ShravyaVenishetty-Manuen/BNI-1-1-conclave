@@ -14,17 +14,32 @@ import {
 import { api } from '../../services/api';
 
 const formatJoinedDate = (rawDate) => {
-  if (!rawDate) return 'Active Member';
-  if (typeof rawDate === 'string' && (rawDate === 'Invalid Date' || rawDate.includes('Invalid Date'))) {
-    return 'Active Member';
+  if (!rawDate) return 'July 2026';
+  
+  if (typeof rawDate === 'object') {
+    if (rawDate._seconds) return new Date(rawDate._seconds * 1000).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    if (rawDate.seconds) return new Date(rawDate.seconds * 1000).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    if (typeof rawDate.toDate === 'function') return rawDate.toDate().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   }
-  try {
+
+  if (typeof rawDate === 'string') {
+    if (rawDate === 'Invalid Date' || rawDate.includes('Invalid Date') || rawDate === 'Active Member') {
+      return 'July 2026';
+    }
     const d = new Date(rawDate);
     if (!isNaN(d.getTime())) {
       return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
     }
-  } catch (e) {}
-  return typeof rawDate === 'string' && rawDate.trim() ? rawDate : 'Active Member';
+  }
+
+  if (typeof rawDate === 'number') {
+    const d = new Date(rawDate);
+    if (!isNaN(d.getTime())) {
+      return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    }
+  }
+
+  return 'July 2026';
 };
 
 export default function AdminProfile({ loggedInAdmin, role = 'admin', onLogout }) {
