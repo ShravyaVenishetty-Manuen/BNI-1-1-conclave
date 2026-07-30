@@ -150,8 +150,9 @@ export default function CaptainSchedule({ loggedInCaptain, conclaveSyncData: pro
 
 
 
-      {/* Main Split Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      {/* Main Split Grid - Only show when real generated schedule items exist */}
+      {scheduleItems.length > 0 ? (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
         {/* Left Column: Timeline with Cards */}
         <div className="lg:col-span-8 relative py-4 px-2">
@@ -287,8 +288,18 @@ export default function CaptainSchedule({ loggedInCaptain, conclaveSyncData: pro
           </div>
 
         </div>
-
       </div>
+      ) : !agendaDoc ? (
+        <div className="bg-white rounded-2xl border border-zinc-200 p-12 text-center shadow-2xs space-y-3">
+          <div className="w-12 h-12 rounded-2xl bg-zinc-100 border border-zinc-200 text-zinc-400 flex items-center justify-center mx-auto">
+            <BookOpen className="w-6 h-6" />
+          </div>
+          <h3 className="text-lg font-black text-zinc-900">No Seating Schedule or Agenda Published Yet</h3>
+          <p className="text-xs text-zinc-500 max-w-md mx-auto font-medium">
+            The conclave table schedule has not been generated or published by Admin yet.
+          </p>
+        </div>
+      ) : null}
 
     </div>
   );

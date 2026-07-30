@@ -17,7 +17,7 @@ export default function MemberSchedule({ loggedInMember, onTabChange, conclaveSy
     if (propConclaveSyncData) return propConclaveSyncData;
     const cached = localStorage.getItem('bni_conclave_sync_data_cache');
     if (cached) {
-      try { return JSON.parse(cached); } catch (e) {}
+      try { return JSON.parse(cached); } catch (e) { }
     }
     return null;
   });
@@ -56,13 +56,13 @@ export default function MemberSchedule({ loggedInMember, onTabChange, conclaveSy
   const getUploadedAgendaDoc = () => {
     if (conclaveSyncData?.agendaDocument) return conclaveSyncData.agendaDocument;
     if (fetchedAgendaDoc) return fetchedAgendaDoc;
-    
+
     // Check specific conclave key
     const conclaveId = conclaveSyncData?.conclaveStatus?.id || conclaveSyncData?.conclaveId;
     if (conclaveId) {
       const cached = localStorage.getItem(`bni_agenda_doc_${conclaveId}`);
       if (cached) {
-        try { return JSON.parse(cached); } catch (e) {}
+        try { return JSON.parse(cached); } catch (e) { }
       }
     }
 
@@ -77,7 +77,7 @@ export default function MemberSchedule({ loggedInMember, onTabChange, conclaveSy
             const found = list.find(c => c.agendaDocument);
             if (found && found.agendaDocument) return found.agendaDocument;
           }
-        } catch (e) {}
+        } catch (e) { }
       }
     }
 
@@ -88,7 +88,7 @@ export default function MemberSchedule({ loggedInMember, onTabChange, conclaveSy
         try {
           const val = JSON.parse(localStorage.getItem(k));
           if (val && (val.url || val.dataUrl)) return val;
-        } catch (e) {}
+        } catch (e) { }
       }
     }
     return null;
@@ -214,8 +214,9 @@ export default function MemberSchedule({ loggedInMember, onTabChange, conclaveSy
 
 
 
-      {/* Bento Grid Layout */}
-      <div className="grid grid-cols-12 gap-6 items-start">
+      {/* If generated rounds exist, render the generated schedule grid */}
+      {rounds.length > 0 ? (
+        <div className="grid grid-cols-12 gap-6 items-start">
 
         {/* Left Column: Schedule Progress & Timeline (Col-Span 12) */}
         <div className="col-span-12 space-y-6">
@@ -335,9 +336,8 @@ export default function MemberSchedule({ loggedInMember, onTabChange, conclaveSy
                 return (
                   <div
                     key={rnd.number}
-                    className={`bg-white rounded-xl p-5 shadow-2xs space-y-4 border transition-all duration-300 hover:shadow-md ${
-                      isActive ? 'border-2 border-brand-red ring-4 ring-brand-red/5' : 'border-zinc-200'
-                    } ${isCompleted ? 'opacity-85 bg-zinc-50/10' : ''}`}
+                    className={`bg-white rounded-xl p-5 shadow-2xs space-y-4 border transition-all duration-300 hover:shadow-md ${isActive ? 'border-2 border-brand-red ring-4 ring-brand-red/5' : 'border-zinc-200'
+                      } ${isCompleted ? 'opacity-85 bg-zinc-50/10' : ''}`}
                   >
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                       <div>
@@ -367,15 +367,10 @@ export default function MemberSchedule({ loggedInMember, onTabChange, conclaveSy
                       {rnd.participants.map(participant => (
                         <div
                           key={participant.name}
-                          className="p-2.5 bg-zinc-50/50 border border-zinc-200/80 rounded-lg flex items-center gap-2.5 transition-smooth hover:border-zinc-300"
+                          className="p-3 bg-zinc-50/50 border border-zinc-200/80 rounded-lg flex flex-col justify-center transition-smooth hover:border-zinc-300"
                         >
-                          <div className="w-8 h-8 rounded-full bg-white border border-zinc-200 flex items-center justify-center font-bold text-[10px] text-zinc-650 shrink-0 shadow-inner select-none">
-                            {participant.initials}
-                          </div>
-                          <div className="min-w-0">
-                            <h4 className="text-[11px] font-black text-zinc-800 truncate leading-snug">{participant.name}</h4>
-                            <span className="text-[9px] text-zinc-450 font-semibold block truncate leading-none mt-0.5">{participant.category}</span>
-                          </div>
+                          <h4 className="text-[11.5px] font-black text-zinc-900 truncate leading-snug">{participant.name}</h4>
+                          <span className="text-[9.5px] text-zinc-500 font-semibold block truncate leading-none mt-1">{participant.category}</span>
                         </div>
                       ))}
                     </div>
@@ -404,8 +399,10 @@ export default function MemberSchedule({ loggedInMember, onTabChange, conclaveSy
                     <span className="text-[13.5px] font-black text-zinc-900 mt-0.5">{nextRound.table}</span>
                   </div>
                   <div className="text-right">
-                    <span className="text-[9px] font-extrabold text-zinc-400 uppercase tracking-widest block">Starts in</span>
-                    <span className="text-[13.5px] font-black text-zinc-500 mt-0.5">TBD</span>
+                    <span className="text-[9px] font-extrabold text-zinc-400 uppercase tracking-widest block">Starts At</span>
+                    <span className="text-[13.5px] font-black text-brand-red mt-0.5">
+                      {nextRound.time ? nextRound.time.split('-')[0].trim() : 'Scheduled'}
+                    </span>
                   </div>
                 </div>
 
@@ -420,9 +417,10 @@ export default function MemberSchedule({ loggedInMember, onTabChange, conclaveSy
                   </div>
                 </div>
 
-                <div className="p-3 bg-zinc-50/50 rounded-lg border border-dashed border-zinc-200 text-center mt-2">
-                  <p className="text-[10px] text-zinc-450 italic font-semibold">
-                    Round details will unlock after active round completion.
+                <div className="p-3 bg-emerald-50/60 rounded-lg border border-emerald-200/80 text-center mt-2">
+                  <p className="text-[11px] text-emerald-800 font-black flex items-center justify-center gap-1.5">
+                    <Check className="w-3.5 h-3.5 text-emerald-600" />
+                    Confirmed seating for Round {nextRound.number}
                   </p>
                 </div>
               </div>
@@ -460,6 +458,17 @@ export default function MemberSchedule({ loggedInMember, onTabChange, conclaveSy
 
         </aside>
       </div>
+      ) : !agendaDoc ? (
+        <div className="bg-white rounded-2xl border border-zinc-200 p-12 text-center shadow-2xs space-y-3">
+          <div className="w-12 h-12 rounded-2xl bg-zinc-100 border border-zinc-200 text-zinc-400 flex items-center justify-center mx-auto">
+            <Clock className="w-6 h-6" />
+          </div>
+          <h3 className="text-lg font-black text-zinc-900">No Seating Schedule or Agenda Published Yet</h3>
+          <p className="text-xs text-zinc-500 max-w-md mx-auto font-medium">
+            The conclave agenda or table seating rounds have not been published by Admin yet. Please check back soon or contact your Chapter Admin.
+          </p>
+        </div>
+      ) : null}
 
     </div>
   );
