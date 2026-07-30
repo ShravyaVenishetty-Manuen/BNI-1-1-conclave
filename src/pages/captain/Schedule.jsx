@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Check, Play, ArrowRight, Award, Shield, PhoneCall, BookOpen } from 'lucide-react';
+import { Check, Play, ArrowRight, Award, Shield, PhoneCall, BookOpen, FileText, Download } from 'lucide-react';
+import { downloadOrViewAgendaDocument } from '../../utils/documentUtils';
+import { api } from '../../services/api';
 
 export default function CaptainSchedule({ loggedInCaptain, conclaveSyncData: propConclaveSyncData }) {
   const [syncData, setSyncData] = useState(() => {
@@ -11,6 +13,28 @@ export default function CaptainSchedule({ loggedInCaptain, conclaveSyncData: pro
     return null;
   });
 
+  const [fetchedAgendaDoc, setFetchedAgendaDoc] = useState(null);
+
+  useEffect(() => {
+    async function fetchLatestAgendaDoc() {
+      try {
+        const list = await api.get('/conclaves');
+        if (Array.isArray(list)) {
+          const conclaveWithDoc = list.find(c => c.agendaDocument);
+          if (conclaveWithDoc && conclaveWithDoc.agendaDocument) {
+            setFetchedAgendaDoc(conclaveWithDoc.agendaDocument);
+            if (conclaveWithDoc.id) {
+              localStorage.setItem(`bni_agenda_doc_${conclaveWithDoc.id}`, JSON.stringify(conclaveWithDoc.agendaDocument));
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("Could not fetch agenda document from backend:", err);
+      }
+    }
+    fetchLatestAgendaDoc();
+  }, []);
+
   useEffect(() => {
     if (propConclaveSyncData) {
       setSyncData(propConclaveSyncData);
@@ -19,6 +43,47 @@ export default function CaptainSchedule({ loggedInCaptain, conclaveSyncData: pro
   }, [propConclaveSyncData]);
 
   const conclaveSyncData = syncData || propConclaveSyncData;
+
+  const getUploadedAgendaDoc = () => {
+    if (conclaveSyncData?.agendaDocument) return conclaveSyncData.agendaDocument;
+    if (fetchedAgendaDoc) return fetchedAgendaDoc;
+    
+    const conclaveId = conclaveSyncData?.conclaveStatus?.id || conclaveSyncData?.conclaveId;
+    if (conclaveId) {
+      const cached = localStorage.getItem(`bni_agenda_doc_${conclaveId}`);
+      if (cached) {
+        try { return JSON.parse(cached); } catch (e) {}
+      }
+    }
+
+    const keys = ['bni_admin_conclaves_cache', 'bni_conclaves', 'bni_member_conclaves_cache', 'bni_schedule_gen_conclaves_cache'];
+    for (const key of keys) {
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        try {
+          const list = JSON.parse(raw);
+          if (Array.isArray(list)) {
+            const found = list.find(c => c.agendaDocument);
+            if (found && found.agendaDocument) return found.agendaDocument;
+          }
+        } catch (e) {}
+      }
+    }
+
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('bni_agenda_doc_')) {
+        try {
+          const val = JSON.parse(localStorage.getItem(k));
+          if (val && (val.url || val.dataUrl)) return val;
+        } catch (e) {}
+      }
+    }
+    return null;
+  };
+
+  const agendaDoc = getUploadedAgendaDoc() || fetchedAgendaDoc;
+
   const scheduleItems = conclaveSyncData?.mySchedule || [];
   const currentRoundNum = conclaveSyncData?.conclaveStatus?.currentRound || 0;
 
@@ -41,12 +106,49 @@ export default function CaptainSchedule({ loggedInCaptain, conclaveSyncData: pro
               Conclave Completed
             </span>
           ) : (
-            <span className="bg-red-50 text-brand-red px-3 py-1 rounded-full text-[10px] font-black tracking-wider uppercase border border-red-100 shadow-2xs">
-              Round {currentRoundNum} Active
+            <span className="bg-red-50 text-brand-red px-3 py-1 rounded-full text-[10px] font-black tracking-wider uppercase border border-red-100 shadow-2xs flex items-center gap-1.5">
+              <Play className="w-3.5 h-3.5 text-brand-red fill-brand-red" />
+              Active Session
             </span>
           )}
         </div>
       </div>
+
+      {/* Published Conclave Agenda Banner (if uploaded by Admin) */}
+      {agendaDoc && (
+        <div className="bg-gradient-to-r from-emerald-950 via-zinc-900 to-zinc-950 text-white rounded-2xl p-6 shadow-md border border-emerald-800/40 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-6">
+          <div className="flex items-center gap-4">
+            <div className="p-4 bg-emerald-500/20 text-emerald-400 rounded-2xl border border-emerald-400/30 shrink-0">
+              <FileText className="w-8 h-8" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[9.5px] font-black tracking-wider uppercase text-emerald-300 bg-emerald-500/20 px-2.5 py-0.5 rounded border border-emerald-400/30">
+                  Published Conclave Agenda
+                </span>
+                <span className="text-xs text-zinc-300 font-medium">{agendaDoc.size || 'PDF Document'}</span>
+              </div>
+              <h2 className="text-xl font-black text-white mt-1.5">{agendaDoc.name || 'Official Conclave Agenda.pdf'}</h2>
+              <p className="text-xs text-zinc-350 font-medium mt-1">
+                Click below to open and view the complete official conclave agenda document.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 w-full md:w-auto shrink-0">
+            <button
+              onClick={() => downloadOrViewAgendaDocument(agendaDoc)}
+              type="button"
+              className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-black text-button rounded-xl transition-smooth shadow-md cursor-pointer"
+            >
+              <FileText className="w-4 h-4" />
+              View / Open Agenda File
+            </button>
+          </div>
+        </div>
+      )}
+
+
 
       {/* Main Split Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">

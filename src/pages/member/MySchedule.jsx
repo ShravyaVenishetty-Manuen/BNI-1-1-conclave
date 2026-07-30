@@ -6,7 +6,11 @@ import {
   Clock,
   MapPin,
   Coffee,
+  FileText,
+  Download,
 } from 'lucide-react';
+import { downloadOrViewAgendaDocument } from '../../utils/documentUtils';
+import { api } from '../../services/api';
 
 export default function MemberSchedule({ loggedInMember, onTabChange, conclaveSyncData: propConclaveSyncData }) {
   const [syncData, setSyncData] = useState(() => {
@@ -18,6 +22,28 @@ export default function MemberSchedule({ loggedInMember, onTabChange, conclaveSy
     return null;
   });
 
+  const [fetchedAgendaDoc, setFetchedAgendaDoc] = useState(null);
+
+  useEffect(() => {
+    async function fetchLatestAgendaDoc() {
+      try {
+        const list = await api.get('/conclaves');
+        if (Array.isArray(list)) {
+          const conclaveWithDoc = list.find(c => c.agendaDocument);
+          if (conclaveWithDoc && conclaveWithDoc.agendaDocument) {
+            setFetchedAgendaDoc(conclaveWithDoc.agendaDocument);
+            if (conclaveWithDoc.id) {
+              localStorage.setItem(`bni_agenda_doc_${conclaveWithDoc.id}`, JSON.stringify(conclaveWithDoc.agendaDocument));
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("Could not fetch agenda document from backend:", err);
+      }
+    }
+    fetchLatestAgendaDoc();
+  }, []);
+
   useEffect(() => {
     if (propConclaveSyncData) {
       setSyncData(propConclaveSyncData);
@@ -26,6 +52,89 @@ export default function MemberSchedule({ loggedInMember, onTabChange, conclaveSy
   }, [propConclaveSyncData]);
 
   const conclaveSyncData = syncData || propConclaveSyncData;
+
+  const getUploadedAgendaDoc = () => {
+    if (conclaveSyncData?.agendaDocument) return conclaveSyncData.agendaDocument;
+    if (fetchedAgendaDoc) return fetchedAgendaDoc;
+    
+    // Check specific conclave key
+    const conclaveId = conclaveSyncData?.conclaveStatus?.id || conclaveSyncData?.conclaveId;
+    if (conclaveId) {
+      const cached = localStorage.getItem(`bni_agenda_doc_${conclaveId}`);
+      if (cached) {
+        try { return JSON.parse(cached); } catch (e) {}
+      }
+    }
+
+    // Check all conclave caches in local storage
+    const keys = ['bni_admin_conclaves_cache', 'bni_conclaves', 'bni_member_conclaves_cache', 'bni_schedule_gen_conclaves_cache'];
+    for (const key of keys) {
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        try {
+          const list = JSON.parse(raw);
+          if (Array.isArray(list)) {
+            const found = list.find(c => c.agendaDocument);
+            if (found && found.agendaDocument) return found.agendaDocument;
+          }
+        } catch (e) {}
+      }
+    }
+
+    // Check any local storage key starting with bni_agenda_doc_
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('bni_agenda_doc_')) {
+        try {
+          const val = JSON.parse(localStorage.getItem(k));
+          if (val && (val.url || val.dataUrl)) return val;
+        } catch (e) {}
+      }
+    }
+    return null;
+  };
+
+  const agendaDoc = getUploadedAgendaDoc() || fetchedAgendaDoc;
+
+  const [pdfBlobUrl, setPdfBlobUrl] = useState(null);
+
+  useEffect(() => {
+    if (!agendaDoc) {
+      setPdfBlobUrl(null);
+      return;
+    }
+
+    const dataUrl = agendaDoc.dataUrl || agendaDoc.url;
+    if (dataUrl && dataUrl.includes(';base64,')) {
+      try {
+        const parts = dataUrl.split(';base64,');
+        const mime = parts[0].replace('data:', '') || agendaDoc.type || 'application/pdf';
+        const base64Str = parts[1];
+        const binaryStr = window.atob(base64Str);
+        const len = binaryStr.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+          bytes[i] = binaryStr.charCodeAt(i);
+        }
+        const blob = new Blob([bytes], { type: mime });
+        const bUrl = URL.createObjectURL(blob);
+        setPdfBlobUrl(bUrl);
+
+        return () => {
+          URL.revokeObjectURL(bUrl);
+        };
+      } catch (e) {
+        console.warn("Failed to create blob URL:", e);
+        setPdfBlobUrl(dataUrl);
+      }
+    } else {
+      let fileUrl = dataUrl || '';
+      if (fileUrl.startsWith('/uploads')) {
+        fileUrl = `${window.location.protocol}//${window.location.hostname}:3000${fileUrl}`;
+      }
+      setPdfBlobUrl(fileUrl);
+    }
+  }, [agendaDoc]);
 
   const initialTime = 15 * 60; // 900 seconds (15:00)
   const [timeLeft, setTimeLeft] = useState(initialTime);
@@ -65,9 +174,45 @@ export default function MemberSchedule({ loggedInMember, onTabChange, conclaveSy
 
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl md:text-3xl font-black text-zinc-955 tracking-tight">My Schedule</h1>
-        <p className="text-xs text-zinc-450 font-semibold mt-1">View your complete networking schedule for the current conclave.</p>
+        <h1 className="text-2xl md:text-3xl font-black text-zinc-955 tracking-tight">My Conclave Agenda & Schedule</h1>
+        <p className="text-xs text-zinc-450 font-semibold mt-1 font-sans">Official agenda uploaded by Admin for the business conclave.</p>
       </div>
+
+      {/* In-Page Interactive Agenda Document Banner (if uploaded by Admin) */}
+      {agendaDoc && (
+        <div className="bg-gradient-to-r from-emerald-950 via-zinc-900 to-zinc-950 text-white rounded-2xl p-6 shadow-md border border-emerald-800/40 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div className="flex items-center gap-4">
+            <div className="p-4 bg-emerald-500/20 text-emerald-400 rounded-2xl border border-emerald-400/30 shrink-0">
+              <FileText className="w-8 h-8" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[9.5px] font-black tracking-wider uppercase text-emerald-300 bg-emerald-500/20 px-2.5 py-0.5 rounded border border-emerald-400/30">
+                  Published Conclave Agenda
+                </span>
+                <span className="text-xs text-zinc-300 font-medium">{agendaDoc.size || 'PDF Document'}</span>
+              </div>
+              <h2 className="text-xl font-black text-white mt-1.5">{agendaDoc.name || 'Official Conclave Agenda.pdf'}</h2>
+              <p className="text-xs text-zinc-350 font-medium mt-1">
+                Click below to open and view the complete official conclave agenda document.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 w-full md:w-auto shrink-0">
+            <button
+              onClick={() => downloadOrViewAgendaDocument(agendaDoc)}
+              type="button"
+              className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-black text-button rounded-xl transition-smooth shadow-md cursor-pointer"
+            >
+              <FileText className="w-4 h-4" />
+              View / Open Agenda File
+            </button>
+          </div>
+        </div>
+      )}
+
+
 
       {/* Bento Grid Layout */}
       <div className="grid grid-cols-12 gap-6 items-start">

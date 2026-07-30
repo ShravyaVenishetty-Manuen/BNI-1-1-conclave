@@ -7,6 +7,8 @@ import {
   Plus,
   MoreVertical,
   Trash2,
+  FileText,
+  Upload,
 } from 'lucide-react';
 import Pagination from '../components/Pagination';
 import { ResponsiveContainer, BarChart, Bar, XAxis } from 'recharts';
@@ -138,10 +140,12 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
+  const [agendaUploadTarget, setAgendaUploadTarget] = useState(null);
+  const [isUploadingAgenda, setIsUploadingAgenda] = useState(false);
 
   // Lock background body scroll when any modal is open
   useEffect(() => {
-    if (isAddModalOpen || isEditModalOpen || deleteTarget || isBulkDeleteOpen) {
+    if (isAddModalOpen || isEditModalOpen || deleteTarget || isBulkDeleteOpen || agendaUploadTarget) {
       document.body.classList.add('modal-open');
       document.body.style.overflow = 'hidden';
     } else {
@@ -152,7 +156,50 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
       document.body.classList.remove('modal-open');
       document.body.style.overflow = '';
     };
-  }, [isAddModalOpen, isEditModalOpen, deleteTarget, isBulkDeleteOpen]);
+  }, [isAddModalOpen, isEditModalOpen, deleteTarget, isBulkDeleteOpen, agendaUploadTarget]);
+
+  const handleAgendaFileUpload = async (e, conclaveId) => {
+    const file = e.target.files?.[0];
+    if (!file || !conclaveId) return;
+
+    if (file.size > 25 * 1024 * 1024) {
+      showToast('File Too Large', 'Please select an agenda document under 25MB.');
+      return;
+    }
+
+    setIsUploadingAgenda(true);
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        const fileObj = {
+          name: file.name,
+          dataUrl: reader.result,
+          type: file.type || 'application/pdf',
+          size: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
+          uploadedAt: new Date().toISOString()
+        };
+
+        const res = await api.post(`/admin/conclaves/${conclaveId}/agenda-document`, { agendaDocument: fileObj });
+
+        const updatedDoc = res?.agendaDocument || fileObj;
+
+        // Update local state and local storage cache
+        setConclaves(prev => prev.map(c => c.id === conclaveId ? { ...c, agendaDocument: updatedDoc } : c));
+        localStorage.setItem(`bni_agenda_doc_${conclaveId}`, JSON.stringify(updatedDoc));
+        if (selectedConclave && selectedConclave.id === conclaveId) {
+          setSelectedConclave(prev => ({ ...prev, agendaDocument: updatedDoc }));
+        }
+
+        showToast('Agenda Published 🎉', `Official document "${file.name}" uploaded and published for Members & Captains.`);
+        setAgendaUploadTarget(null);
+      } catch (err) {
+        showToast('Upload Error', err.message || 'Failed to upload agenda document.');
+      } finally {
+        setIsUploadingAgenda(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
 
 
@@ -817,6 +864,16 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
                                   </button>
                                   <button
                                     onClick={() => {
+                                      setAgendaUploadTarget(conclave);
+                                      setActiveDropdown(null);
+                                    }}
+                                    className="w-full text-left px-3.5 py-2 hover:bg-emerald-50 text-[11px] font-extrabold text-emerald-700 flex items-center gap-1.5 transition-smooth"
+                                  >
+                                    <FileText className="w-3.5 h-3.5" />
+                                    Upload Agenda Doc
+                                  </button>
+                                  <button
+                                    onClick={() => {
                                       if (!isHisCreated) return;
                                       setDeleteTarget(conclave);
                                       setActiveDropdown(null);
@@ -1450,6 +1507,84 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
                 className="px-3.5 py-1.5 bg-brand-red hover:bg-red-700 text-white text-button rounded-lg transition-smooth cursor-pointer text-[10px] font-bold"
               >
                 Confirm Delete
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Upload Agenda Modal */}
+      {agendaUploadTarget && createPortal(
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-[99999] animate-fade-in">
+          <div className="bg-white rounded-2xl max-w-md w-full border border-zinc-200 shadow-2xl p-6 space-y-5 animate-scale-up">
+            <div className="flex items-center justify-between border-b border-zinc-100 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl border border-emerald-100">
+                  <FileText className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-section-heading font-extrabold text-zinc-950">Upload Agenda Document</h3>
+                  <p className="text-[11px] text-zinc-400 font-semibold mt-0.5">{agendaUploadTarget.name}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setAgendaUploadTarget(null)}
+                className="p-1.5 hover:bg-zinc-100 rounded-lg text-zinc-400 hover:text-zinc-700 transition-smooth cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Current Active Agenda Doc info */}
+            {agendaUploadTarget.agendaDocument && (
+              <div className="bg-emerald-50/70 border border-emerald-150 p-3.5 rounded-xl flex items-center justify-between">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <FileText className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <div className="min-w-0">
+                    <span className="text-[10px] font-black text-emerald-800 uppercase tracking-wider block">Current Published Document</span>
+                    <span className="text-body-xs font-bold text-zinc-900 truncate block">{agendaUploadTarget.agendaDocument.name}</span>
+                  </div>
+                </div>
+                <a
+                  href={agendaUploadTarget.agendaDocument.url || agendaUploadTarget.agendaDocument.dataUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-2.5 py-1 bg-white hover:bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded-md border border-emerald-200 transition-smooth shrink-0"
+                >
+                  View
+                </a>
+              </div>
+            )}
+
+            {/* File Upload Box */}
+            <div className="border-2 border-dashed border-zinc-200 hover:border-emerald-500 bg-zinc-50/50 hover:bg-emerald-50/20 p-6 rounded-xl text-center transition-smooth group cursor-pointer relative">
+              <input
+                type="file"
+                accept=".pdf,.png,.jpg,.jpeg,.docx,.doc"
+                onChange={(e) => handleAgendaFileUpload(e, agendaUploadTarget.id)}
+                disabled={isUploadingAgenda}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+              />
+              <div className="p-3 bg-white text-zinc-600 group-hover:text-emerald-600 rounded-full w-12 h-12 mx-auto shadow-2xs border border-zinc-200 group-hover:border-emerald-200 flex items-center justify-center transition-smooth mb-3">
+                <Upload className="w-6 h-6" />
+              </div>
+              <h4 className="text-body-sm font-extrabold text-zinc-900">
+                {isUploadingAgenda ? 'Uploading & Publishing File...' : 'Click to select or drag Agenda File'}
+              </h4>
+              <p className="text-[11px] text-zinc-400 font-semibold mt-1">
+                Supports PDF, PNG, JPG, or DOCX (Max 25MB)
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2 border-t border-zinc-100">
+              <button
+                type="button"
+                onClick={() => setAgendaUploadTarget(null)}
+                disabled={isUploadingAgenda}
+                className="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-button rounded-xl transition-smooth cursor-pointer text-xs font-bold"
+              >
+                Cancel
               </button>
             </div>
           </div>

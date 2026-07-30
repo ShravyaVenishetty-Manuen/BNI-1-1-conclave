@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 
 import { api } from '../../services/api';
+import { downloadOrViewAgendaDocument } from '../../utils/documentUtils';
 
 export default function MemberConclaveHistory({ loggedInMember }) {
   const [searchQuery, setSearchQuery] = useState('');
@@ -106,6 +107,21 @@ export default function MemberConclaveHistory({ loggedInMember }) {
             year: c.date ? new Date(c.date).getFullYear().toString() : 'All',
             status: formattedStatus,
             rounds: c.roundCount || 4,
+            agendaDocument: c.agendaDocument || (() => {
+              const cached = localStorage.getItem(`bni_agenda_doc_${c.id}`);
+              if (cached) {
+                try { return JSON.parse(cached); } catch (e) {}
+              }
+              const allConclavesCached = localStorage.getItem('bni_conclaves');
+              if (allConclavesCached) {
+                try {
+                  const parsed = JSON.parse(allConclavesCached);
+                  const found = parsed.find(item => item.id === c.id);
+                  if (found && found.agendaDocument) return found.agendaDocument;
+                } catch (e) {}
+              }
+              return null;
+            })(),
             details: {
               subtitle: `${c.venueLocation || c.venue || 'TBD Venue'}`,
               rounds: roundDetails.length > 0 ? roundDetails : Array.from({ length: c.roundCount || 4 }, (_, i) => ({
@@ -387,6 +403,28 @@ export default function MemberConclaveHistory({ loggedInMember }) {
             </div>
 
             <div className="flex-grow overflow-y-auto p-6 space-y-6">
+              {/* Published Official Conclave Agenda Document */}
+              {selectedConclave.agendaDocument && (
+                <div className="bg-gradient-to-r from-emerald-900 to-zinc-950 text-white rounded-xl p-4 shadow-md flex items-center justify-between gap-3 border border-emerald-800/40">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="p-2.5 bg-emerald-500/20 text-emerald-300 rounded-lg border border-emerald-400/20 shrink-0">
+                      <FileText className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <span className="text-[9px] font-black tracking-wider uppercase text-emerald-400 block">Official Agenda</span>
+                      <h4 className="text-body-xs font-bold text-white truncate block">{selectedConclave.agendaDocument.name || 'Conclave Agenda.pdf'}</h4>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => downloadOrViewAgendaDocument(selectedConclave.agendaDocument)}
+                    type="button"
+                    className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 text-[11px] font-black rounded-lg transition-smooth shrink-0 cursor-pointer"
+                  >
+                    Download
+                  </button>
+                </div>
+              )}
+
               {/* Round Timeline */}
               <div className="space-y-4">
                 <h3 className="text-body-sm font-black text-zinc-900 border-b border-zinc-100 pb-2">Round Timeline</h3>
@@ -451,13 +489,6 @@ export default function MemberConclaveHistory({ loggedInMember }) {
                   </div>
                 )}
               </div>
-            </div>
-
-            <div className="p-4 border-t border-zinc-200 bg-zinc-50">
-              <button className="w-full h-11 bg-zinc-900 hover:bg-zinc-800 text-white rounded-lg text-[10.5px] font-black uppercase tracking-wider transition-smooth cursor-pointer shadow-sm flex items-center justify-center gap-1.5">
-                <FileText className="w-4 h-4" />
-                Download Attendance Certificate
-              </button>
             </div>
           </div>
         </div>,

@@ -5,6 +5,9 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
+    proxy: {
+      '/uploads': 'http://localhost:3000',
+    },
     watch: {
       ignored: ['**/backend/**', '**/node_modules/**', '**/.git/**'],
     },
