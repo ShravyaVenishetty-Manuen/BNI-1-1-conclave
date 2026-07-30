@@ -9,6 +9,8 @@ import {
   Trash2,
   FileText,
   Upload,
+  Eye,
+  Edit3,
 } from 'lucide-react';
 import Pagination from '../components/Pagination';
 import { ResponsiveContainer, BarChart, Bar, XAxis } from 'recharts';
@@ -826,68 +828,44 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
                         </div>
                       </td>
                       <td className="px-5 py-4 text-right" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-end gap-1">
-                          <div className="relative inline-block" onClick={(e) => e.stopPropagation()}>
-                            <button
-                              onClick={() => setActiveDropdown(activeDropdown === conclave.id ? null : conclave.id)}
-                              className="p-1 hover:bg-zinc-100 rounded text-zinc-400 hover:text-brand-red transition-smooth cursor-pointer"
-                            >
-                              <MoreVertical className="w-4 h-4" />
-                            </button>
-                            {activeDropdown === conclave.id && (
-                              <>
-                                <div
-                                  onClick={() => setActiveDropdown(null)}
-                                  className="fixed inset-0 z-40 cursor-default"
-                                />
-                                <div className="absolute right-0 bottom-full mb-1.5 w-38 bg-white border border-zinc-200 rounded-xl shadow-xl py-1 z-50 text-left animate-scale-up">
-                                  <button
-                                    onClick={() => {
-                                      setSelectedConclave(conclave);
-                                      setActiveDropdown(null);
-                                    }}
-                                    className="w-full text-left px-3.5 py-2 hover:bg-zinc-50 text-[11px] font-bold text-zinc-700 transition-smooth"
-                                  >
-                                    View Details
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      if (!isHisCreated) return;
-                                      openEditModal(conclave);
-                                      setActiveDropdown(null);
-                                    }}
-                                    disabled={!isHisCreated}
-                                    className={`w-full text-left px-3.5 py-2 text-[11px] font-bold transition-smooth ${!isHisCreated ? 'text-zinc-300 cursor-not-allowed opacity-40' : 'hover:bg-zinc-50 text-zinc-700'
-                                      }`}
-                                  >
-                                    Edit Profile
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      setAgendaUploadTarget(conclave);
-                                      setActiveDropdown(null);
-                                    }}
-                                    className="w-full text-left px-3.5 py-2 hover:bg-emerald-50 text-[11px] font-extrabold text-emerald-700 flex items-center gap-1.5 transition-smooth"
-                                  >
-                                    <FileText className="w-3.5 h-3.5" />
-                                    Upload Agenda Doc
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      if (!isHisCreated) return;
-                                      setDeleteTarget(conclave);
-                                      setActiveDropdown(null);
-                                    }}
-                                    disabled={!isHisCreated}
-                                    className={`w-full text-left px-3.5 py-2 text-[11px] font-extrabold transition-smooth border-t border-zinc-100 ${!isHisCreated ? 'text-zinc-300 cursor-not-allowed opacity-40' : 'hover:bg-red-50 text-brand-red'
-                                      }`}
-                                  >
-                                    Remove Conclave
-                                  </button>
-                                </div>
-                              </>
-                            )}
-                          </div>
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => setSelectedConclave(conclave)}
+                            className="p-1.5 hover:bg-zinc-100 rounded-lg text-zinc-500 hover:text-zinc-900 transition-smooth cursor-pointer"
+                            title="View Conclave Details"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+
+                          <button
+                            onClick={() => setAgendaUploadTarget(conclave)}
+                            className="p-1.5 hover:bg-emerald-50 rounded-lg text-emerald-600 hover:text-emerald-700 transition-smooth cursor-pointer"
+                            title="Upload Agenda Document"
+                          >
+                            <FileText className="w-4 h-4" />
+                          </button>
+
+                          <button
+                            onClick={() => isHisCreated && openEditModal(conclave)}
+                            disabled={!isHisCreated}
+                            className={`p-1.5 rounded-lg transition-smooth ${
+                              !isHisCreated ? 'text-zinc-300 cursor-not-allowed opacity-40' : 'hover:bg-zinc-100 text-zinc-500 hover:text-brand-red cursor-pointer'
+                            }`}
+                            title="Edit Conclave Profile"
+                          >
+                            <Edit3 className="w-4 h-4" />
+                          </button>
+
+                          <button
+                            onClick={() => isHisCreated && setDeleteTarget(conclave)}
+                            disabled={!isHisCreated}
+                            className={`p-1.5 rounded-lg transition-smooth ${
+                              !isHisCreated ? 'text-zinc-300 cursor-not-allowed opacity-40' : 'hover:bg-red-50 text-zinc-400 hover:text-brand-red cursor-pointer'
+                            }`}
+                            title="Delete Conclave"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
                       </td>
                     </tr>

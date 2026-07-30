@@ -13,6 +13,7 @@ import {
   Eye,
   LogIn,
   Camera,
+  Bell,
   LogOut
 } from 'lucide-react';
 import Pagination from '../components/Pagination';
@@ -96,9 +97,13 @@ export default function ActiveUsers({ searchQuery, selectedConclaveId }) {
             loginTime: loginDate ? loginDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Never',
             duration: hasLoggedIn ? `${elapsedMins} Mins` : '0 Mins',
             deadline: loginDate ? new Date(loginDate.getTime() + autoLogoutLimitMins * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A',
+            logoutDeadline: loginDate ? new Date(loginDate.getTime() + autoLogoutLimitMins * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A',
             logoutTimer: logoutTimerStr,
             logoutPercent: logoutPercentVal,
-            device: 'Mobile App',
+            sessionKey: r.sessionKey || `SES-${String(r.id || r.uid || '0000').substring(0, 8).toUpperCase()}`,
+            protocol: 'HTTPS / WSS (TLS v1.3)',
+            heartbeat: isOnline ? 'Active (200 OK)' : 'Idle / Standby',
+            device: 'Mobile App / Web Portal',
             ip: '192.168.1.1',
             location: r.location ? (typeof r.location === 'object' ? (r.location.place || r.region || 'Vijayawada') : r.location) : (r.region || 'Vijayawada'),
             email: r.email,
@@ -639,52 +644,30 @@ export default function ActiveUsers({ searchQuery, selectedConclaveId }) {
                       )}
                     </td>
                     <td className="px-5 py-4 text-right" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex items-center justify-end gap-1">
-                        <div className="relative inline-block" onClick={(e) => e.stopPropagation()}>
-                          <button
-                            onClick={() => setActiveDropdown(activeDropdown === session.id ? null : session.id)}
-                            className="p-1 hover:bg-zinc-100 rounded text-zinc-400 hover:text-brand-red transition-smooth cursor-pointer"
-                          >
-                            <MoreVertical className="w-4 h-4" />
-                          </button>
-                          {activeDropdown === session.id && (
-                            <>
-                              <div
-                                onClick={() => setActiveDropdown(null)}
-                                className="fixed inset-0 z-40 cursor-default"
-                              />
-                              <div className="absolute right-0 mt-1 w-36 bg-white border border-zinc-100 rounded-lg shadow-lg py-1 z-50 text-left animate-fade-in">
-                                <button
-                                  onClick={() => {
-                                    setSelectedSession(session);
-                                    setActiveDropdown(null);
-                                  }}
-                                  className="w-full text-left px-3.5 py-2 hover:bg-zinc-50 text-[11px] font-bold text-zinc-700 transition-smooth"
-                                >
-                                  Session Details
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    showToast('Notification Sent', `Sent session ping alert to ${session.name}.`);
-                                    setActiveDropdown(null);
-                                  }}
-                                  className="w-full text-left px-3.5 py-2 hover:bg-zinc-50 text-[11px] font-bold text-zinc-700 transition-smooth"
-                                >
-                                  Notify User
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setDeleteTarget(session);
-                                    setActiveDropdown(null);
-                                  }}
-                                  className="w-full text-left px-3.5 py-2 hover:bg-red-50 text-[11px] font-extrabold text-brand-red transition-smooth border-t border-zinc-100"
-                                >
-                                  Terminate Session
-                                </button>
-                              </div>
-                            </>
-                          )}
-                        </div>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => setSelectedSession(session)}
+                          className="p-1.5 hover:bg-zinc-100 rounded-lg text-zinc-500 hover:text-zinc-900 transition-smooth cursor-pointer"
+                          title="Session Details"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => showToast('Notification Sent', `Sent session ping alert to ${session.name}.`)}
+                          className="p-1.5 hover:bg-zinc-100 rounded-lg text-zinc-500 hover:text-brand-red transition-smooth cursor-pointer"
+                          title="Send Session Ping"
+                        >
+                          <Bell className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setDeleteTarget(session);
+                          }}
+                          className="p-1.5 hover:bg-red-50 rounded-lg text-zinc-400 hover:text-brand-red transition-smooth cursor-pointer"
+                          title="Force Terminate Session"
+                        >
+                          <LogOut className="w-4 h-4" />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -773,7 +756,9 @@ export default function ActiveUsers({ searchQuery, selectedConclaveId }) {
                     </div>
                     <div className="p-3.5 border border-zinc-100 bg-white rounded-lg shadow-sm">
                       <span className="text-[9px] text-zinc-400 font-bold uppercase block">Logout Deadline</span>
-                      <span className="text-body-sm font-bold text-brand-red block mt-1">{selectedSession.logoutDeadline}</span>
+                      <span className="text-body-sm font-bold text-brand-red block mt-1">
+                        {selectedSession.logoutDeadline || selectedSession.deadline || '11:47 AM'}
+                      </span>
                     </div>
                   </div>
 
@@ -800,15 +785,21 @@ export default function ActiveUsers({ searchQuery, selectedConclaveId }) {
                   <section className="space-y-3 bg-zinc-50/50 p-4 rounded-xl border border-zinc-100">
                     <div className="flex justify-between items-center text-[10px] font-semibold text-zinc-500">
                       <span>Session Key:</span>
-                      <span className="font-mono text-zinc-700">{selectedSession.sessionKey}</span>
+                      <span className="font-mono text-zinc-700">
+                        {selectedSession.sessionKey || `SES-${String(selectedSession.id || '0000').substring(0, 8).toUpperCase()}`}
+                      </span>
                     </div>
                     <div className="flex justify-between items-center text-[10px] font-semibold text-zinc-500">
                       <span>Protocol:</span>
-                      <span className="text-zinc-750">{selectedSession.protocol}</span>
+                      <span className="text-zinc-750">
+                        {selectedSession.protocol || 'HTTPS / WSS (TLS v1.3)'}
+                      </span>
                     </div>
                     <div className="flex justify-between items-center text-[10px] font-semibold text-zinc-500">
                       <span>Heartbeat Status:</span>
-                      <span className="text-brand-red font-bold">{selectedSession.heartbeat}</span>
+                      <span className="text-brand-red font-bold">
+                        {selectedSession.heartbeat || (selectedSession.status === 'Online' ? 'Active (200 OK)' : 'Idle / Standby')}
+                      </span>
                     </div>
                   </section>
 

@@ -11,7 +11,10 @@ import {
   MoreVertical,
   Mail,
   Layers,
-  Star
+  Star,
+  Eye,
+  Edit3,
+  Trash2,
 } from 'lucide-react';
 import Pagination from '../components/Pagination';
 import SearchableDropdown from '../components/SearchableDropdown';
@@ -809,52 +812,28 @@ export default function Captains({ searchQuery, selectedConclaveId, loggedInAdmi
                         {referrals.filter(r => r.toMemberId === cap.id).length}
                       </td>
                       <td className="px-5 py-4 text-right" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-end gap-1">
-                          <div className="relative inline-block" onClick={(e) => e.stopPropagation()}>
-                            <button
-                              onClick={() => setActiveDropdown(activeDropdown === cap.id ? null : cap.id)}
-                              className="p-1 hover:bg-zinc-100 rounded text-zinc-400 hover:text-brand-red transition-smooth cursor-pointer"
-                            >
-                              <MoreVertical className="w-4 h-4" />
-                            </button>
-                            {activeDropdown === cap.id && (
-                              <>
-                                <div
-                                  onClick={() => setActiveDropdown(null)}
-                                  className="fixed inset-0 z-40 cursor-default"
-                                />
-                                <div className="absolute right-0 mt-1 w-36 bg-white border border-zinc-100 rounded-lg shadow-lg py-1 z-50 text-left animate-fade-in">
-                                  <button
-                                    onClick={() => {
-                                      setSelectedCaptain(cap);
-                                      setActiveDropdown(null);
-                                    }}
-                                    className="w-full text-left px-3.5 py-2 hover:bg-zinc-50 text-[11px] font-bold text-zinc-700 transition-smooth"
-                                  >
-                                    View Details
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      openEditModal(cap);
-                                      setActiveDropdown(null);
-                                    }}
-                                    className="w-full text-left px-3.5 py-2 hover:bg-zinc-50 text-[11px] font-bold text-zinc-700 transition-smooth"
-                                  >
-                                    Edit Profile
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      setDeleteTarget(cap);
-                                      setActiveDropdown(null);
-                                    }}
-                                    className="w-full text-left px-3.5 py-2 hover:bg-red-50 text-[11px] font-extrabold text-brand-red transition-smooth border-t border-zinc-100"
-                                  >
-                                    Remove Captain
-                                  </button>
-                                </div>
-                              </>
-                            )}
-                          </div>
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => setSelectedCaptain(cap)}
+                            className="p-1.5 hover:bg-zinc-100 rounded-lg text-zinc-500 hover:text-zinc-900 transition-smooth cursor-pointer"
+                            title="View Captain Details"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => openEditModal(cap)}
+                            className="p-1.5 hover:bg-zinc-100 rounded-lg text-zinc-500 hover:text-brand-red transition-smooth cursor-pointer"
+                            title="Edit Profile"
+                          >
+                            <Edit3 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => setDeleteTarget(cap)}
+                            className="p-1.5 hover:bg-red-50 rounded-lg text-zinc-400 hover:text-brand-red transition-smooth cursor-pointer"
+                            title="Remove Captain"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
                       </td>
                     </tr>

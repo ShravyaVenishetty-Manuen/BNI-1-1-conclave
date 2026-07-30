@@ -402,7 +402,7 @@ export default function SuperadminLayout({
         </header>
 
         {/* View Router */}
-        <main className="flex-1 overflow-y-auto p-6 md:p-8">
+        <main className="flex-1 overflow-y-auto p-6 md:p-8 pb-20 md:pb-24">
           {activeTab === 'dashboard' ? (
             <SuperadminDashboard setActiveTab={setActiveTab} />
           ) : activeTab === 'admins' ? (

@@ -468,7 +468,7 @@ export default function App() {
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
         />
-        <main className="flex-1 overflow-y-auto p-4 md:p-8 max-w-7xl mx-auto w-full">
+        <main className="flex-1 overflow-y-auto p-4 md:p-8 pb-20 md:pb-24 max-w-7xl mx-auto w-full">
           {activeTab === 'dashboard' ? (
             <CaptainDashboard
               loggedInCaptain={loggedInCaptain}
@@ -539,7 +539,7 @@ export default function App() {
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
         />
-        <main className="flex-1 overflow-y-auto p-6 md:p-8 max-w-7xl mx-auto w-full">
+        <main className="flex-1 overflow-y-auto p-6 md:p-8 pb-20 md:pb-24 max-w-7xl mx-auto w-full">
           {activeTab === 'dashboard' ? (
             <MemberDashboard
               loggedInMember={memberProfile || loggedInMember}
@@ -668,7 +668,7 @@ export default function App() {
         )}
 
         {/* Workspace views router */}
-        <main ref={mainRef} className="flex-1 overflow-y-auto bg-zinc-50 relative min-h-full">
+        <main ref={mainRef} className="flex-1 overflow-y-auto bg-zinc-50 relative min-h-full p-6 md:p-8 pb-20 md:pb-24">
 
           {activeTab === 'dashboard' ? (
             <Dashboard setActiveTab={handleTabChange} selectedConclaveId={selectedConclaveId} setSelectedConclaveId={setSelectedConclaveId} loggedInAdmin={loggedInAdmin} />
