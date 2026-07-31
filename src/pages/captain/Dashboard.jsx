@@ -274,7 +274,7 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
                       {conclaveSyncData?.conclaveStatus?.status === 'active' ? 'LIVE NOW' : 'Conclave Session'}
                     </span>
                     <span className="text-zinc-450 font-semibold text-xs tracking-wider">
-                      {conclaveSyncData?.conclaveStatus?.id ? `ID: ${conclaveSyncData.conclaveStatus.id}` : 'CONCLAVE'} • {conclaveSyncData?.conclaveStatus?.region || 'Vijayawada Region'}
+                      CONCLAVE • {conclaveSyncData?.conclaveStatus?.region || 'Vijayawada Region'}
                     </span>
                   </div>
 
