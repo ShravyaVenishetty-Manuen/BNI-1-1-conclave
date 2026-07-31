@@ -95,16 +95,16 @@ export default function Sidebar({ activeTab, setActiveTab, onLogout, isOpen, onC
     <aside className={`fixed inset-y-0 left-0 z-50 w-[240px] h-screen flex flex-col py-6 bg-zinc-50 border-r border-red-100 text-sidebar font-medium shrink-0 transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 lg:w-[220px] ${isOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}`}>
 
       {/* Sticky Branding Header (Non-scrolling) */}
-      <div className="px-4 mb-4 shrink-0 flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
+      <div className="px-4 mb-5 shrink-0 flex items-center justify-between">
+        <div className="flex items-center gap-3 min-w-0">
           <img
-            src="/BNI-Guntur-Logo.jpg"
+            src="/BNI-Guntur-Logo.png"
             alt="BNI Logo"
-            className="h-9.5 w-auto object-contain"
+            className="h-8 w-auto object-contain shrink-0"
           />
-          <div className="border-l border-red-100 pl-2.5 flex flex-col justify-center">
-            <h1 className="text-[13px] font-bold text-brand-red leading-none tracking-tight">1-1-CONCLAVE</h1>
-            <p className="text-[9px] text-zinc-500 font-semibold tracking-widest mt-1 uppercase">Enterprise Admin</p>
+          <div className="border-l-2 border-brand-red/30 pl-3 flex flex-col justify-center min-w-0">
+            <h1 className="text-[10px] font-bold text-brand-red leading-tight tracking-tight whitespace-nowrap">1-1-CONCLAVE</h1>
+            <p className="text-[9px] text-zinc-500 font-semibold tracking-wider uppercase whitespace-nowrap mt-0.5">Enterprise Admin</p>
           </div>
         </div>
 

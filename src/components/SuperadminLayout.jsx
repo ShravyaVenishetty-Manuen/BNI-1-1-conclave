@@ -162,15 +162,15 @@ export default function SuperadminLayout({
 
         {/* Branding Header */}
         <div className="px-4 mb-6 shrink-0 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-3 min-w-0">
             <img
-              src="/BNI-Guntur-Logo.jpg"
+              src="/BNI-Guntur-Logo.png"
               alt="BNI Logo"
-              className="h-9.5 w-auto object-contain"
+              className="h-8 w-auto object-contain shrink-0"
             />
-            <div className="border-l border-red-100 pl-2.5 flex flex-col justify-center">
-              <h1 className="text-[13px] font-bold text-brand-red leading-none tracking-tight">1-1-CONCLAVE</h1>
-              <p className="text-[9px] text-zinc-500 font-semibold tracking-widest mt-1 uppercase">Super Administrator</p>
+            <div className="border-l-2 border-brand-red/30 pl-3 flex flex-col justify-center min-w-0">
+              <h1 className="text-[10px] font-bold text-brand-red leading-tight tracking-tight whitespace-nowrap">1-1-CONCLAVE</h1>
+              <p className="text-[7px] text-zinc-500 font-semibold tracking-wider uppercase whitespace-nowrap mt-0.5">Super Administrator</p>
             </div>
           </div>
           <button

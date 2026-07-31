@@ -74,7 +74,7 @@ export default function MemberHeader({
         {/* Left section: Official BNI Logo & Title */}
         <div className="flex items-center gap-2 border-b border-transparent shrink-0">
           <img
-            src="/BNI-Guntur-Logo.jpg"
+            src="/BNI-Guntur-Logo.png"
             alt="BNI Logo"
             className="h-8 w-auto object-contain shrink-0"
           />
