@@ -119,57 +119,51 @@ export default function CaptainSchedule({ loggedInCaptain, onTabChange, conclave
     return null;
   }, [agendaDoc, conclaveSyncData]);
 
-  // Clean, structured vertical timeline events parser (filters out document headings)
+  // Strict timing-based timeline parser: Extracts items ONLY when explicit timings exist, plus description text
   const timelineEvents = useMemo(() => {
     if (!rawAgendaText) return [];
     const lines = rawAgendaText.split('\n').map(l => l.trim()).filter(Boolean);
     const events = [];
-
-    const isDocumentHeader = (text) => {
-      const lower = text.toLowerCase();
-      return (
-        lower.includes('bni regional conclave') ||
-        lower.includes('official schedule document') ||
-        lower.includes('published by bni') ||
-        lower === 'program' ||
-        lower === 'agenda'
-      );
-    };
-
-    let currentEventTime = null;
+    let currentEvent = null;
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
 
-      if (isDocumentHeader(line)) continue;
-
+      // Match explicit timings e.g. 09:30 AM, 10:15 AM
       const timeMatch = line.match(/(\d{1,2}:\d{2}\s*(?:AM|PM|am|pm))/i);
+
       if (timeMatch) {
-        currentEventTime = timeMatch[1].toUpperCase();
-        const textWithoutTime = line.replace(timeMatch[0], '').replace(/^[-–—:\s]+/, '').trim();
-        if (textWithoutTime && !isDocumentHeader(textWithoutTime)) {
-          events.push({ time: currentEventTime, title: textWithoutTime });
+        if (currentEvent && currentEvent.title) {
+          events.push(currentEvent);
         }
-      } else if (currentEventTime) {
-        const cleanTitle = line.replace(/^[-–—:\s]+/, '').trim();
-        if (cleanTitle && !isDocumentHeader(cleanTitle)) {
-          if (events.length > 0 && events[events.length - 1].time === currentEventTime && !events[events.length - 1].title) {
-            events[events.length - 1].title = cleanTitle;
+
+        const timeStr = timeMatch[1].toUpperCase();
+        let titleText = line.replace(timeMatch[0], '').replace(/^[-–—:\s]+/, '').trim();
+
+        currentEvent = {
+          time: timeStr,
+          title: titleText || '',
+          desc: ''
+        };
+      } else if (currentEvent) {
+        const cleanLine = line.replace(/^[-–—:\s]+/, '').trim();
+        if (cleanLine) {
+          if (!currentEvent.title) {
+            currentEvent.title = cleanLine;
           } else {
-            events.push({ time: currentEventTime, title: cleanTitle });
+            currentEvent.desc = currentEvent.desc
+              ? `${currentEvent.desc} ${cleanLine}`
+              : cleanLine;
           }
-          currentEventTime = null;
         }
       }
     }
 
-    const cleanEvents = [];
-    for (const ev of events) {
-      if (cleanEvents.length === 0 || cleanEvents[cleanEvents.length - 1].title !== ev.title) {
-        cleanEvents.push(ev);
-      }
+    if (currentEvent && currentEvent.title) {
+      events.push(currentEvent);
     }
-    return cleanEvents;
+
+    return events.filter(e => e.title && e.title.toLowerCase() !== 'program');
   }, [rawAgendaText]);
 
   return (
@@ -239,14 +233,21 @@ export default function CaptainSchedule({ loggedInCaptain, onTabChange, conclave
                 {/* Timeline Red Dot Node */}
                 <div className="absolute -left-[37px] top-2.5 w-3 h-3 rounded-full bg-brand-red ring-4 ring-white"></div>
 
-                {/* Minimal Event Title & Time (NO Card Boxes, NO Borders around items) */}
-                <div className="flex-1 flex items-center justify-between gap-4">
-                  <span className="text-[14px] font-extrabold text-zinc-900 leading-snug">
-                    {item.title}
-                  </span>
-                  <span className="text-[12.5px] font-black text-brand-red tracking-tight shrink-0">
-                    {item.time}
-                  </span>
+                {/* Minimal Event Title, Description & Time */}
+                <div className="flex-1 flex flex-col gap-1">
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="text-[14px] font-bold text-zinc-900 leading-snug">
+                      {item.title}
+                    </span>
+                    <span className="text-[12.5px] font-bold text-brand-red tracking-tight shrink-0 font-mono">
+                      {item.time}
+                    </span>
+                  </div>
+                  {item.desc && (
+                    <p className="text-[12px] text-zinc-500 font-normal leading-relaxed mt-0.5">
+                      {item.desc}
+                    </p>
+                  )}
                 </div>
 
               </div>
