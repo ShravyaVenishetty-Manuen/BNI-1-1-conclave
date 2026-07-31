@@ -68,8 +68,8 @@ export default function CaptainHeader({
             className="h-8 w-auto object-contain shrink-0"
           />
           <div className="hidden lg:flex flex-col border-l border-zinc-200 pl-2.5">
-            <span className="text-[11.5px] font-black text-zinc-955 tracking-tight leading-none">Captain Portal</span>
-            <span className="text-[7px] text-zinc-400 font-extrabold uppercase tracking-widest mt-0.5">
+            <span className="text-[13px] font-bold text-zinc-900 tracking-tight leading-none">Captain Portal</span>
+            <span className="text-[8px] text-zinc-500 font-semibold uppercase tracking-widest mt-1">
               BNI GUNTUR
             </span>
           </div>

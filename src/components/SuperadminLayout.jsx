@@ -169,8 +169,8 @@ export default function SuperadminLayout({
               className="h-9.5 w-auto object-contain"
             />
             <div className="border-l border-red-100 pl-2.5 flex flex-col justify-center">
-              <h1 className="text-[12px] font-black text-brand-red leading-none tracking-tight">1-1-CONCLAVE</h1>
-              <p className="text-[8.5px] text-zinc-400 font-bold tracking-widest mt-1.5 uppercase">Super Administrator</p>
+              <h1 className="text-[13px] font-bold text-brand-red leading-none tracking-tight">1-1-CONCLAVE</h1>
+              <p className="text-[9px] text-zinc-500 font-semibold tracking-widest mt-1 uppercase">Super Administrator</p>
             </div>
           </div>
           <button
@@ -216,7 +216,6 @@ export default function SuperadminLayout({
             <LogOut className="w-[18px] h-[18px] text-zinc-500 group-hover:text-brand-red shrink-0" />
             <div className="overflow-hidden">
               <p className="text-body-text truncate leading-tight font-extrabold text-zinc-900 group-hover:text-brand-red">Logout</p>
-              <p className="text-caption text-zinc-450 truncate leading-tight mt-0.5 font-bold">Global Superadmin</p>
             </div>
           </button>
         </div>
