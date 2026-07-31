@@ -17,12 +17,14 @@
   --color-zinc-755: #27272a;
   --color-zinc-850: #18181b;
   --color-zinc-955: #09090b;
-  --font-display: "Hanken Grotesk", sans-serif;
-  --font-sans: "Plus Jakarta Sans", sans-serif;
+  --font-display: "Inter", "Plus Jakarta Sans", sans-serif;
+  --font-sans: "Inter", "Plus Jakarta Sans", sans-serif;
 }
 
 body {
-  font-weight: 600;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 
