@@ -268,9 +268,6 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
     <div className="space-y-6 animate-fade-in font-sans">
       {/* Welcome Card */}
       <section className="bg-white rounded-xl border border-zinc-200 shadow-2xs overflow-hidden flex items-stretch">
-        {/* Left red accent bar */}
-        <div className="w-1 bg-brand-red shrink-0 rounded-l-xl" />
-
         {/* Main content */}
         <div className="flex items-center justify-between gap-6 px-5 py-4 flex-1 min-w-0">
           {/* Left: all text info */}
