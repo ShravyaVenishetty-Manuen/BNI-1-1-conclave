@@ -90,130 +90,130 @@ main>div>* {
 }
 
 @utility text-dashboard-title {
-  font-family: "Hanken Grotesk", sans-serif;
+  font-family: var(--font-sans);
   font-size: 26px;
   line-height: 28px;
-  font-weight: 1000;
+  font-weight: 800;
 }
 
 @utility text-module-title {
-  font-family: "Hanken Grotesk", sans-serif;
+  font-family: var(--font-sans);
   font-size: 16px;
   line-height: 22px;
   font-weight: 700;
 }
 
 @utility text-section-heading {
-  font-family: "Hanken Grotesk", sans-serif;
+  font-family: var(--font-sans);
   font-size: 14px;
   line-height: 18px;
   font-weight: 700;
 }
 
 @utility text-card-title {
-  font-family: "Hanken Grotesk", sans-serif;
+  font-family: var(--font-sans);
   font-size: 13px;
   line-height: 18px;
   font-weight: 700;
 }
 
 @utility text-body-text {
-  font-family: "Plus Jakarta Sans", sans-serif;
+  font-family: var(--font-sans);
   font-size: 12px;
   line-height: 16px;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 @utility text-table-text {
-  font-family: "Plus Jakarta Sans", sans-serif;
+  font-family: var(--font-sans);
   font-size: 12px;
   line-height: 16px;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 @utility text-sidebar {
-  font-family: "Geist", sans-serif;
+  font-family: var(--font-sans);
   font-size: 13px;
   line-height: 18px;
   font-weight: 600;
 }
 
 @utility text-button {
-  font-family: "Plus Jakarta Sans", sans-serif;
+  font-family: var(--font-sans);
   font-size: 12px;
   line-height: 16px;
   font-weight: 700;
 }
 
 @utility text-label {
-  font-family: "Geist", sans-serif;
+  font-family: var(--font-sans);
   font-size: 11px;
   line-height: 14px;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 @utility text-caption {
-  font-family: "Plus Jakarta Sans", sans-serif;
+  font-family: var(--font-sans);
   font-size: 11px;
   line-height: 14px;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 /* Custom compact utilities matching the dashboard's layout classes */
 @utility text-display-sm {
-  font-family: "Hanken Grotesk", sans-serif;
+  font-family: var(--font-sans);
   font-size: 20px;
   line-height: 26px;
-  font-weight: 850;
+  font-weight: 800;
 }
 
 @utility text-headline-lg {
-  font-family: "Hanken Grotesk", sans-serif;
+  font-family: var(--font-sans);
   font-size: 18px;
   line-height: 24px;
   font-weight: 800;
 }
 
 @utility text-headline-md {
-  font-family: "Hanken Grotesk", sans-serif;
+  font-family: var(--font-sans);
   font-size: 15px;
   line-height: 20px;
   font-weight: 700;
 }
 
 @utility text-title-lg {
-  font-family: "Hanken Grotesk", sans-serif;
+  font-family: var(--font-sans);
   font-size: 13px;
   line-height: 18px;
   font-weight: 700;
 }
 
 @utility text-body-md {
-  font-family: "Plus Jakarta Sans", sans-serif;
+  font-family: var(--font-sans);
   font-size: 12px;
   line-height: 16px;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 @utility text-body-sm {
-  font-family: "Plus Jakarta Sans", sans-serif;
+  font-family: var(--font-sans);
   font-size: 12px;
   line-height: 16px;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 @utility text-label-md {
-  font-family: "Geist", sans-serif;
+  font-family: var(--font-sans);
   font-size: 11px;
   line-height: 14px;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 @utility text-label-xs {
-  font-family: "Geist", sans-serif;
+  font-family: var(--font-sans);
   font-size: 10px;
   line-height: 12px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 /* Animations and Transitions */
