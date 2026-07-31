@@ -344,37 +344,37 @@ export default function Referrals({ loggedInUser, userType, conclaveSyncData }) 
                     </p>
                   </div>
 
-                    <div className="flex items-center gap-2 ml-auto">
-                      {((ref.status || '').toLowerCase() === 'connected' || (ref.status || '').toLowerCase() === 'closed' || (ref.status || '').toLowerCase() === 'completed') ? (
-                        <div className="flex items-center gap-1.5">
-                          <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-[9px] font-black uppercase tracking-wider flex items-center gap-1">
-                            <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Completed
-                          </span>
-                          {activeSubTab === 'received' && (
-                            <button
-                              type="button"
-                              onClick={() => handleUpdateStatus(ref.id, 'Pending')}
-                              title="Revert to Pending"
-                              className="px-2 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-600 rounded-lg text-[9px] font-extrabold transition-smooth cursor-pointer"
-                            >
-                              Undo
-                            </button>
-                          )}
-                        </div>
-                      ) : activeSubTab === 'received' ? (
-                        <button
-                          type="button"
-                          onClick={() => handleUpdateStatus(ref.id, 'Connected')}
-                          className="px-3 py-1 bg-brand-red text-white hover:bg-red-700 rounded-lg text-[9px] font-black uppercase tracking-wider transition-smooth cursor-pointer shadow-3xs flex items-center gap-1"
-                        >
-                          <CheckCircle2 className="w-3 h-3" /> Mark Complete
-                        </button>
-                      ) : (
-                        <span className="px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-[9px] font-black uppercase tracking-wider">
-                          Pending
+                  {/* Action buttons */}
+                  <div className="flex items-center gap-2 ml-auto">
+                    {((ref.status || '').toLowerCase() === 'connected' || (ref.status || '').toLowerCase() === 'closed' || (ref.status || '').toLowerCase() === 'completed') ? (
+                      <div className="flex items-center gap-1.5">
+                        <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-[9px] font-black uppercase tracking-wider flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Completed
                         </span>
-                      )}
-                    </div>
+                        {activeSubTab === 'received' && (
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateStatus(ref.id, 'Pending')}
+                            title="Revert to Pending"
+                            className="px-2 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-600 rounded-lg text-[9px] font-extrabold transition-smooth cursor-pointer"
+                          >
+                            Undo
+                          </button>
+                        )}
+                      </div>
+                    ) : activeSubTab === 'received' ? (
+                      <button
+                        type="button"
+                        onClick={() => handleUpdateStatus(ref.id, 'Connected')}
+                        className="px-3 py-1 bg-brand-red text-white hover:bg-red-700 rounded-lg text-[9px] font-black uppercase tracking-wider transition-smooth cursor-pointer shadow-3xs flex items-center gap-1"
+                      >
+                        <CheckCircle2 className="w-3 h-3" /> Mark Complete
+                      </button>
+                    ) : (
+                      <span className="px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-[9px] font-black uppercase tracking-wider">
+                        Pending
+                      </span>
+                    )}
                   </div>
                 </div>
               ))}
