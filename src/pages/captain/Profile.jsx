@@ -90,8 +90,8 @@ export default function CaptainProfile({ loggedInCaptain, onTabChange, onLogout 
 
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl md:text-3xl font-black text-zinc-955 tracking-tight">Profile &amp; Settings</h1>
-        <p className="text-xs text-zinc-500 font-semibold mt-1">Manage your account information, captain role, and system preferences.</p>
+        <h1 className="text-[20px] font-black text-zinc-955 leading-tight">Profile &amp; Settings</h1>
+        <p className="text-[11.5px] text-zinc-500 font-semibold mt-0.5">Manage your account information, captain role, and system preferences.</p>
       </div>
 
       <div className="grid grid-cols-12 gap-6 items-start">

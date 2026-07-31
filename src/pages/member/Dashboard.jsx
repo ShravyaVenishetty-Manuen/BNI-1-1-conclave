@@ -192,8 +192,8 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
                 <span className="text-[11px] font-bold">No Active Conclave Registration</span>
               </div>
               <div>
-                <h1 className="text-2xl md:text-3xl font-black text-zinc-955 tracking-tight">Welcome {memberName}</h1>
-                <p className="text-xs font-semibold text-zinc-500 mt-1">{memberCompany} • {memberChapter}</p>
+                <h1 className="text-[20px] font-black text-zinc-955 leading-tight">Welcome {memberName}</h1>
+                <p className="text-[11.5px] text-zinc-500 font-semibold mt-0.5">{memberCompany} • {memberChapter}</p>
                 <p className="text-body-sm text-zinc-600 mt-3 max-w-lg leading-relaxed">
                   You are not currently registered for any live or upcoming conclave. Browse available conclaves to register and get your table seating schedule.
                 </p>
@@ -236,8 +236,8 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
                   </div>
                 )}
                 <div>
-                  <h1 className="text-2xl md:text-3xl font-black text-zinc-955 tracking-tight">Welcome {memberName}</h1>
-                  <p className="text-xs font-semibold text-zinc-450 mt-1">{memberCompany} • {memberChapter}</p>
+                  <h1 className="text-[20px] font-black text-zinc-955 leading-tight">Welcome {memberName}</h1>
+                  <p className="text-[11.5px] text-zinc-500 font-semibold mt-0.5">{memberCompany} • {memberChapter}</p>
                 </div>
 
                 <div className="flex flex-wrap gap-6 items-center pt-2">

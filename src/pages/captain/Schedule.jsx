@@ -171,8 +171,8 @@ export default function CaptainSchedule({ loggedInCaptain, onTabChange, conclave
 
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl md:text-3xl font-black text-zinc-955 tracking-tight">Conclave Program Schedule</h1>
-        <p className="text-xs text-zinc-450 font-semibold mt-1 font-sans font-medium">Official timeline and published agenda document uploaded by Admin.</p>
+        <h1 className="text-[20px] font-black text-zinc-955 leading-tight">Conclave Program Schedule</h1>
+        <p className="text-[11.5px] text-zinc-500 font-semibold mt-0.5">Official timeline and published agenda document uploaded by Admin.</p>
       </div>
 
       {/* Published Conclave Agenda Dark Banner (if uploaded by Admin) */}

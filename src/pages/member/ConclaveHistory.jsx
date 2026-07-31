@@ -183,8 +183,8 @@ export default function MemberConclaveHistory({ loggedInMember }) {
 
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl md:text-3xl font-black text-zinc-955 tracking-tight">Conclave History</h1>
-        <p className="text-xs text-zinc-500 font-semibold mt-1">Review your participation, connections, and achievements from past conclaves.</p>
+        <h1 className="text-[20px] font-black text-zinc-955 leading-tight">Conclave History</h1>
+        <p className="text-[11.5px] text-zinc-500 font-semibold mt-0.5">Review your participation, connections, and achievements from past conclaves.</p>
       </div>
 
       <div className="grid grid-cols-12 gap-6 items-start">

@@ -278,7 +278,7 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
                     </span>
                   </div>
 
-                  <h1 className="text-2xl md:text-3xl font-extrabold text-zinc-950 tracking-tight">
+                  <h1 className="text-[20px] font-black text-zinc-955 leading-tight">
                     {conclaveSyncData?.conclaveStatus?.name || conclaveSyncData?.conclaveStatus?.title || conclaveSyncData?.conclaveName || 'Networking Conclave Session'}
                   </h1>
 

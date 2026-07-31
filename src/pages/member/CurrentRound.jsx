@@ -215,7 +215,7 @@ export default function MemberCurrentRound({ loggedInMember, onTabChange, concla
                   Networking Conclave 2026
                 </span>
               </div>
-              <h1 className="text-2xl md:text-3xl font-black text-zinc-955 tracking-tight">
+              <h1 className="text-[20px] font-black text-zinc-955 leading-tight">
                 Round {conclaveSyncData?.conclaveStatus?.currentRound || 0} of {conclaveSyncData?.mySchedule?.length || 6}
               </h1>
 

@@ -214,8 +214,8 @@ export default function MemberSchedule({ loggedInMember, onTabChange, conclaveSy
 
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl md:text-3xl font-black text-zinc-955 tracking-tight">My Conclave Agenda & Schedule</h1>
-        <p className="text-xs text-zinc-450 font-semibold mt-1 font-sans">Official agenda uploaded by Admin for the business conclave.</p>
+        <h1 className="text-[20px] font-black text-zinc-955 leading-tight">My Conclave Agenda &amp; Schedule</h1>
+        <p className="text-[11.5px] text-zinc-500 font-semibold mt-0.5">Official agenda uploaded by Admin for the business conclave.</p>
       </div>
 
       {/* In-Page Interactive Agenda Document Banner (if uploaded by Admin) */}

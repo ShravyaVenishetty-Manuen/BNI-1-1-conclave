@@ -56,10 +56,10 @@ export default function CaptainTable({ loggedInCaptain, searchQuery, conclaveSyn
     <div className="space-y-6 animate-fade-in font-sans">
 
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-zinc-200 pb-5">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-2">
         <div>
-          <h1 className="text-2xl font-black text-zinc-955 tracking-tight">My Table</h1>
-          <p className="text-xs text-zinc-450 font-semibold mt-0.5">
+          <h1 className="text-[20px] font-black text-zinc-955 leading-tight">My Table</h1>
+          <p className="text-[11.5px] text-zinc-500 font-semibold mt-0.5">
             View your assigned table and participants for each networking round.
           </p>
         </div>

@@ -74,10 +74,10 @@ export default function CurrentRound({ loggedInCaptain, conclaveSyncData: propCo
   if (isCompleted) {
     return (
       <div className="space-y-6 animate-fade-in font-sans">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-zinc-200 pb-5">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-2">
           <div className="space-y-1">
-            <h1 className="text-2xl font-black text-zinc-955 tracking-tight mt-1">Conclave Completed</h1>
-            <p className="text-xs text-zinc-450 font-semibold">This 1-on-1 Conclave session has concluded successfully.</p>
+            <h1 className="text-[20px] font-black text-zinc-955 leading-tight">Conclave Completed</h1>
+            <p className="text-[11.5px] text-zinc-500 font-semibold mt-0.5">This 1-on-1 Conclave session has concluded successfully.</p>
           </div>
           <span className="px-3 py-1 bg-emerald-50 text-emerald-800 font-black text-[10px] uppercase tracking-wider rounded-full border border-emerald-150 flex items-center gap-1.5 shadow-2xs">
             <Check className="w-3.5 h-3.5 text-emerald-600" />
@@ -123,10 +123,10 @@ export default function CurrentRound({ loggedInCaptain, conclaveSyncData: propCo
     <div className="space-y-6 animate-fade-in font-sans">
 
       {/* Live Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-zinc-200 pb-5">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-2">
         <div className="space-y-1">
-          <h1 className="text-2xl font-black text-zinc-955 tracking-tight mt-1">Current Round</h1>
-          <p className="text-xs text-zinc-450 font-semibold">View all information related to the active networking round.</p>
+          <h1 className="text-[20px] font-black text-zinc-955 leading-tight">Current Round</h1>
+          <p className="text-[11.5px] text-zinc-500 font-semibold mt-0.5">View all information related to the active networking round.</p>
         </div>
         <div className="flex gap-2">
           <span className="px-3 py-1 bg-zinc-100 text-zinc-650 font-black text-[10px] uppercase tracking-wider rounded-full border border-zinc-200 shadow-2xs">

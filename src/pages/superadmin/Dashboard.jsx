@@ -193,7 +193,7 @@ export default function SuperadminDashboard({ setActiveTab }) {
 
       {/* Welcome Banner */}
       <div>
-        <h1 className="text-2xl md:text-3xl font-black text-zinc-955 tracking-tight">Superadmin Dashboard</h1>
+        <h1 className="text-2xl font-black text-zinc-955 tracking-tight">Superadmin Dashboard</h1>
         <p className="text-xs text-zinc-500 font-semibold mt-1">Global BNI Conclave directory network oversight &amp; regional admin statistics.</p>
       </div>
 
