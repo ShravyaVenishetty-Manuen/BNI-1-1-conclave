@@ -6,29 +6,70 @@ endobj
 << /Type /Pages /Kids [3 0 R] /Count 1 >>
 endobj
 3 0 obj
-<< /Type /Page /Parent 2 0 R /Resources << /Font << /F1 4 0 R >> >> /MediaBox [0 0 612 792] /Contents 5 0 R >>
+<< /Type /Page /Parent 2 0 R /Resources 4 0 R /MediaBox [0 0 595 842] /Contents 5 0 R >>
 endobj
 4 0 obj
-<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+<< /Font <<
+  /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+  /F2 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+>> >>
 endobj
 5 0 obj
-<< /Length 300 >>
+<< /Length 850 >>
 stream
 BT
-/F1 20 Tf
-50 720 Td
-(BNI REGIONAL CONCLAVE 2026 AGENDA) Tj
+/F1 22 Tf
+0.74 0.11 0.14 rg
+50 780 Td
+(BNI REGIONAL CONCLAVE 2026) Tj
+0 -25 Td
+/F1 15 Tf
+0.2 0.2 0.2 rg
+(OFFICIAL CONCLAVE AGENDA & PROGRAM GUIDE) Tj
 0 -40 Td
 /F1 12 Tf
-(09:30 AM - Registration & Welcome Coffee) Tj
-0 -25 Td
-(10:15 AM - Round 1 Networking Seating) Tj
-0 -25 Td
-(11:30 AM - High Tea Networking Break) Tj
-0 -25 Td
-(12:00 PM - Round 2 Networking Seating) Tj
-0 -25 Td
-(01:15 PM - Executive Business Lunch) Tj
+0.74 0.11 0.14 rg
+(09:30 AM) Tj
+90 0 Td
+/F2 12 Tf
+0.1 0.1 0.1 rg
+(- Registration & Welcome Coffee) Tj
+-90 -45 Td
+/F1 12 Tf
+0.74 0.11 0.14 rg
+(10:15 AM) Tj
+90 0 Td
+/F2 12 Tf
+0.1 0.1 0.1 rg
+(- Round 1 Networking Seating) Tj
+-90 -45 Td
+/F1 12 Tf
+0.74 0.11 0.14 rg
+(11:30 AM) Tj
+90 0 Td
+/F2 12 Tf
+0.1 0.1 0.1 rg
+(- High Tea Networking Break) Tj
+-90 -45 Td
+/F1 12 Tf
+0.74 0.11 0.14 rg
+(12:00 PM) Tj
+90 0 Td
+/F2 12 Tf
+0.1 0.1 0.1 rg
+(- Round 2 Networking Seating) Tj
+-90 -45 Td
+/F1 12 Tf
+0.74 0.11 0.14 rg
+(01:15 PM) Tj
+90 0 Td
+/F2 12 Tf
+0.1 0.1 0.1 rg
+(- Executive Business Lunch) Tj
+-90 -60 Td
+/F2 10 Tf
+0.5 0.5 0.5 rg
+(Published by BNI Conclave Admin - Official Schedule Document) Tj
 ET
 endstream
 endobj
@@ -38,10 +79,10 @@ xref
 0000000009 00000 n 
 0000000058 00000 n 
 0000000115 00000 n 
-0000000244 00000 n 
-0000000313 00000 n 
+0000000224 00000 n 
+0000000356 00000 n 
 trailer
 << /Size 6 /Root 1 0 R >>
 startxref
-660
+1250
 %%EOF
