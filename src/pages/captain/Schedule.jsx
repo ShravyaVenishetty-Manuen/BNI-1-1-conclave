@@ -119,29 +119,46 @@ export default function CaptainSchedule({ loggedInCaptain, onTabChange, conclave
     return null;
   }, [agendaDoc, conclaveSyncData]);
 
-  // Clean, structured vertical timeline events parser
+  // Clean, structured vertical timeline events parser (filters out document headings)
   const timelineEvents = useMemo(() => {
     if (!rawAgendaText) return [];
     const lines = rawAgendaText.split('\n').map(l => l.trim()).filter(Boolean);
     const events = [];
-    let currentTime = '09:00 AM';
+
+    const isDocumentHeader = (text) => {
+      const lower = text.toLowerCase();
+      return (
+        lower.includes('bni regional conclave') ||
+        lower.includes('official schedule document') ||
+        lower.includes('published by bni') ||
+        lower === 'program' ||
+        lower === 'agenda'
+      );
+    };
+
+    let currentEventTime = null;
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
 
-      if (line.toLowerCase() === 'program' || line.toLowerCase() === 'official schedule document') continue;
+      if (isDocumentHeader(line)) continue;
 
       const timeMatch = line.match(/(\d{1,2}:\d{2}\s*(?:AM|PM|am|pm))/i);
       if (timeMatch) {
-        currentTime = timeMatch[1].toUpperCase();
+        currentEventTime = timeMatch[1].toUpperCase();
         const textWithoutTime = line.replace(timeMatch[0], '').replace(/^[-–—:\s]+/, '').trim();
-        if (textWithoutTime && textWithoutTime.toLowerCase() !== 'program') {
-          events.push({ time: currentTime, title: textWithoutTime });
+        if (textWithoutTime && !isDocumentHeader(textWithoutTime)) {
+          events.push({ time: currentEventTime, title: textWithoutTime });
         }
-      } else {
+      } else if (currentEventTime) {
         const cleanTitle = line.replace(/^[-–—:\s]+/, '').trim();
-        if (cleanTitle && cleanTitle.toLowerCase() !== 'program') {
-          events.push({ time: currentTime, title: cleanTitle });
+        if (cleanTitle && !isDocumentHeader(cleanTitle)) {
+          if (events.length > 0 && events[events.length - 1].time === currentEventTime && !events[events.length - 1].title) {
+            events[events.length - 1].title = cleanTitle;
+          } else {
+            events.push({ time: currentEventTime, title: cleanTitle });
+          }
+          currentEventTime = null;
         }
       }
     }
