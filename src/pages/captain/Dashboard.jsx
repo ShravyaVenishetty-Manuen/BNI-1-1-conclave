@@ -267,38 +267,49 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
   return (
     <div className="space-y-6 animate-fade-in font-sans">
       {/* Welcome Card */}
-              <section className="relative bg-white rounded-xl border border-zinc-200 shadow-2xs overflow-hidden p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <span className="bg-red-50 text-brand-red text-[10px] font-extrabold px-2 py-0.5 rounded uppercase tracking-widest border border-red-100/50">
-                      {conclaveSyncData?.conclaveStatus?.status === 'active' ? 'LIVE NOW' : 'Conclave Session'}
-                    </span>
-                    <span className="text-zinc-450 font-semibold text-xs tracking-wider">
-                      CONCLAVE • {conclaveSyncData?.conclaveStatus?.region || 'Vijayawada Region'}
-                    </span>
-                  </div>
+      <section className="relative bg-white rounded-xl border border-zinc-200 shadow-2xs overflow-hidden px-6 py-5 flex items-center justify-between gap-6">
+        {/* Left: Info */}
+        <div className="flex items-center gap-5 min-w-0">
+          {/* BNI Logo Badge */}
+          <div className="shrink-0 w-11 h-11 rounded-xl bg-red-50 border border-red-100 flex flex-col items-center justify-center">
+            <span className="text-brand-red font-black text-[10px] leading-none">BNI</span>
+            <span className="text-zinc-400 font-bold text-[8px] leading-none mt-0.5">2026</span>
+          </div>
 
-                  <h1 className="text-[20px] font-black text-zinc-955 leading-tight">
-                    {conclaveSyncData?.conclaveStatus?.name || conclaveSyncData?.conclaveStatus?.title || conclaveSyncData?.conclaveName || 'Networking Conclave Session'}
-                  </h1>
+          {/* Divider */}
+          <div className="w-px h-10 bg-zinc-200 shrink-0" />
 
-                  <div className="flex flex-wrap gap-4 text-zinc-500 text-[13px] font-medium">
-                    <div className="flex items-center gap-1.5">
-                      <MapPin className="w-4.5 h-4.5 text-zinc-400" />
-                      <span>{conclaveSyncData?.conclaveStatus?.venue || conclaveSyncData?.venue || 'Vijayawada Convention Centre'}</span>
-                    </div>
-                  </div>
-                </div>
+          {/* Text Info */}
+          <div className="min-w-0 space-y-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="bg-red-50 text-brand-red text-[9.5px] font-extrabold px-2 py-0.5 rounded uppercase tracking-widest border border-red-100/60">
+                {conclaveSyncData?.conclaveStatus?.status === 'active' ? 'Live Now' : 'Conclave Session'}
+              </span>
+              <span className="text-zinc-400 font-semibold text-[10.5px] tracking-wide uppercase">
+                CONCLAVE • {conclaveSyncData?.conclaveStatus?.region || 'Vijayawada Region'}
+              </span>
+            </div>
+            <h1 className="text-[20px] font-black text-zinc-955 leading-tight truncate">
+              {conclaveSyncData?.conclaveStatus?.name || conclaveSyncData?.conclaveStatus?.title || conclaveSyncData?.conclaveName || 'Networking Conclave Session'}
+            </h1>
+            <div className="flex items-center gap-1.5 text-zinc-400">
+              <MapPin className="w-3.5 h-3.5 shrink-0" />
+              <span className="text-[11.5px] font-semibold truncate">
+                {conclaveSyncData?.conclaveStatus?.venue || conclaveSyncData?.venue || 'Vijayawada Convention Centre'}
+              </span>
+            </div>
+          </div>
+        </div>
 
-                <div className="flex -space-x-3 overflow-hidden shrink-0">
-                  <div className="w-12 h-12 rounded-full border-4 border-white bg-red-50 flex items-center justify-center text-brand-red font-black text-xs shadow-2xs">
-                    BNI
-                  </div>
-                  <div className="w-12 h-12 rounded-full border-4 border-white bg-zinc-100 flex items-center justify-center text-zinc-500 font-extrabold text-[10px] shadow-2xs">
-                    2026
-                  </div>
-                </div>
-              </section>
+        {/* Right: Round badge */}
+        <div className="shrink-0 text-right hidden sm:block">
+          <p className="text-[9px] font-extrabold text-zinc-400 uppercase tracking-widest">Round</p>
+          <p className="text-2xl font-black text-zinc-900 leading-none mt-0.5">
+            {conclaveSyncData?.conclaveStatus?.currentRound || 0}
+            <span className="text-xs font-semibold text-zinc-400"> / {conclaveSyncData?.mySchedule?.length || 6}</span>
+          </p>
+        </div>
+      </section>
 
               {/* KPI Section */}
               <section className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
