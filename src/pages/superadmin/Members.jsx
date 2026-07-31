@@ -266,8 +266,7 @@ export default function SuperadminMembers({ searchQuery }) {
             <div className="space-y-6">
               <div className="flex justify-between items-center pb-4 border-b border-zinc-200">
                 <div>
-                  <h2 className="text-base font-black text-zinc-900 leading-tight">Member Profile overview</h2>
-                  <p className="text-[10px] text-zinc-450 font-semibold mt-0.5">Member ID: {activeMember.id}</p>
+                  <h2 className="text-base font-black text-zinc-900 leading-tight">Member Profile Overview</h2>
                 </div>
                 <button
                   onClick={() => setActiveMember(null)}

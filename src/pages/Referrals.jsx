@@ -344,12 +344,7 @@ export default function Referrals({ loggedInUser, userType, conclaveSyncData }) 
                     </p>
                   </div>
 
-                  {/* Bottom: Status Action / Badge */}
-                  <div className="flex items-center justify-between pt-2 border-t border-zinc-100/50">
-                    <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest">
-                      SLIP ID: {ref.id}
-                    </span>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 ml-auto">
                       {((ref.status || '').toLowerCase() === 'connected' || (ref.status || '').toLowerCase() === 'closed' || (ref.status || '').toLowerCase() === 'completed') ? (
                         <div className="flex items-center gap-1.5">
                           <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-[9px] font-black uppercase tracking-wider flex items-center gap-1">

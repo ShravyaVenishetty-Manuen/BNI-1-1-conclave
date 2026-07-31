@@ -1311,8 +1311,7 @@ export default function Members({ searchQuery, selectedConclaveId, loggedInAdmin
               </div>
             </div>
             <div className="bg-white p-3 rounded-lg border border-zinc-200/60 shadow-2xs text-[11px] text-zinc-500 font-medium">
-              Name: <span className="font-bold text-zinc-900">{deleteTarget.name}</span><br />
-              ID: <span className="font-mono text-zinc-700 font-bold">{deleteTarget.id}</span>
+              Name: <span className="font-bold text-zinc-900">{deleteTarget.name}</span>
             </div>
             <div className="flex justify-end gap-2 pt-1">
               <button

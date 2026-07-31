@@ -774,7 +774,6 @@ export default function Captains({ searchQuery, selectedConclaveId, loggedInAdmi
                           </div>
                           <div className="flex flex-col">
                             <span className="text-body-sm font-bold text-zinc-900 transition-smooth leading-tight">{cap.name}</span>
-                            <span className="text-[9px] text-zinc-450 font-bold uppercase mt-0.5">ID: {cap.id}</span>
                           </div>
                         </div>
                       </td>
@@ -902,7 +901,6 @@ export default function Captains({ searchQuery, selectedConclaveId, loggedInAdmi
                     </div>
                     <div>
                       <h4 className="text-headline-md font-bold text-zinc-950 leading-tight">{selectedCaptain.name}</h4>
-                      <p className="text-[10px] font-mono text-zinc-450 font-bold uppercase mt-1">ID: {selectedCaptain.id}</p>
 
                       <div className="flex gap-2 mt-2.5 justify-center">
                         {selectedCaptain.status === 'Available' ? (
@@ -1214,8 +1212,7 @@ export default function Captains({ searchQuery, selectedConclaveId, loggedInAdmi
               </div>
             </div>
             <div className="bg-zinc-50 p-3 rounded-lg border border-zinc-100 text-[11px] text-zinc-500 font-medium">
-              Captain: <span className="font-bold text-zinc-900">{deleteTarget.name}</span><br />
-              ID: <span className="font-mono text-zinc-700 font-bold">{deleteTarget.id}</span>
+              Captain: <span className="font-bold text-zinc-900">{deleteTarget.name}</span>
             </div>
             <div className="flex justify-end gap-2 pt-1">
               <button

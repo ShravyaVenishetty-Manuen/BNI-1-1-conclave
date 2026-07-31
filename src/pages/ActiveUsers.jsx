@@ -594,7 +594,6 @@ export default function ActiveUsers({ searchQuery, selectedConclaveId }) {
                         </div>
                         <div>
                           <span className="text-body-sm font-bold text-zinc-900 transition-smooth leading-tight block">{session.name}</span>
-                          <span className="text-[9px] text-zinc-450 font-bold uppercase mt-0.5">ID: {session.id}</span>
                         </div>
                       </div>
                     </td>
@@ -725,7 +724,6 @@ export default function ActiveUsers({ searchQuery, selectedConclaveId }) {
                     </div>
                     <div>
                       <h4 className="text-headline-md font-bold text-zinc-950 leading-tight">{selectedSession.name}</h4>
-                      <p className="text-[10px] text-zinc-450 font-bold uppercase mt-1">ID: {selectedSession.id}</p>
 
                       <div className="flex gap-2 mt-2.5 justify-center">
                         {selectedSession.isCaptain && (

@@ -663,8 +663,7 @@ export default function BusinessTypes({ searchQuery, selectedConclaveId, loggedI
                       </div>
                     </div>
                     <div>
-                      <h4 className="text-headline-md font-bold text-zinc-950 leading-tight">{selectedCategory.name}</h4>
-                      <p className="text-[10px] font-mono text-zinc-400 font-bold mt-1">ID: {selectedCategory.id}</p>
+                      <h4 className="text-headline-md font-bold text-zinc-955 leading-tight">{selectedCategory.name}</h4>
                       <div className="flex gap-2 mt-2 justify-center">
                         {selectedCategory.status === 'Active' ? (
                           <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-100 rounded-md text-[9px] font-extrabold uppercase">

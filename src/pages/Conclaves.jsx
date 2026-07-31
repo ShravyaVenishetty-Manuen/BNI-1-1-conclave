@@ -831,7 +831,6 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
                       <td className="px-5 py-4">
                         <div className="flex flex-col">
                           <span className="text-body-sm font-bold text-zinc-900 transition-smooth leading-tight">{safeRenderString(conclave.name)}</span>
-                          <span className="text-[9px] text-zinc-455 font-bold uppercase mt-0.5">ID: {safeRenderString(conclave.id)}</span>
                         </div>
                       </td>
                       <td className="px-5 py-4">
@@ -970,7 +969,6 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
                     </button>
                     <div>
                       <h3 className="text-section-heading font-extrabold text-zinc-950">Conclave Details</h3>
-                      <span className="text-[10px] text-zinc-400 font-bold uppercase mt-0.5">ID: {selectedConclave.id}</span>
                     </div>
                   </div>
                 </div>

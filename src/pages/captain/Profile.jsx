@@ -123,13 +123,9 @@ export default function CaptainProfile({ loggedInCaptain, onTabChange, onLogout 
 
               <div className="grid grid-cols-2 gap-4 w-full mt-6 py-2">
                 <div>
-                  <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">Captain ID</p>
-                  <p className="font-black text-zinc-800 text-[12.5px] mt-0.5 uppercase truncate" title={captainId}>
-                    {captainId
-                      ? (captainId.startsWith('usr_') 
-                          ? `BNI-CAPT-${captainId.replace('usr_', '').padStart(3, '0')}` 
-                          : `BNI-${captainId.toUpperCase()}`)
-                      : 'BNI-CAPT-001'}
+                  <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">Role</p>
+                  <p className="font-black text-zinc-800 text-[12.5px] mt-0.5">
+                    Table Captain
                   </p>
                 </div>
                 <div>
