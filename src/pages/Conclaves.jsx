@@ -16,6 +16,7 @@ import Pagination from '../components/Pagination';
 import { ResponsiveContainer, BarChart, Bar, XAxis } from 'recharts';
 import SearchableDropdown from '../components/SearchableDropdown';
 import { api } from '../services/api';
+import { createFreshAgendaPdfDataUrl, extractTextFromPdfDataUrl } from '../utils/documentUtils';
 
 export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) {
   const [conclaves, setConclaves] = useState(() => {
@@ -144,6 +145,55 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
   const [agendaUploadTarget, setAgendaUploadTarget] = useState(null);
   const [isUploadingAgenda, setIsUploadingAgenda] = useState(false);
+  const [agendaInputText, setAgendaInputText] = useState('');
+
+  useEffect(() => {
+    if (agendaUploadTarget) {
+      const stored = localStorage.getItem(`bni_agenda_text_${agendaUploadTarget.id}`) ||
+        agendaUploadTarget.agendaText ||
+        '';
+      setAgendaInputText(stored);
+    } else {
+      setAgendaInputText('');
+    }
+  }, [agendaUploadTarget]);
+
+  const handleSaveAgendaText = async () => {
+    if (!agendaUploadTarget) return;
+    try {
+      const textVal = agendaInputText.trim();
+      localStorage.setItem(`bni_agenda_text_${agendaUploadTarget.id}`, textVal);
+      localStorage.setItem('bni_conclave_agenda_text', textVal);
+
+      // Dynamically generate a brand-new PDF containing ONLY the new text
+      const freshPdfDataUrl = createFreshAgendaPdfDataUrl(textVal, agendaUploadTarget.name);
+      const newAgendaDoc = {
+        name: `${agendaUploadTarget.name.replace(/[^a-zA-Z0-9_.-]/g, '_')}_Official_Agenda.pdf`,
+        dataUrl: freshPdfDataUrl,
+        type: 'application/pdf',
+        size: '1.0 MB',
+        uploadedAt: new Date().toISOString()
+      };
+
+      localStorage.setItem(`bni_agenda_doc_${agendaUploadTarget.id}`, JSON.stringify(newAgendaDoc));
+      localStorage.setItem('bni_conclave_agenda_doc', JSON.stringify(newAgendaDoc));
+
+      setConclaves(prev => prev.map(c => c.id === agendaUploadTarget.id ? { ...c, agendaText: textVal, agendaDocument: newAgendaDoc } : c));
+      if (selectedConclave && selectedConclave.id === agendaUploadTarget.id) {
+        setSelectedConclave(prev => ({ ...prev, agendaText: textVal, agendaDocument: newAgendaDoc }));
+      }
+
+      // Sync with backend if API is live
+      try {
+        await api.post(`/admin/conclaves/${agendaUploadTarget.id}/agenda-document`, { agendaDocument: newAgendaDoc });
+      } catch (e) {}
+
+      showToast('New Agenda Published 🎉', 'Brand new PDF document and schedule published for Members & Captains.');
+      setAgendaUploadTarget(null);
+    } catch (err) {
+      showToast('Save Failed', 'Could not save agenda text.');
+    }
+  };
 
   // Lock background body scroll when any modal is open
   useEffect(() => {
@@ -173,21 +223,31 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
     const reader = new FileReader();
     reader.onload = async () => {
       try {
+        const extractedPdfText = extractTextFromPdfDataUrl(reader.result);
+
         const fileObj = {
           name: file.name,
           dataUrl: reader.result,
+          rawText: extractedPdfText,
+          agendaText: extractedPdfText,
           type: file.type || 'application/pdf',
           size: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
           uploadedAt: new Date().toISOString()
         };
+
+        if (extractedPdfText) {
+          localStorage.setItem(`bni_agenda_text_${conclaveId}`, extractedPdfText);
+          localStorage.setItem('bni_conclave_agenda_text', extractedPdfText);
+        }
 
         const res = await api.post(`/admin/conclaves/${conclaveId}/agenda-document`, { agendaDocument: fileObj });
 
         const updatedDoc = res?.agendaDocument || fileObj;
 
         // Update local state and local storage cache
-        setConclaves(prev => prev.map(c => c.id === conclaveId ? { ...c, agendaDocument: updatedDoc } : c));
+        setConclaves(prev => prev.map(c => c.id === conclaveId ? { ...c, agendaDocument: updatedDoc, agendaText: extractedPdfText || c.agendaText } : c));
         localStorage.setItem(`bni_agenda_doc_${conclaveId}`, JSON.stringify(updatedDoc));
+        localStorage.setItem('bni_conclave_agenda_doc', JSON.stringify(updatedDoc));
         if (selectedConclave && selectedConclave.id === conclaveId) {
           setSelectedConclave(prev => ({ ...prev, agendaDocument: updatedDoc }));
         }
@@ -1536,7 +1596,7 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
             )}
 
             {/* File Upload Box */}
-            <div className="border-2 border-dashed border-zinc-200 hover:border-emerald-500 bg-zinc-50/50 hover:bg-emerald-50/20 p-6 rounded-xl text-center transition-smooth group cursor-pointer relative">
+            <div className="border-2 border-dashed border-zinc-200 hover:border-emerald-500 bg-zinc-50/50 hover:bg-emerald-50/20 p-5 rounded-xl text-center transition-smooth group cursor-pointer relative">
               <input
                 type="file"
                 accept=".pdf,.png,.jpg,.jpeg,.docx,.doc"
@@ -1544,15 +1604,29 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
                 disabled={isUploadingAgenda}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
               />
-              <div className="p-3 bg-white text-zinc-600 group-hover:text-emerald-600 rounded-full w-12 h-12 mx-auto shadow-2xs border border-zinc-200 group-hover:border-emerald-200 flex items-center justify-center transition-smooth mb-3">
-                <Upload className="w-6 h-6" />
+              <div className="p-2.5 bg-white text-zinc-600 group-hover:text-emerald-600 rounded-full w-10 h-10 mx-auto shadow-2xs border border-zinc-200 group-hover:border-emerald-200 flex items-center justify-center transition-smooth mb-2">
+                <Upload className="w-5 h-5" />
               </div>
               <h4 className="text-body-sm font-extrabold text-zinc-900">
                 {isUploadingAgenda ? 'Uploading & Publishing File...' : 'Click to select or drag Agenda File'}
               </h4>
-              <p className="text-[11px] text-zinc-400 font-semibold mt-1">
+              <p className="text-[11px] text-zinc-400 font-semibold mt-0.5">
                 Supports PDF, PNG, JPG, or DOCX (Max 25MB)
               </p>
+            </div>
+
+            {/* Direct Text Agenda Input Box */}
+            <div className="space-y-2 pt-2 border-t border-zinc-100">
+              <label className="text-[11px] font-black text-zinc-800 uppercase tracking-wider block">
+                Or Type / Edit Conclave Agenda Schedule
+              </label>
+              <textarea
+                rows={5}
+                value={agendaInputText}
+                onChange={(e) => setAgendaInputText(e.target.value)}
+                placeholder={`Example:\n09:30 AM - Registration & Welcome Coffee\n10:15 AM - Round 1 Networking Seating\n11:30 AM - High Tea Networking Break\n12:00 PM - Round 2 Networking Seating\n01:15 PM - Executive Business Lunch`}
+                className="w-full p-3 bg-zinc-50 border border-zinc-200 rounded-xl text-[11.5px] font-semibold text-zinc-900 placeholder:text-zinc-400 focus:outline-hidden focus:border-brand-red focus:bg-white transition-all resize-y leading-relaxed font-mono"
+              />
             </div>
 
             <div className="flex justify-end gap-2 pt-2 border-t border-zinc-100">
@@ -1563,6 +1637,14 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
                 className="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-button rounded-xl transition-smooth cursor-pointer text-xs font-bold"
               >
                 Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveAgendaText}
+                disabled={isUploadingAgenda || !agendaInputText.trim()}
+                className="px-5 py-2 bg-brand-red hover:bg-red-700 text-white text-button rounded-xl transition-smooth cursor-pointer text-xs font-black uppercase tracking-wider shadow-2xs disabled:opacity-50"
+              >
+                Publish Text Agenda
               </button>
             </div>
           </div>

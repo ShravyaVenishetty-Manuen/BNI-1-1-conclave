@@ -599,7 +599,7 @@ export default function ActiveUsers({ searchQuery, selectedConclaveId }) {
                       </div>
                     </td>
                     <td className="px-5 py-4">
-                      <span className="px-2.5 py-0.5 bg-zinc-50 text-zinc-500 border border-zinc-200 text-[10px] font-semibold rounded-md">
+                      <span className="inline-flex items-center whitespace-nowrap px-2.5 py-0.5 bg-zinc-100 text-zinc-700 rounded-md text-[10.5px] font-extrabold border border-zinc-200/80">
                         {session.category}
                       </span>
                     </td>

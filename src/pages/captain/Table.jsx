@@ -172,7 +172,7 @@ export default function CaptainTable({ loggedInCaptain, searchQuery, conclaveSyn
           </div>
 
           {/* Participant Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {filteredMembers.length === 0 ? (
               <div className="col-span-full bg-white p-12 text-center border border-zinc-200 rounded-xl">
                 <p className="text-[12px] text-zinc-450 font-bold">No members found matching your search query.</p>
@@ -181,39 +181,36 @@ export default function CaptainTable({ loggedInCaptain, searchQuery, conclaveSyn
               filteredMembers.map((member) => {
                 const initials = member.name.split(' ').map(n => n[0]).filter(Boolean).join('').substring(0, 2).toUpperCase() || 'M';
                 const bgClass = member.isCaptain 
-                  ? 'bg-red-50 border-red-100 text-brand-red' 
-                  : 'bg-zinc-50 border-zinc-200 text-zinc-550';
+                  ? 'bg-red-50/90 border-red-100/90 text-brand-red' 
+                  : 'bg-zinc-100/90 border-zinc-200/80 text-zinc-700';
                 const bniTag = 'BNI';
                 return (
                   <div
                     key={member.uid || member.name}
                     onClick={() => setSelectedProfileMember(member)}
-                    className="bg-white p-4.5 rounded-xl border border-zinc-200 hover:border-brand-red/40 shadow-2xs flex flex-col justify-between gap-4 transition-smooth cursor-pointer"
+                    className="bg-white p-5 rounded-2xl border border-zinc-200/90 hover:border-brand-red/35 shadow-2xs hover:shadow-md flex flex-col justify-between gap-4 transition-all duration-200 cursor-pointer group"
                   >
                     <div className="flex items-start gap-3.5">
-                      <div className="w-11 h-11 rounded-full bg-red-50 border border-red-100 font-black text-xs text-brand-red flex items-center justify-center shrink-0 shadow-2xs select-none">
+                      <div className="w-11 h-11 rounded-full bg-red-50 border border-red-100/80 font-black text-xs text-brand-red flex items-center justify-center shrink-0 shadow-2xs select-none">
                         {initials}
                       </div>
 
-                      <div className="min-w-0 flex-1 space-y-1">
-                        <div className="flex justify-between items-center gap-1">
-                          <h4 className="text-[13px] font-black text-zinc-800 truncate leading-tight">{member.name}</h4>
-                          {member.isPresent ? (
-                            <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" title="Checked In"></span>
-                          ) : (
-                            <span className="w-2 h-2 rounded-full bg-zinc-300 shrink-0" title="Absent"></span>
-                          )}
+                      <div className="min-w-0 flex-1 space-y-1.5">
+                        <div className="flex justify-between items-center gap-1.5">
+                          <h4 className="text-body-sm font-extrabold text-zinc-950 leading-snug select-text">{member.name}</h4>
                         </div>
-                        <span className={`inline-block px-2 py-0.5 rounded-[4px] text-[8px] font-black uppercase border tracking-wider leading-none ${bgClass}`}>
-                          {member.category}
-                        </span>
-                        <p className="text-[10.5px] text-zinc-455 font-semibold truncate leading-normal mt-0.5">{member.company}</p>
+                        <div>
+                          <span className={`inline-flex items-center text-[9px] font-extrabold uppercase px-2.5 py-1 rounded-md border tracking-wider leading-tight whitespace-normal break-words ${bgClass}`}>
+                            {member.category}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-zinc-650 font-bold leading-snug select-text truncate">{member.company}</p>
                       </div>
                     </div>
 
                     <div className="pt-3 border-t border-zinc-100 flex justify-between items-center text-[10px]">
-                      <span className="text-zinc-400 font-extrabold uppercase text-[9px] tracking-wide truncate">{member.chapter || 'BNI Chapter'}</span>
-                      <span className="text-brand-red bg-red-50/50 border border-red-100 px-2 py-0.5 rounded font-mono font-bold leading-none">
+                      <span className="text-zinc-500 font-extrabold uppercase text-[9px] tracking-wider truncate">{member.chapter || 'BNI Chapter'}</span>
+                      <span className="text-brand-red bg-red-50 border border-red-100 px-2 py-0.5 rounded font-black text-[9px] uppercase tracking-wider">
                         {bniTag}
                       </span>
                     </div>
@@ -230,7 +227,7 @@ export default function CaptainTable({ loggedInCaptain, searchQuery, conclaveSyn
                           category: member.category
                         });
                       }}
-                      className="w-full py-1.5 border border-zinc-200 hover:border-brand-red text-zinc-650 hover:text-brand-red bg-zinc-50/50 hover:bg-red-50/5 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition-smooth cursor-pointer font-bold font-black"
+                      className="w-full py-2 border border-zinc-200 group-hover:border-brand-red text-zinc-700 group-hover:text-white bg-zinc-50 group-hover:bg-brand-red rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-2xs cursor-pointer"
                     >
                       Send Referral
                     </button>

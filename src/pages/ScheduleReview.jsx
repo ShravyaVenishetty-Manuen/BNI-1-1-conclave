@@ -85,16 +85,18 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
           const captain = conclave.participants.find(p => p.id === t.captainId);
           const members = t.memberIds.map(mId => {
             const p = conclave.participants.find(p => p.id === mId);
+            const cat = p?.businessCategory || p?.category || p?.businessType || p?.profession || p?.industry || p?.classification;
             return {
               id: p?._originalUid || String(mId),
               name: p?.name || 'Unknown',
-              category: p?.businessCategory || 'Uncategorized',
+              category: (cat && cat.trim() && cat.toLowerCase() !== 'uncategorized') ? cat : 'General Business',
               conflict: false
             };
           });
 
           // Check if there are category conflicts (duplicate categories at the table)
-          const categories = [captain?.businessCategory, ...members.map(m => m.category)].filter(Boolean);
+          const captainCat = captain?.businessCategory || captain?.category || captain?.businessType || captain?.profession;
+          const categories = [(captainCat && captainCat.toLowerCase() !== 'uncategorized' ? captainCat : null), ...members.map(m => m.category)].filter(Boolean);
           const hasConflict = categories.length !== new Set(categories).size;
 
           return {
@@ -629,279 +631,135 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
 
 
       {/* Seating Main Dashboard Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-
-          {/* Left Column Seating cards */}
-          <div className="lg:col-span-9 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-            {filteredTables.map((table) => (
-              <div
-                key={table.id}
-                className={`bg-white rounded-xl overflow-hidden shadow-sm flex flex-col p-4 space-y-3.5 border ${table.status === 'warning' ? 'border-red-200 bg-red-50/5' : 'border-zinc-200/80'
-                  }`}
-              >
-                {/* Header card info */}
-                <div className="flex flex-col gap-1 flex-shrink-0">
-                  <div className="flex justify-between items-center">
-                    <span className="font-extrabold text-zinc-955 text-body-sm">{table.id}</span>
-                    <div className="text-right flex items-center gap-1">
-                      <span className="text-body-sm font-extrabold text-zinc-955">{table.capacity}</span>
-                      <span className="text-[9px] text-zinc-450 font-bold uppercase">Capacity</span>
-                    </div>
+      <div className="w-full">
+        {/* Seating cards grid: 3 per row */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredTables.map((table) => (
+            <div
+              key={table.id}
+              className={`bg-white rounded-xl overflow-hidden shadow-sm flex flex-col p-4 space-y-3.5 border transition-all duration-200 hover:shadow-md ${
+                table.status === 'warning' ? 'border-red-200 bg-red-50/5' : 'border-zinc-200/80 hover:border-zinc-300'
+              }`}
+            >
+              {/* Header card info */}
+              <div className="flex flex-col gap-1.5 flex-shrink-0 border-b border-zinc-100 pb-3">
+                <div className="flex justify-between items-center">
+                  <span className="font-black text-zinc-950 text-body-md tracking-tight">{table.id}</span>
+                  <div className="flex items-center gap-1.5 bg-zinc-100/80 px-2.5 py-1 rounded-full border border-zinc-200/60">
+                    <span className="text-body-sm font-extrabold text-zinc-800">{table.capacity}</span>
+                    <span className="text-[9px] text-zinc-450 font-bold uppercase tracking-wider">Capacity</span>
                   </div>
-
-                  {/* Status Indicator (Text Only, no box) */}
-                  {table.status === 'warning' && (
-                    <div className="flex items-center gap-1.5 text-brand-red text-[10px] font-bold uppercase tracking-wider mt-0.5">
-                      <AlertTriangle className="w-3.5 h-3.5 animate-pulse shrink-0" />
-                      <span className="truncate">{table.warningText}</span>
-                    </div>
-                  )}
-                  {table.status === 'validated' && (
-                    <div className="flex items-center gap-1.5 text-emerald-600 text-[10px] font-bold uppercase tracking-wider mt-0.5">
-                      <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                      <span>Validated</span>
-                    </div>
-                  )}
-                  {table.status === 'locked' && (
-                    <div className="flex items-center gap-1.5 text-zinc-450 text-[10px] font-bold uppercase tracking-wider mt-0.5">
-                      <Lock className="w-3.5 h-3.5 shrink-0" />
-                      <span>Locked</span>
-                    </div>
-                  )}
-                  {table.status === 'review' && (
-                    <div className="flex items-center gap-1.5 text-amber-600 text-[10px] font-bold uppercase tracking-wider mt-0.5">
-                      <Clock className="w-3.5 h-3.5 shrink-0" />
-                      <span>Ready for Review</span>
-                    </div>
-                  )}
                 </div>
 
-                {/* Card body Seating */}
-                {table.status === 'locked' ? (
-                  <div className="py-6 flex flex-col items-center justify-center text-zinc-400 italic">
-                    <LockKeyhole className="w-8 h-8 mb-2 text-zinc-300" />
-                    <p className="text-body-sm font-semibold">Standard Seating Active</p>
+                {/* Status Indicator */}
+                {table.status === 'warning' && (
+                  <div className="flex items-center gap-1.5 text-brand-red text-[10px] font-extrabold uppercase tracking-wider mt-0.5 bg-red-50/80 px-2.5 py-1 rounded-md border border-red-100/80 w-fit">
+                    <AlertTriangle className="w-3.5 h-3.5 animate-pulse shrink-0" />
+                    <span className="truncate">{table.warningText || 'Warning'}</span>
                   </div>
-                ) : table.status === 'review' ? (
-                  <div className="py-6 flex items-center justify-center border-t border-dashed border-zinc-100">
-                    <p className="text-zinc-400 font-semibold text-body-sm">Ready for Review</p>
+                )}
+                {table.status === 'validated' && (
+                  <div className="flex items-center gap-1.5 text-emerald-600 text-[10px] font-extrabold uppercase tracking-wider mt-0.5 bg-emerald-50/80 px-2.5 py-1 rounded-md border border-emerald-100/80 w-fit">
+                    <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-emerald-500" />
+                    <span>Validated</span>
                   </div>
-                ) : (
-                  <div className="flex-1 space-y-3.5">
-                    {/* Table Captain block */}
-                    {table.captain && (
-                      <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg transition-smooth hover:bg-zinc-50/55 group/captain">
-                        <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                          {table.captain.image ? (
-                            <img className="w-5.5 h-5.5 rounded-full object-cover shadow-xs" src={table.captain.image} alt={table.captain.name} />
-                          ) : (
-                            <div className="w-5.5 h-5.5 rounded-full bg-brand-red text-white flex items-center justify-center font-bold text-[9px] shadow-sm shrink-0">
-                              {table.captain.initials}
-                            </div>
-                          )}
-                          <div className="flex-1 flex items-center justify-between gap-2 min-w-0">
-                            <span className="font-extrabold text-zinc-800 text-body-sm">{table.captain.name}</span>
-                            <span className="px-2 py-0.5 rounded bg-brand-red/10 text-brand-red text-[8px] font-extrabold uppercase shrink-0">
-                              Captain
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {table.captain && table.members && table.members.length > 0 && (
-                      <div className="border-t border-zinc-150 my-1 mx-2.5" />
-                    )}
-
-                    {/* Members seated */}
-                    <div className="space-y-0.5">
-                      {table.members && table.members.map((member) => (
-                        <div
-                          key={member.id}
-                          className="flex items-center justify-between px-2.5 py-1.5 rounded-lg transition-smooth hover:bg-zinc-50/55 group/member"
-                        >
-                          <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                            <div className={`w-5.5 h-5.5 rounded-full flex items-center justify-center text-[9px] font-extrabold shadow-xs shrink-0 ${member.conflict ? 'bg-red-50 text-brand-red border border-red-100' : 'bg-zinc-100 text-zinc-500'}`}>
-                              {member.initials || member.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
-                            </div>
-
-                            <div className="flex-1 min-w-0 flex flex-col gap-0.5">
-                              <div className="flex items-center gap-1">
-                                <span className={`font-bold text-[11px] leading-tight select-text ${member.conflict ? 'text-brand-red' : 'text-zinc-800'}`}>
-                                  {member.name}
-                                </span>
-                                {member.conflict && (
-                                  <AlertTriangle className="w-3 h-3 text-brand-red shrink-0 animate-pulse" />
-                                )}
-                              </div>
-                              <span className={`text-[9px] font-extrabold uppercase tracking-wide leading-none ${member.conflict ? 'text-brand-red/80' : 'text-zinc-400'}`}>
-                                {member.category}
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="flex gap-1.5 opacity-0 group-hover/member:opacity-100 transition-opacity ml-2 shrink-0">
-                            <button
-                              onClick={() => {
-                                setSwapTarget({ member, table });
-                              }}
-                              className="p-1 text-zinc-400 hover:text-brand-red transition-smooth cursor-pointer"
-                              title="Swap or Move Member"
-                            >
-                              <ArrowRightLeft className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                )}
+                {table.status === 'locked' && (
+                  <div className="flex items-center gap-1.5 text-zinc-500 text-[10px] font-extrabold uppercase tracking-wider mt-0.5 bg-zinc-100 px-2.5 py-1 rounded-md border border-zinc-200/60 w-fit">
+                    <Lock className="w-3.5 h-3.5 shrink-0" />
+                    <span>Locked</span>
+                  </div>
+                )}
+                {table.status === 'review' && (
+                  <div className="flex items-center gap-1.5 text-amber-600 text-[10px] font-extrabold uppercase tracking-wider mt-0.5 bg-amber-50/80 px-2.5 py-1 rounded-md border border-amber-100/80 w-fit">
+                    <Clock className="w-3.5 h-3.5 shrink-0" />
+                    <span>Ready for Review</span>
                   </div>
                 )}
               </div>
-            ))}
 
-            {/* Dotted border create new table button */}
-            <div
-              onClick={() => {
-                setTables(prev => [...prev, { id: `Table ${String(prev.length + 1).padStart(2, '0')}`, status: 'validated', capacity: '0/8', members: [] }]);
-                setHasUnsavedChanges(true);
-                showToast('Table Created', `Table ${String(tables.length + 1).padStart(2, '0')} allocated under standard parameters.`);
-              }}
-              className="border-2 border-zinc-200 border-dashed rounded-xl flex flex-col items-center justify-center p-8 text-zinc-400 cursor-pointer hover:bg-zinc-55 transition-smooth group"
-            >
-              <PlusCircle className="w-10 h-10 mb-2 text-zinc-300 group-hover:text-brand-red transition-colors" />
-              <p className="font-bold uppercase tracking-wider text-[10px] text-zinc-555">Create New Seating Table</p>
-            </div>
-          </div>
-
-          {/* Right Column details panel */}
-          <div className="lg:col-span-3 space-y-6">
-            {/* Validation Engine summary */}
-            <div className="bg-white border border-zinc-200/80 rounded-xl overflow-hidden shadow-sm">
-              <div className="p-4 bg-zinc-900 text-white flex justify-between items-center">
-                <h3 className="font-bold text-[10px] uppercase tracking-wider text-zinc-350">Validation Engine</h3>
-                <ShieldCheck className="w-5 h-5 text-brand-red" />
-              </div>
-
-              <div className="p-4 space-y-4">
-                <div className="flex gap-2.5">
-                  <div className="flex-1 p-2 bg-emerald-50/15 border border-emerald-100 rounded-lg text-center">
-                    <p className="text-[8px] text-zinc-400 font-bold uppercase">Passed</p>
-                    <p className="text-headline-md font-black text-emerald-700">10</p>
-                  </div>
-                  <div className="flex-1 p-2 bg-red-50/15 border border-red-100 rounded-lg text-center">
-                    <p className="text-[8px] text-zinc-400 font-bold uppercase">Warnings</p>
-                    <p className="text-headline-md font-black text-brand-red">{warningsCount}</p>
-                  </div>
-                  <div className="flex-1 p-2 bg-zinc-50 border border-zinc-100 rounded-lg text-center">
-                    <p className="text-[8px] text-zinc-400 font-bold uppercase">Errors</p>
-                    <p className="text-headline-md font-black text-zinc-700">0</p>
-                  </div>
+              {/* Card body Seating */}
+              {table.status === 'locked' ? (
+                <div className="py-8 flex flex-col items-center justify-center text-zinc-400 italic">
+                  <LockKeyhole className="w-8 h-8 mb-2 text-zinc-300" />
+                  <p className="text-body-sm font-semibold">Standard Seating Active</p>
                 </div>
-
-                <div className="space-y-4">
-                  <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest border-b border-zinc-100 pb-1.5">Affected Tables</p>
-
-                  {affectedList.map((aff) => (
-                    <div key={aff.id} className="group border-l-4 border-l-brand-red pl-3 py-1 space-y-2">
-                      <h5 className="font-bold text-zinc-800 text-body-sm leading-snug">{aff.title}</h5>
-                      <p className="text-[11px] text-zinc-555 leading-relaxed font-semibold select-text">
-                        {aff.desc}
-                      </p>
-                      {aff.id === 'aff-1' && (
-                        <button
-                          onClick={handleAutoResolveConflict}
-                          className="text-[10px] font-bold text-brand-red hover:underline flex items-center gap-1 cursor-pointer"
-                        >
-                          Suggest Fix <Sparkles className="w-3.5 h-3.5" />
-                        </button>
-                      )}
+              ) : table.status === 'review' ? (
+                <div className="py-8 flex items-center justify-center border-t border-dashed border-zinc-100">
+                  <p className="text-zinc-400 font-semibold text-body-sm">Ready for Review</p>
+                </div>
+              ) : (
+                <div className="flex-1 space-y-3.5">
+                  {/* Table Captain block - Displays Captain Name Fully */}
+                  {table.captain && (
+                    <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-zinc-50/80 border border-zinc-100 transition-smooth hover:bg-zinc-100/60 group/captain">
+                      <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                        {table.captain.image ? (
+                          <img className="w-6 h-6 rounded-full object-cover shadow-xs shrink-0" src={table.captain.image} alt={table.captain.name} />
+                        ) : (
+                          <div className="w-6 h-6 rounded-full bg-brand-red text-white flex items-center justify-center font-black text-[9.5px] shadow-xs shrink-0">
+                            {table.captain.initials}
+                          </div>
+                        )}
+                        <div className="flex-1 flex items-center justify-between gap-2 min-w-0">
+                          <span className="font-extrabold text-zinc-900 text-body-sm leading-tight select-text whitespace-normal break-words">{table.captain.name}</span>
+                          <span className="px-2 py-0.5 rounded bg-brand-red/10 border border-brand-red/20 text-brand-red text-[8.5px] font-black uppercase tracking-wider shrink-0">
+                            Captain
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+                  )}
 
-            {/* Seating Quality Metrics */}
-            <div className="bg-white border border-zinc-200/80 rounded-xl p-5 shadow-sm space-y-4">
-              <h3 className="text-body-sm font-extrabold text-zinc-955 uppercase border-b border-zinc-100 pb-2.5">Quality Metrics</h3>
+                  {table.captain && table.members && table.members.length > 0 && (
+                    <div className="border-t border-zinc-100 my-1 mx-1" />
+                  )}
 
-              <div className="space-y-4 font-semibold text-zinc-650">
-                <div>
-                  <div className="flex justify-between items-center mb-1.5 text-[10px]">
-                    <span>Unique Meetings</span>
-                    <span className="font-bold text-brand-red">
-                      {conclave?.scheduleSummary?.coverage !== undefined
-                        ? `${Math.round(conclave.scheduleSummary.coverage * 100)}%`
-                        : '98%'}
-                    </span>
-                  </div>
-                  <div className="h-2 w-full rounded-full overflow-hidden cursor-pointer">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart layout="vertical" data={[{
-                        name: 'Unique Meetings',
-                        value: conclave?.scheduleSummary?.coverage !== undefined
-                          ? Math.round(conclave.scheduleSummary.coverage * 100)
-                          : 98
-                      }]} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-                        <XAxis type="number" domain={[0, 100]} hide />
-                        <YAxis type="category" dataKey="name" hide />
-                        <Tooltip formatter={(value) => `${value}%`} cursor={false} />
-                        <Bar dataKey="value" fill="#af101a" radius={[4, 4, 4, 4]} background={{ fill: '#f4f4f5' }} barSize={8} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex justify-between items-center mb-1.5 text-[10px]">
-                    <span className="font-semibold text-zinc-600">Repeat Pairings</span>
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-bold text-zinc-900">
-                        {conclaveKPIs.repeatPairings}
-                      </span>
-                      <button
-                        onClick={() => setShowRepeatModal(true)}
-                        className="text-[9px] font-extrabold text-brand-red hover:underline cursor-pointer"
+                  {/* Members seated */}
+                  <div className="space-y-1">
+                    {table.members && table.members.map((member) => (
+                      <div
+                        key={member.id}
+                        className="flex items-center justify-between px-3 py-1.5 rounded-lg transition-smooth hover:bg-zinc-50 border border-transparent hover:border-zinc-200/50 group/member"
                       >
-                        (View Names)
-                      </button>
-                    </div>
-                  </div>
-                  <div className="h-2 w-full rounded-full overflow-hidden cursor-pointer">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart layout="vertical" data={[{
-                        name: 'Repeat Pairings',
-                        value: conclave?.scheduleSummary?.repeatPairings !== undefined
-                          ? conclave.scheduleSummary.repeatPairings
-                          : 0
-                      }]} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-                        <XAxis type="number" domain={[0, conclave?.scheduleSummary?.repeatPairings > 5 ? conclave.scheduleSummary.repeatPairings : 5]} hide />
-                        <YAxis type="category" dataKey="name" hide />
-                        <Tooltip formatter={(value) => `${value}`} cursor={false} />
-                        <Bar dataKey="value" fill="#af101a" radius={[4, 4, 4, 4]} background={{ fill: '#f4f4f5' }} barSize={8} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
+                        <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[9.5px] font-black shadow-2xs shrink-0 ${member.conflict ? 'bg-red-100 text-brand-red border border-red-200' : 'bg-zinc-100 text-zinc-600 border border-zinc-200/60'}`}>
+                            {member.initials || member.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                          </div>
 
-                <div className="pt-3.5 border-t border-zinc-100">
-                  <div className="flex justify-between items-end">
-                    <div>
-                      <p className="text-[9px] text-zinc-400 font-bold uppercase">Overall Score</p>
-                      <p className="text-headline-md font-black text-zinc-955 leading-none mt-1">
-                        {overallScore}<span className="text-body-sm font-normal text-zinc-450">/100</span>
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-[9px] text-brand-red font-bold uppercase">Exceptional</p>
-                      <span className="inline-block w-4 h-4 bg-red-50 text-brand-red rounded-full text-center mt-1">
-                        ✓
-                      </span>
-                    </div>
+                          <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+                            <div className="flex items-center gap-1.5">
+                              <span className={`font-bold text-[12px] leading-tight select-text truncate ${member.conflict ? 'text-brand-red' : 'text-zinc-850'}`}>
+                                {member.name}
+                              </span>
+                              {member.conflict && (
+                                <AlertTriangle className="w-3.5 h-3.5 text-brand-red shrink-0 animate-pulse" />
+                              )}
+                            </div>
+                            <span className={`text-[9.5px] font-bold uppercase tracking-wider leading-none truncate ${member.conflict ? 'text-brand-red/80' : 'text-zinc-400'}`}>
+                              {member.category}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-1.5 opacity-0 group-hover/member:opacity-100 transition-opacity ml-2 shrink-0">
+                          <button
+                            onClick={() => {
+                              setSwapTarget({ member, table });
+                            }}
+                            className="p-1 text-zinc-400 hover:text-brand-red hover:bg-zinc-100 rounded transition-smooth cursor-pointer"
+                            title="Swap or Move Member"
+                          >
+                            <ArrowRightLeft className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              </div>
+              )}
             </div>
+          ))}
         </div>
       </div>
 

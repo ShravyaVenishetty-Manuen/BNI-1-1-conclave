@@ -489,42 +489,57 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
                 <div
                   key={member.uid}
                   onClick={() => setSelectedProfileMember(member)}
-                  className={`p-4 rounded-xl border transition-smooth group cursor-pointer hover:border-brand-red/40 ${member.isCaptain
-                    ? 'bg-red-50/20 border-brand-red/30 shadow-2xs relative'
-                    : 'bg-white border-zinc-200 shadow-2xs'
+                  className={`p-4 rounded-2xl border transition-all duration-200 group cursor-pointer hover:border-brand-red/35 flex flex-col justify-between gap-3 shadow-2xs hover:shadow-md ${member.isCaptain
+                    ? 'bg-red-50/20 border-brand-red/30 relative'
+                    : 'bg-white border-zinc-200/90'
                     }`}
                 >
                   {member.isCaptain && (
-                    <span className="absolute top-2 right-2 bg-brand-red text-white text-[7.5px] font-black px-1.5 py-0.5 rounded uppercase tracking-wider">
+                    <span className="absolute top-3 right-3 bg-brand-red text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider shadow-2xs z-10">
                       Captain
                     </span>
                   )}
 
-                  <div className="flex items-start gap-3.5">
-                    <div className={`w-12 h-12 rounded-full overflow-hidden border-2 flex items-center justify-center font-bold text-xs shrink-0 select-none ${member.isCaptain
-                      ? 'border-brand-red bg-red-100 text-brand-red'
-                      : 'border-zinc-200 bg-zinc-50 text-zinc-500 transition-colors'
-                      }`}>
-                      {initials}
-                    </div>
+                  {/* Card Details */}
+                  <div className="space-y-2.5">
+                    {/* Top Header: Avatar + Name + Company */}
+                    <div className="flex items-start gap-3">
+                      <div className={`w-10 h-10 rounded-full overflow-hidden border-2 flex items-center justify-center font-black text-xs shrink-0 select-none shadow-2xs ${member.isCaptain
+                        ? 'border-brand-red bg-red-100 text-brand-red'
+                        : 'border-zinc-200 bg-zinc-50 text-zinc-500'
+                        }`}>
+                        {initials}
+                      </div>
 
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-center">
-                        <h4 className="text-[12.5px] font-black text-zinc-850 truncate transition-smooth leading-tight">
+                      <div className="min-w-0 flex-1 pr-12">
+                        <h4 className="text-[13px] font-extrabold text-zinc-950 leading-snug select-text truncate">
                           {member.name}
                         </h4>
+                        <p className="text-[11px] text-zinc-500 font-semibold leading-tight select-text truncate mt-0.5">
+                          {member.company || 'Business Member'}
+                        </p>
                       </div>
-                      <span className="inline-block px-1.5 py-0.5 bg-zinc-100 border border-zinc-200/50 text-zinc-500 text-[8.5px] font-black rounded uppercase tracking-wide mt-1.5">
+                    </div>
+
+                    {/* Category Badge Pill */}
+                    <div>
+                      <span className="inline-flex items-center text-[9px] font-extrabold uppercase px-2.5 py-0.5 rounded-md border border-zinc-200/80 bg-zinc-100/90 text-zinc-700 tracking-wider leading-tight whitespace-normal break-words">
                         {member.category}
                       </span>
-                      <p className="text-[11px] text-zinc-800 font-extrabold mt-2 truncate leading-tight">
-                        {member.company}
+                    </div>
+
+                    {/* Chapter Label */}
+                    {member.chapter && (
+                      <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider truncate">
+                        {member.chapter}
                       </p>
-                      <div className="flex gap-2 mt-2 pt-2 border-t border-zinc-100 text-[9px] font-bold text-zinc-400">
-                        <span>Sent: <span className="text-zinc-700">{getMemberReferralCount(member.name, member.uid).given}</span></span>
-                        <span>•</span>
-                        <span>Recv: <span className="text-zinc-700">{getMemberReferralCount(member.name, member.uid).received}</span></span>
-                      </div>
+                    )}
+
+                    {/* Metrics Line */}
+                    <div className="pt-2 border-t border-zinc-100 flex items-center justify-between text-[10px] font-bold text-zinc-400">
+                      <span>Sent: <span className="text-zinc-800 font-extrabold">{getMemberReferralCount(member.name, member.uid).given}</span></span>
+                      <span className="text-zinc-300">•</span>
+                      <span>Recv: <span className="text-zinc-800 font-extrabold">{getMemberReferralCount(member.name, member.uid).received}</span></span>
                     </div>
                   </div>
 
@@ -540,7 +555,7 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
                           category: member.category
                         });
                       }}
-                      className="mt-4 w-full py-1.5 border border-zinc-200 hover:border-brand-red text-zinc-650 hover:text-brand-red bg-zinc-50/50 hover:bg-red-50/5 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition-smooth cursor-pointer font-bold font-black"
+                      className="w-full py-1.5 border border-zinc-200 group-hover:border-brand-red text-zinc-700 group-hover:text-white bg-zinc-50 group-hover:bg-brand-red rounded-xl text-[9.5px] font-black uppercase tracking-wider transition-all shadow-2xs cursor-pointer"
                     >
                       Send Referral
                     </button>

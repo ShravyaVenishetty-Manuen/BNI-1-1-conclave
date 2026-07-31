@@ -644,7 +644,7 @@ export default function Reports({ searchQuery: globalSearchQuery, selectedConcla
                         </div>
                       </td>
                       <td className="px-6 py-4.5">
-                        <span className="px-2 py-0.5 bg-zinc-100 text-zinc-600 rounded text-[9px] font-extrabold uppercase border border-zinc-200/50">
+                        <span className="inline-flex items-center whitespace-nowrap px-2.5 py-0.5 bg-zinc-100 text-zinc-700 rounded-md text-[10.5px] font-extrabold border border-zinc-200/80">
                           {m.category}
                         </span>
                       </td>

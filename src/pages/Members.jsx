@@ -824,7 +824,7 @@ export default function Members({ searchQuery, selectedConclaveId, loggedInAdmin
                       </span>
                     </td>
                     <td className="px-5 py-4">
-                      <span className="px-2 py-0.5 bg-zinc-100 text-zinc-600 rounded text-[10px] font-bold border border-zinc-200">
+                      <span className="inline-flex items-center whitespace-nowrap px-2.5 py-0.5 bg-zinc-100 text-zinc-700 rounded-md text-[10.5px] font-extrabold border border-zinc-200/80">
                         {member.category}
                       </span>
                     </td>

@@ -4,10 +4,12 @@ import {
   TrendingUp,
   Award,
   Check,
+  FileText
 } from 'lucide-react';
 
 import ReferModal from '../../components/ReferModal';
 import MemberProfileModal from '../../components/MemberProfileModal';
+import { downloadOrViewAgendaDocument, parseAgendaTextToSteps, extractTextFromPdfDataUrl } from '../../utils/documentUtils';
 
 export default function MemberCurrentRound({ loggedInMember, onTabChange, conclaveSyncData: propConclaveSyncData, searchQuery }) {
   const [syncData, setSyncData] = useState(() => {
@@ -133,29 +135,63 @@ export default function MemberCurrentRound({ loggedInMember, onTabChange, concla
   const progressPercent = (timeLeft / initialTime) * 100;
   const strokeDashoffset = circumference - (progressPercent / 100) * circumference;
 
-  const memberName = loggedInMember?.name || 'Member';
+  const activeConclaveId = conclaveSyncData?.conclaveId || conclaveSyncData?.id || conclaveSyncData?.conclaveStatus?.id;
+  const uploadedAgendaDoc = useMemo(() => {
+    if (conclaveSyncData?.agendaDocument) return conclaveSyncData.agendaDocument;
+    if (conclaveSyncData?.conclave?.agendaDocument) return conclaveSyncData.conclave.agendaDocument;
+    if (activeConclaveId) {
+      const cached = localStorage.getItem(`bni_agenda_doc_${activeConclaveId}`);
+      if (cached) {
+        try { return JSON.parse(cached); } catch (e) {}
+      }
+    }
+    const genericCache = localStorage.getItem('bni_conclave_agenda_doc');
+    if (genericCache) {
+      try { return JSON.parse(genericCache); } catch (e) {}
+    }
+    return null;
+  }, [conclaveSyncData, activeConclaveId]);
 
   const getAgendaSteps = (seconds) => {
-    return [
-      {
-        time: 'First 5 Mins',
-        title: 'Introductions & Quick Exchange',
-        desc: 'Introduce yourself, your business category, and state your primary contact target for the conclave.',
-        isCurrent: seconds > 450
-      },
-      {
-        time: 'Next 30 Mins',
-        title: 'Synergy Discussions',
-        desc: 'Review potential cross-referral avenues with table members. Focus on category pairs.',
-        isCurrent: seconds <= 450 && seconds > 150
-      },
-      {
-        time: 'Last 10 Mins',
-        title: 'Referral Logging & Lock',
-        desc: 'Log any referrals or 1-to-1 sync requests in your portal dashboard. Prepare to migrate.',
-        isCurrent: seconds <= 150
+    // 1. Check for raw uploaded agenda text or extract directly from PDF dataUrl
+    let rawAgendaText = uploadedAgendaDoc?.rawText || uploadedAgendaDoc?.agendaText;
+    if (!rawAgendaText && uploadedAgendaDoc?.dataUrl) {
+      rawAgendaText = extractTextFromPdfDataUrl(uploadedAgendaDoc.dataUrl);
+    }
+
+    if (!rawAgendaText) {
+      rawAgendaText = conclaveSyncData?.agendaText ||
+        conclaveSyncData?.conclave?.agendaText ||
+        (activeConclaveId ? localStorage.getItem(`bni_agenda_text_${activeConclaveId}`) : null);
+    }
+
+    if (!rawAgendaText && !uploadedAgendaDoc) {
+      rawAgendaText = localStorage.getItem('bni_conclave_agenda_text');
+    }
+
+    if (rawAgendaText) {
+      const parsed = parseAgendaTextToSteps(rawAgendaText);
+      if (parsed.length > 0) {
+        return parsed.map((s, idx) => ({
+          ...s,
+          isCurrent: idx === 0 ? seconds > 450 : idx === 1 ? (seconds <= 450 && seconds > 150) : seconds <= 150
+        }));
       }
-    ];
+    }
+
+    // 2. Check for custom steps array
+    const customSteps = conclaveSyncData?.agendaSteps || conclaveSyncData?.conclave?.agendaSteps || uploadedAgendaDoc?.steps;
+    if (Array.isArray(customSteps) && customSteps.length > 0) {
+      return customSteps.map((s, idx) => ({
+        time: s.time || s.duration || `Step ${idx + 1}`,
+        title: s.title || s.name || `Agenda Item ${idx + 1}`,
+        desc: s.desc || s.description || s.summary || '',
+        isCurrent: s.isCurrent ?? (idx === 0 ? seconds > 450 : idx === 1 ? (seconds <= 450 && seconds > 150) : seconds <= 150)
+      }));
+    }
+
+    // Return empty array if no explicit text/steps are uploaded by admin
+    return [];
   };
 
   const agendaSteps = getAgendaSteps(timeLeft);
@@ -313,30 +349,44 @@ export default function MemberCurrentRound({ loggedInMember, onTabChange, concla
                   <div
                     key={member.uid}
                     onClick={() => setSelectedProfileMember(member)}
-                    className="p-4 border border-zinc-200/85 hover:border-brand-red/40 rounded-xl transition-smooth group bg-white flex flex-col justify-between cursor-pointer"
+                    className="p-4 border border-zinc-200/90 hover:border-brand-red/35 rounded-2xl transition-all duration-200 group bg-white flex flex-col justify-between gap-3 shadow-2xs hover:shadow-md cursor-pointer"
                   >
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-full bg-red-50 border border-red-100 text-brand-red font-black text-xs flex items-center justify-center shrink-0 shadow-2xs select-none">
-                        {initials}
+                    {/* Card Details */}
+                    <div className="space-y-2.5">
+                      {/* Top Header: Avatar + Name + Company */}
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-full bg-red-50 border border-red-100/80 text-brand-red font-black text-xs flex items-center justify-center shrink-0 shadow-2xs select-none">
+                          {initials}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="text-[13px] font-extrabold text-zinc-950 leading-snug select-text truncate">
+                            {member.name}
+                          </h3>
+                          <p className="text-[11px] text-zinc-500 font-semibold leading-tight select-text truncate mt-0.5">
+                            {member.company || 'Business Member'}
+                          </p>
+                        </div>
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <h3 className="text-[12.5px] font-black text-zinc-850 transition-smooth truncate leading-tight">
-                          {member.name}
-                        </h3>
-                        <span className="inline-block px-1.5 py-0.5 bg-zinc-100 border border-zinc-200/50 text-zinc-500 text-[8.5px] font-black rounded uppercase tracking-wide mt-1.5">
+
+                      {/* Category Badge Pill */}
+                      <div>
+                        <span className="inline-flex items-center text-[9px] font-extrabold uppercase px-2.5 py-0.5 rounded-md border border-zinc-200/80 bg-zinc-100/90 text-zinc-700 tracking-wider leading-tight whitespace-normal break-words">
                           {member.category}
                         </span>
-                        <p className="text-[11px] text-zinc-805 font-extrabold mt-2.5 truncate leading-tight">
-                          {member.company}
-                        </p>
-                        <p className="text-[10px] text-zinc-400 font-semibold truncate leading-none mt-1">
+                      </div>
+
+                      {/* Chapter Label */}
+                      {member.chapter && (
+                        <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider truncate">
                           {member.chapter}
                         </p>
-                        <div className="flex gap-2 mt-2.5 pt-2 border-t border-zinc-100 text-[9px] font-bold text-zinc-400">
-                          <span>Sent: <span className="text-zinc-700">{getMemberReferralCount(member.name, member.uid).given}</span></span>
-                          <span>•</span>
-                          <span>Recv: <span className="text-zinc-700">{getMemberReferralCount(member.name, member.uid).received}</span></span>
-                        </div>
+                      )}
+
+                      {/* Metrics Line */}
+                      <div className="pt-2 border-t border-zinc-100 flex items-center justify-between text-[10px] font-bold text-zinc-400">
+                        <span>Sent: <span className="text-zinc-800 font-extrabold">{getMemberReferralCount(member.name, member.uid).given}</span></span>
+                        <span className="text-zinc-300">•</span>
+                        <span>Recv: <span className="text-zinc-800 font-extrabold">{getMemberReferralCount(member.name, member.uid).received}</span></span>
                       </div>
                     </div>
 
@@ -352,7 +402,7 @@ export default function MemberCurrentRound({ loggedInMember, onTabChange, concla
                             category: member.category
                           });
                         }}
-                        className="mt-4 w-full py-1.5 border border-zinc-200 hover:border-brand-red text-zinc-650 hover:text-brand-red bg-zinc-50/50 hover:bg-red-50/5 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition-smooth cursor-pointer font-black"
+                        className="w-full py-1.5 border border-zinc-200 group-hover:border-brand-red text-zinc-700 group-hover:text-white bg-zinc-50 group-hover:bg-brand-red rounded-xl text-[9.5px] font-black uppercase tracking-wider transition-all shadow-2xs cursor-pointer"
                       >
                         Send Referral
                       </button>
@@ -366,52 +416,75 @@ export default function MemberCurrentRound({ loggedInMember, onTabChange, concla
             </div>
           </div>
 
-          {/* What to do in the round: Agenda */}
-          <div className="bg-white border border-zinc-200 rounded-xl shadow-2xs p-6 space-y-4">
-            <div>
-              <h2 className="text-body-md font-black text-zinc-900 leading-tight">Your Round Agenda &amp; Guide</h2>
-              <p className="text-[11px] text-zinc-450 font-semibold mt-0.5">What you should focus on during this 45-minute seating session</p>
-            </div>
-
-            <div className="relative border-l border-zinc-200 pl-4 ml-2.5 space-y-6 pt-1">
-              {agendaSteps.map((step, idx) => (
-                <div key={idx} className="relative group">
-                  {/* Bullet timeline circle */}
-                  <span className={`absolute -left-6.5 top-0.5 w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${step.completed
-                      ? 'bg-emerald-500 border-emerald-500 text-white'
-                      : idx === 2 // Active Match step
-                        ? 'bg-brand-red border-brand-red text-white'
-                        : 'bg-white border-zinc-300'
-                    }`}>
-                    {step.completed ? (
-                      <Check className="w-2.5 h-2.5 stroke-[3]" />
-                    ) : (
-                      <span className={`w-1.5 h-1.5 rounded-full ${idx === 2 ? 'bg-white animate-pulse' : 'bg-transparent'}`}></span>
-                    )}
-                  </span>
-
-                  <div className="space-y-0.5">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded leading-none ${step.completed
-                          ? 'bg-emerald-50 text-emerald-700'
-                          : idx === 2
-                            ? 'bg-red-50 text-brand-red animate-pulse'
-                            : 'bg-zinc-100 text-zinc-450'
-                        }`}>
-                        {step.time}
-                      </span>
-                      <h4 className="text-[12.5px] font-black text-zinc-800 leading-tight">
-                        {step.title}
-                      </h4>
-                    </div>
-                    <p className="text-[11.5px] text-zinc-500 font-semibold leading-relaxed pt-1.5">
-                      {step.desc}
-                    </p>
-                  </div>
+          {/* What to do in the round: Agenda (rendered ONLY if admin uploaded document or dynamic steps exist) */}
+          {(uploadedAgendaDoc || agendaSteps.length > 0) && (
+            <div className="bg-white border border-zinc-200 rounded-2xl shadow-2xs p-6 space-y-4">
+              <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${agendaSteps.length > 0 ? 'border-b border-zinc-100 pb-4' : ''}`}>
+                <div>
+                  <h2 className="text-body-md font-black text-zinc-900 leading-tight">Conclave Agenda &amp; Document</h2>
+                  <p className="text-[11px] text-zinc-500 font-semibold mt-0.5">
+                    {uploadedAgendaDoc
+                      ? `Official Admin Published Document (${uploadedAgendaDoc.name})`
+                      : 'Official Conclave Program Schedule'}
+                  </p>
                 </div>
-              ))}
+
+                {uploadedAgendaDoc && (
+                  <button
+                    onClick={() => downloadOrViewAgendaDocument(uploadedAgendaDoc)}
+                    className="flex items-center gap-1.5 px-3.5 py-2 bg-red-50 hover:bg-brand-red text-brand-red hover:text-white border border-red-200/80 text-[10px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-2xs shrink-0"
+                    title="View or Download Admin Published Agenda"
+                  >
+                    <FileText className="w-3.5 h-3.5" />
+                    View Admin Agenda PDF
+                  </button>
+                )}
+              </div>
+
+              {agendaSteps.length > 0 && (
+                <div className="relative border-l border-zinc-200 pl-4 ml-2.5 space-y-6 pt-1">
+                  {agendaSteps.map((step, idx) => (
+                    <div key={idx} className="relative group">
+                      {/* Bullet timeline circle */}
+                      <span className={`absolute -left-6.5 top-0.5 w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${step.completed
+                          ? 'bg-emerald-500 border-emerald-500 text-white'
+                          : idx === 0
+                            ? 'bg-brand-red border-brand-red text-white'
+                            : 'bg-white border-zinc-300'
+                        }`}>
+                        {step.completed ? (
+                          <Check className="w-2.5 h-2.5 stroke-[3]" />
+                        ) : (
+                          <span className={`w-1.5 h-1.5 rounded-full ${idx === 0 ? 'bg-white animate-pulse' : 'bg-transparent'}`}></span>
+                        )}
+                      </span>
+
+                      <div className="space-y-0.5">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded leading-none ${step.completed
+                              ? 'bg-emerald-50 text-emerald-700'
+                              : idx === 0
+                                ? 'bg-red-50 text-brand-red animate-pulse'
+                                : 'bg-zinc-100 text-zinc-450'
+                            }`}>
+                            {step.time}
+                          </span>
+                          <h4 className="text-[12.5px] font-black text-zinc-800 leading-tight">
+                            {step.title}
+                          </h4>
+                        </div>
+                        {step.desc && (
+                          <p className="text-[11.5px] text-zinc-500 font-semibold leading-relaxed pt-1.5">
+                            {step.desc}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
+          )}
 
 
 

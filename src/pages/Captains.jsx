@@ -784,10 +784,10 @@ export default function Captains({ searchQuery, selectedConclaveId, loggedInAdmi
                         </span>
                       </td>
                       <td className="px-5 py-4">
-                        <span className="px-2 py-0.5 bg-zinc-100 text-zinc-655 rounded text-[10px] font-bold border border-zinc-200">
-                          {cap.category}
-                        </span>
-                      </td>
+                      <span className="inline-flex items-center whitespace-nowrap px-2.5 py-0.5 bg-zinc-100 text-zinc-700 rounded-md text-[10.5px] font-extrabold border border-zinc-200/80">
+                        {cap.category}
+                      </span>
+                    </td>
                       <td className="px-5 py-4 text-body-sm text-zinc-650 select-all">{cap.email}</td>
                       <td className="px-5 py-4 text-body-sm text-zinc-650 font-semibold">{cap.table}</td>
                       <td className="px-5 py-4">
