@@ -1,14 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { Check, Play, ArrowRight, Award, Shield, PhoneCall, BookOpen, FileText, Download } from 'lucide-react';
-import { downloadOrViewAgendaDocument } from '../../utils/documentUtils';
+import React, { useState, useEffect, useMemo } from 'react';
+import {
+  FileText,
+  Clock,
+  Calendar
+} from 'lucide-react';
+import { downloadOrViewAgendaDocument, extractTextFromPdfDataUrl } from '../../utils/documentUtils';
 import { api } from '../../services/api';
 
-export default function CaptainSchedule({ loggedInCaptain, conclaveSyncData: propConclaveSyncData }) {
+export default function CaptainSchedule({ loggedInCaptain, onTabChange, conclaveSyncData: propConclaveSyncData }) {
   const [syncData, setSyncData] = useState(() => {
     if (propConclaveSyncData) return propConclaveSyncData;
     const cached = localStorage.getItem('bni_conclave_sync_data_cache');
     if (cached) {
-      try { return JSON.parse(cached); } catch (e) {}
+      try { return JSON.parse(cached); } catch (e) { }
     }
     return null;
   });
@@ -47,13 +51,18 @@ export default function CaptainSchedule({ loggedInCaptain, conclaveSyncData: pro
   const getUploadedAgendaDoc = () => {
     if (conclaveSyncData?.agendaDocument) return conclaveSyncData.agendaDocument;
     if (fetchedAgendaDoc) return fetchedAgendaDoc;
-    
+
     const conclaveId = conclaveSyncData?.conclaveStatus?.id || conclaveSyncData?.conclaveId;
     if (conclaveId) {
       const cached = localStorage.getItem(`bni_agenda_doc_${conclaveId}`);
       if (cached) {
-        try { return JSON.parse(cached); } catch (e) {}
+        try { return JSON.parse(cached); } catch (e) { }
       }
+    }
+
+    const genericCache = localStorage.getItem('bni_conclave_agenda_doc');
+    if (genericCache) {
+      try { return JSON.parse(genericCache); } catch (e) { }
     }
 
     const keys = ['bni_admin_conclaves_cache', 'bni_conclaves', 'bni_member_conclaves_cache', 'bni_schedule_gen_conclaves_cache'];
@@ -66,7 +75,7 @@ export default function CaptainSchedule({ loggedInCaptain, conclaveSyncData: pro
             const found = list.find(c => c.agendaDocument);
             if (found && found.agendaDocument) return found.agendaDocument;
           }
-        } catch (e) {}
+        } catch (e) { }
       }
     }
 
@@ -76,47 +85,88 @@ export default function CaptainSchedule({ loggedInCaptain, conclaveSyncData: pro
         try {
           const val = JSON.parse(localStorage.getItem(k));
           if (val && (val.url || val.dataUrl)) return val;
-        } catch (e) {}
+        } catch (e) { }
       }
     }
     return null;
   };
 
-  const agendaDoc = getUploadedAgendaDoc() || fetchedAgendaDoc;
+  const agendaDoc = useMemo(() => {
+    return getUploadedAgendaDoc() || fetchedAgendaDoc;
+  }, [conclaveSyncData, fetchedAgendaDoc]);
 
-  const scheduleItems = conclaveSyncData?.mySchedule || [];
-  const currentRoundNum = conclaveSyncData?.conclaveStatus?.currentRound || 0;
+  const rawAgendaText = useMemo(() => {
+    if (agendaDoc?.rawText) return agendaDoc.rawText;
+    if (agendaDoc?.agendaText) return agendaDoc.agendaText;
+    if (agendaDoc?.dataUrl) {
+      const extracted = extractTextFromPdfDataUrl(agendaDoc.dataUrl);
+      if (extracted && extracted.trim().length > 0) return extracted;
+    }
+
+    if (conclaveSyncData?.agendaText) return conclaveSyncData.agendaText;
+    if (conclaveSyncData?.conclave?.agendaText) return conclaveSyncData.conclave.agendaText;
+
+    const conclaveId = conclaveSyncData?.conclaveStatus?.id || conclaveSyncData?.conclaveId;
+    if (conclaveId) {
+      const cached = localStorage.getItem(`bni_agenda_text_${conclaveId}`);
+      if (cached) return cached;
+    }
+
+    if (!agendaDoc) {
+      return localStorage.getItem('bni_conclave_agenda_text');
+    }
+
+    return null;
+  }, [agendaDoc, conclaveSyncData]);
+
+  // Clean, structured vertical timeline events parser
+  const timelineEvents = useMemo(() => {
+    if (!rawAgendaText) return [];
+    const lines = rawAgendaText.split('\n').map(l => l.trim()).filter(Boolean);
+    const events = [];
+    let currentTime = '09:00 AM';
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+
+      if (line.toLowerCase() === 'program' || line.toLowerCase() === 'official schedule document') continue;
+
+      const timeMatch = line.match(/(\d{1,2}:\d{2}\s*(?:AM|PM|am|pm))/i);
+      if (timeMatch) {
+        currentTime = timeMatch[1].toUpperCase();
+        const textWithoutTime = line.replace(timeMatch[0], '').replace(/^[-–—:\s]+/, '').trim();
+        if (textWithoutTime && textWithoutTime.toLowerCase() !== 'program') {
+          events.push({ time: currentTime, title: textWithoutTime });
+        }
+      } else {
+        const cleanTitle = line.replace(/^[-–—:\s]+/, '').trim();
+        if (cleanTitle && cleanTitle.toLowerCase() !== 'program') {
+          events.push({ time: currentTime, title: cleanTitle });
+        }
+      }
+    }
+
+    const cleanEvents = [];
+    for (const ev of events) {
+      if (cleanEvents.length === 0 || cleanEvents[cleanEvents.length - 1].title !== ev.title) {
+        cleanEvents.push(ev);
+      }
+    }
+    return cleanEvents;
+  }, [rawAgendaText]);
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 gap-4 border-b border-zinc-200 pb-5">
-        <div>
-          <h1 className="text-2xl font-black text-zinc-955 tracking-tight">Round Schedule</h1>
-          <p className="text-xs text-zinc-450 font-semibold mt-0.5">
-            Full schedule and timeline of the business conclave sessions.
-          </p>
-        </div>
-        
-        <div className="flex gap-2">
-          {conclaveSyncData?.conclaveStatus?.status?.toLowerCase() === 'completed' ? (
-            <span className="bg-emerald-50 text-emerald-800 px-3 py-1 rounded-full text-[10px] font-black tracking-wider uppercase border border-emerald-150 shadow-2xs flex items-center gap-1.5">
-              <Check className="w-3.5 h-3.5 text-emerald-600" />
-              Conclave Completed
-            </span>
-          ) : (
-            <span className="bg-red-50 text-brand-red px-3 py-1 rounded-full text-[10px] font-black tracking-wider uppercase border border-red-100 shadow-2xs flex items-center gap-1.5">
-              <Play className="w-3.5 h-3.5 text-brand-red fill-brand-red" />
-              Active Session
-            </span>
-          )}
-        </div>
+    <div className="space-y-8 animate-fade-in font-sans pb-16">
+
+      {/* Page Header */}
+      <div>
+        <h1 className="text-2xl md:text-3xl font-black text-zinc-955 tracking-tight">Conclave Program Schedule</h1>
+        <p className="text-xs text-zinc-450 font-semibold mt-1 font-sans font-medium">Official timeline and published agenda document uploaded by Admin.</p>
       </div>
 
-      {/* Published Conclave Agenda Banner (if uploaded by Admin) */}
+      {/* Published Conclave Agenda Dark Banner (if uploaded by Admin) */}
       {agendaDoc && (
-        <div className="bg-gradient-to-r from-emerald-950 via-zinc-900 to-zinc-950 text-white rounded-2xl p-6 shadow-md border border-emerald-800/40 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-6">
+        <div className="bg-gradient-to-r from-emerald-950 via-zinc-900 to-zinc-950 text-white rounded-2xl p-6 shadow-md border border-emerald-800/40 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="flex items-center gap-4">
             <div className="p-4 bg-emerald-500/20 text-emerald-400 rounded-2xl border border-emerald-400/30 shrink-0">
               <FileText className="w-8 h-8" />
@@ -139,7 +189,7 @@ export default function CaptainSchedule({ loggedInCaptain, conclaveSyncData: pro
             <button
               onClick={() => downloadOrViewAgendaDocument(agendaDoc)}
               type="button"
-              className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-black text-button rounded-xl transition-smooth shadow-md cursor-pointer"
+              className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-zinc-955 font-black text-button rounded-xl transition-smooth shadow-md cursor-pointer"
             >
               <FileText className="w-4 h-4" />
               View / Open Agenda File
@@ -148,158 +198,59 @@ export default function CaptainSchedule({ loggedInCaptain, conclaveSyncData: pro
         </div>
       )}
 
+      {/* Pure, Cardless Minimal Vertical Timeline */}
+      <div className="bg-white border border-zinc-200/90 rounded-2xl p-6 sm:p-8 shadow-2xs space-y-8">
 
-
-      {/* Main Split Grid - Only show when real generated schedule items exist */}
-      {scheduleItems.length > 0 ? (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        
-        {/* Left Column: Timeline with Cards */}
-        <div className="lg:col-span-8 relative py-4 px-2">
-          {/* Continuous timeline vertical track line */}
-          <div className="absolute top-4 bottom-4 left-[19px] w-[1.5px] bg-zinc-200 z-0"></div>
-
-          <div className="space-y-6 relative z-10">
-            {scheduleItems.map((item) => {
-              const isCompleted = item.status?.toLowerCase() === 'completed';
-              const isActive = item.status?.toLowerCase() === 'active';
-
-              return (
-                <div key={item.number} className={`flex gap-5 items-start ${!isActive && !isCompleted ? 'opacity-70' : ''}`}>
-                  
-                  {/* Status Indicator circle */}
-                  <div className="shrink-0 flex items-center justify-center w-6 h-6 relative mt-5">
-                    {isCompleted ? (
-                      <div className="w-5 h-5 rounded-full bg-brand-red text-white flex items-center justify-center shadow-xs z-10 border border-zinc-55">
-                        <Check className="w-2.5 h-2.5" />
-                      </div>
-                    ) : isActive ? (
-                      <div className="w-5.5 h-5.5 rounded-full bg-brand-red text-white flex items-center justify-center shadow-md shadow-brand-red/15 border-2 border-white ring-4 ring-red-100 z-10 animate-pulse">
-                        <Play className="w-2 h-2 fill-current ml-0.5" />
-                      </div>
-                    ) : (
-                      <div className="w-4.5 h-4.5 rounded-full bg-white border border-zinc-250 flex items-center justify-center z-10">
-                        <div className="w-1.5 h-1.5 rounded-full bg-zinc-350"></div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Standalone card block */}
-                  <div className={`flex-1 p-5 rounded-xl border bg-white shadow-2xs hover:border-zinc-300 transition-smooth ${
-                    isActive 
-                      ? 'border-zinc-250 shadow-xs ring-1 ring-zinc-150' 
-                      : 'border-zinc-200/60'
-                  }`}>
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-2">
-                      <span className={`text-[9.5px] font-black uppercase tracking-wider ${
-                        isActive ? 'text-brand-red' : 'text-zinc-400'
-                      }`}>
-                        {item.time}
-                      </span>
-                      {isActive && (
-                        <span className="self-start sm:self-auto bg-brand-red text-white px-2 py-0.5 rounded-[4px] text-[7.5px] font-black uppercase tracking-wider leading-none">
-                          Active Now
-                        </span>
-                      )}
-                    </div>
-                    
-                    <h3 className={`text-[12.5px] font-black leading-snug ${
-                      isActive ? 'text-zinc-955' : 'text-zinc-800'
-                    }`}>
-                      Round {item.number} Seating ({item.table})
-                    </h3>
-                    
-                    <p className="text-[11px] text-zinc-455 font-semibold leading-relaxed mt-1">
-                      Networking session matching synergetic categories at Table {item.tableNumber}. Seated with captain {item.captain}.
-                    </p>
-
-                    {isActive && (
-                      <div className="mt-4 pt-3.5 border-t border-zinc-200 flex items-center justify-between text-[9.5px] font-extrabold text-brand-red">
-                        <div className="flex items-center gap-1.5">
-                          <Award className="w-3.5 h-3.5" />
-                          <span>Table {conclaveSyncData?.tableNumber || 'N/A'} Seating Active</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                </div>
-              );
-            })}
-            {scheduleItems.length === 0 && (
-              <p className="text-center text-zinc-400 text-caption font-semibold py-8">No schedule items generated.</p>
-            )}
-          </div>
-        </div>
-
-        {/* Right Column: Sidebar Info Cards */}
-        <div className="lg:col-span-4 space-y-6">
-          
-          {/* Conclave Guidelines Card */}
-          <div className="bg-white border border-zinc-200/60 rounded-xl p-5 shadow-2xs space-y-4">
-            <h3 className="text-body-sm font-black text-zinc-950 flex items-center gap-2 border-b border-zinc-100 pb-2">
-              <BookOpen className="w-4.5 h-4.5 text-brand-red" />
-              Guidelines
+        {/* Section Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-150 pb-4">
+          <div>
+            <h3 className="text-body-md font-black text-zinc-955 flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-brand-red" />
+              Conclave Program Timeline
             </h3>
-            
-            <ul className="space-y-3 text-[11px] text-zinc-500 font-semibold leading-relaxed">
-              <li className="flex items-start gap-2.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-brand-red shrink-0 mt-1.5"></span>
-                <span>Each participant is allocated exactly 2 minutes for introductions.</span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-brand-red shrink-0 mt-1.5"></span>
-                <span>Ensure members scan the table QR code to confirm attendance.</span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-brand-red shrink-0 mt-1.5"></span>
-                <span>Referral and 1-to-1 requests must be logged through the portal.</span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-brand-red shrink-0 mt-1.5"></span>
-                <span>Migrate quickly when the coffee break signal rings.</span>
-              </li>
-            </ul>
-          </div>
-
-          {/* Captain Support Helpdesk Card */}
-          <div className="bg-zinc-950 border border-zinc-800 text-white rounded-xl p-5 shadow-sm space-y-4">
-            <div>
-              <span className="text-[8px] font-black text-zinc-400 uppercase tracking-widest leading-none">Support Portal</span>
-              <h3 className="text-body-sm font-black text-white mt-1.5 flex items-center gap-2">
-                <Shield className="w-4 h-4 text-brand-red" />
-                Table Captain Assistance
-              </h3>
-            </div>
-            
-            <p className="text-[11px] text-zinc-400 font-medium leading-relaxed">
-              Encountering attendance discrepancies or hardware login issues? Contact the coordinator desk immediately.
+            <p className="text-[11.5px] text-zinc-500 font-semibold mt-0.5">
+              Chronological timeline extracted directly from the official agenda document
             </p>
+          </div>
+        </div>
 
-            <div className="pt-2">
-              <a 
-                href="tel:+1234567890" 
-                className="w-full py-2.5 bg-white/10 hover:bg-white/20 transition-smooth border border-white/15 rounded-lg text-[9.5px] font-black uppercase tracking-wider text-zinc-200 flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <PhoneCall className="w-3.5 h-3.5" />
-                Call Helpdesk
-              </a>
+        {timelineEvents.length > 0 ? (
+          <div className="relative pl-8 space-y-7 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-zinc-200">
+            {timelineEvents.map((item, idx) => (
+              <div key={idx} className="relative flex items-center justify-between gap-4 py-1 border-b border-zinc-100/80 last:border-0 pb-5 last:pb-0">
+
+                {/* Timeline Red Dot Node */}
+                <div className="absolute -left-[37px] top-2.5 w-3 h-3 rounded-full bg-brand-red ring-4 ring-white"></div>
+
+                {/* Minimal Event Title & Time (NO Card Boxes, NO Borders around items) */}
+                <div className="flex-1 flex items-center justify-between gap-4">
+                  <span className="text-[14px] font-extrabold text-zinc-900 leading-snug">
+                    {item.title}
+                  </span>
+                  <span className="text-[12.5px] font-black text-brand-red tracking-tight shrink-0">
+                    {item.time}
+                  </span>
+                </div>
+
+              </div>
+            ))}
+          </div>
+        ) : rawAgendaText ? (
+          <div className="p-6 bg-zinc-50/80 rounded-2xl border border-zinc-200/80 text-[13.5px] font-medium text-zinc-900 leading-relaxed font-sans whitespace-pre-wrap select-text max-h-[700px] overflow-y-auto">
+            {rawAgendaText}
+          </div>
+        ) : (
+          <div className="p-12 text-center space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-zinc-100 border border-zinc-200 text-zinc-400 flex items-center justify-center mx-auto">
+              <Clock className="w-6 h-6" />
             </div>
+            <h3 className="text-lg font-black text-zinc-900">No Agenda Document Uploaded Yet</h3>
+            <p className="text-xs text-zinc-500 max-w-md mx-auto font-medium">
+              The official conclave agenda document has not been published by Admin yet.
+            </p>
           </div>
-
-        </div>
+        )}
       </div>
-      ) : !agendaDoc ? (
-        <div className="bg-white rounded-2xl border border-zinc-200 p-12 text-center shadow-2xs space-y-3">
-          <div className="w-12 h-12 rounded-2xl bg-zinc-100 border border-zinc-200 text-zinc-400 flex items-center justify-center mx-auto">
-            <BookOpen className="w-6 h-6" />
-          </div>
-          <h3 className="text-lg font-black text-zinc-900">No Seating Schedule or Agenda Published Yet</h3>
-          <p className="text-xs text-zinc-500 max-w-md mx-auto font-medium">
-            The conclave table schedule has not been generated or published by Admin yet.
-          </p>
-        </div>
-      ) : null}
 
     </div>
   );
