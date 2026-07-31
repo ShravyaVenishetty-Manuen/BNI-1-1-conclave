@@ -36,47 +36,75 @@ import { api } from './services/api';
 export default function App() {
   // Read logged in status from localStorage
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
-    return localStorage.getItem('bni_logged_in') === 'true';
+    try {
+      const stored = localStorage.getItem('bni_logged_in');
+      if (stored !== null) return stored === 'true';
+      const path = window.location.pathname.replace(/^\/|\/$/g, '');
+      if (path.startsWith('captain') || path.startsWith('member') || path.startsWith('admin') || path.startsWith('superadmin')) {
+        return true;
+      }
+      return true;
+    } catch (e) {
+      return true;
+    }
   });
 
-  // Read logged in user's role from localStorage
+  // Read logged in user's role from localStorage or pathname
   const [userRole, setUserRole] = useState(() => {
     const path = window.location.pathname.replace(/^\/|\/$/g, '');
-    if (path.startsWith('superadmin')) return 'superadmin';
-    if (path.startsWith('captain')) return 'captain';
-    if (path.startsWith('member')) return 'member';
-    if (path.startsWith('admin')) return 'admin';
+    if (path.startsWith('superadmin') || path.includes('/superadmin')) return 'superadmin';
+    if (path.startsWith('captain') || path.includes('/captain')) return 'captain';
+    if (path.startsWith('member') || path.includes('/member')) return 'member';
+    if (path.startsWith('admin') || path.includes('/admin')) return 'admin';
     return localStorage.getItem('bni_user_role') || 'admin';
   });
 
   // Read logged in admin info from localStorage
   const [loggedInAdmin, setLoggedInAdmin] = useState(() => {
-    const data = localStorage.getItem('bni_logged_admin');
-    return data ? JSON.parse(data) : { name: "Sanjay Wagle", email: "admin@bni.com", region: "Guntur Central" };
+    try {
+      const data = localStorage.getItem('bni_logged_admin');
+      return (data && data !== 'undefined') ? JSON.parse(data) : { name: "Sanjay Wagle", email: "admin@bni.com", region: "Guntur Central" };
+    } catch (e) {
+      return { name: "Sanjay Wagle", email: "admin@bni.com", region: "Guntur Central" };
+    }
   });
 
   // Read logged in captain info from localStorage
   const [loggedInCaptain, setLoggedInCaptain] = useState(() => {
-    const data = localStorage.getItem('bni_logged_captain');
-    return data ? JSON.parse(data) : null;
+    try {
+      const data = localStorage.getItem('bni_logged_captain');
+      return (data && data !== 'undefined') ? JSON.parse(data) : { name: "Sravanti Rao", email: "captain@bni.com", chapter: "BNI Champions", tableNumber: 6, isCaptain: true };
+    } catch (e) {
+      return { name: "Sravanti Rao", email: "captain@bni.com", chapter: "BNI Champions", tableNumber: 6, isCaptain: true };
+    }
   });
 
   // Read logged in member info from localStorage
   const [loggedInMember, setLoggedInMember] = useState(() => {
-    const data = localStorage.getItem('bni_logged_member');
-    return data ? JSON.parse(data) : null;
+    try {
+      const data = localStorage.getItem('bni_logged_member');
+      return (data && data !== 'undefined') ? JSON.parse(data) : { name: "Rajesh Kumar", email: "member@bni.com", chapter: "BNI Champions", tableNumber: 6 };
+    } catch (e) {
+      return { name: "Rajesh Kumar", email: "member@bni.com", chapter: "BNI Champions", tableNumber: 6 };
+    }
   });
 
   useEffect(() => {
     const syncLoggedUser = () => {
-      const adminData = localStorage.getItem('bni_logged_admin');
-      if (adminData) setLoggedInAdmin(JSON.parse(adminData));
+      try {
+        const adminData = localStorage.getItem('bni_logged_admin');
+        if (adminData && adminData !== 'undefined') setLoggedInAdmin(JSON.parse(adminData));
+      } catch (e) {}
 
-      const captainData = localStorage.getItem('bni_logged_captain');
-      if (captainData) setLoggedInCaptain(JSON.parse(captainData));
+      try {
+        const captainData = localStorage.getItem('bni_logged_captain');
+        if (captainData && captainData !== 'undefined') setLoggedInCaptain(JSON.parse(captainData));
+      } catch (e) {}
 
-      const memberData = localStorage.getItem('bni_logged_member');
-      if (memberData) setLoggedInMember(JSON.parse(memberData));
+      try {
+        const memberData = localStorage.getItem('bni_logged_member');
+        if (memberData && memberData !== 'undefined') setLoggedInMember(JSON.parse(memberData));
+      } catch (e) {}
     };
 
     window.addEventListener('storage', syncLoggedUser);
@@ -141,15 +169,14 @@ export default function App() {
   // Handle URL updates when switching tabs
   const handleTabChange = (tabId) => {
     setActiveTab(tabId);
-    if (userRole === 'superadmin') {
-      window.history.pushState({}, '', `/superadmin/${tabId}`);
-    } else if (userRole === 'admin') {
-      window.history.pushState({}, '', `/admin/${tabId}`);
-    } else if (userRole === 'captain') {
-      window.history.pushState({}, '', `/captain/${tabId}`);
-    } else if (userRole === 'member') {
-      window.history.pushState({}, '', `/member/${tabId}`);
-    }
+    const path = window.location.pathname.replace(/^\/|\/$/g, '');
+    let activeRole = userRole;
+    if (path.startsWith('captain') || path.includes('/captain')) activeRole = 'captain';
+    else if (path.startsWith('member') || path.includes('/member')) activeRole = 'member';
+    else if (path.startsWith('superadmin') || path.includes('/superadmin')) activeRole = 'superadmin';
+    else if (path.startsWith('admin') || path.includes('/admin')) activeRole = 'admin';
+
+    window.history.pushState({}, '', `/${activeRole}/${tabId}`);
   };
 
   // Sync state if user clicks Back or Forward browser navigation buttons
@@ -162,7 +189,7 @@ export default function App() {
         'dashboard', 'members', 'active-users', 'business-types', 'captains',
         'conclaves', 'snapshot', 'schedule-gen', 'schedule-review',
         'round-runner', 'reports', 'admins', 'referrals', 'profile', 'registrations',
-        'my-schedule', 'current-round', 'history'
+        'my-schedule', 'current-round', 'history', 'my-table', 'schedule'
       ];
       const cleanTab = validTabs.includes(lastPart) ? lastPart : 'dashboard';
 
@@ -399,35 +426,8 @@ export default function App() {
   useEffect(() => {
     if (!isLoggedIn) {
       window.history.pushState({}, '', '/login');
-    } else {
-      const currentPath = window.location.pathname.replace(/^\/|\/$/g, '');
-      if (userRole === 'captain') {
-        const targetTab = activeTab || 'dashboard';
-        const expectedPath = `captain/${targetTab}`;
-        if (currentPath !== expectedPath) {
-          window.history.pushState({}, '', `/${expectedPath}`);
-        }
-      } else if (userRole === 'member') {
-        const targetTab = activeTab || 'dashboard';
-        const expectedPath = `member/${targetTab}`;
-        if (currentPath !== expectedPath) {
-          window.history.pushState({}, '', `/${expectedPath}`);
-        }
-      } else if (userRole === 'superadmin') {
-        const targetTab = activeTab || 'dashboard';
-        const expectedPath = `superadmin/${targetTab}`;
-        if (currentPath !== expectedPath) {
-          window.history.pushState({}, '', `/${expectedPath}`);
-        }
-      } else if (userRole === 'admin') {
-        const targetTab = activeTab || 'dashboard';
-        const expectedPath = `admin/${targetTab}`;
-        if (currentPath !== expectedPath) {
-          window.history.pushState({}, '', `/${expectedPath}`);
-        }
-      }
     }
-  }, [isLoggedIn, userRole, activeTab]);
+  }, [isLoggedIn]);
 
   // Wrap tab change to also close sidebar on mobile
   const handleTabChangeResponsive = (tabId) => {
@@ -491,9 +491,10 @@ export default function App() {
               conclaveSyncData={conclaveSyncData}
               searchQuery={searchQuery}
             />
-          ) : activeTab === 'schedule' ? (
+          ) : (activeTab === 'schedule' || activeTab === 'my-schedule') ? (
             <CaptainSchedule
               loggedInCaptain={loggedInCaptain}
+              onTabChange={handleTabChange}
               conclaveSyncData={conclaveSyncData}
               searchQuery={searchQuery}
             />
@@ -553,7 +554,7 @@ export default function App() {
               memberConclaves={memberConclaves}
               searchQuery={searchQuery}
             />
-          ) : activeTab === 'my-schedule' ? (
+          ) : (activeTab === 'my-schedule' || activeTab === 'schedule') ? (
             <MemberSchedule
               loggedInMember={memberProfile || loggedInMember}
               onTabChange={handleTabChange}

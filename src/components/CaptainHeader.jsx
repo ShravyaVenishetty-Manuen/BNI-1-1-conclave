@@ -79,7 +79,7 @@ export default function CaptainHeader({
         <div className="hidden md:flex items-center xl:gap-6 lg:gap-3 gap-2 shrink-0">
           <nav className="flex items-center xl:gap-5 lg:gap-3 gap-2">
             {navItems.map(item => {
-              const isActive = activeTab === item.id;
+              const isActive = activeTab === item.id || (item.id === 'schedule' && activeTab === 'my-schedule');
               return (
                 <button
                   key={item.id}
@@ -204,7 +204,7 @@ export default function CaptainHeader({
       {/* Mobile Navigation Sub-bar (rendered only on screens smaller than md) */}
       <div className="md:hidden flex items-center overflow-x-auto gap-4 px-4 h-11 bg-white border-b border-zinc-200 scrollbar-none shrink-0 select-none">
         {navItems.map(item => {
-          const isActive = activeTab === item.id;
+          const isActive = activeTab === item.id || (item.id === 'schedule' && activeTab === 'my-schedule');
           return (
             <button
               key={item.id}
