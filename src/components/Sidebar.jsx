@@ -98,7 +98,7 @@ export default function Sidebar({ activeTab, setActiveTab, onLogout, isOpen, onC
       <div className="px-4 mb-4 shrink-0 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <img
-            src="/BNI-Guntur-Logo.webp"
+            src="/BNI-Guntur-Logo.jpg"
             alt="BNI Logo"
             className="h-9.5 w-auto object-contain"
           />

@@ -1,18 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { 
-   LayoutDashboard, 
-   Users, 
-   Award, 
-   CalendarRange, 
-   LogOut, 
-   X, 
-   Menu, 
-   Bell, 
-   Search,
-   Check,
-   AlertTriangle,
-   AlertCircle,
-   Sparkles
+import {
+  LayoutDashboard,
+  Users,
+  Award,
+  CalendarRange,
+  LogOut,
+  X,
+  Menu,
+  Bell,
+  Search,
+  Check,
+  AlertTriangle,
+  AlertCircle,
+  Sparkles
 } from 'lucide-react';
 import SuperadminDashboard from '../pages/superadmin/Dashboard';
 import SuperadminAdmins from '../pages/superadmin/Admins';
@@ -36,7 +36,7 @@ export default function SuperadminLayout({
   const [superadminProfile, setSuperadminProfile] = useState(() => {
     const saved = localStorage.getItem('bni_superadmin_profile');
     if (saved) {
-      try { return JSON.parse(saved); } catch (e) {}
+      try { return JSON.parse(saved); } catch (e) { }
     }
     return { name: 'Superadmin', email: 'superadmin@bni.com', organization: 'BNI Global LLC' };
   });
@@ -69,7 +69,7 @@ export default function SuperadminLayout({
 
       const savedProf = localStorage.getItem('bni_superadmin_profile');
       if (savedProf) {
-        try { setSuperadminProfile(JSON.parse(savedProf)); } catch (e) {}
+        try { setSuperadminProfile(JSON.parse(savedProf)); } catch (e) { }
       }
     };
     syncNotifs();
@@ -85,7 +85,7 @@ export default function SuperadminLayout({
         const conclavesList = await api.get('/admin/conclaves');
         const notifiedList = JSON.parse(localStorage.getItem('superadmin_notified_conclaves') || '[]');
         let updated = false;
-        
+
         conclavesList.forEach(conclave => {
           if (conclave.creator && conclave.creator !== 'Superadmin' && !notifiedList.includes(conclave.id)) {
             addNotification(
@@ -98,7 +98,7 @@ export default function SuperadminLayout({
             updated = true;
           }
         });
-        
+
         if (updated) {
           localStorage.setItem('superadmin_notified_conclaves', JSON.stringify(notifiedList));
         }
@@ -148,7 +148,7 @@ export default function SuperadminLayout({
 
   return (
     <div className="flex h-screen w-screen bg-zinc-50 text-zinc-955 font-sans antialiased overflow-hidden relative">
-      
+
       {/* Mobile drawer backdrop overlay */}
       {isSidebarOpen && (
         <div
@@ -159,12 +159,12 @@ export default function SuperadminLayout({
 
       {/* Superadmin Sidebar */}
       <aside className={`fixed inset-y-0 left-0 z-50 w-[240px] h-screen flex flex-col py-6 bg-zinc-50 border-r border-red-100 text-sidebar font-medium shrink-0 transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 lg:w-[220px] ${isSidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}`}>
-        
+
         {/* Branding Header */}
         <div className="px-4 mb-6 shrink-0 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <img
-              src="/BNI-Guntur-Logo.webp"
+              src="/BNI-Guntur-Logo.jpg"
               alt="BNI Logo"
               className="h-9.5 w-auto object-contain"
             />
@@ -195,8 +195,8 @@ export default function SuperadminLayout({
                     setIsSidebarOpen(false);
                   }}
                   className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-left rounded-lg transition-smooth group cursor-pointer ${isActive
-                      ? 'bg-brand-red text-white font-semibold shadow-sm'
-                      : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-955'
+                    ? 'bg-brand-red text-white font-semibold shadow-sm'
+                    : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-955'
                     }`}
                 >
                   <Icon className="w-[18px] h-[18px] shrink-0" />
@@ -224,7 +224,7 @@ export default function SuperadminLayout({
 
       {/* Main content wrapper */}
       <div className="flex-1 flex flex-col min-w-0 bg-zinc-50 overflow-hidden">
-        
+
         {/* Superadmin Header */}
         <header className="h-14 border-b border-zinc-200 bg-white flex items-center justify-between px-6 shrink-0 relative z-30 shadow-xs">
           <div className="flex items-center gap-3">
@@ -350,9 +350,9 @@ export default function SuperadminLayout({
                 </div>
               )}
             </div>
-            
+
             <div className="h-8 w-px bg-zinc-200" />
-            
+
             <div className="relative" ref={profileDropdownRef}>
               <button
                 onClick={() => setShowProfileDropdown(!showProfileDropdown)}

@@ -74,7 +74,7 @@ export default function MemberHeader({
         {/* Left section: Official BNI Logo & Title */}
         <div className="flex items-center gap-2 border-b border-transparent shrink-0">
           <img
-            src="/BNI-Guntur-Logo.webp"
+            src="/BNI-Guntur-Logo.jpg"
             alt="BNI Logo"
             className="h-8 w-auto object-contain shrink-0"
           />
@@ -96,8 +96,8 @@ export default function MemberHeader({
                   key={item.id}
                   onClick={() => onTabChange && onTabChange(item.id)}
                   className={`text-[11.5px] lg:text-[12.5px] xl:text-[13px] font-extrabold tracking-tight transition-smooth cursor-pointer h-16 relative flex items-center ${isActive
-                      ? 'text-brand-red font-black border-b-2 border-brand-red mt-0.5'
-                      : 'text-zinc-455 hover:text-zinc-800'
+                    ? 'text-brand-red font-black border-b-2 border-brand-red mt-0.5'
+                    : 'text-zinc-455 hover:text-zinc-800'
                     }`}
                 >
                   {item.label}
@@ -152,7 +152,7 @@ export default function MemberHeader({
                     </button>
                   )}
                 </div>
-                
+
                 <div className="max-h-60 overflow-y-auto divide-y divide-zinc-100">
                   {notifications.length === 0 ? (
                     <div className="p-6 text-center text-[10.5px] text-zinc-400 font-semibold">
@@ -164,7 +164,7 @@ export default function MemberHeader({
                         {n.unread && (
                           <div className="absolute left-1 top-4 w-1 h-1 rounded-full bg-brand-red"></div>
                         )}
-                        
+
                         <div className="flex-1 min-w-0">
                           <p className="text-[11px] font-bold text-zinc-800 leading-snug">{n.title}</p>
                           <p className="text-[10px] text-zinc-455 font-semibold leading-normal mt-0.5">{n.desc}</p>
@@ -221,8 +221,8 @@ export default function MemberHeader({
               key={item.id}
               onClick={() => onTabChange && onTabChange(item.id)}
               className={`text-[12px] font-extrabold tracking-tight transition-smooth cursor-pointer whitespace-nowrap pb-1.5 border-b-2 ${isActive
-                  ? 'text-brand-red font-black border-brand-red'
-                  : 'text-zinc-450 border-transparent hover:text-zinc-800'
+                ? 'text-brand-red font-black border-brand-red'
+                : 'text-zinc-450 border-transparent hover:text-zinc-800'
                 }`}
             >
               {item.label}
