@@ -20,8 +20,8 @@ export default function MemberProfileModal({ member, onClose, onSendReferral }) 
   const category = member.category || member.businessCategory || 'Business Professional';
 
   return createPortal(
-    <div className="fixed inset-0 bg-zinc-900/60 backdrop-blur-xs flex items-center justify-center z-[80] p-4 animate-fade-in font-sans">
-      <div className="bg-white rounded-2xl border border-zinc-200 shadow-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-[80] p-4 sm:p-6 animate-fade-in font-sans">
+      <div className="bg-white rounded-2xl border border-zinc-200 shadow-2xl w-full max-w-lg max-h-[85vh] overflow-hidden flex flex-col">
         
         {/* Header Banner */}
         <div className="relative bg-gradient-to-r from-zinc-900 via-zinc-850 to-zinc-900 p-6 text-white shrink-0">
