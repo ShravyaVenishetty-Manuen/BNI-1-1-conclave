@@ -337,7 +337,10 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
       const adminReg = (loggedInAdmin?.region || loggedInAdmin?.scope || '').toLowerCase().trim();
       const concReg = (c.region || '').toLowerCase().trim();
 
-      const matchesViewScope = viewScope === 'global' || !adminReg || adminReg === 'global' || adminReg.includes('global') || concReg.includes(adminReg) || adminReg.includes(concReg);
+      // In global mode show every conclave; in region mode filter by admin's region
+      const matchesViewScope = viewScope === 'global'
+        ? true
+        : (!adminReg || adminReg === 'global' || adminReg.includes('global') || concReg.includes(adminReg) || adminReg.includes(concReg));
       const matchesState = stateFilter === 'All' || c.state === stateFilter;
       const matchesCountry = countryFilter === 'All' || c.country === countryFilter;
 
@@ -354,7 +357,7 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
     }
 
     return result;
-  }, [conclaves, searchVal, statusFilter, venueFilter, stateFilter, countryFilter, sortBy, loggedInAdmin]);
+  }, [conclaves, searchVal, statusFilter, venueFilter, stateFilter, countryFilter, sortBy, loggedInAdmin, viewScope]);
 
   // Paginated list
   const paginatedConclaves = useMemo(() => {
