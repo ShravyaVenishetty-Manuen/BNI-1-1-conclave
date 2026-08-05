@@ -51,8 +51,8 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
               state = "Tamil Nadu";
               country = "India";
             } else {
-              state = c.state || "N/A";
-              country = c.country || "India";
+              state = c.state || '';
+              country = c.country || '';
             }
           }
 
@@ -302,14 +302,14 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  // Get distinct states and countries
+  // Get distinct states and countries - exclude blank/N/A values
   const statesList = useMemo(() => {
-    const list = new Set(conclaves.map(c => c.state).filter(Boolean));
+    const list = new Set(conclaves.map(c => c.state).filter(v => v && v !== 'N/A'));
     return ['All', ...Array.from(list).sort()];
   }, [conclaves]);
 
   const countriesList = useMemo(() => {
-    const list = new Set(conclaves.map(c => c.country).filter(Boolean));
+    const list = new Set(conclaves.map(c => c.country).filter(v => v && v !== 'N/A'));
     return ['All', ...Array.from(list).sort()];
   }, [conclaves]);
 
