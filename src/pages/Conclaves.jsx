@@ -473,6 +473,12 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
     return d ? d.toISOString().slice(0, 10) : '';
   };
 
+  const formatDateNice = (val, fallback = 'TBD') => {
+    const d = parseDate(val);
+    if (!d) return fallback;
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
   const safeRenderString = (val, fallback = '') => {
     if (val === null || val === undefined) return fallback;
     if (typeof val === 'string' || typeof val === 'number') return String(val);
@@ -1078,9 +1084,9 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
                     <div className="space-y-2 border-l-2 border-brand-red pl-3 py-0.5">
                       <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block">Registration Period</span>
                       <span className="text-body-sm font-semibold text-zinc-755 block">
-                        {selectedConclave.regStartDate ?? 'TBD'}
-                        <span className="text-zinc-400 mx-2">to</span>
-                        {selectedConclave.regEndDate ?? 'TBD'}
+                        {formatDateNice(selectedConclave.regStartDate)}
+                        <span className="text-zinc-400 mx-2">→</span>
+                        {formatDateNice(selectedConclave.regEndDate)}
                       </span>
                     </div>
                   )}
