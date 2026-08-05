@@ -8,21 +8,28 @@
  */
 export function generateUpiUri({ upiId, name = 'BNI Conclave', amount = 0, note = 'Conclave Registration' }) {
   if (!upiId) return '';
-  const cleanUpiId = String(upiId).trim();
-  const encodedName = encodeURIComponent(String(name).trim());
-  const encodedNote = encodeURIComponent(String(note).trim());
-  const formattedAmount = Number(amount || 0).toFixed(2);
+  const cleanUpiId = String(upiId).trim().replace(/\s+/g, '');
+  const cleanName = encodeURIComponent(String(name).replace(/[^a-zA-Z0-9 ]/g, '').trim() || 'BNI Conclave');
+  const cleanNote = encodeURIComponent(String(note).replace(/[^a-zA-Z0-9 ]/g, '').trim() || 'Registration');
+  const numAmount = Number(amount || 0);
 
-  return `upi://pay?pa=${cleanUpiId}&pn=${encodedName}&am=${formattedAmount}&tn=${encodedNote}&cu=INR`;
+  let uri = `upi://pay?pa=${cleanUpiId}&pn=${cleanName}&cu=INR`;
+  if (numAmount > 0) {
+    uri += `&am=${numAmount}`;
+  }
+  if (cleanNote) {
+    uri += `&tn=${cleanNote}`;
+  }
+  return uri;
 }
 
 /**
  * Generates a high-quality QR code image URL for a given text/payload using public QR API.
  */
-export function generateQrCodeUrl(text, size = 250) {
+export function generateQrCodeUrl(text, size = 300) {
   if (!text) return '';
   const encodedText = encodeURIComponent(text);
-  return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&margin=10&data=${encodedText}`;
+  return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&ecc=M&margin=2&data=${encodedText}`;
 }
 
 /**

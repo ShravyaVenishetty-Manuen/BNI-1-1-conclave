@@ -778,15 +778,15 @@ export default function Registrations({ loggedInMember }) {
                       amount: selectedConclaveForReg.paymentDetails.registrationFee,
                       note: `${selectedConclaveForReg.name} Registration`
                     });
-                    const qrUrl = generateQrCodeUrl(upiUri, 150);
+                    const qrUrl = selectedConclaveForReg.paymentDetails.qrCodeUrl || generateQrCodeUrl(upiUri, 300);
 
                     return (
-                      <div className="p-3 bg-white rounded-xl border border-zinc-200 space-y-3 shadow-2xs">
-                        <div className="flex items-center gap-3">
+                      <div className="p-3.5 bg-white rounded-xl border border-zinc-200 space-y-3 shadow-2xs">
+                        <div className="flex items-center gap-3.5">
                           <img
                             src={qrUrl}
                             alt="Scan UPI QR Code"
-                            className="w-20 h-20 bg-white p-1 rounded-lg border border-zinc-200 shrink-0 shadow-inner"
+                            className="w-24 h-24 bg-white p-1 rounded-lg border border-zinc-200 shrink-0 shadow-xs object-contain"
                           />
                           <div className="space-y-1 min-w-0 flex-1">
                             <span className="text-[9px] font-extrabold uppercase text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
