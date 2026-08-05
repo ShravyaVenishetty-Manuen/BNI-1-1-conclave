@@ -280,7 +280,7 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
                   : 'Conclave Session'}
               </span>
               <span className="text-zinc-400 text-[10px] font-semibold uppercase tracking-widest">
-                {conclaveSyncData?.conclaveStatus?.region || 'Vijayawada Region'}
+                {conclaveSyncData?.conclaveStatus?.region || conclaveSyncData?.region || 'BNI Region'}
               </span>
             </div>
 
@@ -293,7 +293,7 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
             <div className="flex items-center gap-1.5">
               <MapPin className="w-3 h-3 text-zinc-400 shrink-0" />
               <span className="text-[11px] text-zinc-400 font-medium truncate">
-                {conclaveSyncData?.conclaveStatus?.venue || conclaveSyncData?.venue || 'Vijayawada Convention Centre'}
+                {conclaveSyncData?.conclaveStatus?.venue || conclaveSyncData?.venue || 'Venue TBD'}
               </span>
             </div>
           </div>
@@ -510,7 +510,7 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
                     <div className="flex items-center justify-between">
                       <h3 className="text-body-lg font-black text-zinc-900 tracking-tight">Current Round Participants</h3>
                       <span className="text-zinc-400 font-extrabold text-[10px] uppercase tracking-wider">
-                        6 Members at Table 5
+                        {myTable.members.length} Members at {displayTable}
                       </span>
                     </div>
 

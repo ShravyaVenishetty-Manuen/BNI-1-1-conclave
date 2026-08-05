@@ -19,14 +19,14 @@ export default function CaptainProfile({ loggedInCaptain, onTabChange, onLogout 
       try { return JSON.parse(cached); } catch (e) {}
     }
     return {
-      name: loggedInCaptain?.name || 'Deepak Tiwari',
-      email: loggedInCaptain?.email || 'deepak.tiwari1@bni.com',
-      phone: loggedInCaptain?.phone || loggedInCaptain?.mobile || '+91 98752 77221',
+      name: loggedInCaptain?.name || loggedInCaptain?.displayName || 'Captain',
+      email: loggedInCaptain?.email || 'N/A',
+      phone: loggedInCaptain?.phone || loggedInCaptain?.mobile || 'N/A',
       designation: loggedInCaptain?.designation || 'Table Captain',
-      company: loggedInCaptain?.company || loggedInCaptain?.businessName || 'Prime Realty Group',
-      category: loggedInCaptain?.category || loggedInCaptain?.businessCategory || 'Real Estate',
-      chapter: loggedInCaptain?.chapter || 'Vijayawada Elite',
-      registrationDate: loggedInCaptain?.registrationDate || loggedInCaptain?.joinedDate || '2026'
+      company: loggedInCaptain?.company || loggedInCaptain?.businessName || 'Self Employed',
+      category: loggedInCaptain?.category || loggedInCaptain?.businessCategory || 'General',
+      chapter: loggedInCaptain?.chapter || 'BNI Chapter',
+      registrationDate: loggedInCaptain?.registrationDate || loggedInCaptain?.joinedDate || 'N/A'
     };
   });
 

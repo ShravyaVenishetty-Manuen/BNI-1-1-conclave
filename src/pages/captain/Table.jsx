@@ -257,23 +257,31 @@ export default function CaptainTable({ loggedInCaptain, searchQuery, conclaveSyn
           <div className="bg-white p-5 rounded-xl border border-zinc-200 shadow-2xs space-y-5">
             <h3 className="font-black text-zinc-955 text-body-sm border-b border-zinc-100 pb-2">Round Timeline</h3>
             <div className="relative pl-6 flex flex-col gap-5 before:content-[''] before:absolute before:left-1.5 before:top-2 before:bottom-2 before:w-[1.5px] before:bg-zinc-150">
-              {[
-                { label: 'Round Started', time: 'Completed at 10:15 AM', done: true, active: false },
-                { label: 'Current Discussion', time: 'In progress (8m left)', done: false, active: true },
-                { label: 'Round Ending', time: 'Target: 10:40 AM', done: false, active: false },
-                { label: 'Next Round', time: 'Starts at 10:45 AM', done: false, active: false }
-              ].map((step, sIdx) => (
-                <div key={sIdx} className="relative">
-                  {step.active ? (
-                    <div className="absolute -left-[23.5px] top-1 w-3 h-3 rounded-full bg-brand-red border-2 border-white ring-4 ring-red-100 animate-pulse z-10"></div>
-                  ) : (
-                    <div className={`absolute -left-[22px] top-1.5 w-2 h-2 rounded-full border border-white z-10 ${step.done ? 'bg-emerald-500' : 'bg-zinc-200'
-                      }`}></div>
-                  )}
-                  <p className={`text-[11.5px] font-bold leading-none ${step.active ? 'text-brand-red font-black' : 'text-zinc-800'}`}>{step.label}</p>
-                  <p className="text-[9.5px] text-zinc-400 font-semibold mt-1">{step.time}</p>
-                </div>
-              ))}
+              {(() => {
+                const activeRoundNum = conclaveSyncData?.conclaveStatus?.currentRound || 1;
+                const isCurrent = selectedRound === activeRoundNum;
+                const isPast = selectedRound < activeRoundNum;
+
+                const timelineSteps = [
+                  { label: 'Round Started', time: isPast || isCurrent ? 'Session Live' : 'Scheduled', done: isPast, active: isCurrent },
+                  { label: 'Current Discussion', time: isCurrent ? 'In progress' : (isPast ? 'Completed' : 'Pending'), done: isPast, active: isCurrent },
+                  { label: 'Round Ending', time: isPast ? 'Concluded' : 'Target: End of Session', done: isPast, active: false },
+                  { label: 'Next Round', time: selectedRound < (conclaveSyncData?.mySchedule?.length || 6) ? `Round ${selectedRound + 1}` : 'Final Round', done: false, active: false }
+                ];
+
+                return timelineSteps.map((step, sIdx) => (
+                  <div key={sIdx} className="relative">
+                    {step.active ? (
+                      <div className="absolute -left-[23.5px] top-1 w-3 h-3 rounded-full bg-brand-red border-2 border-white ring-4 ring-red-100 animate-pulse z-10"></div>
+                    ) : (
+                      <div className={`absolute -left-[22px] top-1.5 w-2 h-2 rounded-full border border-white z-10 ${step.done ? 'bg-emerald-500' : 'bg-zinc-200'
+                        }`}></div>
+                    )}
+                    <p className={`text-[11.5px] font-bold leading-none ${step.active ? 'text-brand-red font-black' : 'text-zinc-800'}`}>{step.label}</p>
+                    <p className="text-[9.5px] text-zinc-400 font-semibold mt-1">{step.time}</p>
+                  </div>
+                ));
+              })()}
             </div>
           </div>
         </div>

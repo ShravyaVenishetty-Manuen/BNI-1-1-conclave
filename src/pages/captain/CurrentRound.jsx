@@ -203,29 +203,29 @@ export default function CurrentRound({ loggedInCaptain, conclaveSyncData: propCo
               <span className="text-[9.5px] font-black text-zinc-450 uppercase tracking-wider block">Live Speaker Queue</span>
 
               <div className="space-y-2">
-                <div className="flex items-center justify-between p-2 bg-zinc-50 border border-zinc-150 rounded-lg text-[11px] font-bold">
-                  <div className="flex items-center gap-2">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
-                    <span className="text-zinc-650">Anita Sharma, Rajesh Varma</span>
-                  </div>
-                  <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 border border-emerald-100 rounded px-1.5 py-0.5 uppercase leading-none">Completed</span>
-                </div>
+                {participants.length > 0 ? (
+                  <>
+                    <div className="flex items-center justify-between p-2 bg-red-50/50 border border-red-100 rounded-lg text-[11px] font-bold animate-pulse">
+                      <div className="flex items-center gap-2">
+                        <span className="h-1.5 w-1.5 rounded-full bg-brand-red"></span>
+                        <span className="text-zinc-955 font-black">{participants[0].name} ({participants[0].category || 'Member'})</span>
+                      </div>
+                      <span className="text-[9px] font-black text-brand-red bg-red-50 border border-red-100 rounded px-1.5 py-0.5 uppercase tracking-wider leading-none">Speaking</span>
+                    </div>
 
-                <div className="flex items-center justify-between p-2 bg-red-50/50 border border-red-100 rounded-lg text-[11px] font-bold animate-pulse">
-                  <div className="flex items-center gap-2">
-                    <span className="h-1.5 w-1.5 rounded-full bg-brand-red"></span>
-                    <span className="text-zinc-955 font-black">Sanjay Joshi (Construction)</span>
-                  </div>
-                  <span className="text-[9px] font-black text-brand-red bg-red-50 border border-red-100 rounded px-1.5 py-0.5 uppercase tracking-wider leading-none">Speaking</span>
-                </div>
-
-                <div className="flex items-center justify-between p-2 bg-zinc-50 border border-zinc-150 rounded-lg text-[11px] font-bold text-zinc-500">
-                  <div className="flex items-center gap-2">
-                    <span className="h-1.5 w-1.5 rounded-full bg-zinc-300"></span>
-                    <span>Deepak Chawla, Meera Gupta, Jagdish Wagle</span>
-                  </div>
-                  <span className="text-[9px] font-bold text-zinc-400 uppercase leading-none">Up Next</span>
-                </div>
+                    {participants.length > 1 && (
+                      <div className="flex items-center justify-between p-2 bg-zinc-50 border border-zinc-150 rounded-lg text-[11px] font-bold text-zinc-500">
+                        <div className="flex items-center gap-2">
+                          <span className="h-1.5 w-1.5 rounded-full bg-zinc-300"></span>
+                          <span>{participants.slice(1).map(p => p.name).join(', ')}</span>
+                        </div>
+                        <span className="text-[9px] font-bold text-zinc-400 uppercase leading-none">Up Next</span>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-[11px] text-zinc-400 font-semibold p-2">No table occupants assigned for this round.</p>
+                )}
               </div>
             </div>
           </div>
