@@ -23,10 +23,10 @@ export function generateUpiUri({ upiId, name = 'BNI Conclave', amount = 0, note 
 /**
  * Generates a high-quality QR code image URL for a given text/payload using QuickChart QR API.
  */
-export function generateQrCodeUrl(text, size = 300) {
+export function generateQrCodeUrl(text, size = 500) {
   if (!text) return '';
   const encodedText = encodeURIComponent(text);
-  return `https://quickchart.io/qr?text=${encodedText}&size=${size}&margin=2&ecLevel=M`;
+  return `https://quickchart.io/qr?text=${encodedText}&size=${size}&margin=2&ecLevel=H`;
 }
 
 /**
