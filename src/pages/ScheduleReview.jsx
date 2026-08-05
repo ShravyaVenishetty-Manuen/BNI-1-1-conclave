@@ -498,7 +498,7 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
             <span>Export Schedule</span>
           </button>
 
-          {conclave?.schedule && (conclave.status || '').toLowerCase() !== 'running' && (
+          {conclave?.schedule && !['running', 'completed', 'cancelled'].includes((conclave?.status || '').toLowerCase()) && (
             <button
               onClick={() => handleStartRound(1)}
               type="button"
@@ -523,16 +523,29 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
             </button>
           )}
 
-          <button
-            onClick={handleLockConclave}
-            type="button"
-            className="inline-flex items-center justify-center gap-2 h-10 px-5 bg-brand-red hover:bg-red-750 text-white text-xs font-black uppercase tracking-wider rounded-xl transition-smooth shadow-md cursor-pointer"
-          >
-            <Lock className="w-4 h-4" />
-            <span>Lock Conclave</span>
-          </button>
+          {!['completed', 'cancelled'].includes((conclave?.status || '').toLowerCase()) && (
+            <button
+              onClick={handleLockConclave}
+              type="button"
+              className="inline-flex items-center justify-center gap-2 h-10 px-5 bg-brand-red hover:bg-red-750 text-white text-xs font-black uppercase tracking-wider rounded-xl transition-smooth shadow-md cursor-pointer"
+            >
+              <Lock className="w-4 h-4" />
+              <span>Lock Conclave</span>
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Completed Conclave Notice */}
+      {['completed', 'cancelled'].includes((conclave?.status || '').toLowerCase()) && (
+        <div className="p-4 bg-emerald-50 border border-emerald-200/80 rounded-xl text-emerald-900 text-xs font-bold flex items-center justify-between shadow-2xs">
+          <div className="flex items-center gap-2.5">
+            <CheckCircle2 className="w-4.5 h-4.5 text-emerald-600 shrink-0" />
+            <span>This conclave is <strong>{conclave?.status || 'Completed'}</strong>. All rounds are locked and seating allocations are archived.</span>
+          </div>
+          <span className="px-2.5 py-1 bg-emerald-200/60 rounded text-[9.5px] font-black uppercase tracking-wider text-emerald-950">Conclave Completed</span>
+        </div>
+      )}
 
       {/* KPI Row cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">

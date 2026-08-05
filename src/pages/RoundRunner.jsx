@@ -386,42 +386,61 @@ export default function RoundRunner({ selectedConclaveId }) {
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5 shrink-0 w-full sm:w-auto">
-          {activeRound < (selectedConclave?.roundCount || 4) && (
-            <button
-              onClick={handleStartNextRound}
-              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 border border-zinc-200 bg-white text-zinc-700 font-bold text-button rounded-lg hover:bg-zinc-50 transition-smooth cursor-pointer shadow-sm"
-            >
-              <RefreshCw className="w-4 h-4 text-zinc-400 animate-spin-slow" />
-              Start Round {activeRound + 1}
-            </button>
+        <div className="flex flex-wrap items-center gap-3 shrink-0">
+          {!['completed', 'cancelled'].includes(statusLower) && (
+            <>
+              {activeRound < (selectedConclave?.roundCount || 4) && (
+                <button
+                  onClick={handleStartNextRound}
+                  type="button"
+                  className="inline-flex items-center justify-center gap-2 h-10 px-4 bg-white border border-zinc-250 hover:bg-zinc-50 text-zinc-700 text-xs font-bold rounded-xl transition-smooth shadow-2xs cursor-pointer"
+                >
+                  <RefreshCw className="w-4 h-4 text-zinc-500 animate-spin-slow" />
+                  <span>Start Round {activeRound + 1}</span>
+                </button>
+              )}
+
+              <button
+                onClick={() => setTimerRunning(false)}
+                type="button"
+                className="inline-flex items-center justify-center gap-2 h-10 px-4 bg-white border border-zinc-250 hover:bg-zinc-50 text-zinc-700 text-xs font-bold rounded-xl transition-smooth shadow-2xs cursor-pointer"
+              >
+                <PauseCircle className="w-4 h-4 text-zinc-500" />
+                <span>Pause</span>
+              </button>
+
+              <button
+                onClick={() => setTimerRunning(true)}
+                type="button"
+                className="inline-flex items-center justify-center gap-2 h-10 px-4 bg-white border border-zinc-250 hover:bg-zinc-50 text-zinc-700 text-xs font-bold rounded-xl transition-smooth shadow-2xs cursor-pointer"
+              >
+                <PlayCircle className="w-4 h-4 text-zinc-500" />
+                <span>Resume</span>
+              </button>
+
+              <button
+                onClick={handleFinishConclave}
+                type="button"
+                className="inline-flex items-center justify-center gap-2 h-10 px-5 bg-brand-red hover:bg-red-750 text-white text-xs font-black uppercase tracking-wider rounded-xl transition-smooth shadow-md cursor-pointer"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span>Finish Conclave</span>
+              </button>
+            </>
           )}
-
-          <button
-            onClick={() => setTimerRunning(false)}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 border border-zinc-200 bg-white text-zinc-700 font-bold text-button rounded-lg hover:bg-zinc-50 transition-smooth cursor-pointer shadow-sm"
-          >
-            <PauseCircle className="w-4 h-4 text-zinc-400" />
-            Pause
-          </button>
-
-          <button
-            onClick={() => setTimerRunning(true)}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 border border-zinc-200 bg-white text-zinc-700 font-bold text-button rounded-lg hover:bg-zinc-50 transition-smooth cursor-pointer shadow-sm"
-          >
-            <PlayCircle className="w-4 h-4 text-zinc-400" />
-            Resume
-          </button>
-
-          <button
-            onClick={handleFinishConclave}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-5 py-2 bg-brand-red hover:bg-red-700 text-white font-bold text-button rounded-lg transition-smooth shadow-md cursor-pointer"
-          >
-            <CheckCircle2 className="w-4 h-4" />
-            Finish Conclave
-          </button>
         </div>
       </div>
+
+      {/* Completed Conclave Notice */}
+      {['completed', 'cancelled'].includes(statusLower) && (
+        <div className="p-4 bg-emerald-50 border border-emerald-200/80 rounded-xl text-emerald-900 text-xs font-bold flex items-center justify-between shadow-2xs">
+          <div className="flex items-center gap-2.5">
+            <CheckCircle2 className="w-4.5 h-4.5 text-emerald-600 shrink-0" />
+            <span>This conclave is <strong>{selectedConclave?.status || 'Completed'}</strong>. Live timer controls and round advancement are disabled.</span>
+          </div>
+          <span className="px-2.5 py-1 bg-emerald-200/60 rounded text-[9.5px] font-black uppercase tracking-wider text-emerald-950">Conclave Completed</span>
+        </div>
+      )}
 
       {/* Top Row: KPI card + Timer card side by side */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">

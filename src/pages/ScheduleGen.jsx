@@ -446,6 +446,13 @@ export default function ScheduleGen({ selectedConclaveId, showGenWarning, clearG
     ? Math.min(100, Math.round((selectedConclave.scheduleSummary.coverage * 100) - (selectedConclave.scheduleSummary.repeatPairings || 0)))
     : Math.min(100, Math.round(85 + (diversityWeight * 0.1) - (progress === 100 ? 0 : 3.5)));
 
+  const isConclaveCompleted = Boolean(
+    selectedConclave && (
+      (selectedConclave.status || '').toLowerCase() === 'completed' ||
+      (selectedConclave.status || '').toLowerCase() === 'cancelled'
+    )
+  );
+
   return (
     <div className="p-4 sm:p-6 max-w-[1600px] mx-auto w-full flex flex-col gap-6 animate-fade-in">
 
@@ -459,15 +466,29 @@ export default function ScheduleGen({ selectedConclaveId, showGenWarning, clearG
         </div>
 
         <div className="flex flex-wrap items-center gap-3 shrink-0">
-          <button
-            onClick={handleStartGeneration}
-            disabled={isGenerating}
-            type="button"
-            className="inline-flex items-center justify-center gap-2 h-10 px-4 bg-white border border-zinc-250 hover:bg-zinc-50 text-zinc-700 text-xs font-bold rounded-xl transition-smooth shadow-2xs cursor-pointer disabled:opacity-50"
-          >
-            <RefreshCw className="w-4 h-4 text-zinc-500" />
-            <span>Regenerate</span>
-          </button>
+          {!isConclaveCompleted && (
+            <>
+              <button
+                onClick={handleStartGeneration}
+                disabled={isGenerating || isConclaveCompleted}
+                type="button"
+                className="inline-flex items-center justify-center gap-2 h-10 px-4 bg-white border border-zinc-250 hover:bg-zinc-50 text-zinc-700 text-xs font-bold rounded-xl transition-smooth shadow-2xs cursor-pointer disabled:opacity-50"
+              >
+                <RefreshCw className="w-4 h-4 text-zinc-500" />
+                <span>Regenerate</span>
+              </button>
+
+              <button
+                onClick={handleStartGeneration}
+                disabled={isGenerating || isConclaveCompleted}
+                type="button"
+                className="inline-flex items-center justify-center gap-2 h-10 px-5 bg-brand-red hover:bg-red-750 text-white text-xs font-black uppercase tracking-wider rounded-xl transition-smooth shadow-md cursor-pointer disabled:opacity-50"
+              >
+                <Play className="w-4 h-4 fill-white" />
+                <span>{isGenerating ? 'Generating...' : 'Generate Schedule'}</span>
+              </button>
+            </>
+          )}
 
           <button
             onClick={exportSchedule}
@@ -477,18 +498,19 @@ export default function ScheduleGen({ selectedConclaveId, showGenWarning, clearG
             <Download className="w-4 h-4 text-zinc-500" />
             <span>Export</span>
           </button>
-
-          <button
-            onClick={handleStartGeneration}
-            disabled={isGenerating}
-            type="button"
-            className="inline-flex items-center justify-center gap-2 h-10 px-5 bg-brand-red hover:bg-red-750 text-white text-xs font-black uppercase tracking-wider rounded-xl transition-smooth shadow-md cursor-pointer disabled:opacity-50"
-          >
-            <Play className="w-4 h-4 fill-white" />
-            <span>{isGenerating ? 'Generating...' : 'Generate Schedule'}</span>
-          </button>
         </div>
       </div>
+
+      {/* Completed Banner Notice */}
+      {isConclaveCompleted && (
+        <div className="p-4 bg-amber-50 border border-amber-200/80 rounded-xl text-amber-900 text-xs font-bold flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <Lock className="w-4 h-4 text-amber-600 shrink-0" />
+            <span>This conclave is marked as <strong>{selectedConclave?.status}</strong>. Schedule generation and parameter modifications are disabled.</span>
+          </div>
+          <span className="px-2.5 py-1 bg-amber-200/60 rounded text-[9.5px] font-black uppercase tracking-wider text-amber-900">Completed Conclave</span>
+        </div>
+      )}
 
       {/* KPI & Overview Card */}
       <div className="border border-zinc-200/60 bg-white rounded-xl p-5 shadow-2xs space-y-4">
@@ -563,6 +585,7 @@ export default function ScheduleGen({ selectedConclaveId, showGenWarning, clearG
               type="number"
               min={2}
               max={50}
+              disabled={isConclaveCompleted}
               value={personsPerTable}
               onChange={(e) => {
                 const parsed = parseInt(e.target.value);
@@ -578,7 +601,7 @@ export default function ScheduleGen({ selectedConclaveId, showGenWarning, clearG
                   showToast('Constraint Enforced', 'Minimum capacity is 2 members per table.');
                 }
               }}
-              className="w-20 text-body-sm font-bold text-zinc-800 border border-zinc-200 rounded-lg py-1 px-2.5 outline-none bg-zinc-50 focus:bg-white focus:border-brand-red focus:ring-1 focus:ring-brand-red/20 transition-smooth"
+              className="w-20 text-body-sm font-bold text-zinc-800 border border-zinc-200 rounded-lg py-1 px-2.5 outline-none bg-zinc-50 focus:bg-white focus:border-brand-red focus:ring-1 focus:ring-brand-red/20 transition-smooth disabled:opacity-50 disabled:cursor-not-allowed"
             />
           </div>
 
@@ -589,6 +612,7 @@ export default function ScheduleGen({ selectedConclaveId, showGenWarning, clearG
               type="number"
               min={1}
               max={20}
+              disabled={isConclaveCompleted}
               value={roundCount}
               onChange={(e) => {
                 const parsed = parseInt(e.target.value);
@@ -604,7 +628,7 @@ export default function ScheduleGen({ selectedConclaveId, showGenWarning, clearG
                   showToast('Constraint Enforced', 'Minimum round count is 1 round.');
                 }
               }}
-              className="w-16 text-body-sm font-bold text-zinc-800 border border-zinc-200 rounded-lg py-1 px-2.5 outline-none bg-zinc-50 focus:bg-white focus:border-brand-red focus:ring-1 focus:ring-brand-red/20 transition-smooth"
+              className="w-16 text-body-sm font-bold text-zinc-800 border border-zinc-200 rounded-lg py-1 px-2.5 outline-none bg-zinc-50 focus:bg-white focus:border-brand-red focus:ring-1 focus:ring-brand-red/20 transition-smooth disabled:opacity-50 disabled:cursor-not-allowed"
             />
           </div>
 
