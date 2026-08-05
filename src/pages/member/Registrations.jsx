@@ -17,6 +17,17 @@ import SearchableDropdown from '../../components/SearchableDropdown';
 import { api } from '../../services/api';
 import { generateUpiUri, generateQrCodeUrl, triggerUpiPayment } from '../../utils/paymentUtils';
 
+const formatDateNice = (val, fallback = 'TBD') => {
+  if (!val) return fallback;
+  let d;
+  if (typeof val === 'object' && (val.seconds !== undefined || val._seconds !== undefined)) {
+    d = new Date((val.seconds ?? val._seconds) * 1000);
+  } else {
+    d = new Date(val);
+  }
+  return isNaN(d.getTime()) ? fallback : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+};
+
 export default function Registrations({ loggedInMember }) {
   const [conclaves, setConclaves] = useState(() => {
     const cached = localStorage.getItem('bni_conclaves');
@@ -503,7 +514,7 @@ export default function Registrations({ loggedInMember }) {
                     {(c.regStartDate || c.regEndDate) && (
                       <div className="flex items-center gap-2 text-zinc-500 font-semibold">
                         <CalendarRange className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                        <span>Reg Period: {c.regStartDate || 'Open'} to {c.regEndDate || 'Close'}</span>
+                        <span>Reg Period: {formatDateNice(c.regStartDate, 'Open')} → {formatDateNice(c.regEndDate, 'Close')}</span>
                       </div>
                     )}
                     <div className="flex items-center gap-2">
@@ -530,12 +541,12 @@ export default function Registrations({ loggedInMember }) {
                     ) : isBeforeReg ? (
                       <span className="text-[10px] font-extrabold text-amber-600 flex items-center gap-1">
                         <Info className="w-3.5 h-3.5 text-amber-500" />
-                        Opens {c.regStartDate}
+                        Opens {formatDateNice(c.regStartDate)}
                       </span>
                     ) : isAfterReg ? (
                       <span className="text-[10px] font-extrabold text-zinc-400 flex items-center gap-1">
                         <XCircle className="w-3.5 h-3.5 text-zinc-400" />
-                        Closed {c.regEndDate}
+                        Closed {formatDateNice(c.regEndDate)}
                       </span>
                     ) : isFull ? (
                       <span className="text-[10px] font-extrabold text-brand-red flex items-center gap-1">
