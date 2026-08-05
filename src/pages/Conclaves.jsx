@@ -519,8 +519,8 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
       endDate: '',
       regStartDate: '',
       regEndDate: '',
-      memberLimit: 500,
-      captainLimit: 20,
+      memberLimit: 100,
+      captainLimit: 12,
       status: 'Upcoming',
       region: defaultReg,
       coordinator: defaultCoord,
@@ -556,6 +556,8 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
         coordinator: formData.coordinator || loggedInAdmin?.name || 'Administrator',
         personsPerTable: Number(formData.personsPerTable) || 7,
         roundCount: Number(formData.roundCount) || 4,
+        memberLimit: Number(formData.memberLimit) || 100,
+        captainLimit: Number(formData.captainLimit) || 12,
         paymentDetails: {
           registrationFee: Number(formData.registrationFee) || 0,
           bankName: (formData.bankName || '').trim(),
@@ -582,6 +584,10 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
           startDate: formatDateForInput(c.date || c.startDate),
           coordinator: c.coordinator || loggedInAdmin?.name || 'Admin',
           status: c.status || 'Upcoming',
+          memberCount: c.registrationCount ?? c.memberCount ?? 0,
+          memberLimit: c.memberLimit ?? 100,
+          captainCount: c.captainCount || 0,
+          captainLimit: c.captainLimit ?? 12,
           progress: c.status === 'Completed' ? 100 : c.status === 'Running' ? 80 : c.status === 'Upcoming' ? 40 : 5
         })));
       }
@@ -604,9 +610,9 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
       regStartDate: formatDateForInput(c.regStartDate),
       regEndDate: formatDateForInput(c.regEndDate),
       memberCount: c.memberCount || 0,
-      memberLimit: c.memberLimit || 500,
+      memberLimit: c.memberLimit ?? 100,
       captainCount: c.captainCount || 0,
-      captainLimit: c.captainLimit || 20,
+      captainLimit: c.captainLimit ?? 12,
       status: c.status || 'Upcoming',
       region: c.region || '',
       coordinator: c.coordinator || '',
@@ -636,6 +642,8 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
         endDate: formData.endDate || undefined,
         regStartDate: formData.regStartDate || undefined,
         regEndDate: formData.regEndDate || undefined,
+        memberLimit: Number(formData.memberLimit) || 100,
+        captainLimit: Number(formData.captainLimit) || 12,
         description: formData.description,
         paymentDetails: {
           registrationFee: Number(formData.registrationFee) || 0,
