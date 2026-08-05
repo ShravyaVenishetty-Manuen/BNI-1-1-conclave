@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import SearchableDropdown from '../../components/SearchableDropdown';
 import { api } from '../../services/api';
+import { generateUpiUri, generateQrCodeUrl } from '../../utils/paymentUtils';
 
 
 const formatDateNice = (val, fallback = 'TBD') => {
@@ -72,6 +73,9 @@ export default function Registrations({ loggedInMember }) {
     company: '',
     category: '',
     chapter: '',
+    region: '',
+    state: '',
+    country: '',
     mealPreference: 'Veg',
     needsAccommodation: 'No',
     specialInstructions: '',
@@ -150,6 +154,9 @@ export default function Registrations({ loggedInMember }) {
       company: member?.company || '',
       category: member?.category || '',
       chapter: member?.chapter || '',
+      region: member?.region || conclave?.region || 'Guntur Region',
+      state: member?.state || conclave?.state || 'Andhra Pradesh',
+      country: member?.country || conclave?.country || 'India',
       mealPreference: 'Veg',
       tshirtSize: 'L',
       needsAccommodation: 'No',
@@ -168,7 +175,7 @@ export default function Registrations({ loggedInMember }) {
     if (registeredIds.includes(conclaveId)) return;
 
     try {
-      const res = await api.post(`/conclaves/${conclaveId}/register`);
+      const res = await api.post(`/conclaves/${conclaveId}/register`, regForm);
       if (res && res.alreadyRegistered) {
         showToastMessage(`You are already registered for ${conclaveName}.`, 'info');
       }
@@ -736,6 +743,40 @@ export default function Registrations({ loggedInMember }) {
                 </div>
               </div>
 
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="text-[9.5px] font-bold uppercase text-zinc-450 block mb-1">Region *</label>
+                  <input
+                    value={regForm.region}
+                    onChange={(e) => setRegForm(prev => ({ ...prev, region: e.target.value }))}
+                    className="w-full px-3 py-1.5 border border-zinc-200 rounded-lg text-[11.5px] focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-zinc-50/20 font-medium text-zinc-800"
+                    type="text"
+                    placeholder="e.g. Guntur Region"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="text-[9.5px] font-bold uppercase text-zinc-450 block mb-1">State</label>
+                  <input
+                    value={regForm.state}
+                    onChange={(e) => setRegForm(prev => ({ ...prev, state: e.target.value }))}
+                    className="w-full px-3 py-1.5 border border-zinc-200 rounded-lg text-[11.5px] focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-zinc-50/20 font-medium text-zinc-800"
+                    type="text"
+                    placeholder="e.g. Andhra Pradesh"
+                  />
+                </div>
+                <div>
+                  <label className="text-[9.5px] font-bold uppercase text-zinc-450 block mb-1">Country</label>
+                  <input
+                    value={regForm.country}
+                    onChange={(e) => setRegForm(prev => ({ ...prev, country: e.target.value }))}
+                    className="w-full px-3 py-1.5 border border-zinc-200 rounded-lg text-[11.5px] focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-zinc-50/20 font-medium text-zinc-800"
+                    type="text"
+                    placeholder="e.g. India"
+                  />
+                </div>
+              </div>
+
               <div className="text-[10px] font-black text-brand-red uppercase tracking-wider border-b border-zinc-100 pb-1 mt-3">
                 Conclave Preferences
               </div>
@@ -790,29 +831,51 @@ export default function Registrations({ loggedInMember }) {
                     </span>
                   </div>
 
-                  {/* UPI QR Code - Only show pre-uploaded QR, never expose UPI ID to member */}
-                  {selectedConclaveForReg.paymentDetails.qrCodeUrl ? (
-                    <div className="p-4 bg-white rounded-xl border border-zinc-200 space-y-2 shadow-sm">
-                      <div className="flex flex-col items-center gap-2">
-                        <span className="text-[9px] font-extrabold uppercase tracking-widest text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded border border-emerald-200">
-                          Scan to Pay via Any UPI App
-                        </span>
-                        <div className="p-3 bg-white rounded-xl border-2 border-zinc-200 shadow-md">
-                          <img
-                            src={selectedConclaveForReg.paymentDetails.qrCodeUrl}
-                            alt="Scan UPI QR Code"
-                            className="w-48 h-48 object-contain block"
-                          />
+                  {/* UPI QR Code - Auto-generated from upiId or qrCodeUrl, text details remain hidden */}
+                  {(() => {
+                    const details = selectedConclaveForReg.paymentDetails || {};
+                    let qrUrl = details.qrCodeUrl;
+                    if (!qrUrl && details.upiId) {
+                      const uri = generateUpiUri({
+                        upiId: details.upiId,
+                        name: details.accountHolderName || selectedConclaveForReg.name,
+                        amount: details.registrationFee,
+                        note: `${selectedConclaveForReg.name} Registration`
+                      });
+                      qrUrl = generateQrCodeUrl(uri, 500);
+                    }
+
+                    if (qrUrl) {
+                      return (
+                        <div className="p-4 bg-white rounded-xl border border-zinc-200 space-y-2 shadow-sm">
+                          <div className="flex flex-col items-center gap-2">
+                            <span className="text-[9px] font-extrabold uppercase tracking-widest text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded border border-emerald-200">
+                              Scan to Pay via Any UPI App
+                            </span>
+                            <div className="p-3 bg-white rounded-xl border-2 border-zinc-200 shadow-md">
+                              <img
+                                src={qrUrl}
+                                alt="Scan UPI QR Code"
+                                className="w-48 h-48 object-contain block"
+                              />
+                            </div>
+                            <p className="text-[10px] text-zinc-400 font-medium text-center">Point your phone camera / UPI app at the QR code to pay</p>
+                          </div>
                         </div>
-                        <p className="text-[10px] text-zinc-400 font-medium text-center">Point your camera at the QR code to pay</p>
-                      </div>
-                    </div>
-                  ) : selectedConclaveForReg.paymentDetails.registrationFee > 0 ? (
-                    <div className="p-4 bg-amber-50 rounded-xl border border-amber-200 text-center space-y-1">
-                      <p className="text-[11px] font-bold text-amber-800">Payment QR not available yet</p>
-                      <p className="text-[10px] text-amber-600">Please contact the conclave organiser for payment details.</p>
-                    </div>
-                  ) : null}
+                      );
+                    }
+
+                    if (details.registrationFee > 0) {
+                      return (
+                        <div className="p-4 bg-amber-50 rounded-xl border border-amber-200 text-center space-y-1">
+                          <p className="text-[11px] font-bold text-amber-800">Payment QR not available yet</p>
+                          <p className="text-[10px] text-amber-600">Please contact the conclave organiser for payment details.</p>
+                        </div>
+                      );
+                    }
+
+                    return null;
+                  })()}
 
                   {/* UTR / Transaction Reference ID Input */}
                   <div>

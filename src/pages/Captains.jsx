@@ -106,7 +106,7 @@ export default function Captains({ searchQuery, selectedConclaveId, loggedInAdmi
                     if (r.role === 'captain' || r.isTableCaptain === true) {
                       const uid = r.userId || r.uid || r.id;
                       const existing = captainMap.get(uid) || {};
-                      const userRegion = existing.region || (typeof existing.location === 'string' ? existing.location : '') || r.region || 'Global BNI Network';
+                      const userRegion = r.region || master.region || existing.region || (typeof r.location === 'string' ? r.location : '') || 'Guntur Region';
                       captainMap.set(uid, {
                         ...r,
                         ...existing,
@@ -118,6 +118,8 @@ export default function Captains({ searchQuery, selectedConclaveId, loggedInAdmi
                         company: existing.company || r.company || existing.businessName || 'Self Employed',
                         category: existing.category || r.category || existing.businessCategory || 'General',
                         chapter: existing.chapter || r.chapter || 'N/A',
+                        state: existing.state || r.state || '',
+                        country: existing.country || r.country || '',
                         userRegion: userRegion
                       });
                     }
@@ -256,15 +258,17 @@ export default function Captains({ searchQuery, selectedConclaveId, loggedInAdmi
     setTimeout(() => setToast(null), 3000);
   };
 
-  const getCaptainRegion = (captain) => {
-    if (captain.userRegion && typeof captain.userRegion === 'string') return captain.userRegion;
-    if (captain.region && typeof captain.region === 'string') return captain.region;
-    if (captain.location) {
-      if (typeof captain.location === 'string') return captain.location;
-      if (typeof captain.location === 'object' && captain.location.place) return captain.location.place;
+  const getCaptainRegion = (c) => {
+    const reg = c?.userRegion || c?.region;
+    if (reg && typeof reg === 'string' && reg !== 'Global BNI Network' && reg.trim() !== '') return reg;
+    if (c?.chapter && c.chapter.trim() !== '' && c.chapter !== 'N/A') return `${c.chapter} Chapter`;
+    if (c?.state && c.state.trim() !== '') return c.state.includes('Region') ? c.state : `${c.state} Region`;
+    if (c?.location) {
+      if (typeof c.location === 'string' && c.location !== 'Global BNI Network') return c.location;
+      if (typeof c.location === 'object' && c.location.place) return c.location.place;
     }
-    if (captain.address && typeof captain.address === 'string') return captain.address;
-    return 'Global BNI Network';
+    if (c?.address && typeof c.address === 'string' && c.address !== 'Global BNI Network') return c.address;
+    return 'Guntur Region';
   };
 
   // Conclave-specific captains subset
@@ -278,14 +282,19 @@ export default function Captains({ searchQuery, selectedConclaveId, loggedInAdmi
   const assignedCount = conclaveCaptains.filter(c => c.status === 'Assigned').length;
   const busyCount = conclaveCaptains.filter(c => c.status === 'Busy').length;
 
-  // Get distinct states and countries for captains
+  // Get distinct filter options dynamically from captain data
+  const categoriesList = useMemo(() => {
+    const list = new Set(captains.map(c => c.category).filter(v => v && v !== 'N/A' && v !== 'General'));
+    return ['All', ...Array.from(list).sort()];
+  }, [captains]);
+
   const statesList = useMemo(() => {
-    const list = new Set(captains.map(c => c.state).filter(Boolean));
+    const list = new Set(captains.map(c => c.state).filter(v => v && v !== 'N/A'));
     return ['All', ...Array.from(list).sort()];
   }, [captains]);
 
   const countriesList = useMemo(() => {
-    const list = new Set(captains.map(c => c.country).filter(Boolean));
+    const list = new Set(captains.map(c => c.country).filter(v => v && v !== 'N/A'));
     return ['All', ...Array.from(list).sort()];
   }, [captains]);
 
@@ -664,7 +673,7 @@ export default function Captains({ searchQuery, selectedConclaveId, loggedInAdmi
           <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
             <SearchableDropdown
               label="Business Type"
-              options={['All', 'Financial Consultancy', 'Real Estate', 'Legal Services', 'IT Services']}
+              options={categoriesList.length > 1 ? categoriesList : ['All']}
               value={categoryFilter}
               onChange={setCategoryFilter}
               placeholder="Search business type..."

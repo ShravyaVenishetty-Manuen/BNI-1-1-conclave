@@ -99,7 +99,7 @@ export default function Members({ searchQuery, selectedConclaveId, loggedInAdmin
                   res.registrations.forEach(r => {
                     const uid = r.userId || r.uid || r.id;
                     const existing = memberMap.get(uid) || {};
-                    const userRegion = existing.region || (typeof existing.location === 'string' ? existing.location : '') || r.region || 'Global BNI Network';
+                    const userRegion = r.region || master.region || existing.region || (typeof r.location === 'string' ? r.location : '') || 'Guntur Region';
                     memberMap.set(uid, {
                       ...r,
                       ...existing,
@@ -111,6 +111,8 @@ export default function Members({ searchQuery, selectedConclaveId, loggedInAdmin
                       company: existing.company || r.company || existing.businessName || 'Self Employed',
                       category: existing.category || r.category || existing.businessCategory || 'General',
                       chapter: existing.chapter || r.chapter || 'N/A',
+                      state: existing.state || r.state || '',
+                      country: existing.country || r.country || '',
                       userRegion: userRegion
                     });
                   });
@@ -249,15 +251,17 @@ export default function Members({ searchQuery, selectedConclaveId, loggedInAdmin
     }, 3000);
   };
 
-  const getMemberRegion = (member) => {
-    if (member?.userRegion && typeof member.userRegion === 'string') return member.userRegion;
-    if (member?.region && typeof member.region === 'string') return member.region;
-    if (member?.location) {
-      if (typeof member.location === 'string') return member.location;
-      if (typeof member.location === 'object' && member.location.place) return member.location.place;
+  const getMemberRegion = (m) => {
+    const reg = m?.userRegion || m?.region;
+    if (reg && typeof reg === 'string' && reg !== 'Global BNI Network' && reg.trim() !== '') return reg;
+    if (m?.chapter && m.chapter.trim() !== '' && m.chapter !== 'N/A') return `${m.chapter} Chapter`;
+    if (m?.state && m.state.trim() !== '') return m.state.includes('Region') ? m.state : `${m.state} Region`;
+    if (m?.location) {
+      if (typeof m.location === 'string' && m.location !== 'Global BNI Network') return m.location;
+      if (typeof m.location === 'object' && m.location.place) return m.location.place;
     }
-    if (member?.address && typeof member.address === 'string') return member.address;
-    return 'Global BNI Network';
+    if (m?.address && typeof m.address === 'string' && m.address !== 'Global BNI Network') return m.address;
+    return 'Guntur Region';
   };
 
   // Reset to first page when search or filters change
@@ -369,14 +373,24 @@ export default function Members({ searchQuery, selectedConclaveId, loggedInAdmin
   const captainCount = conclaveMembers.filter(m => m.isCaptain).length;
   const businessClassCount = new Set(conclaveMembers.map(m => m.category)).size;
 
-  // Get distinct states and countries for members
+  // Get distinct filter options dynamically from member data
+  const categoriesList = useMemo(() => {
+    const list = new Set(members.map(m => m.category).filter(v => v && v !== 'N/A' && v !== 'General'));
+    return ['All', ...Array.from(list).sort()];
+  }, [members]);
+
   const statesList = useMemo(() => {
-    const list = new Set(members.map(m => m.state).filter(Boolean));
+    const list = new Set(members.map(m => m.state).filter(v => v && v !== 'N/A'));
     return ['All', ...Array.from(list).sort()];
   }, [members]);
 
   const countriesList = useMemo(() => {
-    const list = new Set(members.map(m => m.country).filter(Boolean));
+    const list = new Set(members.map(m => m.country).filter(v => v && v !== 'N/A'));
+    return ['All', ...Array.from(list).sort()];
+  }, [members]);
+
+  const chaptersList = useMemo(() => {
+    const list = new Set(members.map(m => m.chapter).filter(v => v && v !== 'N/A'));
     return ['All', ...Array.from(list).sort()];
   }, [members]);
 
@@ -705,7 +719,7 @@ export default function Members({ searchQuery, selectedConclaveId, loggedInAdmin
             {/* Category Filter */}
             <SearchableDropdown
               label="Category"
-              options={['All', 'Real Estate', 'Marketing', 'Finance', 'Corporate Gifting', 'IT Services', 'HR Services', 'Legal Services', 'Graphic Design']}
+              options={categoriesList.length > 1 ? categoriesList : ['All']}
               value={categoryFilter}
               onChange={setCategoryFilter}
               placeholder="Search category..."
