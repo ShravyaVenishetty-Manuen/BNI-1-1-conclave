@@ -818,22 +818,6 @@ export default function Registrations({ loggedInMember }) {
                           <p className="text-[10px] text-zinc-400 font-medium text-center">Point your camera at the QR code to pay</p>
                         </div>
 
-                        {/* UPI Details */}
-                        <div className="bg-zinc-50 rounded-lg px-3 py-2.5 space-y-1 border border-zinc-100">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[9px] font-bold uppercase text-zinc-400">UPI ID</span>
-                            <span className="text-[11px] font-black text-zinc-900 font-mono">{selectedConclaveForReg.paymentDetails.upiId}</span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-[9px] font-bold uppercase text-zinc-400">Account</span>
-                            <span className="text-[11px] font-semibold text-zinc-600">{selectedConclaveForReg.paymentDetails.accountHolderName || 'BNI Chapter Account'}</span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-[9px] font-bold uppercase text-zinc-400">Amount</span>
-                            <span className="text-[13px] font-black text-emerald-700">₹{selectedConclaveForReg.paymentDetails.registrationFee || 0}</span>
-                          </div>
-                        </div>
-
                         {/* One-Tap Mobile Pay Button */}
                         <button
                           type="button"
@@ -846,27 +830,6 @@ export default function Registrations({ loggedInMember }) {
                       </div>
                     );
                   })()}
-
-                  {/* Bank Transfer Details */}
-                  {selectedConclaveForReg.paymentDetails.bankName && (
-                    <div className="p-3 bg-white rounded-lg border border-zinc-200 text-[11px] space-y-1.5">
-                      <span className="text-[9.5px] font-black uppercase text-zinc-400 block">Direct Bank Transfer Details</span>
-                      <div className="grid grid-cols-2 gap-2 pt-0.5">
-                        <div>
-                          <span className="text-zinc-450 font-bold uppercase text-[8.5px] block">Bank Name</span>
-                          <span className="font-extrabold text-zinc-800">{selectedConclaveForReg.paymentDetails.bankName}</span>
-                        </div>
-                        <div>
-                          <span className="text-zinc-450 font-bold uppercase text-[8.5px] block">Account Number</span>
-                          <span className="font-extrabold text-zinc-800 font-mono">{selectedConclaveForReg.paymentDetails.accountNumber || '—'}</span>
-                        </div>
-                        <div>
-                          <span className="text-zinc-450 font-bold uppercase text-[8.5px] block">IFSC Code</span>
-                          <span className="font-extrabold text-zinc-800 font-mono">{selectedConclaveForReg.paymentDetails.ifscCode || '—'}</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
 
                   {/* UTR / Transaction Reference ID Input */}
                   <div>
