@@ -7,7 +7,6 @@ import {
   MapPin,
   Coffee,
   FileText,
-  Download,
 } from 'lucide-react';
 import { downloadOrViewAgendaDocument } from '../../utils/documentUtils';
 import { api } from '../../services/api';
@@ -165,47 +164,10 @@ export default function MemberSchedule({ loggedInMember, onTabChange, conclaveSy
     return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   };
 
-  const defaultMemberRounds = [
-    {
-      number: 1,
-      time: '09:30 AM - 10:15 AM',
-      table: 'Table 8',
-      tableNumber: 8,
-      captain: 'Sravanti Rao',
-      status: 'completed'
-    },
-    {
-      number: 2,
-      time: '10:15 AM - 11:00 AM',
-      table: 'Table 6',
-      tableNumber: 6,
-      captain: 'Anupama Kambhampati',
-      status: 'active'
-    },
-    {
-      number: 3,
-      time: '11:30 AM - 12:15 PM',
-      table: 'Table 7',
-      tableNumber: 7,
-      captain: 'Archana Bhat',
-      status: 'upcoming'
-    },
-    {
-      number: 4,
-      time: '01:30 PM - 02:15 PM',
-      table: 'Table 1',
-      tableNumber: 1,
-      captain: 'Girish Das',
-      status: 'upcoming'
-    }
-  ];
+  const rounds = Array.isArray(conclaveSyncData?.mySchedule) ? conclaveSyncData.mySchedule : [];
 
-  const rounds = (conclaveSyncData?.mySchedule && conclaveSyncData.mySchedule.length > 0)
-    ? conclaveSyncData.mySchedule
-    : defaultMemberRounds;
-
-  const currentRoundNum = conclaveSyncData?.conclaveStatus?.currentRound || 2;
-  const currentRoundSeating = rounds.find(s => s.number === currentRoundNum) || rounds[1] || rounds[0];
+  const currentRoundNum = conclaveSyncData?.conclaveStatus?.currentRound || 1;
+  const currentRoundSeating = rounds.find(s => s.number === currentRoundNum) || rounds[0] || null;
   const nextRound = rounds.find(r => r.number === currentRoundNum + 1);
   const memberName = loggedInMember?.name || 'Member';
 
@@ -251,8 +213,6 @@ export default function MemberSchedule({ loggedInMember, onTabChange, conclaveSy
           </div>
         </div>
       )}
-
-
 
       {/* Schedule grid layout */}
       <div className="grid grid-cols-12 gap-6 items-start">

@@ -3,24 +3,25 @@ import {
   Search,
   Calendar,
   MapPin,
-  Users,
   CheckCircle2,
   XCircle,
   Filter,
   Check,
-  PlusCircle,
   Sparkles,
   Info,
-  CalendarRange
+  CalendarRange,
+  CreditCard,
+  ExternalLink
 } from 'lucide-react';
 import SearchableDropdown from '../../components/SearchableDropdown';
 import { api } from '../../services/api';
+import { generateUpiUri, generateQrCodeUrl, triggerUpiPayment } from '../../utils/paymentUtils';
 
 export default function Registrations({ loggedInMember }) {
   const [conclaves, setConclaves] = useState(() => {
     const cached = localStorage.getItem('bni_conclaves');
     if (cached) {
-      try { return JSON.parse(cached); } catch (e) {}
+      try { return JSON.parse(cached); } catch (e) { }
     }
     return [];
   });
@@ -63,7 +64,8 @@ export default function Registrations({ loggedInMember }) {
     chapter: '',
     mealPreference: 'Veg',
     needsAccommodation: 'No',
-    specialInstructions: ''
+    specialInstructions: '',
+    utrNumber: ''
   });
 
   useEffect(() => {
@@ -83,7 +85,7 @@ export default function Registrations({ loggedInMember }) {
           ...c,
           name: c.name || c.title || 'BNI Conclave',
           venue: c.venue || c.venueLocation || 'TBD Venue',
-          region: c.region || 'Guntur Region',
+          region: c.region || 'BNI Region',
           startDate: c.date || c.startDate || null,
           status: c.status ? (c.status.toLowerCase() === 'running' ? 'Running' : c.status.toLowerCase() === 'completed' ? 'Completed' : c.status.toLowerCase().includes('closed') ? 'Registration Closed' : c.status.toLowerCase().includes('open') ? 'Registration Open' : c.status) : 'Upcoming',
           memberCount: c.memberCount || c.registrationCount || 0,
@@ -431,7 +433,7 @@ export default function Registrations({ loggedInMember }) {
             const localRegs = JSON.parse(localStorage.getItem('bni_conclave_registrations') || '[]');
             const isLocallyRegistered = localRegs.some(r => r.conclaveId === c.id);
             const isRegistered = Boolean(
-              c.isRegistered || 
+              c.isRegistered ||
               c.registered ||
               (member?.conclaveIds || []).includes(c.id) ||
               isLocallyRegistered
@@ -472,6 +474,16 @@ export default function Registrations({ loggedInMember }) {
                     <span className="px-2 py-0.5 bg-zinc-50 text-zinc-600 border border-zinc-200/80 rounded text-[9px] font-extrabold uppercase tracking-wide">
                       {c.region}
                     </span>
+
+                    {c.paymentDetails?.registrationFee > 0 ? (
+                      <span className="px-2 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded text-[9px] font-black uppercase tracking-wide">
+                        Fee: ₹{c.paymentDetails.registrationFee}
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 bg-zinc-50 text-zinc-600 border border-zinc-200 rounded text-[9px] font-bold uppercase tracking-wide">
+                        Free Entry
+                      </span>
+                    )}
                   </div>
 
                   {/* Title and description */}
@@ -740,10 +752,102 @@ export default function Registrations({ loggedInMember }) {
                 <textarea
                   value={regForm.specialInstructions}
                   onChange={(e) => setRegForm(prev => ({ ...prev, specialInstructions: e.target.value }))}
-                  className="w-full px-3 py-1.5 border border-zinc-200 rounded-lg text-[11.5px] focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-zinc-50/20 min-h-[60px] font-medium text-zinc-700"
+                  className="w-full px-3 py-1.5 border border-zinc-200 rounded-lg text-[11.5px] focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-zinc-50/20 min-h-[50px] font-medium text-zinc-700"
                   placeholder="Allergies, access needs, or pairing request notes..."
                 />
               </div>
+
+              {/* Registration Fee & UPI Payment Section */}
+              {selectedConclaveForReg?.paymentDetails && (
+                <div className="border-t border-zinc-100 pt-3 space-y-3 bg-zinc-50/60 p-3.5 rounded-xl border border-zinc-200/70">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <CreditCard className="w-4 h-4 text-brand-red" />
+                      <span className="text-xs font-black text-zinc-900">Registration Payment Details</span>
+                    </div>
+                    <span className="text-xs font-black text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-300">
+                      Fee: ₹{selectedConclaveForReg.paymentDetails.registrationFee || 0}
+                    </span>
+                  </div>
+
+                  {/* UPI QR & Mobile Payment App Launcher */}
+                  {selectedConclaveForReg.paymentDetails.upiId && (() => {
+                    const upiUri = generateUpiUri({
+                      upiId: selectedConclaveForReg.paymentDetails.upiId,
+                      name: selectedConclaveForReg.paymentDetails.accountHolderName || selectedConclaveForReg.name,
+                      amount: selectedConclaveForReg.paymentDetails.registrationFee,
+                      note: `${selectedConclaveForReg.name} Registration`
+                    });
+                    const qrUrl = generateQrCodeUrl(upiUri, 150);
+
+                    return (
+                      <div className="p-3 bg-white rounded-xl border border-zinc-200 space-y-3 shadow-2xs">
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={qrUrl}
+                            alt="Scan UPI QR Code"
+                            className="w-20 h-20 bg-white p-1 rounded-lg border border-zinc-200 shrink-0 shadow-inner"
+                          />
+                          <div className="space-y-1 min-w-0 flex-1">
+                            <span className="text-[9px] font-extrabold uppercase text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                              Scan to Pay via Any UPI App
+                            </span>
+                            <p className="text-xs font-black text-zinc-900 font-mono truncate">{selectedConclaveForReg.paymentDetails.upiId}</p>
+                            <p className="text-[10px] text-zinc-500 font-medium truncate">
+                              Account: {selectedConclaveForReg.paymentDetails.accountHolderName || 'BNI Chapter Account'}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* One-Tap Mobile Pay Button */}
+                        <button
+                          type="button"
+                          onClick={() => triggerUpiPayment(upiUri)}
+                          className="w-full py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-lg text-[11px] font-extrabold flex items-center justify-center gap-1.5 transition-smooth shadow-sm cursor-pointer"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                          Pay ₹{selectedConclaveForReg.paymentDetails.registrationFee || 0} via Installed UPI App (GPay / PhonePe)
+                        </button>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Bank Transfer Details */}
+                  {selectedConclaveForReg.paymentDetails.bankName && (
+                    <div className="p-3 bg-white rounded-lg border border-zinc-200 text-[11px] space-y-1.5">
+                      <span className="text-[9.5px] font-black uppercase text-zinc-400 block">Direct Bank Transfer Details</span>
+                      <div className="grid grid-cols-2 gap-2 pt-0.5">
+                        <div>
+                          <span className="text-zinc-450 font-bold uppercase text-[8.5px] block">Bank Name</span>
+                          <span className="font-extrabold text-zinc-800">{selectedConclaveForReg.paymentDetails.bankName}</span>
+                        </div>
+                        <div>
+                          <span className="text-zinc-450 font-bold uppercase text-[8.5px] block">Account Number</span>
+                          <span className="font-extrabold text-zinc-800 font-mono">{selectedConclaveForReg.paymentDetails.accountNumber || '—'}</span>
+                        </div>
+                        <div>
+                          <span className="text-zinc-450 font-bold uppercase text-[8.5px] block">IFSC Code</span>
+                          <span className="font-extrabold text-zinc-800 font-mono">{selectedConclaveForReg.paymentDetails.ifscCode || '—'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* UTR / Transaction Reference ID Input */}
+                  <div>
+                    <label className="text-[9.5px] font-bold uppercase text-zinc-650 block mb-1">
+                      Payment Transaction Ref / UTR Number
+                    </label>
+                    <input
+                      value={regForm.utrNumber}
+                      onChange={(e) => setRegForm(prev => ({ ...prev, utrNumber: e.target.value }))}
+                      className="w-full px-3 py-1.5 border border-zinc-250 rounded-lg text-[11.5px] focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 outline-none bg-white font-mono uppercase text-zinc-800"
+                      placeholder="e.g. 423512984512 or UTR Ref"
+                      type="text"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Modal Footer Actions */}

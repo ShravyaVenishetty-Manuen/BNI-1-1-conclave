@@ -1,12 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
-  CheckCircle,
   Check,
   LogOut,
   Edit2,
-  LayoutGrid,
-  Shield,
-  LogIn,
   Save
 } from 'lucide-react';
 import { api } from '../../services/api';
@@ -17,17 +13,17 @@ export default function MemberProfile({ loggedInMember, onTabChange, onLogout })
   const [profileData, setProfileData] = useState(() => {
     const cached = localStorage.getItem('bni_member_profile_cache');
     if (cached) {
-      try { return JSON.parse(cached); } catch (e) {}
+      try { return JSON.parse(cached); } catch (e) { }
     }
     return {
-      name: loggedInMember?.name || 'Vijay Kulkarni',
-      email: loggedInMember?.email || 'vijay.kulkarni20@bni.com',
-      phone: loggedInMember?.phone || loggedInMember?.mobile || '9861020209',
+      name: loggedInMember?.name || loggedInMember?.displayName || 'Member',
+      email: loggedInMember?.email || 'N/A',
+      phone: loggedInMember?.phone || loggedInMember?.mobile || 'N/A',
       designation: loggedInMember?.designation || 'BNI Member',
-      company: loggedInMember?.company || loggedInMember?.businessName || 'Zenith Systems 20',
-      category: loggedInMember?.category || loggedInMember?.businessCategory || 'IT Infrastructure',
-      chapter: loggedInMember?.chapter || 'Vijayawada Central',
-      registrationDate: loggedInMember?.registrationDate || loggedInMember?.joinedDate || '2026'
+      company: loggedInMember?.company || loggedInMember?.businessName || 'Self Employed',
+      category: loggedInMember?.category || loggedInMember?.businessCategory || 'General',
+      chapter: loggedInMember?.chapter || 'BNI Chapter',
+      registrationDate: loggedInMember?.registrationDate || loggedInMember?.joinedDate || 'N/A'
     };
   });
 
@@ -52,7 +48,7 @@ export default function MemberProfile({ loggedInMember, onTabChange, onLogout })
             return updated;
           });
         }
-      } catch (e) {}
+      } catch (e) { }
     }
     loadFreshProfile();
   }, []);
@@ -161,9 +157,9 @@ export default function MemberProfile({ loggedInMember, onTabChange, onLogout })
           {/* Networking Summary KPIs */}
           <section className="grid grid-cols-2 gap-3">
             {[
-              { label: "Conclaves", value: 1 },
-              { label: "Total Rounds", value: 4 },
-              { label: "Members Met", value: 20 },
+              { label: "Conclaves", value: loggedInMember?.conclaveIds?.length || 0 },
+              { label: "Total Rounds", value: loggedInMember?.conclaveIds?.length ? (loggedInMember.conclaveIds.length * 4) : 0 },
+              { label: "Members Met", value: loggedInMember?.conclaveIds?.length ? (loggedInMember.conclaveIds.length * 20) : 0 },
               { label: "Active Status", value: "Verified" }
             ].map((kpi, idx) => (
               <div key={idx} className="bg-white border border-zinc-200 p-4 rounded-xl shadow-2xs">

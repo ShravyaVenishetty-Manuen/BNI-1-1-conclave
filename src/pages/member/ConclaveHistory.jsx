@@ -5,13 +5,7 @@ import {
   Calendar,
   MapPin,
   RefreshCw,
-  ArrowUpDown,
-  MessageSquare,
   X,
-  Award,
-  Star,
-  Users,
-  Clock,
   Check,
   FileText
 } from 'lucide-react';
@@ -28,7 +22,7 @@ export default function MemberConclaveHistory({ loggedInMember }) {
   const [conclaves, setConclaves] = useState(() => {
     const cached = localStorage.getItem('bni_member_history_cache');
     if (cached) {
-      try { return JSON.parse(cached); } catch (e) {}
+      try { return JSON.parse(cached); } catch (e) { }
     }
     return [];
   });
@@ -61,7 +55,7 @@ export default function MemberConclaveHistory({ loggedInMember }) {
               roundDetails = c.schedule.rounds.map((r) => {
                 const table = r.tables?.find((t) => t.captainId === pId || t.memberIds?.includes(pId));
                 const capObj = table ? c.participants.find((p) => p.id === table.captainId) : null;
-                
+
                 // Track categories met
                 if (table) {
                   const allTableMemberIds = [table.captainId, ...(table.memberIds || [])].filter(id => id !== pId);
@@ -88,15 +82,15 @@ export default function MemberConclaveHistory({ loggedInMember }) {
           const formattedStatus = c.status === 'completed'
             ? 'Completed'
             : c.status === 'active' || c.status === 'running'
-            ? 'Active'
-            : c.status === 'cancelled'
-            ? 'Cancelled'
-            : 'Registered';
+              ? 'Active'
+              : c.status === 'cancelled'
+                ? 'Cancelled'
+                : 'Registered';
 
           // Count referrals given by this user for this conclave
           const userReferralsGiven = referralsList.filter(
             r => (r.fromMemberId === memberUid || r.fromMemberId === loggedInMember?.id) &&
-                 (!r.conclaveId || r.conclaveId === c.id)
+              (!r.conclaveId || r.conclaveId === c.id)
           ).length;
 
           return {
@@ -110,7 +104,7 @@ export default function MemberConclaveHistory({ loggedInMember }) {
             agendaDocument: c.agendaDocument || (() => {
               const cached = localStorage.getItem(`bni_agenda_doc_${c.id}`);
               if (cached) {
-                try { return JSON.parse(cached); } catch (e) {}
+                try { return JSON.parse(cached); } catch (e) { }
               }
               const allConclavesCached = localStorage.getItem('bni_conclaves');
               if (allConclavesCached) {
@@ -118,7 +112,7 @@ export default function MemberConclaveHistory({ loggedInMember }) {
                   const parsed = JSON.parse(allConclavesCached);
                   const found = parsed.find(item => item.id === c.id);
                   if (found && found.agendaDocument) return found.agendaDocument;
-                } catch (e) {}
+                } catch (e) { }
               }
               return null;
             })(),
@@ -132,11 +126,11 @@ export default function MemberConclaveHistory({ loggedInMember }) {
               })),
               contacts: (c.roundCount || 4) * ((c.personsPerTable || 6) - 1),
               referrals: userReferralsGiven,
-              recommendation: userReferralsGiven > 0 
-                ? "High synergy session with active referral flow." 
-                : (formattedStatus === 'Active' 
-                    ? "Session in progress. Log referrals given during 1-on-1 meetings." 
-                    : "Session completed. Log referrals given during meetings.")
+              recommendation: userReferralsGiven > 0
+                ? "High synergy session with active referral flow."
+                : (formattedStatus === 'Active'
+                  ? "Session in progress. Log referrals given during 1-on-1 meetings."
+                  : "Session completed. Log referrals given during meetings.")
             }
           };
         });
@@ -197,7 +191,7 @@ export default function MemberConclaveHistory({ loggedInMember }) {
               { label: "Total Conclaves", value: conclaves.length },
               { label: "Rounds Participated", value: conclaves.reduce((acc, c) => acc + (c.rounds || 0), 0) },
               { label: "People Met", value: conclaves.reduce((acc, c) => acc + (c.rounds || 0) * 4, 0) },
-              { label: "Business Categories", value: conclaves.length ? 15 : 0 }
+              { label: "Business Categories", value: industryDistribution.length }
             ].map((kpi, idx) => (
               <div
                 key={idx}
@@ -275,8 +269,8 @@ export default function MemberConclaveHistory({ loggedInMember }) {
                           {conclave.title}
                         </h3>
                         <span className={`px-2 py-0.5 text-[8.5px] font-black rounded uppercase tracking-wider ${conclave.status === 'Completed'
-                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
-                            : 'bg-zinc-150 text-zinc-500 border border-zinc-200'
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                          : 'bg-zinc-150 text-zinc-500 border border-zinc-200'
                           }`}>
                           {conclave.status}
                         </span>
@@ -304,8 +298,8 @@ export default function MemberConclaveHistory({ loggedInMember }) {
                       onClick={() => handleOpenDrawer(conclave)}
                       disabled={conclave.status === 'Cancelled'}
                       className={`shrink-0 h-10 px-4.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-smooth ${conclave.status === 'Cancelled'
-                          ? 'bg-zinc-100 text-zinc-400 border border-zinc-200 cursor-not-allowed'
-                          : 'bg-zinc-900 text-white hover:bg-zinc-800 shadow-2xs cursor-pointer'
+                        ? 'bg-zinc-100 text-zinc-400 border border-zinc-200 cursor-not-allowed'
+                        : 'bg-zinc-900 text-white hover:bg-zinc-800 shadow-2xs cursor-pointer'
                         }`}
                     >
                       {conclave.status === 'Cancelled' ? 'No Details' : 'View Details'}
