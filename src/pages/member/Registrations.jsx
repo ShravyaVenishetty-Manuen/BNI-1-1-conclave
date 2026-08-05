@@ -789,24 +789,38 @@ export default function Registrations({ loggedInMember }) {
                       amount: selectedConclaveForReg.paymentDetails.registrationFee,
                       note: `${selectedConclaveForReg.name} Registration`
                     });
-                    const qrUrl = selectedConclaveForReg.paymentDetails.qrCodeUrl || generateQrCodeUrl(upiUri, 300);
+                    const qrUrl = selectedConclaveForReg.paymentDetails.qrCodeUrl || generateQrCodeUrl(upiUri, 500);
 
                     return (
-                      <div className="p-3.5 bg-white rounded-xl border border-zinc-200 space-y-3 shadow-2xs">
-                        <div className="flex items-center gap-3.5">
-                          <img
-                            src={qrUrl}
-                            alt="Scan UPI QR Code"
-                            className="w-24 h-24 bg-white p-1 rounded-lg border border-zinc-200 shrink-0 shadow-xs object-contain"
-                          />
-                          <div className="space-y-1 min-w-0 flex-1">
-                            <span className="text-[9px] font-extrabold uppercase text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                              Scan to Pay via Any UPI App
-                            </span>
-                            <p className="text-xs font-black text-zinc-900 font-mono truncate">{selectedConclaveForReg.paymentDetails.upiId}</p>
-                            <p className="text-[10px] text-zinc-500 font-medium truncate">
-                              Account: {selectedConclaveForReg.paymentDetails.accountHolderName || 'BNI Chapter Account'}
-                            </p>
+                      <div className="p-4 bg-white rounded-xl border border-zinc-200 space-y-3 shadow-sm">
+                        {/* Centered large QR code */}
+                        <div className="flex flex-col items-center gap-2">
+                          <span className="text-[9px] font-extrabold uppercase tracking-widest text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded border border-emerald-200">
+                            Scan to Pay via Any UPI App
+                          </span>
+                          <div className="p-3 bg-white rounded-xl border-2 border-zinc-200 shadow-md">
+                            <img
+                              src={qrUrl}
+                              alt="Scan UPI QR Code"
+                              className="w-48 h-48 object-contain block"
+                            />
+                          </div>
+                          <p className="text-[10px] text-zinc-400 font-medium text-center">Point your camera at the QR code to pay</p>
+                        </div>
+
+                        {/* UPI Details */}
+                        <div className="bg-zinc-50 rounded-lg px-3 py-2.5 space-y-1 border border-zinc-100">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[9px] font-bold uppercase text-zinc-400">UPI ID</span>
+                            <span className="text-[11px] font-black text-zinc-900 font-mono">{selectedConclaveForReg.paymentDetails.upiId}</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[9px] font-bold uppercase text-zinc-400">Account</span>
+                            <span className="text-[11px] font-semibold text-zinc-600">{selectedConclaveForReg.paymentDetails.accountHolderName || 'BNI Chapter Account'}</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[9px] font-bold uppercase text-zinc-400">Amount</span>
+                            <span className="text-[13px] font-black text-emerald-700">₹{selectedConclaveForReg.paymentDetails.registrationFee || 0}</span>
                           </div>
                         </div>
 
@@ -814,7 +828,7 @@ export default function Registrations({ loggedInMember }) {
                         <button
                           type="button"
                           onClick={() => triggerUpiPayment(upiUri)}
-                          className="w-full py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-lg text-[11px] font-extrabold flex items-center justify-center gap-1.5 transition-smooth shadow-sm cursor-pointer"
+                          className="w-full py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-lg text-[11px] font-extrabold flex items-center justify-center gap-1.5 transition-smooth shadow-sm cursor-pointer"
                         >
                           <ExternalLink className="w-3.5 h-3.5" />
                           Pay ₹{selectedConclaveForReg.paymentDetails.registrationFee || 0} via Installed UPI App (GPay / PhonePe)
