@@ -355,18 +355,19 @@ export default function SuperadminMembers({ searchQuery }) {
                 <div className="space-y-3 pt-2">
                   <h4 className="text-[11px] font-black text-zinc-400 uppercase tracking-widest px-0.5">Recent Seating History</h4>
                   <div className="border border-zinc-200 rounded-xl overflow-hidden divide-y divide-zinc-200">
-                    {[
-                      { title: "Annual Global Summit 2024", date: "Oct 12, 2024", table: "Table 14", captain: "Rohan Wagle" },
-                      { title: "Regional Directors Meet", date: "Aug 24, 2024", table: "Table 02", captain: "Sanjay Joshi" }
-                    ].map((history, idx) => (
-                      <div key={idx} className="p-3.5 bg-white hover:bg-zinc-50/50 transition-colors text-body-sm">
-                        <div className="flex justify-between items-start">
-                          <p className="font-black text-zinc-800">{history.title}</p>
-                          <span className="text-[9px] text-zinc-400 font-semibold">{history.date}</span>
+                    {Array.isArray(activeMember.seatingHistory) && activeMember.seatingHistory.length > 0 ? (
+                      activeMember.seatingHistory.map((history, idx) => (
+                        <div key={idx} className="p-3.5 bg-white hover:bg-zinc-50/50 transition-colors text-body-sm">
+                          <div className="flex justify-between items-start">
+                            <p className="font-black text-zinc-800">{history.title || history.conclaveName || 'Conclave'}</p>
+                            <span className="text-[9px] text-zinc-400 font-semibold">{history.date}</span>
+                          </div>
+                          <p className="text-[10px] text-zinc-450 font-semibold mt-1">Seated at {history.table || 'Table'} {history.captain ? `(Captain: ${history.captain})` : ''}</p>
                         </div>
-                        <p className="text-[10px] text-zinc-450 font-semibold mt-1">Seated at {history.table} (Captain: {history.captain})</p>
-                      </div>
-                    ))}
+                      ))
+                    ) : (
+                      <p className="p-4 text-center text-[10.5px] text-zinc-400 font-semibold bg-white">No past seating history logged for this member.</p>
+                    )}
                   </div>
                 </div>
 
@@ -428,12 +429,12 @@ export default function SuperadminMembers({ searchQuery }) {
 
       {/* Role Change Modal */}
       {roleChangeTarget && (
-        <div className="fixed inset-0 z-[65] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[65] flex items-center justify-center p-4 sm:p-6">
           <div
             onClick={() => setRoleChangeTarget(null)}
-            className="fixed inset-0 bg-black/50 transition-opacity duration-300"
+            className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity duration-300"
           />
-          <div className="bg-white border border-zinc-250 rounded-xl shadow-xl w-full max-w-sm relative z-10 overflow-hidden animate-fade-in">
+          <div className="bg-white border border-zinc-250 rounded-2xl shadow-xl w-full max-w-lg max-h-[85vh] relative z-10 overflow-hidden animate-fade-in flex flex-col">
             <div className="p-4 border-b border-zinc-200 flex justify-between items-center bg-zinc-50">
               <h3 className="text-body-md font-black text-zinc-900 leading-tight">Change Member Role</h3>
               <button

@@ -6,8 +6,6 @@ import {
   Users,
   Clock,
   ChevronRight,
-  ShieldAlert,
-  CheckCircle2
 } from 'lucide-react';
 import { api } from '../../services/api';
 
@@ -17,20 +15,10 @@ export default function SuperadminDashboard({ setActiveTab }) {
     if (cached) {
       try {
         const arr = JSON.parse(cached);
-        if (Array.isArray(arr) && arr.length > 0) return arr;
-      } catch (e) {}
+        if (Array.isArray(arr)) return arr;
+      } catch (e) { }
     }
-    const backup = localStorage.getItem('bni_admin_coordinators');
-    if (backup) {
-      try {
-        const arr = JSON.parse(backup);
-        if (Array.isArray(arr) && arr.length > 0) return arr;
-      } catch (e) {}
-    }
-    return [
-      { id: 'adm_1', name: 'Sanjay Wagle', email: 'admin@bni.com', region: 'Guntur Region', status: 'Active' },
-      { id: 'adm_2', name: 'Ramesh Gupta', email: 'ramesh@bni.com', region: 'Vijayawada Central', status: 'Active' }
-    ];
+    return [];
   });
 
   const [regions, setRegions] = useState(() => {
@@ -38,14 +26,10 @@ export default function SuperadminDashboard({ setActiveTab }) {
     if (cached) {
       try {
         const arr = JSON.parse(cached);
-        if (Array.isArray(arr) && arr.length > 0) return arr;
-      } catch (e) {}
+        if (Array.isArray(arr)) return arr;
+      } catch (e) { }
     }
-    return [
-      { id: 'reg_1', name: 'Guntur Region', memberCount: 142, conclaveCount: 4, status: 'Active' },
-      { id: 'reg_2', name: 'Vijayawada Central', memberCount: 98, conclaveCount: 3, status: 'Active' },
-      { id: 'reg_3', name: 'Visakhapatnam North', memberCount: 86, conclaveCount: 2, status: 'Active' }
-    ];
+    return [];
   });
 
   const [conclaves, setConclaves] = useState(() => {
@@ -53,20 +37,10 @@ export default function SuperadminDashboard({ setActiveTab }) {
     if (cached) {
       try {
         const arr = JSON.parse(cached);
-        if (Array.isArray(arr) && arr.length > 0) return arr;
-      } catch (e) {}
+        if (Array.isArray(arr)) return arr;
+      } catch (e) { }
     }
-    const backup = localStorage.getItem('bni_admin_conclaves_cache') || localStorage.getItem('bni_conclaves');
-    if (backup) {
-      try {
-        const arr = JSON.parse(backup);
-        if (Array.isArray(arr) && arr.length > 0) return arr;
-      } catch (e) {}
-    }
-    return [
-      { id: 'conc_1', name: 'BNI Guntur Regional Business Conclave 2026', region: 'Guntur Region', status: 'Running', dateRange: 'Jul 28 - Jul 30, 2026', venue: 'Vijayawada Convention Centre' },
-      { id: 'conc_2', name: 'BNI AP Leadership & Networking Summit 2026', region: 'Vijayawada Central', status: 'Upcoming', dateRange: 'Aug 15 - Aug 17, 2026', venue: 'Novotel Varun Beach' }
-    ];
+    return [];
   });
 
   const [members, setMembers] = useState(() => {
@@ -74,20 +48,10 @@ export default function SuperadminDashboard({ setActiveTab }) {
     if (cached) {
       try {
         const arr = JSON.parse(cached);
-        if (Array.isArray(arr) && arr.length > 0) return arr;
-      } catch (e) {}
+        if (Array.isArray(arr)) return arr;
+      } catch (e) { }
     }
-    const backup = localStorage.getItem('bni_admin_members_cache');
-    if (backup) {
-      try {
-        const arr = JSON.parse(backup);
-        if (Array.isArray(arr) && arr.length > 0) return arr;
-      } catch (e) {}
-    }
-    return [
-      { id: 'mem_1', name: 'Vijay Kulkarni', company: 'Zenith Systems', category: 'IT Infrastructure', region: 'Guntur Region', status: 'Active' },
-      { id: 'mem_2', name: 'Deepak Tiwari', company: 'Prime Realty', category: 'Real Estate', region: 'Guntur Region', status: 'Active' }
-    ];
+    return [];
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -102,19 +66,19 @@ export default function SuperadminDashboard({ setActiveTab }) {
           api.get('/admin/conclaves?global=true').catch(() => []),
           api.get('/admin/users').catch(() => [])
         ]);
-        if (Array.isArray(adminsList) && adminsList.length > 0) {
+        if (Array.isArray(adminsList)) {
           setAdmins(adminsList);
           localStorage.setItem('bni_superadmin_admins_cache', JSON.stringify(adminsList));
         }
-        if (Array.isArray(regionsList) && regionsList.length > 0) {
+        if (Array.isArray(regionsList)) {
           setRegions(regionsList);
           localStorage.setItem('bni_superadmin_regions_cache', JSON.stringify(regionsList));
         }
-        if (Array.isArray(conclavesList) && conclavesList.length > 0) {
+        if (Array.isArray(conclavesList)) {
           setConclaves(conclavesList);
           localStorage.setItem('bni_superadmin_conclaves_cache', JSON.stringify(conclavesList));
         }
-        if (Array.isArray(membersList) && membersList.length > 0) {
+        if (Array.isArray(membersList)) {
           setMembers(membersList);
           localStorage.setItem('bni_superadmin_members_cache', JSON.stringify(membersList));
         }
@@ -135,12 +99,12 @@ export default function SuperadminDashboard({ setActiveTab }) {
 
   // Distribution helpers
   const conclavesPerRegion = regions.map(reg => {
-    const count = conclaves.filter(c => (c.region || 'Guntur Region') === reg.name).length;
+    const count = conclaves.filter(c => (c.region || '').toLowerCase() === reg.name.toLowerCase()).length;
     return { name: reg.name, count };
   });
 
   const adminsPerRegion = regions.map(reg => {
-    const count = admins.filter(a => (a.region || 'Guntur Region') === reg.name).length;
+    const count = admins.filter(a => (a.region || '').toLowerCase() === reg.name.toLowerCase()).length;
     return { name: reg.name, count };
   });
 
@@ -377,10 +341,10 @@ export default function SuperadminDashboard({ setActiveTab }) {
                         </span>
                         <span className="text-zinc-300">•</span>
                         <span className={`px-1.5 py-0.5 rounded-md text-[8.5px] font-black uppercase tracking-wider ${activity.bg.includes("amber")
-                            ? "bg-amber-50 text-amber-700 border border-amber-100"
-                            : activity.bg.includes("emerald")
-                              ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
-                              : "bg-red-50 text-brand-red border border-red-100"
+                          ? "bg-amber-50 text-amber-700 border border-amber-100"
+                          : activity.bg.includes("emerald")
+                            ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
+                            : "bg-red-50 text-brand-red border border-red-100"
                           }`}>
                           {activity.info}
                         </span>

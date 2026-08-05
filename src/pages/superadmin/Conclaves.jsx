@@ -72,7 +72,7 @@ export default function SuperadminConclaves({ searchQuery }) {
       : conclave.status?.toLowerCase() === selectedStatus.toLowerCase();
     const matchesRegion = selectedRegion === 'All'
       ? true
-      : (conclave.region || 'Guntur Region') === selectedRegion;
+      : (conclave.region || '').toLowerCase() === selectedRegion.toLowerCase();
     return matchesSearch && matchesStatus && matchesRegion;
   });
 

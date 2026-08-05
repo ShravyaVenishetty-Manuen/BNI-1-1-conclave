@@ -49,7 +49,7 @@ export default function SuperadminAdmins({ searchQuery }) {
     name: '',
     email: '',
     mobile: '',
-    region: 'Guntur Region',
+    region: '',
     status: 'Active'
   });
 
@@ -732,8 +732,8 @@ export default function SuperadminAdmins({ searchQuery }) {
 
       {/* Admin Form Modal */}
       {showAdminModal && createPortal(
-        <div className="fixed top-14 left-0 lg:left-[220px] right-0 bottom-0 z-55 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
-          <div className="bg-white border border-zinc-250 rounded-xl shadow-xl w-full max-w-md relative z-10 overflow-hidden animate-scale-up">
+        <div className="fixed inset-0 z-55 flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white border border-zinc-250 rounded-2xl shadow-xl w-full max-w-lg max-h-[85vh] relative z-10 overflow-hidden animate-scale-up flex flex-col">
             <div className="p-4 border-b border-zinc-200 flex justify-between items-center bg-zinc-50">
               <h3 className="text-body-md font-black text-zinc-900 leading-tight">
                 {editingAdmin ? 'Edit Regional Admin' : 'Add Regional Admin'}
@@ -832,8 +832,8 @@ export default function SuperadminAdmins({ searchQuery }) {
 
       {/* Region Form Modal */}
       {showRegionModal && createPortal(
-        <div className="fixed top-14 left-0 lg:left-[220px] right-0 bottom-0 z-55 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
-          <div className="bg-white border border-zinc-250 rounded-xl shadow-xl w-full max-w-md relative z-10 overflow-hidden animate-scale-up">
+        <div className="fixed inset-0 z-55 flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white border border-zinc-250 rounded-2xl shadow-xl w-full max-w-lg max-h-[85vh] relative z-10 overflow-hidden animate-scale-up flex flex-col">
             <div className="p-4 border-b border-zinc-200 flex justify-between items-center bg-zinc-50">
               <h3 className="text-body-md font-black text-zinc-900 leading-tight">
                 {editingRegion ? 'Edit BNI Region' : 'Add BNI Region'}
@@ -917,8 +917,8 @@ export default function SuperadminAdmins({ searchQuery }) {
 
       {/* Reset Password Modal */}
       {resetPasswordTarget && createPortal(
-        <div className="fixed top-14 left-0 lg:left-[220px] right-0 bottom-0 z-55 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
-          <div className="bg-white border border-zinc-250 rounded-xl shadow-xl w-full max-w-md relative z-10 overflow-hidden animate-scale-up">
+        <div className="fixed inset-0 z-55 flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white border border-zinc-250 rounded-2xl shadow-xl w-full max-w-lg max-h-[85vh] relative z-10 overflow-hidden animate-scale-up flex flex-col">
             <div className="p-4 border-b border-zinc-200 flex justify-between items-center bg-zinc-50">
               <h3 className="text-body-md font-black text-zinc-900 leading-tight">
                 {isPasswordResetDone ? (isNewAdminCreation ? 'Coordinator Created Successfully' : 'Password Reset Successful') : 'Reset Administrator Password'}
