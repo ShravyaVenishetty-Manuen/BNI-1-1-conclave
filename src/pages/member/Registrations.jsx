@@ -454,10 +454,20 @@ export default function Registrations({ loggedInMember }) {
             const isDraft = (c.status || '').toLowerCase() === 'draft';
             const percentFilled = Math.min(100, Math.round(((c.memberCount || 0) / (c.memberLimit || 500)) * 100));
 
-            // Registration window dates logic
-            const todayStr = new Date().toISOString().split('T')[0];
-            const isBeforeReg = c.regStartDate && todayStr < c.regStartDate;
-            const isAfterReg = c.regEndDate && todayStr > c.regEndDate;
+            // Registration window dates logic - normalise both sides to YYYY-MM-DD
+            const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD in local timezone
+            const normaliseDate = (val) => {
+              if (!val) return null;
+              if (typeof val === 'object' && (val.seconds !== undefined || val._seconds !== undefined)) {
+                return new Date((val.seconds ?? val._seconds) * 1000).toLocaleDateString('en-CA');
+              }
+              // Slice ISO string or plain date to just YYYY-MM-DD
+              return String(val).slice(0, 10);
+            };
+            const regStartStr = normaliseDate(c.regStartDate);
+            const regEndStr = normaliseDate(c.regEndDate);
+            const isBeforeReg = regStartStr && todayStr < regStartStr;
+            const isAfterReg = regEndStr && todayStr > regEndStr;
 
             return (
               <div
