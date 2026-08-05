@@ -27,6 +27,7 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
     }
     return [];
   });
+  const [isLoadingConclaves, setIsLoadingConclaves] = useState(true);
 
   useEffect(() => {
     async function loadConclaves() {
@@ -347,13 +348,13 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
       return matchesSearch && matchesStatus && matchesVenue && matchesViewScope && matchesState && matchesCountry;
     });
 
-    // Sorting logic
+    // Sorting logic - guard against undefined fields
     if (sortBy === 'NameAsc') {
-      result.sort((a, b) => a.name.localeCompare(b.name));
+      result.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
     } else if (sortBy === 'Capacity') {
-      result.sort((a, b) => b.memberLimit - a.memberLimit);
+      result.sort((a, b) => (b.memberLimit || 0) - (a.memberLimit || 0));
     } else { // DateDesc
-      result.sort((a, b) => b.startDate.localeCompare(a.startDate));
+      result.sort((a, b) => (b.startDate || '').localeCompare(a.startDate || ''));
     }
 
     return result;
