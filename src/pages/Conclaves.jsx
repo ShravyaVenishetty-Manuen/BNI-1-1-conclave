@@ -132,7 +132,7 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
       document.body.style.overflow = '';
     };
   }, [selectedConclave]);
-  const [viewScope, setViewScope] = useState('region'); // 'region' or 'global'
+  const [viewScope, setViewScope] = useState('global'); // 'region' or 'global' - default to global so all conclaves are visible
 
   // Checked rows
   const [selectedRows, setSelectedRows] = useState(new Set());
