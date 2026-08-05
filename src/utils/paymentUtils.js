@@ -9,8 +9,8 @@
 export function generateUpiUri({ upiId, name = 'BNI Conclave', amount = 0, note = 'Conclave Registration' }) {
   if (!upiId) return '';
   const cleanUpiId = String(upiId).trim().replace(/\s+/g, '');
-  // NPCI spec requires raw clean payee name without URL encoding (%20) inside the QR payload
-  const cleanName = String(name || 'BNI Conclave').replace(/[^a-zA-Z0-9 ]/g, '').trim() || 'BNI Conclave';
+  // Clean alphanumeric name without spaces or special characters for 100% UPI scanner compatibility
+  const cleanName = String(name || 'BNIConclave').replace(/[^a-zA-Z0-9]/g, '').trim() || 'BNIConclave';
   const numAmount = Number(amount || 0);
 
   let uri = `upi://pay?pa=${cleanUpiId}&pn=${cleanName}&cu=INR`;
@@ -21,12 +21,12 @@ export function generateUpiUri({ upiId, name = 'BNI Conclave', amount = 0, note 
 }
 
 /**
- * Generates a high-quality QR code image URL for a given text/payload using public QR API.
+ * Generates a high-quality QR code image URL for a given text/payload using QuickChart QR API.
  */
 export function generateQrCodeUrl(text, size = 300) {
   if (!text) return '';
   const encodedText = encodeURIComponent(text);
-  return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&ecc=M&margin=2&data=${encodedText}`;
+  return `https://quickchart.io/qr?text=${encodedText}&size=${size}&margin=2&ecLevel=M`;
 }
 
 /**
