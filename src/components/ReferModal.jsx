@@ -107,14 +107,14 @@ export default function ReferModal({ recipient, loggedInUser, activeConclaveId, 
     : 'BNI';
 
   return createPortal(
-    <div className="fixed inset-0 bg-zinc-950/60 backdrop-blur-md z-[999] flex items-center justify-center p-4 animate-fade-in font-sans">
-      <div className="bg-white border border-zinc-200/80 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-scale-up text-left flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-xs z-[999] flex items-center justify-center p-4 sm:p-6 animate-fade-in font-sans">
+      <div className="bg-white border border-zinc-200/80 w-full max-w-lg max-h-[85vh] rounded-2xl shadow-2xl overflow-hidden animate-scale-up text-left flex flex-col">
         
         {/* Top Decorative Banner */}
         <div className="h-2 bg-gradient-to-r from-red-600 via-brand-red to-red-500"></div>
 
         {/* Header */}
-        <div className="p-4 sm:p-5 border-b border-zinc-150 flex items-center justify-between bg-zinc-50/70">
+        <div className="p-4 sm:p-5 border-b border-zinc-150 flex items-center justify-between bg-zinc-50/70 shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center text-brand-red shrink-0 shadow-xs">
               <Send className="w-4 h-4" />
@@ -134,7 +134,7 @@ export default function ReferModal({ recipient, loggedInUser, activeConclaveId, 
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-5 space-y-4 overflow-y-auto">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-5 space-y-4 flex-1 overflow-y-auto max-h-[60vh]">
           
           {/* Recipient card summary (pre-filled & locked) */}
           <div className="space-y-1.5">
