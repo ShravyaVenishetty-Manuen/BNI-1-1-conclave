@@ -385,8 +385,8 @@ export default function Referrals({ loggedInUser, userType, conclaveSyncData }) 
 
       {/* Send Referral Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-zinc-950/40 z-50 flex items-center justify-center p-4">
-          <div className="bg-white border border-zinc-250 w-full max-w-md rounded-xl shadow-2xl overflow-hidden animate-scale-up">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white border border-zinc-250 w-full max-w-lg max-h-[85vh] rounded-2xl shadow-2xl overflow-hidden animate-scale-up flex flex-col">
 
             {/* Modal Header */}
             <div className="p-4 border-b border-zinc-150 flex items-center justify-between bg-zinc-50/50">

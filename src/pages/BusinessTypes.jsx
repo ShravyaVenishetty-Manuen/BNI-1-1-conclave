@@ -2,16 +2,13 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Search,
-  ChevronRight,
   Plus,
   X,
-  Edit2,
   Trash2,
   Download,
   Upload,
   FileSpreadsheet,
   Layers,
-  MoreVertical,
   Eye,
   Edit3,
 } from 'lucide-react';
@@ -23,7 +20,7 @@ export default function BusinessTypes({ searchQuery, selectedConclaveId, loggedI
   const [categories, setCategories] = useState(() => {
     const cached = localStorage.getItem('bni_admin_categories_cache');
     if (cached) {
-      try { return JSON.parse(cached); } catch (e) {}
+      try { return JSON.parse(cached); } catch (e) { }
     }
     return [];
   });
@@ -64,10 +61,10 @@ export default function BusinessTypes({ searchQuery, selectedConclaveId, loggedI
             company: fallbackCompany,
             category: fallbackCategory,
             address: fallbackLocation,
-            state: r.state || 'Andhra Pradesh',
-            country: r.country || 'India',
-            chapter: r.chapter || 'Peak Performance',
-            region: r.region || 'Vijayawada Region',
+            state: r.state || '',
+            country: r.country || '',
+            chapter: r.chapter || '',
+            region: r.region || '',
             isCaptain: r.role === 'captain' || r.isTableCaptain === true,
             status: r.status || (r.isActive ? 'Active' : 'Inactive'),
           };
@@ -768,10 +765,10 @@ export default function BusinessTypes({ searchQuery, selectedConclaveId, loggedI
 
       {/* Add / Edit Category Modal */}
       {isFormOpen && createPortal(
-        <div className="fixed top-14 left-0 lg:left-[220px] right-0 bottom-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
-          <div className="w-full max-w-md bg-white rounded-xl border border-zinc-100 shadow-2xl overflow-hidden animate-scale-up">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-xs animate-fade-in">
+          <div className="w-full max-w-lg max-h-[85vh] flex flex-col bg-white rounded-2xl border border-zinc-100 shadow-2xl overflow-hidden animate-scale-up">
             {/* Modal Header */}
-            <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50">
+            <div className="p-4 sm:p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50 shrink-0">
               <h3 className="text-section-heading font-extrabold text-zinc-950">
                 {editingCategory ? 'Edit Classification' : 'Add New Category'}
               </h3>
@@ -784,60 +781,62 @@ export default function BusinessTypes({ searchQuery, selectedConclaveId, loggedI
             </div>
 
             {/* Modal Form */}
-            <form onSubmit={handleFormSubmit} className="p-5 space-y-4">
-              <div className="space-y-4">
-                {/* Name */}
-                <div className="space-y-1.5">
-                  <label className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">Classification Name</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-3.5 py-2 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none transition-smooth"
-                    placeholder="e.g. Accounting Systems"
-                  />
-                </div>
+            <form onSubmit={handleFormSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+              <div className="p-4 sm:p-5 space-y-4 flex-1 overflow-y-auto max-h-[60vh] md:max-h-[65vh]">
+                <div className="space-y-4">
+                  {/* Name */}
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">Classification Name</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      className="w-full px-3.5 py-2 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none transition-smooth"
+                      placeholder="e.g. Accounting Systems"
+                    />
+                  </div>
 
-                {/* Description */}
-                <div className="space-y-1.5">
-                  <label className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">Description Details</label>
-                  <textarea
-                    rows="3"
-                    required
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full px-3.5 py-2 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none transition-smooth resize-none"
-                    placeholder="Provide a detailed scope of this business classification..."
-                  />
-                </div>
+                  {/* Description */}
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">Description Details</label>
+                    <textarea
+                      rows="3"
+                      required
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      className="w-full px-3.5 py-2 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none transition-smooth resize-none"
+                      placeholder="Provide a detailed scope of this business classification..."
+                    />
+                  </div>
 
-                {/* Status selection */}
-                <div className="flex items-center justify-between pt-2 border-t border-zinc-100">
-                  <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">Classification Status</span>
-                  <select
-                    value={formData.status}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    className="border border-zinc-200 rounded-lg px-2.5 py-1 text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-white font-semibold text-zinc-700 cursor-pointer"
-                  >
-                    <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
-                  </select>
+                  {/* Status selection */}
+                  <div className="flex items-center justify-between pt-2 border-t border-zinc-100">
+                    <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">Classification Status</span>
+                    <select
+                      value={formData.status}
+                      onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                      className="border border-zinc-200 rounded-lg px-2.5 py-1 text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-white font-semibold text-zinc-700 cursor-pointer"
+                    >
+                      <option value="Active">Active</option>
+                      <option value="Inactive">Inactive</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
-              {/* Form Buttons */}
-              <div className="pt-4 flex justify-end gap-2.5 border-t border-zinc-100">
+              {/* Static Non-Scrolling Footer Action Buttons */}
+              <div className="p-4 border-t border-zinc-100 bg-zinc-50/50 flex justify-end gap-2.5 shrink-0">
                 <button
                   type="button"
                   onClick={() => setIsFormOpen(false)}
-                  className="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-button rounded-lg transition-smooth cursor-pointer border border-zinc-200 text-[10px] font-bold"
+                  className="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-button rounded-lg transition-smooth cursor-pointer border border-zinc-200 font-bold text-xs"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-brand-red hover:bg-red-700 text-white text-button rounded-lg transition-smooth cursor-pointer text-[10px] font-bold"
+                  className="px-5 py-2 bg-brand-red hover:bg-red-700 text-white text-button rounded-lg transition-smooth shadow-md cursor-pointer font-bold text-xs"
                 >
                   {editingCategory ? 'Save Changes' : 'Create Category'}
                 </button>
@@ -850,8 +849,8 @@ export default function BusinessTypes({ searchQuery, selectedConclaveId, loggedI
 
       {/* Delete Confirmation Modal */}
       {deleteTarget && createPortal(
-        <div className="fixed top-14 left-0 lg:left-[220px] right-0 bottom-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
-          <div className="w-full max-w-sm bg-white rounded-xl border border-zinc-100 shadow-2xl p-5 space-y-4 animate-scale-up">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-xs animate-fade-in">
+          <div className="w-full max-w-sm bg-white rounded-2xl border border-zinc-100 shadow-2xl p-5 space-y-4 animate-scale-up">
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 rounded-full bg-brand-red/10 text-brand-red flex items-center justify-center shrink-0 mt-0.5">
                 <X className="w-4 h-4" />
@@ -894,8 +893,8 @@ export default function BusinessTypes({ searchQuery, selectedConclaveId, loggedI
 
       {/* Bulk Delete Confirmation Modal */}
       {isBulkDeleteConfirmOpen && createPortal(
-        <div className="fixed top-14 left-0 lg:left-[220px] right-0 bottom-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
-          <div className="w-full max-w-sm bg-white rounded-xl border border-zinc-100 shadow-2xl p-5 space-y-4 animate-scale-up">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-xs animate-fade-in">
+          <div className="w-full max-w-sm bg-white rounded-2xl border border-zinc-100 shadow-2xl p-5 space-y-4 animate-scale-up">
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 rounded-full bg-brand-red/10 text-brand-red flex items-center justify-center shrink-0 mt-0.5">
                 <X className="w-4 h-4" />

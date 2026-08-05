@@ -9,31 +9,18 @@ import {
   AlertTriangle,
   CheckCircle2,
   LockKeyhole,
-  PlusCircle,
-  Sparkles,
   ArrowRightLeft,
   X,
   Clock,
   Save,
-  ShieldCheck,
-  XCircle,
-  Lightbulb,
-  ArrowRight,
-  ChevronDown,
-  Calendar,
-  MapPin,
-  Layers
 } from 'lucide-react';
-import confetti from 'canvas-confetti';
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell } from 'recharts';
-
 import { api } from '../services/api';
 
 export default function ScheduleReview({ setActiveTab, searchQuery: globalSearchQuery, selectedConclaveId }) {
   const [conclave, setConclave] = useState(() => {
     const cached = localStorage.getItem('bni_schedule_review_conclave_cache');
     if (cached) {
-      try { return JSON.parse(cached); } catch (e) {}
+      try { return JSON.parse(cached); } catch (e) { }
     }
     return null;
   });
@@ -72,7 +59,7 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
     loadConclaveDetails();
   }, [selectedConclaveId]);
 
-  
+
 
   useEffect(() => {
     if (!conclave) return;
@@ -118,9 +105,6 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
         setLocalTables([]);
       }
     } else {
-      // Prefer live backend data: if the conclave exists but lacks a generated
-      // schedule/participants, don't show bundled mock tables automatically.
-      // Leave the review empty until the server publishes a schedule.
       setLocalTables([]);
     }
   }, [conclave, activeRound, selectedConclaveId]);
@@ -131,7 +115,7 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
 
   // Validation States
   const [validationConclaves, setValidationConclaves] = useState([]);
-  
+
   const activeConclaveIndex = useMemo(() => {
     const idx = validationConclaves.findIndex(c => c.id === selectedConclaveId);
     return idx !== -1 ? idx : 0;
@@ -160,7 +144,7 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
       (rd.tables || []).forEach((tbl) => {
         const tableNum = tbl.tableNumber || tbl.number;
         const participants = tbl.participants || tbl.members || [];
-        
+
         for (let i = 0; i < participants.length; i++) {
           for (let j = i + 1; j < participants.length; j++) {
             const m1 = participants[i];
@@ -205,9 +189,9 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
       return {
         rounds: 4,
         roundsDisplay: '0 / 4',
-        tables: 11,
-        members: 75,
-        captains: 5,
+        tables: 0,
+        members: 0,
+        captains: 0,
         repeatPairings: 0
       };
     }
@@ -215,9 +199,9 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
     const isUpcoming = (conclave.status || '').toLowerCase() === 'upcoming' || !conclave.currentRound;
     const currentRound = isUpcoming ? 0 : (conclave.currentRound || 0);
     const roundsDisplay = `${currentRound} / ${rounds}`;
-    let members = conclave.participants?.length || 75;
+    let members = conclave.participants?.length || 0;
     let uniqueCaptains = new Set(conclave.schedule?.rounds?.[0]?.tables?.map(t => t.captainId).filter(Boolean));
-    let captains = uniqueCaptains.size || conclave.scheduleSummary?.tableCount || conclave.participants?.filter(p => p.role === 'captain' || p.isTableCaptain).length || 5;
+    let captains = uniqueCaptains.size || conclave.scheduleSummary?.tableCount || conclave.participants?.filter(p => p.role === 'captain' || p.isTableCaptain).length || 0;
     let tables = conclave.scheduleSummary?.tableCount || conclave.schedule?.rounds?.[0]?.tables?.length || Math.ceil(members / (conclave.personsPerTable || 7));
     const hasSchedule = Boolean(conclave.schedule?.rounds?.length);
     const repeatPairings = hasSchedule
@@ -326,10 +310,10 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
       // Real database conclave
       setIssuesCount(0); // If it generated, there are no blocking validation errors
       setWarningsCount(conclave.warnings ? conclave.warnings.length : 0);
-      
+
       const coverage = conclave.scheduleSummary?.coverage || 1.0;
       setOverallScore(Math.round(coverage * 100));
-      
+
       const affected = (conclave.warnings || []).map((w, idx) => ({
         id: `warn-${idx}`,
         title: w.code || 'Warning',
@@ -495,54 +479,57 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5 shrink-0 w-full sm:w-auto">
+        <div className="flex flex-wrap items-center gap-3 shrink-0">
           <button
             onClick={handleRevalidate}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 border border-zinc-200 bg-white text-zinc-700 font-bold text-button rounded-lg hover:bg-zinc-50 transition-smooth cursor-pointer shadow-sm"
+            type="button"
+            className="inline-flex items-center justify-center gap-2 h-10 px-4 bg-white border border-zinc-250 hover:bg-zinc-50 text-zinc-700 text-xs font-bold rounded-xl transition-smooth shadow-2xs cursor-pointer"
           >
-            <RefreshCw className="w-4 h-4 text-zinc-400" />
-            Revalidate
+            <RefreshCw className="w-4 h-4 text-zinc-500" />
+            <span>Revalidate</span>
           </button>
 
           <button
             onClick={exportSchedule}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 border border-zinc-200 bg-white text-zinc-700 font-bold text-button rounded-lg hover:bg-zinc-50 transition-smooth cursor-pointer shadow-sm"
+            type="button"
+            className="inline-flex items-center justify-center gap-2 h-10 px-4 bg-white border border-zinc-250 hover:bg-zinc-50 text-zinc-700 text-xs font-bold rounded-xl transition-smooth shadow-2xs cursor-pointer"
           >
-            <Download className="w-4 h-4 text-zinc-400" />
-            Export Schedule
+            <Download className="w-4 h-4 text-zinc-500" />
+            <span>Export Schedule</span>
           </button>
 
           {conclave?.schedule && (conclave.status || '').toLowerCase() !== 'running' && (
             <button
               onClick={() => handleStartRound(1)}
-              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 border border-zinc-200 bg-white text-zinc-700 font-bold text-button rounded-lg hover:bg-zinc-50 transition-smooth cursor-pointer shadow-sm"
+              type="button"
+              className="inline-flex items-center justify-center gap-2 h-10 px-4 bg-white border border-zinc-250 hover:bg-zinc-50 text-zinc-700 text-xs font-bold rounded-xl transition-smooth shadow-2xs cursor-pointer"
             >
-              <Play className="w-4 h-4 text-zinc-400" />
-              Start Round
+              <Play className="w-4 h-4 text-zinc-500" />
+              <span>Start Round</span>
             </button>
           )}
 
           {(conclave?.status || '').toLowerCase() === 'running' && (
-
             <button
               onClick={() => {
                 window.history.pushState({}, '', '/admin/round-runner');
                 window.dispatchEvent(new PopStateEvent('popstate'));
               }}
-              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-button rounded-lg transition-smooth cursor-pointer shadow-sm"
+              type="button"
+              className="inline-flex items-center justify-center gap-2 h-10 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold rounded-xl transition-smooth shadow-2xs cursor-pointer"
             >
-              <Play className="w-4 h-4 text-white animate-pulse" />
-              Go to Round Runner
+              <Play className="w-4 h-4 fill-white animate-pulse" />
+              <span>Go to Round Runner</span>
             </button>
           )}
 
-
           <button
             onClick={handleLockConclave}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-5 py-2 bg-brand-red hover:bg-red-700 text-white font-bold text-button rounded-lg transition-smooth shadow-md cursor-pointer"
+            type="button"
+            className="inline-flex items-center justify-center gap-2 h-10 px-5 bg-brand-red hover:bg-red-750 text-white text-xs font-black uppercase tracking-wider rounded-xl transition-smooth shadow-md cursor-pointer"
           >
             <Lock className="w-4 h-4" />
-            Lock Conclave
+            <span>Lock Conclave</span>
           </button>
         </div>
       </div>
@@ -565,7 +552,7 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
           <p className="text-[10px] font-bold text-zinc-400 uppercase mb-1">Captains</p>
           <h4 className="text-headline-md font-extrabold text-zinc-900 mt-1">{conclaveKPIs.captains}</h4>
         </div>
-        <div 
+        <div
           onClick={() => setShowRepeatModal(true)}
           className="bg-white border border-zinc-200/80 p-4 rounded-xl shadow-sm hover:border-brand-red/40 transition-smooth group cursor-pointer"
         >
@@ -637,9 +624,8 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
           {filteredTables.map((table) => (
             <div
               key={table.id}
-              className={`bg-white rounded-xl overflow-hidden shadow-sm flex flex-col p-4 space-y-3.5 border transition-all duration-200 hover:shadow-md ${
-                table.status === 'warning' ? 'border-red-200 bg-red-50/5' : 'border-zinc-200/80 hover:border-zinc-300'
-              }`}
+              className={`bg-white rounded-xl overflow-hidden shadow-sm flex flex-col p-4 space-y-3.5 border transition-all duration-200 hover:shadow-md ${table.status === 'warning' ? 'border-red-200 bg-red-50/5' : 'border-zinc-200/80 hover:border-zinc-300'
+                }`}
             >
               {/* Header card info */}
               <div className="flex flex-col gap-1.5 flex-shrink-0 border-b border-zinc-100 pb-3">
@@ -915,8 +901,8 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
 
               return (
                 <div className={`p-3 rounded-lg border text-[11px] font-semibold flex items-center gap-2 ${conflictDetected
-                    ? 'bg-red-50/50 border-red-100 text-brand-red'
-                    : 'bg-emerald-50/50 border-emerald-100 text-emerald-800'
+                  ? 'bg-red-50/50 border-red-100 text-brand-red'
+                  : 'bg-emerald-50/50 border-emerald-100 text-emerald-800'
                   }`}>
                   {conflictDetected ? (
                     <span>{warningMsg}</span>

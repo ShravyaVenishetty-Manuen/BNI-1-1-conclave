@@ -5,18 +5,19 @@ import {
   X,
   Download,
   Plus,
-  MoreVertical,
   Trash2,
   FileText,
   Upload,
   Eye,
   Edit3,
+  CreditCard,
 } from 'lucide-react';
 import Pagination from '../components/Pagination';
 import { ResponsiveContainer, BarChart, Bar, XAxis } from 'recharts';
 import SearchableDropdown from '../components/SearchableDropdown';
 import { api } from '../services/api';
-import { createFreshAgendaPdfDataUrl, extractTextFromPdfDataUrl } from '../utils/documentUtils';
+import { extractTextFromPdfDataUrl } from '../utils/documentUtils';
+import { generateUpiUri, generateQrCodeUrl } from '../utils/paymentUtils';
 
 export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) {
   const [conclaves, setConclaves] = useState(() => {
@@ -26,11 +27,9 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
     }
     return [];
   });
-  const [isLoadingConclaves, setIsLoadingConclaves] = useState(false);
 
   useEffect(() => {
     async function loadConclaves() {
-      setIsLoadingConclaves(false);
       try {
         const data = await api.get('/admin/conclaves?global=true');
         const mapped = data.map(c => {
@@ -51,8 +50,8 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
               state = "Tamil Nadu";
               country = "India";
             } else {
-              state = "Andhra Pradesh";
-              country = "India";
+              state = c.state || "N/A";
+              country = c.country || "India";
             }
           }
 
@@ -186,7 +185,7 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
       // Sync with backend if API is live
       try {
         await api.post(`/admin/conclaves/${agendaUploadTarget.id}/agenda-document`, { agendaDocument: newAgendaDoc });
-      } catch (e) {}
+      } catch (e) { }
 
       showToast('New Agenda Published 🎉', 'Brand new PDF document and schedule published for Members & Captains.');
       setAgendaUploadTarget(null);
@@ -282,7 +281,14 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
     coordinator: '',
     description: '',
     state: '',
-    country: ''
+    country: '',
+    registrationFee: 0,
+    bankName: '',
+    accountNumber: '',
+    ifscCode: '',
+    accountHolderName: '',
+    upiId: '',
+    upiQrImageUrl: ''
   });
 
   const [toast, setToast] = useState(null);
@@ -518,7 +524,14 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
       status: 'Upcoming',
       region: defaultReg,
       coordinator: defaultCoord,
-      description: ''
+      description: '',
+      registrationFee: 0,
+      bankName: '',
+      accountNumber: '',
+      ifscCode: '',
+      accountHolderName: '',
+      upiId: '',
+      upiQrImageUrl: ''
     });
     setIsAddModalOpen(true);
   };
@@ -542,7 +555,16 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
         region: formData.region || loggedInAdmin?.region || loggedInAdmin?.scope || 'Guntur Region',
         coordinator: formData.coordinator || loggedInAdmin?.name || 'Administrator',
         personsPerTable: Number(formData.personsPerTable) || 7,
-        roundCount: Number(formData.roundCount) || 4
+        roundCount: Number(formData.roundCount) || 4,
+        paymentDetails: {
+          registrationFee: Number(formData.registrationFee) || 0,
+          bankName: (formData.bankName || '').trim(),
+          accountNumber: (formData.accountNumber || '').trim(),
+          ifscCode: (formData.ifscCode || '').trim(),
+          accountHolderName: (formData.accountHolderName || '').trim(),
+          upiId: (formData.upiId || '').trim(),
+          upiQrImageUrl: (formData.upiQrImageUrl || '').trim(),
+        }
       };
 
       await api.post('/admin/conclaves', payload);
@@ -570,6 +592,7 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
   };
 
   const openEditModal = (c) => {
+    const pay = c.paymentDetails || {};
     setFormData({
       id: c.id,
       name: c.name || '',
@@ -587,7 +610,14 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
       status: c.status || 'Upcoming',
       region: c.region || '',
       coordinator: c.coordinator || '',
-      description: c.description || ''
+      description: c.description || '',
+      registrationFee: pay.registrationFee || 0,
+      bankName: pay.bankName || '',
+      accountNumber: pay.accountNumber || '',
+      ifscCode: pay.ifscCode || '',
+      accountHolderName: pay.accountHolderName || '',
+      upiId: pay.upiId || '',
+      upiQrImageUrl: pay.upiQrImageUrl || ''
     });
     setIsEditModalOpen(true);
   };
@@ -606,7 +636,16 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
         endDate: formData.endDate || undefined,
         regStartDate: formData.regStartDate || undefined,
         regEndDate: formData.regEndDate || undefined,
-        description: formData.description
+        description: formData.description,
+        paymentDetails: {
+          registrationFee: Number(formData.registrationFee) || 0,
+          bankName: (formData.bankName || '').trim(),
+          accountNumber: (formData.accountNumber || '').trim(),
+          ifscCode: (formData.ifscCode || '').trim(),
+          accountHolderName: (formData.accountHolderName || '').trim(),
+          upiId: (formData.upiId || '').trim(),
+          upiQrImageUrl: (formData.upiQrImageUrl || '').trim(),
+        }
       };
       await api.put(`/admin/conclaves/${formData.id}`, payload);
       showToast('Conclave Updated', `Successfully updated conclave profile data.`);
@@ -907,9 +946,8 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
                           <button
                             onClick={() => isHisCreated && openEditModal(conclave)}
                             disabled={!isHisCreated}
-                            className={`p-1.5 rounded-lg transition-smooth ${
-                              !isHisCreated ? 'text-zinc-300 cursor-not-allowed opacity-40' : 'hover:bg-zinc-100 text-zinc-500 hover:text-brand-red cursor-pointer'
-                            }`}
+                            className={`p-1.5 rounded-lg transition-smooth ${!isHisCreated ? 'text-zinc-300 cursor-not-allowed opacity-40' : 'hover:bg-zinc-100 text-zinc-500 hover:text-brand-red cursor-pointer'
+                              }`}
                             title="Edit Conclave Profile"
                           >
                             <Edit3 className="w-4 h-4" />
@@ -918,9 +956,8 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
                           <button
                             onClick={() => isHisCreated && setDeleteTarget(conclave)}
                             disabled={!isHisCreated}
-                            className={`p-1.5 rounded-lg transition-smooth ${
-                              !isHisCreated ? 'text-zinc-300 cursor-not-allowed opacity-40' : 'hover:bg-red-50 text-zinc-400 hover:text-brand-red cursor-pointer'
-                            }`}
+                            className={`p-1.5 rounded-lg transition-smooth ${!isHisCreated ? 'text-zinc-300 cursor-not-allowed opacity-40' : 'hover:bg-red-50 text-zinc-400 hover:text-brand-red cursor-pointer'
+                              }`}
                             title="Delete Conclave"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -976,13 +1013,57 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
                 {/* Drawer Body */}
                 <div className="flex-1 overflow-y-auto min-h-0 p-5 space-y-6">
 
-                  {/* Description */}
-                  <div className="space-y-2">
-                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block">Description</span>
-                    <p className="text-body-md text-zinc-655 leading-relaxed bg-zinc-50 p-3.5 border border-zinc-100 rounded-xl select-text">
-                      {selectedConclave.description || '—'}
-                    </p>
-                  </div>
+                  {/* Payment & Bank Details in Drawer */}
+                  {selectedConclave.paymentDetails && (
+                    <div className="p-4 bg-zinc-50 border border-zinc-200/80 rounded-xl space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <CreditCard className="w-4 h-4 text-brand-red" />
+                          <span className="text-xs font-black text-zinc-900">Payment & Bank Details</span>
+                        </div>
+                        <span className="text-[10px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                          Fee: ₹{selectedConclave.paymentDetails.registrationFee || 0}
+                        </span>
+                      </div>
+
+                      {selectedConclave.paymentDetails.upiId && (
+                        <div className="flex items-center gap-3 p-2 bg-white rounded-lg border border-zinc-200">
+                          <img
+                            src={generateQrCodeUrl(generateUpiUri({
+                              upiId: selectedConclave.paymentDetails.upiId,
+                              name: selectedConclave.paymentDetails.accountHolderName || selectedConclave.name,
+                              amount: selectedConclave.paymentDetails.registrationFee,
+                              note: `${selectedConclave.name} Registration`
+                            }), 120)}
+                            alt="UPI QR Code"
+                            className="w-14 h-14 bg-white p-1 rounded border border-zinc-200 shrink-0"
+                          />
+                          <div>
+                            <span className="text-[9px] font-extrabold uppercase text-zinc-400">UPI ID</span>
+                            <p className="text-xs font-black text-zinc-900 font-mono mt-0.5">{selectedConclave.paymentDetails.upiId}</p>
+                            <p className="text-[10px] text-zinc-500 font-medium">{selectedConclave.paymentDetails.accountHolderName || 'BNI Chapter Account'}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {selectedConclave.paymentDetails.bankName && (
+                        <div className="grid grid-cols-2 gap-2 text-[11px] pt-1">
+                          <div>
+                            <span className="text-zinc-400 font-bold uppercase text-[9px] block">Bank Name</span>
+                            <span className="font-bold text-zinc-800">{selectedConclave.paymentDetails.bankName}</span>
+                          </div>
+                          <div>
+                            <span className="text-zinc-400 font-bold uppercase text-[9px] block">Account Number</span>
+                            <span className="font-bold text-zinc-800 font-mono">{selectedConclave.paymentDetails.accountNumber || '—'}</span>
+                          </div>
+                          <div>
+                            <span className="text-zinc-400 font-bold uppercase text-[9px] block">IFSC Code</span>
+                            <span className="font-bold text-zinc-800 font-mono">{selectedConclave.paymentDetails.ifscCode || '—'}</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* Registration Window Info */}
                   {(selectedConclave.regStartDate || selectedConclave.regEndDate) && (
@@ -1069,8 +1150,8 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
                         }}
                         disabled={!canEditSelected}
                         className={`flex-1 py-2.5 rounded-lg text-button font-bold transition-smooth shadow-sm ${!canEditSelected
-                            ? 'bg-zinc-100 text-zinc-350 border border-zinc-200/60 cursor-not-allowed opacity-50'
-                            : 'bg-white border border-zinc-200 text-zinc-800 hover:bg-zinc-50 cursor-pointer'
+                          ? 'bg-zinc-100 text-zinc-350 border border-zinc-200/60 cursor-not-allowed opacity-50'
+                          : 'bg-white border border-zinc-200 text-zinc-800 hover:bg-zinc-50 cursor-pointer'
                           }`}
                       >
                         Edit Conclave
@@ -1100,17 +1181,16 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
 
       {/* CREATE MODAL */}
       {isAddModalOpen && createPortal(
-        <div className="fixed top-14 left-0 lg:left-[220px] right-0 bottom-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
-          <form onSubmit={handleAddSubmit} className="w-full max-w-lg bg-white rounded-xl border border-zinc-100 shadow-2xl overflow-hidden animate-scale-up">
-            <div className="p-5 border-b border-zinc-100 bg-zinc-50 flex justify-between items-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-xs animate-fade-in">
+          <form onSubmit={handleAddSubmit} className="w-full max-w-lg max-h-[85vh] flex flex-col bg-white rounded-2xl border border-zinc-100 shadow-2xl overflow-hidden animate-scale-up">
+            <div className="p-4 sm:p-5 border-b border-zinc-100 bg-zinc-50 flex justify-between items-center shrink-0">
               <h3 className="font-extrabold text-zinc-950 text-body-sm">Create New Conclave</h3>
-              <button type="button" onClick={() => setIsAddModalOpen(false)} className="p-1 hover:bg-zinc-200 rounded text-zinc-400 transition-smooth">
+              <button type="button" onClick={() => setIsAddModalOpen(false)} className="p-1 hover:bg-zinc-200 rounded text-zinc-400 transition-smooth cursor-pointer">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-
-            <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
+            <div className="p-4 sm:p-5 space-y-4 flex-1 overflow-y-auto max-h-[60vh] md:max-h-[65vh]">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-[10px] font-bold uppercase text-zinc-450 block mb-1">Conclave Name *</label>
@@ -1251,9 +1331,108 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  className="w-full px-3 py-1.5 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-zinc-50/20 min-h-[80px]"
+                  className="w-full px-3 py-1.5 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-zinc-50/20 min-h-[60px]"
                   placeholder="Details about matching sessions, sectors, coordinator notes..."
                 />
+              </div>
+
+              {/* Bank Account & UPI Setup */}
+              <div className="border-t border-zinc-100 pt-3.5 space-y-3 bg-zinc-50/40 p-3.5 rounded-xl">
+                <div className="flex items-center gap-2">
+                  <CreditCard className="w-4 h-4 text-brand-red" />
+                  <h4 className="text-[11px] font-extrabold uppercase text-zinc-800 tracking-wider">
+                    Registration Fee & Bank Account (UPI)
+                  </h4>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[10px] font-bold uppercase text-zinc-450 block mb-1">Registration Fee (₹)</label>
+                    <input
+                      value={formData.registrationFee}
+                      onChange={(e) => setFormData(prev => ({ ...prev, registrationFee: e.target.value }))}
+                      className="w-full px-3 py-1.5 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-white font-bold text-emerald-700"
+                      placeholder="0 for Free"
+                      type="number"
+                      min="0"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold uppercase text-zinc-450 block mb-1">UPI ID (e.g. name@upi)</label>
+                    <input
+                      value={formData.upiId}
+                      onChange={(e) => setFormData(prev => ({ ...prev, upiId: e.target.value }))}
+                      className="w-full px-3 py-1.5 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-white font-mono text-zinc-800"
+                      placeholder="bni.guntur@upi"
+                      type="text"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[10px] font-bold uppercase text-zinc-450 block mb-1">Account Holder Name</label>
+                    <input
+                      value={formData.accountHolderName}
+                      onChange={(e) => setFormData(prev => ({ ...prev, accountHolderName: e.target.value }))}
+                      className="w-full px-3 py-1.5 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-white"
+                      placeholder="BNI Guntur Chapter"
+                      type="text"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold uppercase text-zinc-450 block mb-1">Bank Name</label>
+                    <input
+                      value={formData.bankName}
+                      onChange={(e) => setFormData(prev => ({ ...prev, bankName: e.target.value }))}
+                      className="w-full px-3 py-1.5 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-white"
+                      placeholder="HDFC Bank"
+                      type="text"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[10px] font-bold uppercase text-zinc-450 block mb-1">Account Number</label>
+                    <input
+                      value={formData.accountNumber}
+                      onChange={(e) => setFormData(prev => ({ ...prev, accountNumber: e.target.value }))}
+                      className="w-full px-3 py-1.5 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-white font-mono"
+                      placeholder="50100234567890"
+                      type="text"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold uppercase text-zinc-450 block mb-1">IFSC Code</label>
+                    <input
+                      value={formData.ifscCode}
+                      onChange={(e) => setFormData(prev => ({ ...prev, ifscCode: e.target.value }))}
+                      className="w-full px-3 py-1.5 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-white font-mono uppercase"
+                      placeholder="HDFC0001234"
+                      type="text"
+                    />
+                  </div>
+                </div>
+
+                {formData.upiId && (
+                  <div className="p-2.5 bg-white rounded-lg border border-emerald-200 flex items-center justify-between gap-3 shadow-2xs">
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={generateQrCodeUrl(generateUpiUri({ upiId: formData.upiId, name: formData.accountHolderName || formData.name, amount: formData.registrationFee, note: `${formData.name || 'Conclave'} Registration` }), 120)}
+                        alt="Generated UPI QR Code"
+                        className="w-14 h-14 bg-white p-1 rounded border border-zinc-200 shrink-0"
+                      />
+                      <div>
+                        <span className="text-[8.5px] font-black uppercase text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300">
+                          Dynamic QR Preview
+                        </span>
+                        <p className="text-xs font-black text-zinc-900 mt-1">{formData.upiId}</p>
+                        <p className="text-[10px] text-zinc-500 font-semibold">Registration Fee: ₹{formData.registrationFee || 0}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -1279,16 +1458,16 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
 
       {/* EDIT MODAL */}
       {isEditModalOpen && createPortal(
-        <div className="fixed top-14 left-0 lg:left-[220px] right-0 bottom-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
-          <form onSubmit={handleEditSubmit} className="w-full max-w-lg bg-white rounded-xl border border-zinc-100 shadow-2xl overflow-hidden animate-scale-up">
-            <div className="p-5 border-b border-zinc-100 bg-zinc-50 flex justify-between items-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-xs animate-fade-in">
+          <form onSubmit={handleEditSubmit} className="w-full max-w-lg max-h-[85vh] flex flex-col bg-white rounded-2xl border border-zinc-100 shadow-2xl overflow-hidden animate-scale-up">
+            <div className="p-4 sm:p-5 border-b border-zinc-100 bg-zinc-50 flex justify-between items-center shrink-0">
               <h3 className="font-extrabold text-zinc-950 text-body-sm">Edit Conclave Profile</h3>
-              <button type="button" onClick={() => setIsEditModalOpen(false)} className="p-1 hover:bg-zinc-200 rounded text-zinc-400 transition-smooth">
+              <button type="button" onClick={() => setIsEditModalOpen(false)} className="p-1 hover:bg-zinc-200 rounded text-zinc-400 transition-smooth cursor-pointer">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
+            <div className="p-4 sm:p-5 space-y-4 flex-1 overflow-y-auto max-h-[60vh] md:max-h-[65vh]">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-[10px] font-bold uppercase text-zinc-450 block mb-1">Conclave Name</label>
@@ -1424,8 +1603,107 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  className="w-full px-3 py-1.5 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-zinc-50/20 min-h-[80px]"
+                  className="w-full px-3 py-1.5 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-zinc-50/20 min-h-[60px]"
                 />
+              </div>
+
+              {/* Bank Account & UPI Setup */}
+              <div className="border-t border-zinc-100 pt-3.5 space-y-3 bg-zinc-50/40 p-3.5 rounded-xl">
+                <div className="flex items-center gap-2">
+                  <CreditCard className="w-4 h-4 text-brand-red" />
+                  <h4 className="text-[11px] font-extrabold uppercase text-zinc-800 tracking-wider">
+                    Registration Fee & Bank Account (UPI)
+                  </h4>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[10px] font-bold uppercase text-zinc-450 block mb-1">Registration Fee (₹)</label>
+                    <input
+                      value={formData.registrationFee}
+                      onChange={(e) => setFormData(prev => ({ ...prev, registrationFee: e.target.value }))}
+                      className="w-full px-3 py-1.5 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-white font-bold text-emerald-700"
+                      placeholder="0 for Free"
+                      type="number"
+                      min="0"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold uppercase text-zinc-450 block mb-1">UPI ID (e.g. name@upi)</label>
+                    <input
+                      value={formData.upiId}
+                      onChange={(e) => setFormData(prev => ({ ...prev, upiId: e.target.value }))}
+                      className="w-full px-3 py-1.5 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-white font-mono text-zinc-800"
+                      placeholder="bni.guntur@upi"
+                      type="text"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[10px] font-bold uppercase text-zinc-450 block mb-1">Account Holder Name</label>
+                    <input
+                      value={formData.accountHolderName}
+                      onChange={(e) => setFormData(prev => ({ ...prev, accountHolderName: e.target.value }))}
+                      className="w-full px-3 py-1.5 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-white"
+                      placeholder="BNI Guntur Chapter"
+                      type="text"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold uppercase text-zinc-450 block mb-1">Bank Name</label>
+                    <input
+                      value={formData.bankName}
+                      onChange={(e) => setFormData(prev => ({ ...prev, bankName: e.target.value }))}
+                      className="w-full px-3 py-1.5 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-white"
+                      placeholder="HDFC Bank"
+                      type="text"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[10px] font-bold uppercase text-zinc-450 block mb-1">Account Number</label>
+                    <input
+                      value={formData.accountNumber}
+                      onChange={(e) => setFormData(prev => ({ ...prev, accountNumber: e.target.value }))}
+                      className="w-full px-3 py-1.5 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-white font-mono"
+                      placeholder="50100234567890"
+                      type="text"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold uppercase text-zinc-450 block mb-1">IFSC Code</label>
+                    <input
+                      value={formData.ifscCode}
+                      onChange={(e) => setFormData(prev => ({ ...prev, ifscCode: e.target.value }))}
+                      className="w-full px-3 py-1.5 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-white font-mono uppercase"
+                      placeholder="HDFC0001234"
+                      type="text"
+                    />
+                  </div>
+                </div>
+
+                {formData.upiId && (
+                  <div className="p-2.5 bg-white rounded-lg border border-emerald-200 flex items-center justify-between gap-3 shadow-2xs">
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={generateQrCodeUrl(generateUpiUri({ upiId: formData.upiId, name: formData.accountHolderName || formData.name, amount: formData.registrationFee, note: `${formData.name || 'Conclave'} Registration` }), 120)}
+                        alt="Generated UPI QR Code"
+                        className="w-14 h-14 bg-white p-1 rounded border border-zinc-200 shrink-0"
+                      />
+                      <div>
+                        <span className="text-[8.5px] font-black uppercase text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300">
+                          Dynamic QR Preview
+                        </span>
+                        <p className="text-xs font-black text-zinc-900 mt-1">{formData.upiId}</p>
+                        <p className="text-[10px] text-zinc-500 font-semibold">Registration Fee: ₹{formData.registrationFee || 0}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -1451,8 +1729,8 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
 
       {/* REMOVE SINGLE CONCLAVE CONFIRMATION */}
       {deleteTarget && createPortal(
-        <div className="fixed top-14 left-0 lg:left-[220px] right-0 bottom-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
-          <div className="w-full max-w-sm bg-white rounded-xl border border-zinc-100 shadow-2xl p-5 space-y-4 animate-scale-up">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-xs animate-fade-in">
+          <div className="w-full max-w-sm bg-white rounded-2xl border border-zinc-100 shadow-2xl p-5 space-y-4 animate-scale-up">
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 rounded-full bg-brand-red/10 text-brand-red flex items-center justify-center shrink-0 mt-0.5">
                 <Trash2 className="w-4 h-4" />
@@ -1511,8 +1789,8 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
 
       {/* BULK REMOVE CONFIRMATION */}
       {isBulkDeleteOpen && createPortal(
-        <div className="fixed top-14 left-0 lg:left-[220px] right-0 bottom-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
-          <div className="w-full max-w-sm bg-white rounded-xl border border-zinc-100 shadow-2xl p-5 space-y-4 animate-scale-up">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-xs animate-fade-in">
+          <div className="w-full max-w-sm bg-white rounded-2xl border border-zinc-100 shadow-2xl p-5 space-y-4 animate-scale-up">
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 rounded-full bg-brand-red/10 text-brand-red flex items-center justify-center shrink-0 mt-0.5">
                 <Trash2 className="w-4 h-4" />

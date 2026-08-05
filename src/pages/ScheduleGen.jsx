@@ -11,15 +11,7 @@ import {
   X,
   PlayCircle,
   StopCircle,
-  Flag,
   Lock,
-  Layers,
-  Sparkles,
-  Info,
-  ShieldAlert,
-  TrendingUp,
-  Users,
-  MapPin,
 } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 import confetti from 'canvas-confetti';
@@ -30,11 +22,11 @@ export default function ScheduleGen({ selectedConclaveId, showGenWarning, clearG
   const [conclaves, setConclaves] = useState(() => {
     const cached = localStorage.getItem('bni_schedule_gen_conclaves_cache');
     if (cached) {
-      try { return JSON.parse(cached); } catch (e) {}
+      try { return JSON.parse(cached); } catch (e) { }
     }
     const adminCached = localStorage.getItem('bni_admin_conclaves_cache');
     if (adminCached) {
-      try { return JSON.parse(adminCached); } catch (e) {}
+      try { return JSON.parse(adminCached); } catch (e) { }
     }
     return [];
   });
@@ -106,7 +98,7 @@ export default function ScheduleGen({ selectedConclaveId, showGenWarning, clearG
   const [stats, setStats] = useState(() => {
     const cached = localStorage.getItem('bni_admin_stats_cache');
     if (cached) {
-      try { return JSON.parse(cached); } catch (e) {}
+      try { return JSON.parse(cached); } catch (e) { }
     }
     return null;
   });
@@ -171,7 +163,7 @@ export default function ScheduleGen({ selectedConclaveId, showGenWarning, clearG
   const [progress, setProgress] = useState(isConclaveRunningOrLocked ? 100 : 0);
   const [isGenerating, setIsGenerating] = useState(false);
   const [elapsed, setElapsed] = useState(isConclaveRunningOrLocked ? 42 : 0);
-  const [processed, setProcessed] = useState(isConclaveRunningOrLocked ? (selectedConclave?.registrationCount || stats?.counts?.registered || 1054) : 0);
+  const [processed, setProcessed] = useState(isConclaveRunningOrLocked ? (selectedConclave?.registrationCount || stats?.counts?.registered || 0) : 0);
   const [currentStep, setCurrentStep] = useState(isConclaveRunningOrLocked ? 'Complete' : 'Idle');
   const [round3Status, setRound3Status] = useState(isConclaveRunningOrLocked ? 'COMPLETED' : 'PENDING');
   const [activeStepIndex, setActiveStepIndex] = useState(isConclaveRunningOrLocked ? 5 : 0);
@@ -187,7 +179,7 @@ export default function ScheduleGen({ selectedConclaveId, showGenWarning, clearG
     );
     setProgress(isRunning ? 100 : 0);
     setElapsed(isRunning ? 42 : 0);
-    setProcessed(isRunning ? (selectedConclave?.registrationCount || stats?.counts?.registered || 1054) : 0);
+    setProcessed(isRunning ? (selectedConclave?.registrationCount || stats?.counts?.registered || 0) : 0);
     setCurrentStep(isRunning ? 'Complete' : 'Idle');
     setRound3Status(isRunning ? 'COMPLETED' : 'PENDING');
     setActiveStepIndex(isRunning ? 5 : 0);
@@ -466,31 +458,34 @@ export default function ScheduleGen({ selectedConclaveId, showGenWarning, clearG
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5 shrink-0 w-full sm:w-auto">
+        <div className="flex flex-wrap items-center gap-3 shrink-0">
           <button
             onClick={handleStartGeneration}
             disabled={isGenerating}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 border border-zinc-200 bg-white text-zinc-700 font-bold text-button rounded-lg hover:bg-zinc-50 transition-smooth cursor-pointer shadow-sm disabled:opacity-50"
+            type="button"
+            className="inline-flex items-center justify-center gap-2 h-10 px-4 bg-white border border-zinc-250 hover:bg-zinc-50 text-zinc-700 text-xs font-bold rounded-xl transition-smooth shadow-2xs cursor-pointer disabled:opacity-50"
           >
-            <RefreshCw className="w-4 h-4 text-zinc-400" />
-            Regenerate
+            <RefreshCw className="w-4 h-4 text-zinc-500" />
+            <span>Regenerate</span>
           </button>
 
           <button
             onClick={exportSchedule}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3.5 py-2 border border-zinc-200 bg-white text-zinc-700 font-bold text-button rounded-lg hover:bg-zinc-50 transition-smooth cursor-pointer shadow-sm"
+            type="button"
+            className="inline-flex items-center justify-center gap-2 h-10 px-4 bg-white border border-zinc-250 hover:bg-zinc-50 text-zinc-700 text-xs font-bold rounded-xl transition-smooth shadow-2xs cursor-pointer"
           >
-            <Download className="w-4 h-4 text-zinc-400" />
-            Export
+            <Download className="w-4 h-4 text-zinc-500" />
+            <span>Export</span>
           </button>
 
           <button
             onClick={handleStartGeneration}
             disabled={isGenerating}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-5 py-2 bg-brand-red hover:bg-red-700 text-white font-bold text-button rounded-lg transition-smooth shadow-md cursor-pointer disabled:opacity-50"
+            type="button"
+            className="inline-flex items-center justify-center gap-2 h-10 px-5 bg-brand-red hover:bg-red-750 text-white text-xs font-black uppercase tracking-wider rounded-xl transition-smooth shadow-md cursor-pointer disabled:opacity-50"
           >
-            <Play className="w-4 h-4" />
-            {isGenerating ? 'Generating...' : 'Generate Schedule'}
+            <Play className="w-4 h-4 fill-white" />
+            <span>{isGenerating ? 'Generating...' : 'Generate Schedule'}</span>
           </button>
         </div>
       </div>
@@ -798,8 +793,8 @@ export default function ScheduleGen({ selectedConclaveId, showGenWarning, clearG
                       }}
                       disabled={isLocked}
                       className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-button font-bold transition-smooth shadow-md cursor-pointer uppercase tracking-wider text-[11px] ${isLocked
-                          ? 'bg-zinc-250 text-zinc-450 border border-zinc-300/30 cursor-not-allowed shadow-none'
-                          : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                        ? 'bg-zinc-250 text-zinc-450 border border-zinc-300/30 cursor-not-allowed shadow-none'
+                        : 'bg-emerald-600 hover:bg-emerald-700 text-white'
                         }`}
                     >
                       <Lock className="w-4 h-4" />
@@ -891,8 +886,8 @@ export default function ScheduleGen({ selectedConclaveId, showGenWarning, clearG
               onClick={() => setIsModalOpen(true)}
               disabled={isLocked}
               className={`px-5 py-2.5 rounded-lg text-button font-bold flex items-center gap-2 shadow-md transition-smooth cursor-pointer ${isLocked
-                  ? 'bg-zinc-100 text-zinc-400 border border-zinc-200 cursor-not-allowed'
-                  : 'bg-brand-red hover:bg-red-700 text-white'
+                ? 'bg-zinc-100 text-zinc-400 border border-zinc-200 cursor-not-allowed'
+                : 'bg-brand-red hover:bg-red-700 text-white'
                 }`}
             >
               <Lock className="w-4 h-4" />
@@ -942,8 +937,8 @@ export default function ScheduleGen({ selectedConclaveId, showGenWarning, clearG
 
       {/* CONFIRM LOCK MODAL OVERLAY */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
-          <div className="w-full max-w-md bg-white rounded-xl border border-zinc-100 shadow-2xl overflow-hidden animate-scale-up">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-xs animate-fade-in">
+          <div className="w-full max-w-lg max-h-[85vh] flex flex-col bg-white rounded-2xl border border-zinc-100 shadow-2xl overflow-hidden animate-scale-up">
 
             <div className="p-5 border-b border-zinc-100 bg-zinc-50 flex items-center gap-2">
               <ShieldAlert className="w-5 h-5 text-brand-red" />
@@ -1010,8 +1005,8 @@ export default function ScheduleGen({ selectedConclaveId, showGenWarning, clearG
 
       {/* Repeat Pairings Audit Modal */}
       {showRepeatModal && (
-        <div className="fixed inset-0 z-[100] bg-zinc-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in">
-          <div className="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-5 border border-zinc-200">
+        <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 animate-fade-in">
+          <div className="bg-white rounded-2xl max-w-xl w-full max-h-[85vh] flex flex-col p-6 shadow-2xl space-y-5 border border-zinc-200">
             <div className="flex items-center justify-between border-b border-zinc-100 pb-4">
               <div>
                 <h3 className="text-body-lg font-black text-zinc-900">Repeat Pairings Audit</h3>

@@ -1,21 +1,15 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
-  CheckCircle,
   Check,
   LogOut,
   Edit2,
-  LayoutGrid,
-  Shield,
-  LogIn,
   Save,
-  Globe,
-  Settings
 } from 'lucide-react';
 import { api } from '../../services/api';
 
 const formatJoinedDate = (rawDate) => {
   if (!rawDate) return 'July 2026';
-  
+
   if (typeof rawDate === 'object') {
     if (rawDate._seconds) return new Date(rawDate._seconds * 1000).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
     if (rawDate.seconds) return new Date(rawDate.seconds * 1000).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
@@ -50,10 +44,10 @@ export default function AdminProfile({ loggedInAdmin, role = 'admin', onLogout }
   const [profileData, setProfileData] = useState({
     name: loggedInAdmin?.name || (isSuperadmin ? 'Superadmin' : 'Administrator'),
     email: loggedInAdmin?.email || (isSuperadmin ? 'superadmin@bni.com' : 'admin@bni.com'),
-    phone: loggedInAdmin?.phone || loggedInAdmin?.mobile || '+91 98888 77777',
+    phone: loggedInAdmin?.phone || loggedInAdmin?.mobile || 'N/A',
     designation: isSuperadmin ? 'Global Administrator' : 'Regional Administrator',
-    organization: isSuperadmin ? 'BNI Global LLC' : 'BNI India (Guntur Region)',
-    region: isSuperadmin ? 'All Regions (Global)' : (loggedInAdmin?.chapter || loggedInAdmin?.region || 'Guntur Central'),
+    organization: isSuperadmin ? 'BNI Global LLC' : 'BNI Regional Office',
+    region: isSuperadmin ? 'All Regions (Global)' : (loggedInAdmin?.chapter || loggedInAdmin?.region || 'BNI Region'),
     joinedDate: formatJoinedDate(loggedInAdmin?.createdAt)
   });
 

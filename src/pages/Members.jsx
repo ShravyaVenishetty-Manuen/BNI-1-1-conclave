@@ -7,8 +7,6 @@ import {
   Phone,
   Plus,
   X,
-  Edit,
-  MoreVertical,
   Download,
   Upload,
   FileSpreadsheet,
@@ -24,7 +22,7 @@ export default function Members({ searchQuery, selectedConclaveId, loggedInAdmin
   const [members, setMembers] = useState(() => {
     const cached = localStorage.getItem('bni_admin_members_cache');
     if (cached) {
-      try { return JSON.parse(cached); } catch (e) {}
+      try { return JSON.parse(cached); } catch (e) { }
     }
     return [];
   });
@@ -72,7 +70,7 @@ export default function Members({ searchQuery, selectedConclaveId, loggedInAdmin
                     phone: r.phone || master.phone || master.mobile || 'n/a',
                     company: r.company || master.company || master.businessName || 'Self Employed',
                     category: r.category || master.category || master.businessCategory || 'General',
-                    chapter: r.chapter || master.chapter || 'Peak Performance',
+                    chapter: r.chapter || master.chapter || 'N/A',
                     region: userRegion,
                     userRegion: userRegion
                   };
@@ -101,7 +99,7 @@ export default function Members({ searchQuery, selectedConclaveId, loggedInAdmin
                   res.registrations.forEach(r => {
                     const uid = r.userId || r.uid || r.id;
                     const existing = memberMap.get(uid) || {};
-                    const userRegion = existing.region || (typeof existing.location === 'string' ? existing.location : '') || (r.region && r.region !== 'Guntur Region' ? r.region : '') || 'Global BNI Network';
+                    const userRegion = existing.region || (typeof existing.location === 'string' ? existing.location : '') || r.region || 'Global BNI Network';
                     memberMap.set(uid, {
                       ...r,
                       ...existing,
@@ -112,7 +110,7 @@ export default function Members({ searchQuery, selectedConclaveId, loggedInAdmin
                       phone: existing.phone || r.phone || existing.mobile || 'n/a',
                       company: existing.company || r.company || existing.businessName || 'Self Employed',
                       category: existing.category || r.category || existing.businessCategory || 'General',
-                      chapter: existing.chapter || r.chapter || 'Peak Performance',
+                      chapter: existing.chapter || r.chapter || 'N/A',
                       userRegion: userRegion
                     });
                   });
@@ -141,7 +139,7 @@ export default function Members({ searchQuery, selectedConclaveId, loggedInAdmin
           const rawDate = r.createdAt || r.registeredAt;
           const joinDateFormatted = rawDate && !isNaN(new Date(rawDate).getTime())
             ? new Date(rawDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
-            : 'Jan 2026';
+            : 'N/A';
 
           const historyDateFormatted = rawDate && !isNaN(new Date(rawDate).getTime())
             ? new Date(rawDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })
@@ -155,9 +153,9 @@ export default function Members({ searchQuery, selectedConclaveId, loggedInAdmin
             company: fallbackCompany,
             category: fallbackCategory,
             address: fallbackLocation,
-            state: r.state || 'Andhra Pradesh',
-            country: r.country || 'India',
-            chapter: r.chapter || 'Peak Performance',
+            state: r.state || '',
+            country: r.country || '',
+            chapter: r.chapter || '',
             region: resolvedRegion,
             isCaptain: r.role === 'captain' || r.isTableCaptain === true,
             status: isActiveMember ? 'Active' : 'Inactive',
@@ -1128,10 +1126,10 @@ export default function Members({ searchQuery, selectedConclaveId, loggedInAdmin
 
       {/* Add / Edit Member Modal */}
       {isFormOpen && createPortal(
-        <div className="fixed top-14 left-0 lg:left-[220px] right-0 bottom-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
-          <div className="w-full max-w-lg bg-white rounded-xl border border-zinc-100 shadow-2xl overflow-hidden animate-scale-up">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-xs animate-fade-in">
+          <div className="w-full max-w-lg max-h-[85vh] flex flex-col bg-white rounded-2xl border border-zinc-100 shadow-2xl overflow-hidden animate-scale-up">
             {/* Modal Header */}
-            <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50">
+            <div className="p-4 sm:p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50 shrink-0">
               <h3 className="text-section-heading font-extrabold text-zinc-950">
                 {editingMember ? 'Edit Member Profile' : 'Add New Member'}
               </h3>
@@ -1144,147 +1142,149 @@ export default function Members({ searchQuery, selectedConclaveId, loggedInAdmin
             </div>
 
             {/* Modal Form */}
-            <form onSubmit={handleFormSubmit} className="p-5 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                {/* Full Name */}
-                <div className="col-span-2 space-y-1.5">
-                  <label className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">Full Name</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-3.5 py-2 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none transition-smooth"
-                    placeholder="e.g. Rajesh Mehta"
-                  />
-                </div>
-
-                {/* Classification / Category */}
-                <div className="space-y-1.5">
-                  <label className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">Classification</label>
-                  <select
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full px-3 py-2 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-white font-medium text-zinc-700 cursor-pointer"
-                  >
-                    <option value="Real Estate">Real Estate</option>
-                    <option value="Marketing">Marketing</option>
-                    <option value="Finance">Finance</option>
-                    <option value="Corporate Gifting">Corporate Gifting</option>
-                    <option value="IT Services">IT Services</option>
-                    <option value="HR Services">HR Services</option>
-                    <option value="Legal Services">Legal Services</option>
-                    <option value="Graphic Design">Graphic Design</option>
-                  </select>
-                </div>
-
-                {/* Chapter */}
-                <div className="space-y-1.5">
-                  <label className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">BNI Chapter</label>
-                  <select
-                    value={formData.chapter}
-                    onChange={(e) => setFormData({ ...formData, chapter: e.target.value })}
-                    className="w-full px-3 py-2 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-white font-medium text-zinc-700 cursor-pointer"
-                  >
-                    <option value="Peak Performance">Peak Performance</option>
-                    <option value="Apex Chapter">Apex Chapter</option>
-                    <option value="Capital Chapter">Capital Chapter</option>
-                  </select>
-                </div>
-
-                {/* Email */}
-                <div className="space-y-1.5">
-                  <label className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">Email Address</label>
-                  <input
-                    type="email"
-                    required
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-3.5 py-2 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none transition-smooth"
-                    placeholder="name@company.com"
-                  />
-                </div>
-
-                {/* Phone */}
-                <div className="space-y-1.5">
-                  <label className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">Mobile Number</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full px-3.5 py-2 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none transition-smooth"
-                    placeholder="+91 98XXX XXXXX"
-                  />
-                </div>
-
-                {/* Company Name */}
-                <div className="col-span-2 space-y-1.5">
-                  <label className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">Company Name</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.company}
-                    onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                    className="w-full px-3.5 py-2 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none transition-smooth"
-                    placeholder="e.g. Mehta Developers"
-                  />
-                </div>
-
-                {/* Office Location */}
-                <div className="col-span-2 space-y-1.5">
-                  <label className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">Office Location</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.address}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    className="w-full px-3.5 py-2 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none transition-smooth"
-                    placeholder="Full business office address"
-                  />
-                </div>
-
-                {/* Role Toggle & Status Select */}
-                <div className="col-span-2 flex items-center justify-between pt-2 border-t border-zinc-100">
-                  <div className="flex items-center gap-2">
+            <form onSubmit={handleFormSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+              <div className="p-4 sm:p-5 space-y-4 flex-1 overflow-y-auto max-h-[60vh] md:max-h-[65vh]">
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Full Name */}
+                  <div className="col-span-2 space-y-1.5">
+                    <label className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">Full Name</label>
                     <input
-                      type="checkbox"
-                      id="form-is-captain"
-                      checked={formData.isCaptain}
-                      onChange={(e) => setFormData({ ...formData, isCaptain: e.target.checked })}
-                      className="rounded border-zinc-300 text-brand-red focus:ring-brand-red cursor-pointer w-4 h-4"
+                      type="text"
+                      required
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      className="w-full px-3.5 py-2 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none transition-smooth"
+                      placeholder="e.g. Rajesh Mehta"
                     />
-                    <label htmlFor="form-is-captain" className="text-body-sm font-semibold text-zinc-700 cursor-pointer select-none">
-                      Assign as Chapter Captain
-                    </label>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">Status:</span>
+                  {/* Classification / Category */}
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">Classification</label>
                     <select
-                      value={formData.status}
-                      onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                      className="border border-zinc-200 rounded-lg px-2.5 py-1 text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-white font-semibold text-zinc-700 cursor-pointer"
+                      value={formData.category}
+                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                      className="w-full px-3 py-2 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-white font-medium text-zinc-700 cursor-pointer"
                     >
-                      <option value="Active">Active</option>
-                      <option value="Inactive">Inactive</option>
+                      <option value="Real Estate">Real Estate</option>
+                      <option value="Marketing">Marketing</option>
+                      <option value="Finance">Finance</option>
+                      <option value="Corporate Gifting">Corporate Gifting</option>
+                      <option value="IT Services">IT Services</option>
+                      <option value="HR Services">HR Services</option>
+                      <option value="Legal Services">Legal Services</option>
+                      <option value="Graphic Design">Graphic Design</option>
                     </select>
+                  </div>
+
+                  {/* Chapter */}
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">BNI Chapter</label>
+                    <select
+                      value={formData.chapter}
+                      onChange={(e) => setFormData({ ...formData, chapter: e.target.value })}
+                      className="w-full px-3 py-2 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-white font-medium text-zinc-700 cursor-pointer"
+                    >
+                      <option value="Peak Performance">Peak Performance</option>
+                      <option value="Apex Chapter">Apex Chapter</option>
+                      <option value="Capital Chapter">Capital Chapter</option>
+                    </select>
+                  </div>
+
+                  {/* Email */}
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">Email Address</label>
+                    <input
+                      type="email"
+                      required
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className="w-full px-3.5 py-2 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none transition-smooth"
+                      placeholder="name@company.com"
+                    />
+                  </div>
+
+                  {/* Phone */}
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">Mobile Number</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      className="w-full px-3.5 py-2 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none transition-smooth"
+                      placeholder="+91 98XXX XXXXX"
+                    />
+                  </div>
+
+                  {/* Company Name */}
+                  <div className="col-span-2 space-y-1.5">
+                    <label className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">Company Name</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.company}
+                      onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                      className="w-full px-3.5 py-2 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none transition-smooth"
+                      placeholder="e.g. Mehta Developers"
+                    />
+                  </div>
+
+                  {/* Office Location */}
+                  <div className="col-span-2 space-y-1.5">
+                    <label className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">Office Location</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.address}
+                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                      className="w-full px-3.5 py-2 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none transition-smooth"
+                      placeholder="Full business office address"
+                    />
+                  </div>
+
+                  {/* Role Toggle & Status Select */}
+                  <div className="col-span-2 flex items-center justify-between pt-2 border-t border-zinc-100">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="form-is-captain"
+                        checked={formData.isCaptain}
+                        onChange={(e) => setFormData({ ...formData, isCaptain: e.target.checked })}
+                        className="rounded border-zinc-300 text-brand-red focus:ring-brand-red cursor-pointer w-4 h-4"
+                      />
+                      <label htmlFor="form-is-captain" className="text-body-sm font-semibold text-zinc-700 cursor-pointer select-none">
+                        Assign as Chapter Captain
+                      </label>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">Status:</span>
+                      <select
+                        value={formData.status}
+                        onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                        className="border border-zinc-200 rounded-lg px-2.5 py-1 text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-white font-semibold text-zinc-700 cursor-pointer"
+                      >
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Form Buttons */}
-              <div className="pt-4 flex justify-end gap-2.5">
+              {/* Static Non-Scrolling Footer Action Buttons */}
+              <div className="p-4 border-t border-zinc-100 bg-zinc-50/50 flex justify-end gap-2.5 shrink-0">
                 <button
                   type="button"
                   onClick={() => setIsFormOpen(false)}
-                  className="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-button rounded-lg transition-smooth shadow-sm cursor-pointer border border-zinc-100"
+                  className="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-button rounded-lg transition-smooth shadow-sm cursor-pointer border border-zinc-100 font-bold text-xs"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-brand-red hover:bg-red-700 text-white text-button rounded-lg transition-smooth shadow-sm cursor-pointer"
+                  className="px-5 py-2 bg-brand-red hover:bg-red-700 text-white text-button rounded-lg transition-smooth shadow-md cursor-pointer font-bold text-xs"
                 >
                   {editingMember ? 'Save Changes' : 'Create Member'}
                 </button>
@@ -1297,8 +1297,8 @@ export default function Members({ searchQuery, selectedConclaveId, loggedInAdmin
 
       {/* Delete Confirmation Modal */}
       {deleteTarget && createPortal(
-        <div className="fixed top-14 left-0 lg:left-[220px] right-0 bottom-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
-          <div className="w-full max-w-sm bg-white rounded-xl border border-zinc-100 shadow-2xl p-5 space-y-4 animate-scale-up">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-xs animate-fade-in">
+          <div className="w-full max-w-sm bg-white rounded-2xl border border-zinc-100 shadow-2xl p-5 space-y-4 animate-scale-up">
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 rounded-full bg-brand-red/10 text-brand-red flex items-center justify-center shrink-0 mt-0.5">
                 <X className="w-4 h-4" />
@@ -1340,8 +1340,8 @@ export default function Members({ searchQuery, selectedConclaveId, loggedInAdmin
 
       {/* Bulk Delete Confirmation Modal */}
       {isBulkDeleteConfirmOpen && createPortal(
-        <div className="fixed top-14 left-0 lg:left-[220px] right-0 bottom-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
-          <div className="w-full max-w-sm bg-white rounded-xl border border-zinc-100 shadow-2xl p-5 space-y-4 animate-scale-up">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-xs animate-fade-in">
+          <div className="w-full max-w-sm bg-white rounded-2xl border border-zinc-100 shadow-2xl p-5 space-y-4 animate-scale-up">
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 rounded-full bg-brand-red/10 text-brand-red flex items-center justify-center shrink-0 mt-0.5">
                 <X className="w-4 h-4" />

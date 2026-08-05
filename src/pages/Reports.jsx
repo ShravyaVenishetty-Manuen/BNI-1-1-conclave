@@ -686,9 +686,9 @@ export default function Reports({ searchQuery: globalSearchQuery, selectedConcla
 
       {/* SWITCH ACTIVE CONCLAVE SELECTOR MODAL */}
       {isConclaveSelectorOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
-          <div className="w-full max-w-md bg-white rounded-xl border border-zinc-100 shadow-2xl overflow-hidden animate-scale-up">
-            <div className="p-5 border-b border-zinc-100 bg-zinc-50 flex justify-between items-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-xs animate-fade-in">
+          <div className="w-full max-w-lg max-h-[85vh] flex flex-col bg-white rounded-2xl border border-zinc-100 shadow-2xl overflow-hidden animate-scale-up">
+            <div className="p-4 sm:p-5 border-b border-zinc-100 bg-zinc-50 flex justify-between items-center shrink-0">
               <h3 className="font-extrabold text-zinc-950 text-body-sm">Switch Conclave Data</h3>
               <button type="button" onClick={() => setIsConclaveSelectorOpen(false)} className="p-1 hover:bg-zinc-200 rounded text-zinc-400 transition-smooth">
                 <X className="w-4 h-4" />
@@ -731,8 +731,8 @@ export default function Reports({ searchQuery: globalSearchQuery, selectedConcla
 
       {/* Repeat Pairings Audit Modal */}
       {showRepeatModal && (
-        <div className="fixed inset-0 z-[100] bg-zinc-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in">
-          <div className="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-5 border border-zinc-200">
+        <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 animate-fade-in">
+          <div className="bg-white rounded-2xl max-w-xl w-full max-h-[85vh] flex flex-col p-6 shadow-2xl space-y-5 border border-zinc-200">
             <div className="flex items-center justify-between border-b border-zinc-100 pb-4">
               <div>
                 <h3 className="text-body-lg font-black text-zinc-900">Repeat Pairings Audit</h3>

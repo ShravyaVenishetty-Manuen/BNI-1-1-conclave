@@ -606,9 +606,9 @@ export default function Snapshot({ searchQuery, selectedConclaveId }) {
 
       {/* CHANGE SELECTION MODAL */}
       {isConclaveSelectorOpen && createPortal(
-        <div className="fixed top-14 left-0 lg:left-[220px] right-0 bottom-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
-          <div className="w-full max-w-md bg-white rounded-xl border border-zinc-100 shadow-2xl overflow-hidden animate-scale-up">
-            <div className="p-5 border-b border-zinc-100 bg-zinc-50 flex justify-between items-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-xs animate-fade-in">
+          <div className="w-full max-w-lg max-h-[85vh] flex flex-col bg-white rounded-2xl border border-zinc-100 shadow-2xl overflow-hidden animate-scale-up">
+            <div className="p-4 sm:p-5 border-b border-zinc-100 bg-zinc-50 flex justify-between items-center shrink-0">
               <h3 className="font-extrabold text-zinc-950 text-body-sm">Select Conclave Profile</h3>
               <button type="button" onClick={() => setIsConclaveSelectorOpen(false)} className="p-1 hover:bg-zinc-200 rounded text-zinc-400 transition-smooth">
                 <X className="w-4 h-4" />
@@ -652,8 +652,8 @@ export default function Snapshot({ searchQuery, selectedConclaveId }) {
 
       {/* TAKE SNAPSHOT MODAL */}
       {isSnapshotModalOpen && createPortal(
-        <div className="fixed top-14 left-0 lg:left-[220px] right-0 bottom-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in">
-          <div className="w-full max-w-sm bg-white rounded-xl border border-zinc-100 shadow-2xl p-5 space-y-4 animate-scale-up">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-xs animate-fade-in">
+          <div className="w-full max-w-sm bg-white rounded-2xl border border-zinc-100 shadow-2xl p-5 space-y-4 animate-scale-up">
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 rounded-full bg-brand-red/10 text-brand-red flex items-center justify-center shrink-0 mt-0.5">
                 <Camera className="w-4 h-4" />
