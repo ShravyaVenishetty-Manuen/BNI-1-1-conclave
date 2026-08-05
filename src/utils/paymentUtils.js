@@ -9,16 +9,13 @@
 export function generateUpiUri({ upiId, name = 'BNI Conclave', amount = 0, note = 'Conclave Registration' }) {
   if (!upiId) return '';
   const cleanUpiId = String(upiId).trim().replace(/\s+/g, '');
-  const cleanName = encodeURIComponent(String(name).replace(/[^a-zA-Z0-9 ]/g, '').trim() || 'BNI Conclave');
-  const cleanNote = encodeURIComponent(String(note).replace(/[^a-zA-Z0-9 ]/g, '').trim() || 'Registration');
+  // NPCI spec requires raw clean payee name without URL encoding (%20) inside the QR payload
+  const cleanName = String(name || 'BNI Conclave').replace(/[^a-zA-Z0-9 ]/g, '').trim() || 'BNI Conclave';
   const numAmount = Number(amount || 0);
 
   let uri = `upi://pay?pa=${cleanUpiId}&pn=${cleanName}&cu=INR`;
   if (numAmount > 0) {
     uri += `&am=${numAmount}`;
-  }
-  if (cleanNote) {
-    uri += `&tn=${cleanNote}`;
   }
   return uri;
 }
