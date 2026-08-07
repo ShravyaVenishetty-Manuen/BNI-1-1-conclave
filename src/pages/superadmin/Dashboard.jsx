@@ -6,6 +6,7 @@ import {
   Users,
   Clock,
   ChevronRight,
+  ShieldAlert,
 } from 'lucide-react';
 import { api } from '../../services/api';
 
