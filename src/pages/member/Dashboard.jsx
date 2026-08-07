@@ -175,6 +175,9 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
   const memberCompany = loggedInMember?.company || 'N/A';
   const memberCategory = loggedInMember?.category || 'N/A';
 
+  const conclaveStatusStr = (conclaveSyncData?.conclaveStatus?.status || '').toLowerCase();
+  const isConclaveCompleted = conclaveStatusStr === 'completed' || conclaveStatusStr === 'finished';
+
   return (
     <div className="space-y-8 animate-fade-in font-sans pb-16">
 
@@ -211,10 +214,17 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
           ) : (
             <>
               <div className="absolute top-4 right-4">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-800 text-[10px] font-black uppercase tracking-wider rounded-full border border-emerald-150 shadow-2xs">
-                  <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
-                  LIVE ROUND {conclaveSyncData?.conclaveStatus?.currentRound || 0}
-                </span>
+                {isConclaveCompleted ? (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-zinc-100 text-zinc-700 text-[10px] font-black uppercase tracking-wider rounded-full border border-zinc-200 shadow-2xs">
+                    <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    CONCLAVE COMPLETED
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-800 text-[10px] font-black uppercase tracking-wider rounded-full border border-emerald-150 shadow-2xs">
+                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                    LIVE ROUND {conclaveSyncData?.conclaveStatus?.currentRound || 0}
+                  </span>
+                )}
               </div>
 
               <div className="space-y-4">
@@ -243,7 +253,9 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
                 <div className="flex flex-wrap gap-6 items-center pt-2">
                   <div className="flex flex-col">
                     <span className="text-[9px] font-extrabold text-zinc-400 uppercase tracking-widest">Active Session</span>
-                    <span className="text-lg font-black text-zinc-900 mt-0.5">Round {conclaveSyncData?.conclaveStatus?.currentRound || 0} of {conclaveSyncData?.mySchedule?.length || 6}</span>
+                    <span className="text-lg font-black text-zinc-900 mt-0.5">
+                      {isConclaveCompleted ? 'All Rounds Finished' : `Round ${conclaveSyncData?.conclaveStatus?.currentRound || 0} of ${conclaveSyncData?.mySchedule?.length || 6}`}
+                    </span>
                   </div>
                   <div className="w-px h-8 bg-zinc-200"></div>
                   <div className="flex flex-col">
@@ -298,17 +310,19 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
                 <div className="pt-2">
                   <div className="flex justify-between items-end mb-2">
                     <div className="flex flex-col">
-                      <span className="text-[9px] font-extrabold text-zinc-400 uppercase tracking-widest">Time Remaining</span>
-                      <span className="text-2xl font-black text-brand-red mt-0.5 tracking-tighter leading-none">{formatTime(timeLeft)}</span>
+                      <span className="text-[9px] font-extrabold text-zinc-400 uppercase tracking-widest">{isConclaveCompleted ? 'Conclave Status' : 'Time Remaining'}</span>
+                      <span className={`text-2xl font-black mt-0.5 tracking-tighter leading-none ${isConclaveCompleted ? 'text-emerald-600' : 'text-brand-red'}`}>
+                        {isConclaveCompleted ? 'Completed' : formatTime(timeLeft)}
+                      </span>
                     </div>
                     <span className="text-[9.5px] font-bold text-zinc-455">
-                      {Math.floor(((600 - timeLeft) / 600) * 100)}% Completed
+                      {isConclaveCompleted ? '100% Completed' : `${Math.floor(((600 - timeLeft) / 600) * 100)}% Completed`}
                     </span>
                   </div>
                   <div className="w-full bg-zinc-100 rounded-full h-2 overflow-hidden border border-zinc-200/50">
                     <div
-                      className="bg-brand-red h-full rounded-full transition-all duration-1000 ease-out shadow-inner"
-                      style={{ width: `${(timeLeft / 600) * 100}%` }}
+                      className={`${isConclaveCompleted ? 'bg-emerald-600' : 'bg-brand-red'} h-full rounded-full transition-all duration-1000 ease-out shadow-inner`}
+                      style={{ width: isConclaveCompleted ? '100%' : `${(timeLeft / 600) * 100}%` }}
                     ></div>
                   </div>
                 </div>
