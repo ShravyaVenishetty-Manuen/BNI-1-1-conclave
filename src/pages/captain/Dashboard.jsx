@@ -264,6 +264,9 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
   const presentCount = Object.values(attendance).filter(s => s === 'present').length;
   const absentCount = Object.values(attendance).filter(s => s === 'absent').length;
 
+  const conclaveStatusStr = (conclaveSyncData?.conclaveStatus?.status || '').toLowerCase();
+  const isConclaveCompleted = conclaveStatusStr === 'completed' || conclaveStatusStr === 'finished';
+
   return (
     <div className="space-y-6 animate-fade-in font-sans">
       {/* Welcome Card */}
@@ -274,10 +277,16 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
           <div className="min-w-0 space-y-1">
             {/* Tags row */}
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1 bg-red-50 text-brand-red text-[9px] font-extrabold px-2 py-0.5 rounded-md uppercase tracking-widest border border-red-100">
-                {conclaveSyncData?.conclaveStatus?.status === 'active'
-                  ? <><span className="w-1.5 h-1.5 rounded-full bg-brand-red animate-pulse inline-block" /> Live Now</>
-                  : 'Conclave Session'}
+              <span className={`inline-flex items-center gap-1 text-[9px] font-extrabold px-2 py-0.5 rounded-md uppercase tracking-widest border ${
+                isConclaveCompleted 
+                  ? 'bg-zinc-100 text-zinc-700 border-zinc-200' 
+                  : 'bg-red-50 text-brand-red border-red-100'
+              }`}>
+                {isConclaveCompleted ? (
+                  <><CheckCircle className="w-3 h-3 text-emerald-600 inline-block" /> Conclave Completed</>
+                ) : conclaveSyncData?.conclaveStatus?.status === 'active' || conclaveSyncData?.conclaveStatus?.status === 'running' ? (
+                  <><span className="w-1.5 h-1.5 rounded-full bg-brand-red animate-pulse inline-block" /> Live Now</>
+                ) : 'Conclave Session'}
               </span>
               <span className="text-zinc-400 text-[10px] font-semibold uppercase tracking-widest">
                 {conclaveSyncData?.conclaveStatus?.region || conclaveSyncData?.region || 'BNI Region'}
@@ -300,10 +309,10 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
 
           {/* Right: Round info */}
           <div className="shrink-0 hidden sm:flex flex-col items-center justify-center bg-zinc-50 border border-zinc-200 rounded-lg px-4 py-2.5 text-center min-w-[64px]">
-            <span className="text-[8.5px] font-extrabold text-zinc-400 uppercase tracking-widest">Round</span>
+            <span className="text-[8.5px] font-extrabold text-zinc-400 uppercase tracking-widest">{isConclaveCompleted ? 'Status' : 'Round'}</span>
             <span className="text-xl font-black text-zinc-900 leading-none mt-0.5">
-              {conclaveSyncData?.conclaveStatus?.currentRound || 0}
-              <span className="text-xs font-semibold text-zinc-400">/{conclaveSyncData?.mySchedule?.length || 6}</span>
+              {isConclaveCompleted ? 'Ended' : conclaveSyncData?.conclaveStatus?.currentRound || 0}
+              {!isConclaveCompleted && <span className="text-xs font-semibold text-zinc-400">/{conclaveSyncData?.mySchedule?.length || 6}</span>}
             </span>
           </div>
         </div>
@@ -315,7 +324,7 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
                   <p className="text-[11px] font-bold text-zinc-455 uppercase tracking-wide">Current Round</p>
                   <div className="flex items-end justify-between mt-2">
                     <span className="text-lg font-black text-zinc-900 leading-none">
-                      {conclaveSyncData?.conclaveStatus?.currentRound || 0} <span className="text-zinc-400 text-xs font-semibold">of {conclaveSyncData?.mySchedule?.length || 6}</span>
+                      {isConclaveCompleted ? 'All Finished' : `${conclaveSyncData?.conclaveStatus?.currentRound || 0} of ${conclaveSyncData?.mySchedule?.length || 6}`}
                     </span>
                     <RefreshCw className="w-5 h-5 text-brand-red shrink-0" />
                   </div>
@@ -339,10 +348,12 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
                   </div>
                 </div>
                 <div className="bg-white p-4.5 rounded-xl border border-zinc-200 shadow-2xs flex flex-col justify-between h-24">
-                  <p className="text-[11px] font-bold text-zinc-455 uppercase tracking-wide">Time Remaining</p>
+                  <p className="text-[11px] font-bold text-zinc-455 uppercase tracking-wide">{isConclaveCompleted ? 'Status' : 'Time Remaining'}</p>
                   <div className="flex items-end justify-between mt-2">
-                    <span className="text-lg font-black text-brand-red leading-none">{formatTimeSimple(secondsLeft)}</span>
-                    <Clock className="w-5 h-5 text-brand-red shrink-0 animate-pulse" />
+                    <span className={`text-lg font-black leading-none ${isConclaveCompleted ? 'text-emerald-600' : 'text-brand-red'}`}>
+                      {isConclaveCompleted ? 'Completed' : formatTimeSimple(secondsLeft)}
+                    </span>
+                    <Clock className={`w-5 h-5 ${isConclaveCompleted ? 'text-emerald-600' : 'text-brand-red animate-pulse'} shrink-0`} />
                   </div>
                 </div>
                 <div className="bg-white p-4.5 rounded-xl border border-zinc-200 shadow-2xs flex flex-col justify-between h-24 col-span-2 md:col-span-1">

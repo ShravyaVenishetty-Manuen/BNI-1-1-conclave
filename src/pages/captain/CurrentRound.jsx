@@ -119,23 +119,35 @@ export default function CurrentRound({ loggedInCaptain, conclaveSyncData: propCo
     );
   }
 
+  const conclaveStatusStr = (conclaveSyncData?.conclaveStatus?.status || '').toLowerCase();
+  const isConclaveCompleted = conclaveStatusStr === 'completed' || conclaveStatusStr === 'finished';
+
   return (
     <div className="space-y-6 animate-fade-in font-sans">
 
       {/* Live Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-2">
         <div className="space-y-1">
-          <h1 className="text-[20px] font-black text-zinc-955 leading-tight">Current Round</h1>
-          <p className="text-[11.5px] text-zinc-500 font-semibold mt-0.5">View all information related to the active networking round.</p>
+          <h1 className="text-[20px] font-black text-zinc-955 leading-tight">{isConclaveCompleted ? 'Conclave Completed' : 'Current Round'}</h1>
+          <p className="text-[11.5px] text-zinc-500 font-semibold mt-0.5">
+            {isConclaveCompleted ? 'This conclave session has officially concluded.' : 'View all information related to the active networking round.'}
+          </p>
         </div>
         <div className="flex gap-2">
           <span className="px-3 py-1 bg-zinc-100 text-zinc-650 font-black text-[10px] uppercase tracking-wider rounded-full border border-zinc-200 shadow-2xs">
-            Round {conclaveSyncData?.conclaveStatus?.currentRound || 0}
+            {isConclaveCompleted ? 'All Rounds Finished' : `Round ${conclaveSyncData?.conclaveStatus?.currentRound || 0}`}
           </span>
-          <span className="px-3 py-1 bg-emerald-50 text-emerald-800 font-black text-[10px] uppercase tracking-wider rounded-full border border-emerald-150 flex items-center gap-1.5 shadow-2xs">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            Running
-          </span>
+          {isConclaveCompleted ? (
+            <span className="px-3 py-1 bg-zinc-100 text-zinc-700 font-black text-[10px] uppercase tracking-wider rounded-full border border-zinc-200 flex items-center gap-1.5 shadow-2xs">
+              <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              Completed
+            </span>
+          ) : (
+            <span className="px-3 py-1 bg-emerald-50 text-emerald-800 font-black text-[10px] uppercase tracking-wider rounded-full border border-emerald-150 flex items-center gap-1.5 shadow-2xs">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              Running
+            </span>
+          )}
         </div>
       </div>
 
@@ -148,8 +160,11 @@ export default function CurrentRound({ loggedInCaptain, conclaveSyncData: propCo
 
           <div className="absolute top-4 left-4">
             <span className="text-[11px] font-extrabold text-zinc-550 uppercase tracking-wider flex items-center gap-1.5">
-              <span className="w-2 h-2 bg-brand-red rounded-full animate-pulse"></span>
-              LIVE ROUND {conclaveSyncData?.conclaveStatus?.currentRound || 0}
+              {isConclaveCompleted ? (
+                <><CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> CONCLAVE COMPLETED</>
+              ) : (
+                <><span className="w-2 h-2 bg-brand-red rounded-full animate-pulse"></span> LIVE ROUND {conclaveSyncData?.conclaveStatus?.currentRound || 0}</>
+              )}
             </span>
           </div>
 
