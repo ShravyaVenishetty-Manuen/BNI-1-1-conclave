@@ -560,7 +560,7 @@ export default function App() {
               conclaveSyncData={conclaveSyncData}
               searchQuery={searchQuery}
             />
-          ) : activeTab === 'current-round' ? (
+          ) : (activeTab === 'current-round' || activeTab === 'round') ? (
             <MemberCurrentRound
               loggedInMember={memberProfile || loggedInMember}
               onTabChange={handleTabChange}

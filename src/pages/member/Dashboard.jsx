@@ -328,7 +328,7 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
                   {isCheckedIn ? 'Attendance Confirmed' : 'Mark My Attendance'}
                 </button>
                 <button
-                  onClick={() => onTabChange && onTabChange('round')}
+                  onClick={() => onTabChange && onTabChange('current-round')}
                   className="text-[10px] font-black uppercase tracking-wider px-5 py-2.5 bg-brand-red hover:bg-red-700 text-white rounded-lg transition-smooth flex items-center gap-1.5 cursor-pointer shadow-sm"
                 >
                   View Current Round
