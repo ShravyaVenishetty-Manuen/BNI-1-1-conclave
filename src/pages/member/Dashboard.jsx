@@ -188,24 +188,20 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
         <div className="col-span-12 lg:col-span-8 bg-white p-6 md:p-8 rounded-xl shadow-2xs border border-zinc-200 relative overflow-hidden flex flex-col justify-between min-h-[300px]">
           <div className="absolute inset-0 opacity-[0.02] pointer-events-none bg-[radial-gradient(#af101a_1px,transparent_1px)] [background-size:16px_16px]"></div>
 
-          {!conclaveSyncData || isConclaveCompleted ? (
+          {!conclaveSyncData ? (
             <div className="space-y-5 py-4 my-auto">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-800">
-                <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span className="text-[11px] font-bold">
-                  {isConclaveCompleted ? 'Conclave Completed — Ready for Next Event' : 'No Active Conclave Registration'}
-                </span>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-lg text-amber-800">
+                <Info className="w-4 h-4 text-amber-600 shrink-0" />
+                <span className="text-[11px] font-bold">No Active Conclave Registration</span>
               </div>
               <div>
                 <h1 className="text-[20px] font-black text-zinc-955 leading-tight">Welcome {memberName}</h1>
                 <p className="text-[11.5px] text-zinc-500 font-semibold mt-0.5">{memberCompany} • {memberChapter}</p>
                 <p className="text-body-sm text-zinc-600 mt-3 max-w-lg leading-relaxed">
-                  {isConclaveCompleted 
-                    ? `The previous conclave (${conclaveSyncData?.conclaveStatus?.title || 'Conclave Session'}) has officially ended. Browse available conclaves below to register for upcoming events!`
-                    : 'You are not currently registered for any live or upcoming conclave. Browse available conclaves to register and get your table seating schedule.'}
+                  You are not currently registered for any live or upcoming conclave. Browse available conclaves to register and get your table seating schedule.
                 </p>
               </div>
-              <div className="pt-2 flex flex-wrap gap-3">
+              <div className="pt-2">
                 <button
                   onClick={() => onTabChange && onTabChange('registrations')}
                   className="px-5 py-2.5 bg-brand-red hover:bg-red-700 text-white font-bold text-button rounded-lg transition-smooth shadow-md cursor-pointer inline-flex items-center gap-2"
@@ -213,15 +209,6 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
                   <Calendar className="w-4 h-4" />
                   Browse &amp; Register Conclaves
                 </button>
-                {isConclaveCompleted && (
-                  <button
-                    onClick={() => onTabChange && onTabChange('history')}
-                    className="px-5 py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-bold text-button rounded-lg transition-smooth cursor-pointer inline-flex items-center gap-2"
-                  >
-                    <Clock className="w-4 h-4" />
-                    View Conclave History
-                  </button>
-                )}
               </div>
             </div>
           ) : (
