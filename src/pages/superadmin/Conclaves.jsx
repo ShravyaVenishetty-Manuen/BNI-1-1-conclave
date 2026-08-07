@@ -62,7 +62,8 @@ export default function SuperadminConclaves({ searchQuery }) {
   }
 
   // Filter lists
-  const filteredConclaves = conclaves.filter(conclave => {
+  const conclavesList = Array.isArray(conclaves) ? conclaves : [];
+  const filteredConclaves = conclavesList.filter(conclave => {
     const q = searchQuery ? searchQuery.toLowerCase() : '';
     const title = conclave.name || conclave.title || '';
     const venue = conclave.venueLocation || conclave.venue || '';

@@ -196,11 +196,13 @@ export default function Snapshot({ searchQuery, selectedConclaveId }) {
 
   // Filtered participants
   const filteredParticipants = useMemo(() => {
-    return currentConclave.participants.filter(p => {
+    const list = Array.isArray(currentConclave?.participants) ? currentConclave.participants : [];
+    return list.filter(p => {
+      if (!p) return false;
       const matchesSearch =
-        p.name.toLowerCase().includes(searchVal.toLowerCase()) ||
-        p.category.toLowerCase().includes(searchVal.toLowerCase()) ||
-        p.captain.toLowerCase().includes(searchVal.toLowerCase());
+        (p.name || '').toLowerCase().includes(searchVal.toLowerCase()) ||
+        (p.category || '').toLowerCase().includes(searchVal.toLowerCase()) ||
+        (p.captain || '').toLowerCase().includes(searchVal.toLowerCase());
 
       const matchesCategory =
         categoryFilter === 'All' ||
