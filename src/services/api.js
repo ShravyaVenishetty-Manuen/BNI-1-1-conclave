@@ -1,7 +1,11 @@
 import { auth } from '../config/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const defaultBackendUrl = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ? 'http://localhost:3000/api'
+  : 'https://bni-1-2-1-backend.onrender.com/api';
+
+const BASE_URL = import.meta.env.VITE_API_URL || defaultBackendUrl;
 
 /**
  * Returns a promise that resolves to the current Firebase user (or null)

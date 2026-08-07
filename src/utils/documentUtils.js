@@ -134,8 +134,10 @@ export function downloadOrViewAgendaDocument(agendaDoc) {
   }
 
   // 2. Direct physical server static URL on backend port 3000
-  if (agendaDoc.url && agendaDoc.url.startsWith('/uploads')) {
-    const backendUrl = `http://localhost:3000${agendaDoc.url}`;
+    const host = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+      ? 'http://localhost:3000'
+      : 'https://bni-1-2-1-backend.onrender.com';
+    const backendUrl = `${host}${agendaDoc.url}`;
     const win = window.open(backendUrl, '_blank');
     if (!win) {
       const a = document.createElement('a');
