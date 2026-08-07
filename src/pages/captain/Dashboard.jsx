@@ -11,6 +11,7 @@ import {
   History,
   TrendingUp,
   Check,
+  CheckCircle,
   X
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
