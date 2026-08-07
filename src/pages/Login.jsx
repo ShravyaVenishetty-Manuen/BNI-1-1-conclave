@@ -70,11 +70,14 @@ export default function Login({ onLogin }) {
       .catch((firebaseErr) => {
         console.warn('Firebase Auth fallback:', firebaseErr.code, firebaseErr.message);
 
+        const fallbackEmail = emailLower.includes('@') ? emailLower : `${emailLower}@bni.com`;
+        localStorage.setItem('bni_auth_token', fallbackEmail);
+
         const cleanName = inputVal.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
         let payload = {
           uid: "usr_" + inputVal.replace(/[^a-zA-Z0-9]/g, '_'),
           id: "usr_" + inputVal.replace(/[^a-zA-Z0-9]/g, '_'),
-          email: emailLower.includes('@') ? emailLower : `${emailLower}@bni.com`,
+          email: fallbackEmail,
           name: cleanName || "BNI Member",
           role: role
         };
