@@ -34,38 +34,37 @@ import SuperadminLayout from './components/SuperadminLayout';
 import { api } from './services/api';
 
 export default function App() {
-  // Read logged in status from localStorage
+  // Read logged in status from localStorage - default to FALSE so visitors see Login screen
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
     try {
       const stored = localStorage.getItem('bni_logged_in');
-      if (stored !== null) return stored === 'true';
-      const path = window.location.pathname.replace(/^\/|\/$/g, '');
-      if (path.startsWith('captain') || path.startsWith('member') || path.startsWith('admin') || path.startsWith('superadmin')) {
-        return true;
-      }
-      return true;
+      const token = localStorage.getItem('bni_auth_token');
+      if (stored === 'true' || (stored === null && token)) return true;
+      return false;
     } catch (e) {
-      return true;
+      return false;
     }
   });
 
   // Read logged in user's role from localStorage or pathname
   const [userRole, setUserRole] = useState(() => {
+    const storedRole = localStorage.getItem('bni_user_role');
+    if (storedRole) return storedRole;
     const path = window.location.pathname.replace(/^\/|\/$/g, '');
     if (path.startsWith('superadmin') || path.includes('/superadmin')) return 'superadmin';
     if (path.startsWith('captain') || path.includes('/captain')) return 'captain';
     if (path.startsWith('member') || path.includes('/member')) return 'member';
     if (path.startsWith('admin') || path.includes('/admin')) return 'admin';
-    return localStorage.getItem('bni_user_role') || 'admin';
+    return 'admin';
   });
 
   // Read logged in admin info from localStorage
   const [loggedInAdmin, setLoggedInAdmin] = useState(() => {
     try {
       const data = localStorage.getItem('bni_logged_admin');
-      return (data && data !== 'undefined') ? JSON.parse(data) : { name: "Sanjay Wagle", email: "admin@bni.com", region: "Guntur Central" };
+      return (data && data !== 'undefined') ? JSON.parse(data) : null;
     } catch (e) {
-      return { name: "Sanjay Wagle", email: "admin@bni.com", region: "Guntur Central" };
+      return null;
     }
   });
 
@@ -73,9 +72,9 @@ export default function App() {
   const [loggedInCaptain, setLoggedInCaptain] = useState(() => {
     try {
       const data = localStorage.getItem('bni_logged_captain');
-      return (data && data !== 'undefined') ? JSON.parse(data) : { name: "Sravanti Rao", email: "captain@bni.com", chapter: "BNI Champions", tableNumber: 6, isCaptain: true };
+      return (data && data !== 'undefined') ? JSON.parse(data) : null;
     } catch (e) {
-      return { name: "Sravanti Rao", email: "captain@bni.com", chapter: "BNI Champions", tableNumber: 6, isCaptain: true };
+      return null;
     }
   });
 
@@ -83,9 +82,9 @@ export default function App() {
   const [loggedInMember, setLoggedInMember] = useState(() => {
     try {
       const data = localStorage.getItem('bni_logged_member');
-      return (data && data !== 'undefined') ? JSON.parse(data) : { name: "Rajesh Kumar", email: "member@bni.com", chapter: "BNI Champions", tableNumber: 6 };
+      return (data && data !== 'undefined') ? JSON.parse(data) : null;
     } catch (e) {
-      return { name: "Rajesh Kumar", email: "member@bni.com", chapter: "BNI Champions", tableNumber: 6 };
+      return null;
     }
   });
 
