@@ -425,6 +425,7 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
             <p className="text-[10px] leading-relaxed text-zinc-500 font-semibold">
               No cross-chapter business overlaps detected in this round. High potential for external referrals.
             </p>
+          </div>
         </div>
       </div>
 
