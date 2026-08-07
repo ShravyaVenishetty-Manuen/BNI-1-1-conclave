@@ -178,55 +178,61 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
   const conclaveStatusStr = (conclaveSyncData?.conclaveStatus?.status || '').toLowerCase();
   const isConclaveCompleted = conclaveStatusStr === 'completed' || conclaveStatusStr === 'finished';
 
+  if (!conclaveSyncData || isConclaveCompleted) {
+    return (
+      <div className="space-y-8 animate-fade-in font-sans pb-16">
+        <div className="bg-white p-6 md:p-8 rounded-xl shadow-2xs border border-zinc-200 relative overflow-hidden flex flex-col justify-between min-h-[300px]">
+          <div className="absolute inset-0 opacity-[0.02] pointer-events-none bg-[radial-gradient(#af101a_1px,transparent_1px)] [background-size:16px_16px]"></div>
+          <div className="space-y-5 py-4 my-auto">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-800">
+              <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span className="text-[11px] font-bold">
+                {isConclaveCompleted ? 'Conclave Completed — Ready for Next Event' : 'No Active Conclave Registration'}
+              </span>
+            </div>
+            <div>
+              <h1 className="text-[20px] font-black text-zinc-955 leading-tight">Welcome {memberName}</h1>
+              <p className="text-[11.5px] text-zinc-500 font-semibold mt-0.5">{memberCompany} • {memberChapter}</p>
+              <p className="text-body-sm text-zinc-600 mt-3 max-w-lg leading-relaxed">
+                {isConclaveCompleted 
+                  ? `The previous conclave (${conclaveSyncData?.conclaveStatus?.title || 'Conclave Session'}) has officially ended. Browse available conclaves below to register for upcoming events!`
+                  : 'You are not currently registered for any live or upcoming conclave. Browse available conclaves to register and get your table seating schedule.'}
+              </p>
+            </div>
+            <div className="pt-2 flex flex-wrap gap-3">
+              <button
+                onClick={() => onTabChange && onTabChange('registrations')}
+                className="px-5 py-2.5 bg-brand-red hover:bg-red-700 text-white font-bold text-button rounded-lg transition-smooth shadow-md cursor-pointer inline-flex items-center gap-2"
+              >
+                <Calendar className="w-4 h-4" />
+                Browse &amp; Register Conclaves
+              </button>
+              {isConclaveCompleted && (
+                <button
+                  onClick={() => onTabChange && onTabChange('history')}
+                  className="px-5 py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-bold text-button rounded-lg transition-smooth cursor-pointer inline-flex items-center gap-2"
+                >
+                  <Clock className="w-4 h-4" />
+                  View Conclave History
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8 animate-fade-in font-sans pb-16">
 
       {/* Hero Section */}
       <div className="grid grid-cols-12 gap-6">
 
-        {/* Left: Welcome & Status Card (Takes 8 cols on large screens, stacks on tablets/mobile) */}
+        {/* Left: Welcome & Status Card */}
         <div className="col-span-12 lg:col-span-8 bg-white p-6 md:p-8 rounded-xl shadow-2xs border border-zinc-200 relative overflow-hidden flex flex-col justify-between min-h-[300px]">
           <div className="absolute inset-0 opacity-[0.02] pointer-events-none bg-[radial-gradient(#af101a_1px,transparent_1px)] [background-size:16px_16px]"></div>
-
-          {!conclaveSyncData || isConclaveCompleted ? (
-            <div className="space-y-5 py-4 my-auto">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-800">
-                <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span className="text-[11px] font-bold">
-                  {isConclaveCompleted ? 'Conclave Completed — Ready for Next Event' : 'No Active Conclave Registration'}
-                </span>
-              </div>
-              <div>
-                <h1 className="text-[20px] font-black text-zinc-955 leading-tight">Welcome {memberName}</h1>
-                <p className="text-[11.5px] text-zinc-500 font-semibold mt-0.5">{memberCompany} • {memberChapter}</p>
-                <p className="text-body-sm text-zinc-600 mt-3 max-w-lg leading-relaxed">
-                  {isConclaveCompleted 
-                    ? `The previous conclave (${conclaveSyncData?.conclaveStatus?.title || 'Conclave Session'}) has officially ended. Browse available conclaves below to register for upcoming events!`
-                    : 'You are not currently registered for any live or upcoming conclave. Browse available conclaves to register and get your table seating schedule.'}
-                </p>
-              </div>
-              <div className="pt-2 flex flex-wrap gap-3">
-                <button
-                  onClick={() => onTabChange && onTabChange('registrations')}
-                  className="px-5 py-2.5 bg-brand-red hover:bg-red-700 text-white font-bold text-button rounded-lg transition-smooth shadow-md cursor-pointer inline-flex items-center gap-2"
-                >
-                  <Calendar className="w-4 h-4" />
-                  Browse &amp; Register Conclaves
-                </button>
-                {isConclaveCompleted && (
-                  <button
-                    onClick={() => onTabChange && onTabChange('history')}
-                    className="px-5 py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-bold text-button rounded-lg transition-smooth cursor-pointer inline-flex items-center gap-2"
-                  >
-                    <Clock className="w-4 h-4" />
-                    View Conclave History
-                  </button>
-                )}
-              </div>
-            </div>
-          ) : (
-            <>
-              <div className="absolute top-4 right-4">
+          <div className="absolute top-4 right-4">
                 {isConclaveCompleted ? (
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-zinc-100 text-zinc-700 text-[10px] font-black uppercase tracking-wider rounded-full border border-zinc-200 shadow-2xs">
                     <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
@@ -368,11 +374,8 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
                   View Full Schedule
                 </button>
               </div>
-            </>
-          )}
         </div>
 
-        {/* Right: Table Info Card (Takes 4 cols on large screens, stacks on smaller screens) */}
         <div className="col-span-12 lg:col-span-4 bg-white p-6 rounded-xl shadow-2xs border border-zinc-200 flex flex-col justify-between min-h-[300px]">
           <div>
             <h3 className="font-black text-zinc-900 text-body-sm mb-4">Table {conclaveSyncData?.tableNumber || 'N/A'} Intelligence</h3>
@@ -422,7 +425,6 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
             <p className="text-[10px] leading-relaxed text-zinc-500 font-semibold">
               No cross-chapter business overlaps detected in this round. High potential for external referrals.
             </p>
-          </div>
         </div>
       </div>
 
@@ -657,7 +659,6 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
               ></div>
             </div>
           </div>
-
         </div>
       </div>
 
