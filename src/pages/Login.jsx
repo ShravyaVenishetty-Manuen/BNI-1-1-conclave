@@ -4,13 +4,11 @@ import { auth } from '../config/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 
 export default function Login({ onLogin }) {
-  const [role, setRole] = useState('admin'); // 'admin', 'captain', or 'member'
   const [inputVal, setInputVal] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -22,21 +20,21 @@ export default function Login({ onLogin }) {
     }
 
     setIsLoading(true);
+    const emailLower = inputVal.trim().toLowerCase();
 
-    const emailLower = inputVal.toLowerCase();
-
-    // Enforce login with seamless fallback if Firebase Auth credentials differ
+    // Authenticate strictly with Firebase Auth
     signInWithEmailAndPassword(auth, emailLower, password)
       .then(async (userCredential) => {
         const firebaseUser = userCredential.user;
         const token = await firebaseUser.getIdToken();
 
-        // Clear any stale cached session from a previous user
+        // Clear any stale cached sessions from previous user
         localStorage.removeItem('bni_logged_captain');
         localStorage.removeItem('bni_logged_member');
+        localStorage.removeItem('bni_logged_admin');
         localStorage.setItem('bni_auth_token', token);
 
-        // Fetch real profile from backend (resolves correct Firestore doc by email/identifier)
+        // Fetch real profile from backend to resolve user role & details
         let backendProfile = null;
         try {
           const defaultBackendUrl = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
@@ -46,55 +44,64 @@ export default function Login({ onLogin }) {
           const resp = await fetch(`${apiBase}/me`, {
             headers: { Authorization: `Bearer ${token}` }
           });
-          if (resp.ok) backendProfile = await resp.json();
-        } catch (_) { /* network issue, fall through */ }
+          if (resp.ok) {
+            backendProfile = await resp.json();
+          }
+        } catch (_) {
+          /* Network error fallback if offline */
+        }
 
+        // Determine user role automatically from backend profile or default
+        const rawRole = (backendProfile?.role || 'member').toLowerCase();
+        let detectedRole = 'member';
+        if (rawRole === 'superadmin') {
+          detectedRole = 'superadmin';
+        } else if (rawRole === 'admin' || rawRole === 'regional_admin' || rawRole === 'coordinator') {
+          detectedRole = 'admin';
+        } else if (rawRole === 'captain') {
+          detectedRole = 'captain';
+        } else {
+          detectedRole = 'member';
+        }
 
         let payload = {
           uid: firebaseUser.uid,
           id: firebaseUser.uid,
           email: backendProfile?.email || firebaseUser.email,
           name: backendProfile?.name || firebaseUser.displayName || firebaseUser.email.split('@')[0],
-          role: backendProfile?.role || role,
+          role: detectedRole,
           ...(backendProfile || {}),
         };
 
-        if (role === 'admin') {
+        if (detectedRole === 'admin') {
           payload.region = payload.region || "Guntur Central";
-        } else if (role === 'captain') {
+        } else if (detectedRole === 'captain') {
           payload.tableId = payload.tableId || "Table 01";
           payload.chapter = payload.chapter || "Peak Performance";
           payload.category = payload.category || "Financial Services";
         }
 
         setIsLoading(false);
-        onLogin && onLogin(role, payload);
+        onLogin && onLogin(detectedRole, payload);
       })
       .catch((firebaseErr) => {
-        console.warn('Firebase Auth fallback:', firebaseErr.code, firebaseErr.message);
+        console.error('Authentication Error:', firebaseErr.code, firebaseErr.message);
 
-        const fallbackEmail = emailLower.includes('@') ? emailLower : `${emailLower}@bni.com`;
-        localStorage.setItem('bni_auth_token', fallbackEmail);
+        // Clear invalid auth token
+        localStorage.removeItem('bni_auth_token');
 
-        const cleanName = inputVal.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-        let payload = {
-          uid: "usr_" + inputVal.replace(/[^a-zA-Z0-9]/g, '_'),
-          id: "usr_" + inputVal.replace(/[^a-zA-Z0-9]/g, '_'),
-          email: fallbackEmail,
-          name: cleanName || "BNI Member",
-          role: role
-        };
-
-        if (role === 'admin') {
-          payload.region = "Guntur Central";
-        } else if (role === 'captain') {
-          payload.tableId = "Table 01";
-          payload.chapter = "Peak Performance";
-          payload.category = "Financial Services";
+        // Strictly enforce login failure: DO NOT log in or open dashboard!
+        let userMessage = 'Invalid email or password. Please check your credentials and try again.';
+        if (firebaseErr.code === 'auth/invalid-email') {
+          userMessage = 'Please enter a valid email address.';
+        } else if (firebaseErr.code === 'auth/user-disabled') {
+          userMessage = 'This account has been disabled. Please contact system admin.';
+        } else if (firebaseErr.code === 'auth/too-many-requests') {
+          userMessage = 'Access temporarily disabled due to repeated failed attempts. Please try again later.';
         }
 
+        setError(userMessage);
         setIsLoading(false);
-        onLogin && onLogin(role, payload);
       });
   };
 
@@ -113,10 +120,10 @@ export default function Login({ onLogin }) {
           </div>
           <div>
             <h1 className="text-xl font-black text-white tracking-wider leading-none">
-              {role === 'admin' ? 'BNI ADMIN' : role === 'captain' ? 'BNI CAPTAIN' : 'BNI MEMBER'}
+              BNI CONCLAVE PORTAL
             </h1>
             <p className="text-[9px] text-zinc-400 font-bold uppercase tracking-widest mt-1">
-              {role === 'admin' ? 'Conclave Seating Seeding Portal' : role === 'captain' ? 'Table Attendance Check-in Portal' : 'Conclave Member Portal'}
+              High-Performance Networking Platform
             </p>
           </div>
         </div>
@@ -129,19 +136,11 @@ export default function Login({ onLogin }) {
           </div>
           
           <h2 className="text-3xl font-extrabold text-white leading-tight">
-            {role === 'admin' 
-              ? 'High-Performance Networking Seating Assignments.' 
-              : role === 'captain'
-              ? 'Effortless Attendance Log & Collision Management.'
-              : 'Track Your Seating & Connect with Table Members.'}
+            High-Performance Networking &amp; Seating Assignments.
           </h2>
           
           <p className="text-zinc-400 text-body-md font-medium leading-relaxed">
-            {role === 'admin'
-              ? 'Validate constraints, manage chapter captains, and seed networking pairings using our multi-round optimization engine.'
-              : role === 'captain'
-              ? 'Captains can quickly check-in table attendees, verify business category conflicts, and synchronize round status directly with the admin dashboard.'
-              : 'View co-attendees category tags, browse all 6 seating round locations, and track discussion focus timers in real-time.'}
+            Sign in with your registered account credentials to view your table seating, track round schedules, and connect with fellow chapter members.
           </p>
         </div>
 
@@ -159,112 +158,48 @@ export default function Login({ onLogin }) {
         <div className="absolute bottom-0 left-10 w-96 h-96 rounded-full bg-red-900/10 blur-[120px] pointer-events-none"></div>
       </div>
 
-      {/* Right side: Modern Form login wrapper */}
+      {/* Right side: Modern Unified Login Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 sm:p-12 md:p-16 bg-white relative">
-        {/* Floating circles on right (ambient visual flair) */}
+        {/* Ambient visual glow */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-zinc-50 rounded-full blur-[60px] pointer-events-none"></div>
         
         <div className="w-full max-w-sm space-y-6 relative z-10">
           {/* Form Header */}
           <div className="space-y-2">
-            {/* Show logo icon on mobile instead */}
+            {/* Mobile logo */}
             <div className="lg:hidden w-10 h-10 bg-brand-red rounded-xl flex items-center justify-center mb-6">
               <Award className="w-5 h-5 text-white" />
             </div>
             
             <h3 className="text-2xl font-black text-zinc-955 tracking-tight">Portal Login</h3>
             <p className="text-body-md text-zinc-500 font-medium">
-              Select your role below and enter credentials.
+              Enter your account credentials to access your portal.
             </p>
-          </div>
-
-          {/* Role Switcher Tabs */}
-          <div className="flex border-b border-zinc-200">
-            <button
-              type="button"
-              onClick={() => {
-                setRole('superadmin');
-                setInputVal('superadmin@bni.com');
-                setError('');
-              }}
-              className={`flex-1 pb-3 text-[10px] font-black uppercase tracking-wider transition-smooth cursor-pointer ${
-                role === 'superadmin'
-                  ? 'border-b-2 border-brand-red text-brand-red font-black'
-                  : 'text-zinc-400 hover:text-zinc-755'
-              }`}
-            >
-              Superadmin
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setRole('admin');
-                setInputVal('admin@bni.com');
-                setError('');
-              }}
-              className={`flex-1 pb-3 text-[10px] font-black uppercase tracking-wider transition-smooth cursor-pointer ${
-                role === 'admin'
-                  ? 'border-b-2 border-brand-red text-brand-red font-black'
-                  : 'text-zinc-400 hover:text-zinc-755'
-              }`}
-            >
-              Admin
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setRole('captain');
-                setInputVal('amit@bni.com');
-                setError('');
-              }}
-              className={`flex-1 pb-3 text-[10px] font-black uppercase tracking-wider transition-smooth cursor-pointer ${
-                role === 'captain'
-                  ? 'border-b-2 border-brand-red text-brand-red font-black'
-                  : 'text-zinc-400 hover:text-zinc-755'
-              }`}
-            >
-              Captain
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setRole('member');
-                setInputVal('anjali.s@sharmaads.in');
-                setError('');
-              }}
-              className={`flex-1 pb-3 text-[10px] font-black uppercase tracking-wider transition-smooth cursor-pointer ${
-                role === 'member'
-                  ? 'border-b-2 border-brand-red text-brand-red font-black'
-                  : 'text-zinc-400 hover:text-zinc-755'
-              }`}
-            >
-              Member
-            </button>
           </div>
 
           {/* Form Content */}
           <form onSubmit={handleSubmit} className="space-y-4 pt-2">
             {error && (
               <div className="p-3 bg-red-50 border border-red-100 rounded-lg text-brand-red text-body-sm font-semibold flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-brand-red"></span>
-                {error}
+                <span className="w-1.5 h-1.5 rounded-full bg-brand-red shrink-0"></span>
+                <span>{error}</span>
               </div>
             )}
 
             {/* Email/Mobile Field */}
             <div className="space-y-1.5">
               <label className="text-[10px] text-zinc-450 font-extrabold uppercase tracking-widest" htmlFor="email-input">
-                {role === 'admin' ? 'Email Address' : 'Email or Mobile Number'}
+                Email Address
               </label>
               <div className="relative">
                 <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
                 <input
                   id="email-input"
-                  type="text"
+                  type="email"
                   value={inputVal}
                   onChange={(e) => setInputVal(e.target.value)}
                   disabled={isLoading}
-                  placeholder={role === 'admin' ? 'admin@bni.com' : 'amit@bni.com or anjali.s@sharmaads.in'}
+                  placeholder="name@example.com"
                   className="w-full pl-10 pr-4 py-2.5 bg-white border border-zinc-200 rounded-lg text-body-md font-semibold outline-none focus:border-zinc-800 transition-smooth placeholder-zinc-400 text-zinc-900"
                 />
               </div>
@@ -276,12 +211,6 @@ export default function Login({ onLogin }) {
                 <label className="text-[10px] text-zinc-450 font-extrabold uppercase tracking-widest" htmlFor="password-input">
                   Password
                 </label>
-                <button
-                  type="button"
-                  className="text-[10px] text-zinc-450 hover:text-zinc-900 font-extrabold uppercase tracking-wider cursor-pointer"
-                >
-                  Forgot Password?
-                </button>
               </div>
               <div className="relative">
                 <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
@@ -302,18 +231,6 @@ export default function Login({ onLogin }) {
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-            </div>
-
-            {/* Remember Me Option */}
-            <div className="flex items-center justify-between pt-1">
-              <label className="flex items-center gap-2 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  defaultChecked
-                  className="w-4 h-4 rounded border-zinc-300 text-brand-red focus:ring-brand-red outline-none"
-                />
-                <span className="text-body-sm font-semibold text-zinc-600">Keep me signed in</span>
-              </label>
             </div>
 
             {/* Submit Sign-in Button */}
@@ -338,8 +255,6 @@ export default function Login({ onLogin }) {
               )}
             </button>
           </form>
-
-
 
           {/* Terms Footer */}
           <p className="text-[10px] text-zinc-450 text-center leading-relaxed font-semibold pt-4">
