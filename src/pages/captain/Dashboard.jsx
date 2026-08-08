@@ -266,7 +266,42 @@ export default function CaptainDashboard({ loggedInCaptain, activeTab = 'dashboa
   const absentCount = Object.values(attendance).filter(s => s === 'absent').length;
 
   const conclaveStatusStr = (conclaveSyncData?.conclaveStatus?.status || '').toLowerCase();
-  const isConclaveCompleted = conclaveStatusStr === 'completed' || conclaveStatusStr === 'finished';
+  const isConclaveCompleted = conclaveStatusStr === 'completed' || conclaveStatusStr === 'finished' || conclaveStatusStr === 'ended';
+
+  if (isConclaveCompleted) {
+    return (
+      <div className="space-y-8 animate-fade-in font-sans pb-20">
+        <div className="bg-white p-8 md:p-12 pb-12 md:pb-16 rounded-xl border border-zinc-200 text-center shadow-2xs space-y-6 mb-10">
+          <CheckCircle className="w-14 h-14 text-emerald-500 mx-auto" />
+          <div className="space-y-2">
+            <h2 className="text-xl font-black text-zinc-900">Conclave Session Completed</h2>
+            <p className="text-xs text-zinc-500 max-w-md mx-auto leading-relaxed">
+              The previous conclave session has officially concluded. Table captain management controls are active only during running conclaves. Please browse upcoming conclaves!
+            </p>
+          </div>
+          <div className="pt-2 pb-4">
+            <button
+              onClick={() => onTabChange ? onTabChange('dashboard') : (window.location.href = '/')}
+              className="px-6 py-2.5 bg-brand-red hover:bg-red-700 text-white font-extrabold text-xs rounded-lg transition-smooth shadow-sm inline-flex items-center gap-2 cursor-pointer"
+            >
+              Go to Member Dashboard
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!conclaveSyncData) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-4 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-xs font-semibold text-zinc-500">Loading captain table session...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-fade-in font-sans">

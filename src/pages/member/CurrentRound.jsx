@@ -194,7 +194,35 @@ export default function MemberCurrentRound({ loggedInMember, onTabChange, concla
     return [];
   };
 
-  const agendaSteps = getAgendaSteps(timeLeft);
+  const conclaveStatusStr = (conclaveSyncData?.conclaveStatus?.status || '').toLowerCase();
+  const isConclaveCompleted = conclaveStatusStr === 'completed' || conclaveStatusStr === 'finished' || conclaveStatusStr === 'ended';
+
+  if (isConclaveCompleted || !conclaveSyncData || !conclaveSyncData?.tableOccupants || conclaveSyncData?.tableOccupants.length === 0) {
+    return (
+      <div className="space-y-8 animate-fade-in font-sans pb-16">
+        <div>
+          <h1 className="text-[20px] font-black text-zinc-955 leading-tight">Live Conclave Session</h1>
+          <p className="text-[11.5px] text-zinc-500 font-semibold mt-0.5">Real-time table assignment &amp; 1-on-1 networking round overview.</p>
+        </div>
+
+        <div className="bg-white p-8 md:p-12 rounded-xl border border-zinc-200 text-center shadow-2xs space-y-4">
+          <TrendingUp className="w-12 h-12 text-zinc-300 mx-auto" />
+          <div>
+            <h3 className="text-lg font-black text-zinc-800">No Active Conclave Round Running</h3>
+            <p className="text-xs text-zinc-500 max-w-md mx-auto mt-1 leading-relaxed">
+              There is currently no live networking round active for your account. When a conclave is running and you are registered, your current round table assignment and 1-on-1 table members will appear here!
+            </p>
+          </div>
+          <button
+            onClick={() => onTabChange && onTabChange('registrations')}
+            className="px-6 py-2.5 bg-brand-red hover:bg-red-700 text-white font-extrabold text-xs rounded-lg transition-smooth shadow-sm inline-flex items-center gap-2 cursor-pointer"
+          >
+            Explore &amp; Register Conclaves
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-fade-in font-sans pb-16">

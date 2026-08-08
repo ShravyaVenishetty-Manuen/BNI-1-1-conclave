@@ -169,7 +169,36 @@ export default function MemberSchedule({ loggedInMember, onTabChange, conclaveSy
   const currentRoundNum = conclaveSyncData?.conclaveStatus?.currentRound || 1;
   const currentRoundSeating = rounds.find(s => s.number === currentRoundNum) || rounds[0] || null;
   const nextRound = rounds.find(r => r.number === currentRoundNum + 1);
-  const memberName = loggedInMember?.name || 'Member';
+  const conclaveStatusStr = (conclaveSyncData?.conclaveStatus?.status || '').toLowerCase();
+  const isConclaveCompleted = conclaveStatusStr === 'completed' || conclaveStatusStr === 'finished' || conclaveStatusStr === 'ended';
+
+  if (isConclaveCompleted || !conclaveSyncData || rounds.length === 0) {
+    return (
+      <div className="space-y-8 animate-fade-in font-sans pb-16">
+        <div>
+          <h1 className="text-[20px] font-black text-zinc-955 leading-tight">My Conclave Agenda &amp; Schedule</h1>
+          <p className="text-[11.5px] text-zinc-500 font-semibold mt-0.5">Official agenda and schedule for BNI conclaves.</p>
+        </div>
+
+        <div className="bg-white p-8 md:p-12 rounded-xl border border-zinc-200 text-center shadow-2xs space-y-4">
+          <Clock className="w-12 h-12 text-zinc-300 mx-auto" />
+          <div>
+            <h3 className="text-lg font-black text-zinc-800">No Active Conclave Seating Schedule</h3>
+            <p className="text-xs text-zinc-500 max-w-md mx-auto mt-1 leading-relaxed">
+              The previous conclave has concluded or there is no active running conclave registered for your account. Please browse available conclaves to register for upcoming networking sessions!
+            </p>
+          </div>
+          <button
+            onClick={() => onTabChange && onTabChange('registrations')}
+            className="px-6 py-2.5 bg-brand-red hover:bg-red-700 text-white font-extrabold text-xs rounded-lg transition-smooth shadow-sm inline-flex items-center gap-2 cursor-pointer"
+          >
+            <ArrowRight className="w-4 h-4" />
+            Browse &amp; Register Conclaves
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-fade-in font-sans pb-16">

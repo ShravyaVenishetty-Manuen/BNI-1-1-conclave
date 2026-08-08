@@ -120,7 +120,31 @@ export default function CurrentRound({ loggedInCaptain, conclaveSyncData: propCo
   }
 
   const conclaveStatusStr = (conclaveSyncData?.conclaveStatus?.status || '').toLowerCase();
-  const isConclaveCompleted = conclaveStatusStr === 'completed' || conclaveStatusStr === 'finished';
+  const isConclaveCompleted = conclaveStatusStr === 'completed' || conclaveStatusStr === 'finished' || conclaveStatusStr === 'ended';
+
+  if (isConclaveCompleted) {
+    return (
+      <div className="space-y-8 animate-fade-in font-sans pb-20">
+        <div className="bg-white p-8 md:p-12 pb-12 md:pb-16 rounded-xl border border-zinc-200 text-center shadow-2xs space-y-6 mb-10">
+          <Award className="w-14 h-14 text-emerald-500 mx-auto" />
+          <div className="space-y-2">
+            <h2 className="text-xl font-black text-zinc-900">Conclave Session Completed</h2>
+            <p className="text-xs text-zinc-500 max-w-md mx-auto leading-relaxed">
+              The previous conclave session has officially concluded. Live captain round tracking is active only during running conclaves.
+            </p>
+          </div>
+          <div className="pt-2 pb-4">
+            <button
+              onClick={() => window.location.href = '/'}
+              className="px-6 py-2.5 bg-brand-red hover:bg-red-700 text-white font-extrabold text-xs rounded-lg transition-smooth shadow-sm inline-flex items-center gap-2 cursor-pointer"
+            >
+              Go to Member Dashboard
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-fade-in font-sans">

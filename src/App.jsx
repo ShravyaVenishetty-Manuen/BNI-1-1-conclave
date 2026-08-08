@@ -312,20 +312,18 @@ export default function App() {
     localStorage.removeItem('bni_logged_captain');
     localStorage.removeItem('bni_logged_member');
     localStorage.removeItem('bni_logged_admin');
+    localStorage.removeItem('bni_conclave_sync_data_cache');
+    localStorage.removeItem('bni_member_conclaves_cache');
+    localStorage.removeItem('bni_referrals');
     setLoggedInCaptain(null);
     setLoggedInMember(null);
     setLoggedInAdmin(null);
+    setConclaveSyncData(null);
     setIsLoggedIn(false);
     setIsSidebarOpen(false);
   };
 
-  const [conclaveSyncData, setConclaveSyncData] = useState(() => {
-    const cached = localStorage.getItem('bni_conclave_sync_data_cache');
-    if (cached) {
-      try { return JSON.parse(cached); } catch (e) {}
-    }
-    return null;
-  });
+  const [conclaveSyncData, setConclaveSyncData] = useState(null);
   const [memberConclaves, setMemberConclaves] = useState(() => {
     const cached = localStorage.getItem('bni_member_conclaves_cache');
     if (cached) {
@@ -543,6 +541,7 @@ export default function App() {
           {activeTab === 'dashboard' ? (
             <MemberDashboard
               loggedInMember={memberProfile || loggedInMember}
+              memberConclaves={memberConclaves}
               onTabChange={handleTabChange}
               conclaveSyncData={conclaveSyncData}
               searchQuery={searchQuery}

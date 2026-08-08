@@ -16,7 +16,21 @@ import MemberProfileModal from '../../components/MemberProfileModal';
 
 import { api } from '../../services/api';
 
-export default function MemberDashboard({ loggedInMember, onTabChange, conclaveSyncData: propConclaveSyncData, searchQuery }) {
+export default function MemberDashboard({ loggedInMember, onTabChange, conclaveSyncData: propConclaveSyncData, searchQuery, memberConclaves: propMemberConclaves }) {
+  const [conclavesList, setConclavesList] = useState(() => propMemberConclaves || []);
+
+  useEffect(() => {
+    async function loadConclaves() {
+      try {
+        const list = await api.get('/conclaves');
+        if (Array.isArray(list)) {
+          setConclavesList(list);
+        }
+      } catch (err) {}
+    }
+    loadConclaves();
+  }, []);
+
   const [syncData, setSyncData] = useState(() => {
     if (propConclaveSyncData) return propConclaveSyncData;
     const cached = localStorage.getItem('bni_conclave_sync_data_cache');
@@ -178,46 +192,172 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
   const conclaveStatusStr = (conclaveSyncData?.conclaveStatus?.status || '').toLowerCase();
   const isConclaveCompleted = conclaveStatusStr === 'completed' || conclaveStatusStr === 'finished';
 
-  if (!conclaveSyncData || isConclaveCompleted) {
+  if (!conclaveSyncData) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-4 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-xs font-semibold text-zinc-500">Loading your conclave schedule...</p>
+        </div>
+      </div>
+    );
+  }
+
+
+
+  if (isConclaveCompleted) {
+    const listToFilter = conclavesList.length > 0 ? conclavesList : (propMemberConclaves || []);
+    const upcomingConclaves = listToFilter.filter(c => {
+      const s = (c.status || '').toLowerCase();
+      return s !== 'completed' && s !== 'finished' && s !== 'ended' && s !== 'running' && s !== 'active';
+    });
+
+    const myUid = loggedInMember?.uid || loggedInMember?.id;
+    const myName = (loggedInMember?.name || '').toLowerCase();
+    const allRefs = [
+      ...referrals,
+      ...(conclaveSyncData?.newReferralsReceived || []).map(r => ({
+        fromUserId: r.fromUserId,
+        fromMemberId: r.fromUserId,
+        toUserId: myUid,
+        toMemberId: myUid
+      }))
+    ];
+    const sentCount = allRefs.filter(r => r.fromMemberId === myUid || r.fromUserId === myUid || (r.fromName && r.fromName.toLowerCase() === myName)).length;
+    const recvCount = allRefs.filter(r => r.toMemberId === myUid || r.toUserId === myUid || (r.toName && r.toName.toLowerCase() === myName)).length;
+
     return (
       <div className="space-y-8 animate-fade-in font-sans pb-16">
-        <div className="bg-white p-6 md:p-8 rounded-xl shadow-2xs border border-zinc-200 relative overflow-hidden flex flex-col justify-between min-h-[300px]">
+        {/* Top Hero Banner */}
+        <div className="bg-white p-6 md:p-8 pb-8 md:pb-10 rounded-xl shadow-2xs border border-zinc-200 relative overflow-hidden flex flex-col justify-between">
           <div className="absolute inset-0 opacity-[0.02] pointer-events-none bg-[radial-gradient(#af101a_1px,transparent_1px)] [background-size:16px_16px]"></div>
-          <div className="space-y-5 py-4 my-auto">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-800">
+          <div className="space-y-4 my-auto relative z-10">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-800">
               <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
               <span className="text-[11px] font-bold">
-                {isConclaveCompleted ? 'Conclave Completed — Ready for Next Event' : 'No Active Conclave Registration'}
+                Conclave Completed — Ready for Next Event
               </span>
             </div>
             <div>
-              <h1 className="text-[20px] font-black text-zinc-955 leading-tight">Welcome {memberName}</h1>
-              <p className="text-[11.5px] text-zinc-500 font-semibold mt-0.5">{memberCompany} • {memberChapter}</p>
-              <p className="text-body-sm text-zinc-600 mt-3 max-w-lg leading-relaxed">
-                {isConclaveCompleted 
-                  ? `The previous conclave (${conclaveSyncData?.conclaveStatus?.title || 'Conclave Session'}) has officially ended. Browse available conclaves below to register for upcoming events!`
-                  : 'You are not currently registered for any live or upcoming conclave. Browse available conclaves to register and get your table seating schedule.'}
+              <h1 className="text-[22px] font-black text-zinc-955 leading-tight">Welcome {memberName}</h1>
+              <p className="text-[12px] text-zinc-500 font-semibold mt-0.5">{memberCompany} • {memberChapter}</p>
+              <p className="text-body-sm text-zinc-600 mt-2 max-w-2xl leading-relaxed">
+                The previous conclave ({conclaveSyncData?.conclaveStatus?.title || 'Conclave Session'}) has officially ended. Browse upcoming conclaves below to register for your next event!
               </p>
             </div>
-            <div className="pt-2 flex flex-wrap gap-3">
+            <div className="pt-4 pb-2 flex flex-wrap gap-3">
               <button
                 onClick={() => onTabChange && onTabChange('registrations')}
                 className="px-5 py-2.5 bg-brand-red hover:bg-red-700 text-white font-bold text-button rounded-lg transition-smooth shadow-md cursor-pointer inline-flex items-center gap-2"
               >
                 <Calendar className="w-4 h-4" />
-                Browse &amp; Register Conclaves
+                Browse All Conclaves
               </button>
-              {isConclaveCompleted && (
-                <button
-                  onClick={() => onTabChange && onTabChange('history')}
-                  className="px-5 py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-bold text-button rounded-lg transition-smooth cursor-pointer inline-flex items-center gap-2"
-                >
-                  <Clock className="w-4 h-4" />
-                  View Conclave History
-                </button>
-              )}
+              <button
+                onClick={() => onTabChange && onTabChange('history')}
+                className="px-5 py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-bold text-button rounded-lg transition-smooth cursor-pointer inline-flex items-center gap-2"
+              >
+                View Conclave History
+              </button>
             </div>
           </div>
+        </div>
+
+        {/* Quick KPI Stats Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="bg-white p-5 rounded-xl border border-zinc-200 shadow-2xs flex items-center gap-4">
+            <div className="w-11 h-11 rounded-lg bg-red-50 border border-red-100 flex items-center justify-center text-brand-red shrink-0">
+              <Calendar className="w-5 h-5" />
+            </div>
+            <div>
+              <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-widest block">Registered Conclaves</span>
+              <span className="text-xl font-black text-zinc-900 leading-tight mt-0.5 block">{listToFilter.length} Events</span>
+            </div>
+          </div>
+
+          <div className="bg-white p-5 rounded-xl border border-zinc-200 shadow-2xs flex items-center gap-4">
+            <div className="w-11 h-11 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+              <Activity className="w-5 h-5" />
+            </div>
+            <div>
+              <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-widest block">Referrals Exchanged</span>
+              <span className="text-xl font-black text-zinc-900 leading-tight mt-0.5 block">{sentCount + recvCount} Total</span>
+            </div>
+          </div>
+
+          <div className="bg-white p-5 rounded-xl border border-zinc-200 shadow-2xs flex items-center gap-4">
+            <div className="w-11 h-11 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shrink-0">
+              <Building2 className="w-5 h-5" />
+            </div>
+            <div>
+              <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-widest block">Chapter</span>
+              <span className="text-sm font-black text-zinc-900 leading-tight mt-0.5 block truncate max-w-[140px]">{memberChapter}</span>
+            </div>
+          </div>
+
+          <div className="bg-white p-5 rounded-xl border border-zinc-200 shadow-2xs flex items-center gap-4">
+            <div className="w-11 h-11 rounded-lg bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600 shrink-0">
+              <Users className="w-5 h-5" />
+            </div>
+            <div>
+              <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-widest block">Niche / Category</span>
+              <span className="text-xs font-black text-brand-red leading-tight mt-0.5 block truncate max-w-[140px]">{memberCategory}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Upcoming Conclaves Section */}
+        <div className="space-y-4 pt-2">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-black text-zinc-900 tracking-tight">Upcoming Conclaves</h2>
+              <p className="text-xs text-zinc-500 font-medium">Register for upcoming BNI networking conclaves.</p>
+            </div>
+            <button
+              onClick={() => onTabChange && onTabChange('registrations')}
+              className="text-xs font-bold text-brand-red hover:underline flex items-center gap-1 cursor-pointer"
+            >
+              View All <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {upcomingConclaves.length === 0 ? (
+            <div className="bg-white p-8 rounded-xl border border-zinc-200 text-center">
+              <Building2 className="w-10 h-10 text-zinc-300 mx-auto mb-2" />
+              <p className="text-sm font-extrabold text-zinc-700">No upcoming conclaves scheduled at the moment</p>
+              <p className="text-xs text-zinc-500 mt-1">Please check back soon for upcoming regional BNI conclave announcements.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {upcomingConclaves.map(c => (
+                <div key={c.id} className="bg-white p-5 rounded-xl border border-zinc-200 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200">
+                        REGISTRATION OPEN
+                      </span>
+                      <span className="text-[10px] text-zinc-400 font-semibold">{c.region || 'BNI Region'}</span>
+                    </div>
+                    <h3 className="text-base font-black text-zinc-900 leading-snug">{c.title || c.name || 'BNI Conclave'}</h3>
+                    {c.venue && (
+                      <p className="text-xs text-zinc-500 font-medium flex items-center gap-1">
+                        <Building2 className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                        {c.venue}
+                      </p>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={() => onTabChange && onTabChange('registrations')}
+                    className="w-full py-2.5 px-4 rounded-lg font-bold text-xs bg-brand-red hover:bg-red-700 text-white shadow-sm transition-smooth flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    Register Now
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     );
@@ -348,30 +488,40 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
               </div>
 
               <div className="flex flex-wrap gap-3 pt-6 border-t border-zinc-100 mt-6">
+                {!isConclaveCompleted && (
+                  <button
+                    onClick={handleSelfCheckIn}
+                    disabled={isCheckedIn}
+                    className={`text-[10px] font-black uppercase tracking-wider px-5 py-2.5 rounded-lg transition-smooth flex items-center gap-1.5 cursor-pointer shadow-sm ${
+                      isCheckedIn 
+                        ? 'bg-emerald-600 text-white cursor-default' 
+                        : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                    }`}
+                  >
+                    <CheckCircle className="w-3.5 h-3.5" />
+                    {isCheckedIn ? 'Attendance Confirmed' : 'Mark My Attendance'}
+                  </button>
+                )}
                 <button
-                  onClick={handleSelfCheckIn}
-                  disabled={isCheckedIn}
-                  className={`text-[10px] font-black uppercase tracking-wider px-5 py-2.5 rounded-lg transition-smooth flex items-center gap-1.5 cursor-pointer shadow-sm ${
-                    isCheckedIn 
-                      ? 'bg-emerald-600 text-white cursor-default' 
-                      : 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                  }`}
+                  onClick={() => onTabChange && onTabChange('registrations')}
+                  className="text-[10px] font-black uppercase tracking-wider px-5 py-2.5 bg-brand-red hover:bg-red-700 text-white rounded-lg transition-smooth flex items-center gap-1.5 cursor-pointer shadow-sm"
                 >
-                  <CheckCircle className="w-3.5 h-3.5" />
-                  {isCheckedIn ? 'Attendance Confirmed' : 'Mark My Attendance'}
+                  <Calendar className="w-3.5 h-3.5" />
+                  Browse &amp; Register Conclaves
                 </button>
                 <button
                   onClick={() => onTabChange && onTabChange('current-round')}
-                  className="text-[10px] font-black uppercase tracking-wider px-5 py-2.5 bg-brand-red hover:bg-red-700 text-white rounded-lg transition-smooth flex items-center gap-1.5 cursor-pointer shadow-sm"
+                  className="text-[10px] font-black uppercase tracking-wider px-5 py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 rounded-lg transition-smooth flex items-center gap-1.5 cursor-pointer"
                 >
                   View Current Round
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
                 <button
-                  onClick={() => onTabChange && onTabChange('schedule')}
-                  className="text-[10px] font-black uppercase tracking-wider px-5 py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-lg transition-smooth cursor-pointer"
+                  onClick={() => onTabChange && onTabChange('history')}
+                  className="text-[10px] font-black uppercase tracking-wider px-5 py-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-lg transition-smooth flex items-center gap-1.5 cursor-pointer"
                 >
-                  View Full Schedule
+                  <Clock className="w-3.5 h-3.5" />
+                  View Conclave History
                 </button>
               </div>
         </div>
