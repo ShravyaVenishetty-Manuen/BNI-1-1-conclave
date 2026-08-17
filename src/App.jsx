@@ -13,6 +13,7 @@ import ScheduleReview from './pages/ScheduleReview';
 import RoundRunner from './pages/RoundRunner';
 import Reports from './pages/Reports';
 import Login from './pages/Login';
+import SignUp from './pages/SignUp';
 import CaptainHeader from './components/CaptainHeader';
 import CaptainDashboard from './pages/captain/Dashboard';
 import CaptainTable from './pages/captain/Table';
@@ -432,9 +433,24 @@ export default function App() {
     setIsSidebarOpen(false);
   };
 
-  // If not logged in, render only the Login page
+  const [authView, setAuthView] = useState('login');
+
+  // If not logged in, render Login or SignUp page
   if (!isLoggedIn) {
-    return <Login onLogin={handleLogin} />;
+    if (authView === 'signup') {
+      return (
+        <SignUp
+          onSwitchToLogin={() => setAuthView('login')}
+          onLogin={handleLogin}
+        />
+      );
+    }
+    return (
+      <Login
+        onLogin={handleLogin}
+        onSwitchToSignUp={() => setAuthView('signup')}
+      />
+    );
   }
 
   // If logged in as a Superadmin, render the Superadmin portal layout directly

@@ -3,7 +3,7 @@ import { Award, Lock, Mail, Eye, EyeOff, ShieldCheck, Sparkles } from 'lucide-re
 import { auth } from '../config/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 
-export default function Login({ onLogin }) {
+export default function Login({ onLogin, onSwitchToSignUp }) {
   const [inputVal, setInputVal] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -255,6 +255,21 @@ export default function Login({ onLogin }) {
               )}
             </button>
           </form>
+
+          {onSwitchToSignUp && (
+            <div className="mt-5 pt-4 border-t border-zinc-100 text-center">
+              <p className="text-[11px] text-zinc-500 font-semibold">
+                New member?{' '}
+                <button
+                  type="button"
+                  onClick={onSwitchToSignUp}
+                  className="text-brand-red font-bold hover:underline ml-1 cursor-pointer"
+                >
+                  Create Member Account
+                </button>
+              </p>
+            </div>
+          )}
 
           {/* Terms Footer */}
           <p className="text-[10px] text-zinc-450 text-center leading-relaxed font-semibold pt-4">
