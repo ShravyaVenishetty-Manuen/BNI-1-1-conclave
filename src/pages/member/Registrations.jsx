@@ -154,7 +154,7 @@ export default function Registrations({ loggedInMember }) {
       company: member?.company || '',
       category: member?.category || '',
       chapter: member?.chapter || '',
-      region: member?.region || conclave?.region || 'Guntur Region',
+      region: member?.region || conclave?.region || 'Global',
       state: member?.state || conclave?.state || 'Andhra Pradesh',
       country: member?.country || conclave?.country || 'India',
       mealPreference: 'Veg',

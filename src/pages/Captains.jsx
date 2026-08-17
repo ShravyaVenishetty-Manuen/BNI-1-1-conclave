@@ -106,7 +106,7 @@ export default function Captains({ searchQuery, selectedConclaveId, loggedInAdmi
                     if (r.role === 'captain' || r.isTableCaptain === true) {
                       const uid = r.userId || r.uid || r.id;
                       const existing = captainMap.get(uid) || {};
-                      const userRegion = r.region || master.region || existing.region || (typeof r.location === 'string' ? r.location : '') || 'Guntur Region';
+                      const userRegion = r.region || master.region || existing.region || (typeof r.location === 'string' ? r.location : '') || 'Global';
                       captainMap.set(uid, {
                         ...r,
                         ...existing,
@@ -268,7 +268,7 @@ export default function Captains({ searchQuery, selectedConclaveId, loggedInAdmi
       if (typeof c.location === 'object' && c.location.place) return c.location.place;
     }
     if (c?.address && typeof c.address === 'string' && c.address !== 'Global BNI Network') return c.address;
-    return 'Guntur Region';
+    return 'Global';
   };
 
   // Conclave-specific captains subset

@@ -151,7 +151,7 @@ export default function SuperadminConclaves({ searchQuery }) {
                   </td>
                   <td className="p-4">
                     <span className="px-2.5 py-0.5 bg-zinc-50 border border-zinc-200 text-zinc-550 text-[10px] font-bold rounded-full whitespace-nowrap">
-                      {conclave.region || 'Guntur Region'}
+                      {conclave.region || 'Global'}
                     </span>
                   </td>
                   <td className="p-4 text-zinc-500">{conclave.coordinator || conclave.creator || 'Admin'}</td>
@@ -223,7 +223,7 @@ function ConclaveDetailView({ conclave, onBack }) {
               <MapPin className="w-3.5 h-3.5 text-zinc-400" />
               {conclave.venueLocation || conclave.venue || 'TBD Venue'}
               <span className="text-zinc-300">•</span>
-              <span>Region: {conclave.region || 'Guntur Region'}</span>
+              <span>Region: {conclave.region || 'Global'}</span>
             </p>
           </div>
           <div className="text-left sm:text-right">

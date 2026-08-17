@@ -286,7 +286,7 @@ export default function SuperadminDashboard({ setActiveTab }) {
                   <div className="space-y-1">
                     <p className="font-black text-zinc-800 leading-none">{conclave.name || conclave.title || 'Unnamed Conclave'}</p>
                     <div className="flex gap-2 items-center text-[10px] text-zinc-450 font-semibold mt-1">
-                      <span>{conclave.region || conclave.location || 'Guntur Region'}</span>
+                      <span>{conclave.region || conclave.location || 'Global'}</span>
                       <span>•</span>
                       <span>{Math.ceil((conclave.registrationCount || conclave.membersCount || 0) / (conclave.personsPerTable || 7)) || 1} tables</span>
                       <span>•</span>

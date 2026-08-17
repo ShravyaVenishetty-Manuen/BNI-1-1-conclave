@@ -590,7 +590,7 @@ export default function SuperadminAdmins({ searchQuery }) {
                             <div>
                               <span className="text-[9px] font-black text-zinc-400 uppercase tracking-wider block">Members</span>
                               <span className="text-[13px] font-black text-zinc-900">
-                                {members.filter(m => (m.region ? (typeof m.region === 'object' ? m.region.place : m.region) : (m.location ? (typeof m.location === 'object' ? m.location.place : m.location) : 'Guntur Region')) === adminRegion).length} Registered
+                                {members.filter(m => (m.region ? (typeof m.region === 'object' ? m.region.place : m.region) : (m.location ? (typeof m.location === 'object' ? m.location.place : m.location) : 'Global')) === adminRegion).length} Registered
                               </span>
                             </div>
                           </div>
@@ -601,7 +601,7 @@ export default function SuperadminAdmins({ searchQuery }) {
                       <div className="space-y-3">
                         <h4 className="text-[11px] font-black text-zinc-400 uppercase tracking-widest px-0.5">Registered Members</h4>
                         <div className="border border-zinc-200 rounded-xl overflow-hidden divide-y divide-zinc-200 max-h-[220px] overflow-y-auto">
-                          {members.filter(m => (m.region ? (typeof m.region === 'object' ? m.region.place : m.region) : (m.location ? (typeof m.location === 'object' ? m.location.place : m.location) : 'Guntur Region')) === adminRegion).map(member => (
+                          {members.filter(m => (m.region ? (typeof m.region === 'object' ? m.region.place : m.region) : (m.location ? (typeof m.location === 'object' ? m.location.place : m.location) : 'Global')) === adminRegion).map(member => (
                             <div key={member.id} className="p-3 flex justify-between items-center text-body-sm bg-white hover:bg-zinc-50/50 transition-colors">
                               <div>
                                 <p className="font-black text-zinc-800">{member.name}</p>
@@ -612,7 +612,7 @@ export default function SuperadminAdmins({ searchQuery }) {
                               </span>
                             </div>
                           ))}
-                          {members.filter(m => (m.region ? (typeof m.region === 'object' ? m.region.place : m.region) : (m.location ? (typeof m.location === 'object' ? m.location.place : m.location) : 'Guntur Region')) === adminRegion).length === 0 && (
+                          {members.filter(m => (m.region ? (typeof m.region === 'object' ? m.region.place : m.region) : (m.location ? (typeof m.location === 'object' ? m.location.place : m.location) : 'Global')) === adminRegion).length === 0 && (
                             <p className="p-4 text-center text-zinc-400 text-caption font-semibold">No registered members in this region.</p>
                           )}
                         </div>

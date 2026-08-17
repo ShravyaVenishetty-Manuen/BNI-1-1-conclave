@@ -99,7 +99,7 @@ export default function Members({ searchQuery, selectedConclaveId, loggedInAdmin
                   res.registrations.forEach(r => {
                     const uid = r.userId || r.uid || r.id;
                     const existing = memberMap.get(uid) || {};
-                    const userRegion = r.region || master.region || existing.region || (typeof r.location === 'string' ? r.location : '') || 'Guntur Region';
+                    const userRegion = r.region || master.region || existing.region || (typeof r.location === 'string' ? r.location : '') || 'Global';
                     memberMap.set(uid, {
                       ...r,
                       ...existing,
@@ -252,16 +252,15 @@ export default function Members({ searchQuery, selectedConclaveId, loggedInAdmin
   };
 
   const getMemberRegion = (m) => {
-    const reg = m?.userRegion || m?.region;
-    if (reg && typeof reg === 'string' && reg !== 'Global BNI Network' && reg.trim() !== '') return reg;
-    if (m?.chapter && m.chapter.trim() !== '' && m.chapter !== 'N/A') return `${m.chapter} Chapter`;
-    if (m?.state && m.state.trim() !== '') return m.state.includes('Region') ? m.state : `${m.state} Region`;
+    const reg = m?.region || m?.userRegion;
+    if (reg && typeof reg === 'string' && reg.trim() !== '' && reg !== 'Global BNI Network') return reg;
+    if (m?.state && m.state.trim() !== '') return m.state;
     if (m?.location) {
       if (typeof m.location === 'string' && m.location !== 'Global BNI Network') return m.location;
       if (typeof m.location === 'object' && m.location.place) return m.location.place;
     }
     if (m?.address && typeof m.address === 'string' && m.address !== 'Global BNI Network') return m.address;
-    return 'Guntur Region';
+    return 'Global';
   };
 
   // Reset to first page when search or filters change

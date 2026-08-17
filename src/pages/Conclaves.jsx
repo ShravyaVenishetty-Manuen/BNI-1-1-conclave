@@ -892,7 +892,7 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
                       </td>
                       <td className="px-5 py-4">
                         <span className="px-2 py-0.5 bg-zinc-50 border border-zinc-200 text-zinc-555 text-[10px] font-bold rounded-full whitespace-nowrap">
-                          {safeRenderString(conclave.region, 'Guntur Region')}
+                          {safeRenderString(conclave.region, 'Global')}
                         </span>
                       </td>
                       <td className="px-5 py-4">
