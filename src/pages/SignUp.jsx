@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Award, User, Mail, Lock, Phone, Building2, Layers, MapPin, Eye, EyeOff, Sparkles, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Award, User, Mail, Lock, Phone, Building2, Layers, MapPin, Eye, EyeOff, Sparkles, ShieldCheck, ArrowRight } from 'lucide-react';
 import { auth } from '../config/firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 
@@ -110,65 +110,113 @@ export default function SignUp({ onSwitchToLogin, onLogin }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 flex flex-col justify-center py-10 sm:px-6 lg:px-8 font-sans relative overflow-hidden">
-      {/* Background Decorative Elements */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-brand-red/10 rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute bottom-10 right-10 w-80 h-80 bg-red-900/10 rounded-full blur-3xl pointer-events-none"></div>
-
-      <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10 text-center space-y-3">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-red to-red-800 text-white shadow-xl shadow-red-950/50 mb-1 border border-red-500/20">
-          <Award className="w-9 h-9" />
+    <div className="min-h-screen w-full bg-zinc-50 flex items-stretch font-sans overflow-hidden">
+      
+      {/* Left side: Premium branding panel (Same as Login) */}
+      <div className="hidden lg:flex lg:w-1/2 bg-zinc-900 relative flex-col justify-between p-12 overflow-hidden select-none">
+        {/* Decorative background grid pattern */}
+        <div className="absolute inset-0 opacity-[0.03] bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+        
+        {/* Top brand logo */}
+        <div className="relative z-10 flex items-center gap-3">
+          <div className="w-10 h-10 bg-brand-red rounded-xl flex items-center justify-center shadow-lg shadow-brand-red/20">
+            <Award className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h1 className="text-xl font-black text-white tracking-wider leading-none">
+              BNI CONCLAVE PORTAL
+            </h1>
+            <p className="text-[9px] text-zinc-400 font-bold uppercase tracking-widest mt-1">
+              High-Performance Networking Platform
+            </p>
+          </div>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
-          BNI Member Registration
-        </h1>
-        <p className="text-xs text-zinc-400 font-medium max-w-xs mx-auto">
-          Create your account to register for conclaves, access 1-on-1 networking schedules, and track referrals.
-        </p>
+
+        {/* Ambient content highlights */}
+        <div className="relative z-10 space-y-6 max-w-md my-auto">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] font-black uppercase text-brand-red tracking-wider">
+            <Sparkles className="w-3.5 h-3.5" />
+            Member Registration
+          </div>
+          
+          <h2 className="text-3xl font-extrabold text-white leading-tight">
+            Join Your Chapter Conclave &amp; Connect.
+          </h2>
+          
+          <p className="text-zinc-400 text-body-md font-medium leading-relaxed">
+            Register your member account to access 1-on-1 meeting schedules, view table seating assignments, and track your referral business.
+          </p>
+        </div>
+
+        {/* Brand footer */}
+        <div className="relative z-10 flex items-center justify-between text-[10px] text-zinc-550 font-bold tracking-tight border-t border-zinc-800 pt-5">
+          <div className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            <span>Server cluster node: AP-SOUTH-1</span>
+          </div>
+          <span>&copy; 2026 BNI Global LLC.</span>
+        </div>
+
+        {/* Ambient background glows */}
+        <div className="absolute top-1/4 right-0 w-80 h-80 rounded-full bg-brand-red/10 blur-[100px] pointer-events-none"></div>
+        <div className="absolute bottom-0 left-10 w-96 h-96 rounded-full bg-red-900/10 blur-[120px] pointer-events-none"></div>
       </div>
 
-      <div className="mt-6 sm:mx-auto sm:w-full sm:max-w-lg relative z-10 px-4 sm:px-0">
-        <div className="bg-zinc-900/90 backdrop-blur-xl py-8 px-6 sm:px-10 shadow-2xl rounded-2xl border border-zinc-800/80">
+      {/* Right side: Modern Clean White Form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-10 md:p-12 bg-white relative overflow-y-auto">
+        <div className="w-full max-w-md space-y-5 relative z-10 my-auto py-4">
           
+          {/* Form Header */}
+          <div className="space-y-1">
+            {/* Mobile logo */}
+            <div className="lg:hidden w-10 h-10 bg-brand-red rounded-xl flex items-center justify-center mb-4">
+              <Award className="w-5 h-5 text-white" />
+            </div>
+            
+            <h3 className="text-2xl font-black text-zinc-955 tracking-tight">Create Member Account</h3>
+            <p className="text-body-md text-zinc-500 font-medium">
+              Enter your details to register for BNI Conclaves.
+            </p>
+          </div>
+
+          {/* Error Alert */}
           {error && (
-            <div className="mb-6 p-3.5 rounded-xl bg-red-950/50 border border-red-800/50 text-red-300 text-xs font-semibold flex items-center gap-2.5 animate-shake">
-              <div className="w-2 h-2 rounded-full bg-red-500 shrink-0 animate-ping"></div>
+            <div className="p-3 bg-red-50 border border-red-100 rounded-lg text-brand-red text-body-sm font-semibold flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-brand-red shrink-0"></span>
               <span>{error}</span>
             </div>
           )}
 
-          <form className="space-y-4" onSubmit={handleSubmit}>
+          {/* Form Content */}
+          <form onSubmit={handleSubmit} className="space-y-3.5 pt-1">
+            
             {/* Full Name */}
-            <div>
-              <label className="block text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1.5">
-                Full Name <span className="text-red-500">*</span>
+            <div className="space-y-1">
+              <label className="text-[10px] text-zinc-450 font-extrabold uppercase tracking-widest">
+                Full Name <span className="text-brand-red">*</span>
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-500">
-                  <User className="h-4 h-4" />
-                </div>
+                <User className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
                 <input
                   type="text"
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  placeholder="e.g. Rahul Sharma"
+                  placeholder="Rahul Sharma"
                   required
-                  className="block w-full pl-10 pr-4 py-2.5 bg-zinc-950/70 border border-zinc-800 rounded-xl text-zinc-100 placeholder-zinc-500 text-xs font-medium focus:outline-none focus:border-brand-red focus:ring-1 focus:ring-brand-red transition-all"
+                  className="w-full pl-10 pr-4 py-2 bg-white border border-zinc-200 rounded-lg text-body-md font-semibold outline-none focus:border-zinc-800 transition-smooth placeholder-zinc-400 text-zinc-900"
                 />
               </div>
             </div>
 
             {/* Email & Phone Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1.5">
-                  Email Address <span className="text-red-500">*</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-[10px] text-zinc-450 font-extrabold uppercase tracking-widest">
+                  Email <span className="text-brand-red">*</span>
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-500">
-                    <Mail className="h-4 h-4" />
-                  </div>
+                  <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
                   <input
                     type="email"
                     name="email"
@@ -176,19 +224,17 @@ export default function SignUp({ onSwitchToLogin, onLogin }) {
                     onChange={handleChange}
                     placeholder="member@bni.com"
                     required
-                    className="block w-full pl-10 pr-3 py-2.5 bg-zinc-950/70 border border-zinc-800 rounded-xl text-zinc-100 placeholder-zinc-500 text-xs font-medium focus:outline-none focus:border-brand-red focus:ring-1 focus:ring-brand-red transition-all"
+                    className="w-full pl-10 pr-3 py-2 bg-white border border-zinc-200 rounded-lg text-body-md font-semibold outline-none focus:border-zinc-800 transition-smooth placeholder-zinc-400 text-zinc-900"
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1.5">
-                  Phone / Mobile <span className="text-red-500">*</span>
+              <div className="space-y-1">
+                <label className="text-[10px] text-zinc-450 font-extrabold uppercase tracking-widest">
+                  Phone <span className="text-brand-red">*</span>
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-500">
-                    <Phone className="h-4 h-4" />
-                  </div>
+                  <Phone className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
                   <input
                     type="tel"
                     name="phone"
@@ -196,22 +242,20 @@ export default function SignUp({ onSwitchToLogin, onLogin }) {
                     onChange={handleChange}
                     placeholder="+91 98765 43210"
                     required
-                    className="block w-full pl-10 pr-3 py-2.5 bg-zinc-950/70 border border-zinc-800 rounded-xl text-zinc-100 placeholder-zinc-500 text-xs font-medium focus:outline-none focus:border-brand-red focus:ring-1 focus:ring-brand-red transition-all"
+                    className="w-full pl-10 pr-3 py-2 bg-white border border-zinc-200 rounded-lg text-body-md font-semibold outline-none focus:border-zinc-800 transition-smooth placeholder-zinc-400 text-zinc-900"
                   />
                 </div>
               </div>
             </div>
 
             {/* Company & Category Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1.5">
-                  Company Name <span className="text-red-500">*</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-[10px] text-zinc-450 font-extrabold uppercase tracking-widest">
+                  Company Name <span className="text-brand-red">*</span>
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-500">
-                    <Building2 className="h-4 h-4" />
-                  </div>
+                  <Building2 className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
                   <input
                     type="text"
                     name="company"
@@ -219,41 +263,37 @@ export default function SignUp({ onSwitchToLogin, onLogin }) {
                     onChange={handleChange}
                     placeholder="Acme Tech Ltd"
                     required
-                    className="block w-full pl-10 pr-3 py-2.5 bg-zinc-950/70 border border-zinc-800 rounded-xl text-zinc-100 placeholder-zinc-500 text-xs font-medium focus:outline-none focus:border-brand-red focus:ring-1 focus:ring-brand-red transition-all"
+                    className="w-full pl-10 pr-3 py-2 bg-white border border-zinc-200 rounded-lg text-body-md font-semibold outline-none focus:border-zinc-800 transition-smooth placeholder-zinc-400 text-zinc-900"
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1.5">
-                  Business Category <span className="text-red-500">*</span>
+              <div className="space-y-1">
+                <label className="text-[10px] text-zinc-450 font-extrabold uppercase tracking-widest">
+                  Category <span className="text-brand-red">*</span>
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-500">
-                    <Layers className="h-4 h-4" />
-                  </div>
+                  <Layers className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
                   <input
                     type="text"
                     name="category"
                     value={formData.category}
                     onChange={handleChange}
-                    placeholder="IT / Real Estate / Legal"
+                    placeholder="IT Services"
                     required
-                    className="block w-full pl-10 pr-3 py-2.5 bg-zinc-950/70 border border-zinc-800 rounded-xl text-zinc-100 placeholder-zinc-500 text-xs font-medium focus:outline-none focus:border-brand-red focus:ring-1 focus:ring-brand-red transition-all"
+                    className="w-full pl-10 pr-3 py-2 bg-white border border-zinc-200 rounded-lg text-body-md font-semibold outline-none focus:border-zinc-800 transition-smooth placeholder-zinc-400 text-zinc-900"
                   />
                 </div>
               </div>
             </div>
 
             {/* BNI Chapter */}
-            <div>
-              <label className="block text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1.5">
-                BNI Chapter Name <span className="text-red-500">*</span>
+            <div className="space-y-1">
+              <label className="text-[10px] text-zinc-450 font-extrabold uppercase tracking-widest">
+                BNI Chapter Name <span className="text-brand-red">*</span>
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-500">
-                  <MapPin className="h-4 h-4" />
-                </div>
+                <MapPin className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
                 <input
                   type="text"
                   name="chapter"
@@ -261,20 +301,18 @@ export default function SignUp({ onSwitchToLogin, onLogin }) {
                   onChange={handleChange}
                   placeholder="e.g. BNI Guntur Titans"
                   required
-                  className="block w-full pl-10 pr-4 py-2.5 bg-zinc-950/70 border border-zinc-800 rounded-xl text-zinc-100 placeholder-zinc-500 text-xs font-medium focus:outline-none focus:border-brand-red focus:ring-1 focus:ring-brand-red transition-all"
+                  className="w-full pl-10 pr-4 py-2 bg-white border border-zinc-200 rounded-lg text-body-md font-semibold outline-none focus:border-zinc-800 transition-smooth placeholder-zinc-400 text-zinc-900"
                 />
               </div>
             </div>
 
             {/* Password */}
-            <div>
-              <label className="block text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1.5">
-                Password <span className="text-red-500">*</span>
+            <div className="space-y-1">
+              <label className="text-[10px] text-zinc-450 font-extrabold uppercase tracking-widest">
+                Password <span className="text-brand-red">*</span>
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-500">
-                  <Lock className="h-4 h-4" />
-                </div>
+                <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   name="password"
@@ -282,14 +320,14 @@ export default function SignUp({ onSwitchToLogin, onLogin }) {
                   onChange={handleChange}
                   placeholder="Minimum 6 characters"
                   required
-                  className="block w-full pl-10 pr-10 py-2.5 bg-zinc-950/70 border border-zinc-800 rounded-xl text-zinc-100 placeholder-zinc-500 text-xs font-medium focus:outline-none focus:border-brand-red focus:ring-1 focus:ring-brand-red transition-all"
+                  className="w-full pl-10 pr-10 py-2 bg-white border border-zinc-200 rounded-lg text-body-md font-semibold outline-none focus:border-zinc-800 transition-smooth placeholder-zinc-400 text-zinc-900"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-zinc-500 hover:text-zinc-300 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-650 cursor-pointer"
                 >
-                  {showPassword ? <EyeOff className="h-4 h-4" /> : <Eye className="h-4 h-4" />}
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
             </div>
@@ -298,30 +336,33 @@ export default function SignUp({ onSwitchToLogin, onLogin }) {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full mt-2 py-3 px-4 bg-gradient-to-r from-brand-red to-red-700 hover:from-red-600 hover:to-red-800 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-red-950/40 hover:shadow-red-900/50 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              className="w-full bg-brand-red hover:bg-red-700 text-white py-2.5 rounded-lg text-button font-bold transition-smooth shadow-md shadow-brand-red/10 cursor-pointer flex items-center justify-center gap-2 mt-2 disabled:opacity-75"
             >
               {isLoading ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Creating Member Account...</span>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  <span>Creating Account...</span>
                 </>
               ) : (
                 <>
-                  <span>Create Account</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <ShieldCheck className="w-4 h-4" />
+                  <span>Register Account</span>
                 </>
               )}
             </button>
           </form>
 
           {/* Switch to Login Link */}
-          <div className="mt-6 pt-5 border-t border-zinc-800/60 text-center">
-            <p className="text-xs text-zinc-400">
+          <div className="mt-4 pt-3 border-t border-zinc-100 text-center">
+            <p className="text-[11px] text-zinc-500 font-semibold">
               Already have an account?{' '}
               <button
                 type="button"
                 onClick={onSwitchToLogin}
-                className="text-brand-red hover:text-red-400 font-bold hover:underline ml-1 cursor-pointer transition-colors"
+                className="text-brand-red font-bold hover:underline ml-1 cursor-pointer"
               >
                 Sign In Here
               </button>
