@@ -192,7 +192,16 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
   const conclaveStatusStr = (conclaveSyncData?.conclaveStatus?.status || '').toLowerCase();
   const isConclaveCompleted = conclaveStatusStr === 'completed' || conclaveStatusStr === 'finished';
 
-  if (!conclaveSyncData) {
+  const [isSyncLoading, setIsSyncLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsSyncLoading(false);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!conclaveSyncData && isSyncLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="flex flex-col items-center gap-3">
@@ -205,7 +214,7 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
 
 
 
-  if (isConclaveCompleted) {
+  if (isConclaveCompleted || !conclaveSyncData) {
     const listToFilter = conclavesList.length > 0 ? conclavesList : (propMemberConclaves || []);
     const upcomingConclaves = listToFilter.filter(c => {
       const s = (c.status || '').toLowerCase();
