@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Award, User, Mail, Lock, Phone, Building2, Layers, MapPin, Eye, EyeOff, Sparkles, ShieldCheck, ArrowRight } from 'lucide-react';
+import { Award, User, Mail, Lock, Phone, Building2, Layers, MapPin, Globe, Eye, EyeOff, Sparkles, ShieldCheck, ArrowRight } from 'lucide-react';
 import { auth } from '../config/firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 
@@ -11,6 +11,7 @@ export default function SignUp({ onSwitchToLogin, onLogin }) {
     phone: '',
     company: '',
     category: '',
+    region: '',
     chapter: ''
   });
 
@@ -26,7 +27,7 @@ export default function SignUp({ onSwitchToLogin, onLogin }) {
     e.preventDefault();
     setError('');
 
-    if (!formData.name || !formData.email || !formData.password || !formData.phone || !formData.company || !formData.category || !formData.chapter) {
+    if (!formData.name || !formData.email || !formData.password || !formData.phone || !formData.company || !formData.category || !formData.region || !formData.chapter) {
       setError('Please fill in all required fields.');
       return;
     }
@@ -40,6 +41,10 @@ export default function SignUp({ onSwitchToLogin, onLogin }) {
 
     try {
       const emailLower = formData.email.trim().toLowerCase();
+
+      // Clean up chapter name: remove any leading "BNI" or region name if accidentally typed
+      let cleanChapter = formData.chapter.trim();
+      cleanChapter = cleanChapter.replace(/^BNI\s+/i, '').replace(new RegExp(`^${formData.region.trim()}\\s+`, 'i'), '');
 
       // 1. Create Firebase Auth Account
       const userCredential = await createUserWithEmailAndPassword(auth, emailLower, formData.password);
@@ -67,7 +72,8 @@ export default function SignUp({ onSwitchToLogin, onLogin }) {
         businessName: formData.company.trim(),
         category: formData.category.trim(),
         businessCategory: formData.category.trim(),
-        chapter: formData.chapter.trim(),
+        region: formData.region.trim(),
+        chapter: cleanChapter,
         role: 'member'
       };
 
@@ -112,7 +118,7 @@ export default function SignUp({ onSwitchToLogin, onLogin }) {
   return (
     <div className="min-h-screen w-full bg-zinc-50 flex items-stretch font-sans overflow-hidden">
       
-      {/* Left side: Premium branding panel (Same as Login) */}
+      {/* Left side: Premium branding panel */}
       <div className="hidden lg:flex lg:w-1/2 bg-zinc-900 relative flex-col justify-between p-12 overflow-hidden select-none">
         {/* Decorative background grid pattern */}
         <div className="absolute inset-0 opacity-[0.03] bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-[size:24px_24px]"></div>
@@ -164,7 +170,7 @@ export default function SignUp({ onSwitchToLogin, onLogin }) {
 
       {/* Right side: Modern Clean White Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-10 md:p-12 bg-white relative overflow-y-auto">
-        <div className="w-full max-w-md space-y-5 relative z-10 my-auto py-4">
+        <div className="w-full max-w-md space-y-4 relative z-10 my-auto py-4">
           
           {/* Form Header */}
           <div className="space-y-1">
@@ -188,7 +194,7 @@ export default function SignUp({ onSwitchToLogin, onLogin }) {
           )}
 
           {/* Form Content */}
-          <form onSubmit={handleSubmit} className="space-y-3.5 pt-1">
+          <form onSubmit={handleSubmit} className="space-y-3 pt-1">
             
             {/* Full Name */}
             <div className="space-y-1">
@@ -287,24 +293,49 @@ export default function SignUp({ onSwitchToLogin, onLogin }) {
               </div>
             </div>
 
-            {/* BNI Chapter */}
-            <div className="space-y-1">
-              <label className="text-[10px] text-zinc-450 font-extrabold uppercase tracking-widest">
-                BNI Chapter Name <span className="text-brand-red">*</span>
-              </label>
-              <div className="relative">
-                <MapPin className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
-                <input
-                  type="text"
-                  name="chapter"
-                  value={formData.chapter}
-                  onChange={handleChange}
-                  placeholder="e.g. BNI Guntur Titans"
-                  required
-                  className="w-full pl-10 pr-4 py-2 bg-white border border-zinc-200 rounded-lg text-body-md font-semibold outline-none focus:border-zinc-800 transition-smooth placeholder-zinc-400 text-zinc-900"
-                />
+            {/* Region & Chapter Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Region Text Input */}
+              <div className="space-y-1">
+                <label className="text-[10px] text-zinc-450 font-extrabold uppercase tracking-widest">
+                  Region <span className="text-brand-red">*</span>
+                </label>
+                <div className="relative">
+                  <Globe className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+                  <input
+                    type="text"
+                    name="region"
+                    value={formData.region}
+                    onChange={handleChange}
+                    placeholder="e.g. Guntur Central"
+                    required
+                    className="w-full pl-10 pr-3 py-2 bg-white border border-zinc-200 rounded-lg text-body-md font-semibold outline-none focus:border-zinc-800 transition-smooth placeholder-zinc-400 text-zinc-900"
+                  />
+                </div>
+              </div>
+
+              {/* Clean Chapter Name */}
+              <div className="space-y-1">
+                <label className="text-[10px] text-zinc-450 font-extrabold uppercase tracking-widest">
+                  Chapter Name <span className="text-brand-red">*</span>
+                </label>
+                <div className="relative">
+                  <MapPin className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
+                  <input
+                    type="text"
+                    name="chapter"
+                    value={formData.chapter}
+                    onChange={handleChange}
+                    placeholder="e.g. Titans / Express"
+                    required
+                    className="w-full pl-10 pr-3 py-2 bg-white border border-zinc-200 rounded-lg text-body-md font-semibold outline-none focus:border-zinc-800 transition-smooth placeholder-zinc-400 text-zinc-900"
+                  />
+                </div>
               </div>
             </div>
+            <p className="text-[9.5px] text-zinc-400 font-medium -mt-1">
+              Enter Region and Chapter separately (do not include "BNI" in chapter name).
+            </p>
 
             {/* Password */}
             <div className="space-y-1">
