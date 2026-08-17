@@ -431,7 +431,7 @@ export async function listRegions(_req: AuthedRequest, res: Response) {
   const conclaveCounts: Record<string, number> = {};
   conclavesSnap.docs.forEach(doc => {
     const data = doc.data();
-    const reg = data.region || "Guntur Region";
+    const reg = data.region || "Global";
     conclaveCounts[reg] = (conclaveCounts[reg] || 0) + 1;
   });
 
@@ -440,9 +440,7 @@ export async function listRegions(_req: AuthedRequest, res: Response) {
   usersSnap.docs.forEach(doc => {
     const data = doc.data();
     const loc = data.location;
-    const reg = loc
-      ? (typeof loc === "object" ? (loc.place || "Guntur Region") : loc)
-      : "Guntur Region";
+    const reg = data.region || (loc ? (typeof loc === "object" ? loc.place : loc) : undefined) || "Global";
     memberCounts[reg] = (memberCounts[reg] || 0) + 1;
   });
 
@@ -612,14 +610,12 @@ export async function listAllUsers(_req: AuthedRequest, res: Response) {
     .map(doc => {
       const data = doc.data();
       const loc = data.location;
-      const regionStr = loc
-        ? (typeof loc === "object" ? (loc.place || "Guntur Region") : loc)
-        : "Guntur Region";
+      const regionStr = data.region || (loc ? (typeof loc === "object" ? loc.place : loc) : undefined) || "Global";
       return {
         id: doc.id,
         name: data.name || "Unknown Member",
         company: data.businessName || data.company || "",
-        category: data.businessCategory || "",
+        category: data.businessCategory || data.category || "",
         region: regionStr,
         chapter: data.chapter || "",
         status: data.lastLoginAt ? "Active" : "Inactive",

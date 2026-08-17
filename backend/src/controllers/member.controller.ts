@@ -32,7 +32,7 @@ export async function me(req: AuthedRequest, res: Response) {
         name: adminData.name || (resolvedRole === 'superadmin' ? "Superadmin" : "Admin"),
         email: adminData.email || req.email || "",
         phone: adminData.mobile || "",
-        region: adminData.region || "Guntur Region",
+        region: adminData.region || "Global",
         role: resolvedRole,
         createdAt: toISO(adminData.grantedAt || adminData.createdAt),
       });
@@ -53,7 +53,7 @@ export async function me(req: AuthedRequest, res: Response) {
           name: adminData.name || (resolvedRole === 'superadmin' ? "Superadmin" : "Admin"),
           email: adminData.email || req.email,
           phone: adminData.mobile || "",
-          region: adminData.region || "Guntur Region",
+          region: adminData.region || "Global",
           role: resolvedRole,
           createdAt: toISO(adminData.grantedAt || adminData.createdAt),
         });
