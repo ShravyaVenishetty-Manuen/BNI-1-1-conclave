@@ -374,8 +374,7 @@ export default function App() {
         const myRegisteredConclave = Array.isArray(list) ? (
           list.find(c => c.isRegistered && (c.status === 'running' || c.status === 'active')) ||
           list.find(c => c.isRegistered) ||
-          list.find(c => c.status === 'running' || c.status === 'active') ||
-          list[0]
+          null
         ) : null;
 
         if (myRegisteredConclave) {
@@ -383,7 +382,13 @@ export default function App() {
           if (syncResult && Array.isArray(syncResult.mySchedule) && syncResult.mySchedule.length > 0) {
             localStorage.setItem('bni_conclave_sync_data_cache', JSON.stringify(syncResult));
             setConclaveSyncData(prev => (JSON.stringify(prev) !== JSON.stringify(syncResult) ? syncResult : prev));
+          } else {
+            setConclaveSyncData(null);
+            localStorage.removeItem('bni_conclave_sync_data_cache');
           }
+        } else {
+          setConclaveSyncData(null);
+          localStorage.removeItem('bni_conclave_sync_data_cache');
         }
       } catch (err) {
         console.warn("Failed to sync member conclave data:", err.message);

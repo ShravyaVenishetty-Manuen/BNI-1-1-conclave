@@ -241,17 +241,19 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
         <div className="bg-white p-6 md:p-8 pb-8 md:pb-10 rounded-xl shadow-2xs border border-zinc-200 relative overflow-hidden flex flex-col justify-between">
           <div className="absolute inset-0 opacity-[0.02] pointer-events-none bg-[radial-gradient(#af101a_1px,transparent_1px)] [background-size:16px_16px]"></div>
           <div className="space-y-4 my-auto relative z-10">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-800">
-              <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+            <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg ${isConclaveCompleted ? 'bg-emerald-50 border border-emerald-200 text-emerald-800' : 'bg-amber-50 border border-amber-200 text-amber-800'}`}>
+              <CheckCircle className={`w-4 h-4 shrink-0 ${isConclaveCompleted ? 'text-emerald-600' : 'text-amber-600'}`} />
               <span className="text-[11px] font-bold">
-                Conclave Completed — Ready for Next Event
+                {isConclaveCompleted ? 'Conclave Completed — Ready for Next Event' : 'Not Registered for Active Conclave'}
               </span>
             </div>
             <div>
               <h1 className="text-[22px] font-black text-zinc-955 leading-tight">Welcome {memberName}</h1>
               <p className="text-[12px] text-zinc-500 font-semibold mt-0.5">{memberCompany} • {memberChapter}</p>
               <p className="text-body-sm text-zinc-600 mt-2 max-w-2xl leading-relaxed">
-                The previous conclave ({conclaveSyncData?.conclaveStatus?.title || 'Conclave Session'}) has officially ended. Browse upcoming conclaves below to register for your next event!
+                {isConclaveCompleted
+                  ? `The previous conclave (${conclaveSyncData?.conclaveStatus?.title || 'Conclave Session'}) has officially ended. Browse upcoming conclaves below to register for your next event!`
+                  : 'You are currently not registered for the running conclave session. Browse available conclaves below and register to participate!'}
               </p>
             </div>
             <div className="pt-4 pb-2 flex flex-wrap gap-3">
