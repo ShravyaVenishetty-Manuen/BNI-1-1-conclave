@@ -126,7 +126,7 @@ export default function Sidebar({ activeTab, setActiveTab, onLogout, isOpen, onC
           <div className={`w-2 h-2 rounded-full shrink-0 ${selectedConclave ? getStatusDot(selectedConclave.status) : 'bg-zinc-300'}`} />
           <div className="flex-1 min-w-0 text-left">
             <p className="text-[10px] font-black text-zinc-800 truncate leading-tight">
-              {selectedConclave ? selectedConclave.name : "No Active Conclave"}
+              {selectedConclave ? (selectedConclave.name || selectedConclave.title || 'Conclave') : "No Active Conclave"}
             </p>
             <p className="text-[8px] text-zinc-400 font-bold uppercase tracking-wider mt-0.5 truncate">
               {selectedConclave ? `${selectedConclave.status || 'ACTIVE'} • ${selectedConclave.region || selectedConclave.venueLocation || '—'}` : "N/A • NO REGION"}
@@ -150,8 +150,8 @@ export default function Sidebar({ activeTab, setActiveTab, onLogout, isOpen, onC
               >
                 <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${getStatusDot(c.status)}`} />
                 <div className="min-w-0 flex-1">
-                  <p className={`text-[9.5px] font-bold truncate ${c.id === selectedConclaveId ? 'text-brand-red' : 'text-zinc-700'}`}>{c.name}</p>
-                  <p className="text-[7.5px] text-zinc-400 font-semibold mt-0.5 truncate">{c.dateRange}</p>
+                  <p className={`text-[9.5px] font-bold truncate ${c.id === selectedConclaveId ? 'text-brand-red' : 'text-zinc-700'}`}>{c.name || c.title || 'Conclave'}</p>
+                  <p className="text-[7.5px] text-zinc-400 font-semibold mt-0.5 truncate">{c.dateRange || (c.date ? new Date(c.date).toLocaleDateString([], { month: 'short', day: '2-digit', year: 'numeric' }) : 'TBD')}</p>
                 </div>
               </button>
             ))}

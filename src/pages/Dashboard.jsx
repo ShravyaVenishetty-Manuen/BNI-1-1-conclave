@@ -247,7 +247,7 @@ export default function Dashboard({ setActiveTab, selectedConclaveId, setSelecte
               <Calendar className="w-5 h-5" />
             </div>
             <div className="text-left min-w-0">
-              <p className="text-[13px] font-black text-zinc-900 truncate">{selectedConclave.name}</p>
+              <p className="text-[13px] font-black text-zinc-900 truncate">{selectedConclave.name || selectedConclave.title || 'Conclave'}</p>
               <div className="flex items-center gap-2 mt-0.5">
                 <span className={`px-2 py-0.5 text-[8px] font-black uppercase tracking-wider rounded-full ${getStatusStyle(selectedConclave.status)}`}>
                   {displayStatus(selectedConclave.status)}
@@ -269,7 +269,7 @@ export default function Dashboard({ setActiveTab, selectedConclaveId, setSelecte
               >
                 <div className={`w-2 h-2 rounded-full shrink-0 ${(c.status || '').toLowerCase() === 'running' ? 'bg-emerald-500 animate-pulse' : (c.status || '').toLowerCase() === 'upcoming' || (c.status || '').toLowerCase() === 'registration_open' ? 'bg-amber-400' : (c.status || '').toLowerCase() === 'completed' ? 'bg-zinc-300' : 'bg-zinc-200'}`} />
                 <div className="min-w-0 flex-1">
-                  <p className={`text-[12px] font-bold truncate ${c.id === selectedConclaveId ? 'text-brand-red' : 'text-zinc-800'}`}>{c.name}</p>
+                  <p className={`text-[12px] font-bold truncate ${c.id === selectedConclaveId ? 'text-brand-red' : 'text-zinc-800'}`}>{c.name || c.title || 'Conclave'}</p>
                   <p className="text-[9.5px] text-zinc-400 font-semibold mt-0.5">
                     {c.date ? new Date(c.date).toLocaleDateString([], { month: 'short', day: '2-digit', year: 'numeric' }) : 'N/A'} • {c.venueLocation || c.venue || 'N/A'}
                   </p>
