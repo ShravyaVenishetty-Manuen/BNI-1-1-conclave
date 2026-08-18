@@ -267,7 +267,7 @@ const DUMMY_CONCLAVES = [
     region: "Guntur",
     location: "Royal Convention Hall, Guntur",
     status: "active",
-    date: "2026-08-17T09:00:00.000Z",
+    date: "2026-08-18T09:00:00.000Z",
     registrationCloseDate: "2026-08-16T23:59:59.000Z",
     isRegistrationOpen: true,
     registrationFee: 1200,
