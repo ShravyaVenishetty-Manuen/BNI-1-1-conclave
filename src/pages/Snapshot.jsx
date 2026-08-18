@@ -52,12 +52,43 @@ export default function Snapshot({ searchQuery, selectedConclaveId }) {
 
   useEffect(() => {
     async function loadSnapshot() {
-      setIsLoadingSnapshot(false);
+      setIsLoadingSnapshot(true);
       try {
         const conclavesList = await api.get('/admin/conclaves');
+        if (!Array.isArray(conclavesList) || conclavesList.length === 0) {
+          setIsLoadingSnapshot(false);
+          return;
+        }
+
         const storedSnapshots = getStoredSnapshots();
 
+        // Determine which conclave is selected in the sidebar
+        const targetId = selectedConclaveId || conclavesList.find(c => (c.status || '').toLowerCase() === 'running')?.id || conclavesList[0]?.id;
+
         const updatedConclaves = await Promise.all(conclavesList.map(async (c) => {
+          const isTarget = c.id === targetId;
+          const savedSnap = storedSnapshots[c.id];
+          const dateFormatted = c.date
+            ? new Date(c.date).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })
+            : null;
+
+          if (!isTarget) {
+            return {
+              ...c,
+              version: savedSnap?.version || c.version || 'V. 1.0',
+              lastSnapshot: savedSnap?.lastSnapshot || c.lastSnapshot || 'Never',
+              dateRange: dateFormatted || c.dateRange || 'TBD Date',
+              venue: c.venueLocation || c.venue || c.location || 'TBD Venue',
+              totalRegistered: c.registrationCount || 0,
+              activeMembers: 0,
+              inactive: 0,
+              captains: 0,
+              memberCount: c.registrationCount || 0,
+              participants: []
+            };
+          }
+
+          // Fetch registrations ONLY for the selected conclave
           try {
             const res = await api.get(`/admin/conclaves/${c.id}/registrations`);
             let regsList = Array.isArray(res?.registrations) ? res.registrations : [];
@@ -66,18 +97,12 @@ export default function Snapshot({ searchQuery, selectedConclaveId }) {
             const inactiveCount = regsList.length - activeCount;
             const captainCount = regsList.filter(r => r.role === 'captain' || r.isTableCaptain === true).length;
 
-            const dateFormatted = c.date
-              ? new Date(c.date).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })
-              : null;
-
-            const savedSnap = storedSnapshots[c.id];
-
             return {
               ...c,
               version: savedSnap?.version || c.version || 'V. 1.0',
               lastSnapshot: savedSnap?.lastSnapshot || c.lastSnapshot || 'Never',
               dateRange: dateFormatted || c.dateRange || 'TBD Date',
-              venue: c.venueLocation || c.venue || 'TBD Venue',
+              venue: c.venueLocation || c.venue || c.location || 'TBD Venue',
               totalRegistered: regsList.length,
               activeMembers: activeCount,
               inactive: inactiveCount,
@@ -102,14 +127,13 @@ export default function Snapshot({ searchQuery, selectedConclaveId }) {
               })
             };
           } catch (err) {
-            console.warn("Failed to load registrations for conclave", c.id, err);
-            const savedSnap = storedSnapshots[c.id];
+            console.warn("Failed to load registrations for target conclave", c.id, err);
             return {
               ...c,
               version: savedSnap?.version || c.version || 'V. 1.0',
               lastSnapshot: savedSnap?.lastSnapshot || c.lastSnapshot || 'Never',
               dateRange: c.dateRange || 'TBD Date',
-              venue: c.venueLocation || c.venue || 'TBD Venue',
+              venue: c.venueLocation || c.venue || c.location || 'TBD Venue',
               totalRegistered: 0,
               activeMembers: 0,
               inactive: 0,
@@ -119,6 +143,7 @@ export default function Snapshot({ searchQuery, selectedConclaveId }) {
             };
           }
         }));
+
         setConclaves(updatedConclaves);
         localStorage.setItem('bni_snapshot_conclaves_cache', JSON.stringify(updatedConclaves));
       } catch (err) {
