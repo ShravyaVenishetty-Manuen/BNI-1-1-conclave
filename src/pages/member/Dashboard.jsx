@@ -281,8 +281,8 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
               <Calendar className="w-5 h-5" />
             </div>
             <div>
-              <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-widest block">Registered Conclaves</span>
-              <span className="text-xl font-black text-zinc-900 leading-tight mt-0.5 block">{listToFilter.length} Events</span>
+              <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-widest block">My Registered Events</span>
+              <span className="text-xl font-black text-zinc-900 leading-tight mt-0.5 block">{listToFilter.filter(c => c.isRegistered).length} Events</span>
             </div>
           </div>
 
