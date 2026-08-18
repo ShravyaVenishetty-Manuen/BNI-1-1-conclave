@@ -5,7 +5,7 @@ import { getNotifications, markAllRead } from '../utils/notifications';
 export default function Header({ searchQuery, setSearchQuery, activeTab, setActiveTab, onMenuClick, loggedInAdmin, onLogout, selectedConclaveId }) {
 
   const adminUid = loggedInAdmin?.uid || loggedInAdmin?.id || loggedInAdmin?.email;
-  const adminRegion = loggedInAdmin?.region || 'Guntur Region';
+  const adminRegion = loggedInAdmin?.region || 'Global';
   const isSuperAdmin = loggedInAdmin?.role === 'superadmin' || adminRegion === 'Global';
 
   const [showNotifications, setShowNotifications] = useState(false);

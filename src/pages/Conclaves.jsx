@@ -518,7 +518,7 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
   };
 
   const openAddModal = () => {
-    const defaultReg = loggedInAdmin?.region || loggedInAdmin?.scope || 'Guntur Region';
+    const defaultReg = loggedInAdmin?.region || loggedInAdmin?.scope || '';
     const defaultCoord = loggedInAdmin?.name || 'Administrator';
     setFormData({
       name: '',
@@ -562,7 +562,7 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
         regStartDate: formData.regStartDate || undefined,
         regEndDate: formData.regEndDate || undefined,
         dateRange: formData.dateRange || 'TBD',
-        region: formData.region || loggedInAdmin?.region || loggedInAdmin?.scope || 'Guntur Region',
+        region: formData.region || loggedInAdmin?.region || loggedInAdmin?.scope || '',
         coordinator: formData.coordinator || loggedInAdmin?.name || 'Administrator',
         personsPerTable: Number(formData.personsPerTable) || 7,
         roundCount: Number(formData.roundCount) || 4,
@@ -580,10 +580,9 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
       };
 
       await api.post('/admin/conclaves', payload);
-      showToast('Conclave Created', `Successfully created ${formData.name}.`);
+      showToast('Conclave Created', `"${formData.name}" has been successfully added.`);
       setIsAddModalOpen(false);
 
-      // Re-fetch fresh conclaves list from backend
       const freshData = await api.get('/admin/conclaves?global=true');
       if (Array.isArray(freshData)) {
         setConclaves(freshData.map(c => ({
@@ -644,7 +643,7 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
       const payload = {
         name: formData.name,
         venueLocation: formData.venue,
-        region: formData.region || loggedInAdmin?.region || loggedInAdmin?.scope || 'Guntur Region',
+        region: formData.region || loggedInAdmin?.region || loggedInAdmin?.scope || '',
         coordinator: formData.coordinator || loggedInAdmin?.name || 'Administrator',
         status: formData.status,
         dateRange: formData.dateRange,

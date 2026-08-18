@@ -431,7 +431,7 @@ export async function listRegions(_req: AuthedRequest, res: Response) {
   const conclaveCounts: Record<string, number> = {};
   conclavesSnap.docs.forEach(doc => {
     const data = doc.data();
-    const reg = data.region || "Global";
+    const reg = data.region || "Guntur Region";
     conclaveCounts[reg] = (conclaveCounts[reg] || 0) + 1;
   });
 
@@ -440,7 +440,9 @@ export async function listRegions(_req: AuthedRequest, res: Response) {
   usersSnap.docs.forEach(doc => {
     const data = doc.data();
     const loc = data.location;
-    const reg = data.region || (loc ? (typeof loc === "object" ? loc.place : loc) : undefined) || "Global";
+    const reg = loc
+      ? (typeof loc === "object" ? (loc.place || "Guntur Region") : loc)
+      : "Guntur Region";
     memberCounts[reg] = (memberCounts[reg] || 0) + 1;
   });
 
