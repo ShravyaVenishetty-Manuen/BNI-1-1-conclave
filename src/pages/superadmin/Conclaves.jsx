@@ -29,7 +29,7 @@ export default function SuperadminConclaves({ searchQuery }) {
 
   useEffect(() => {
     async function loadData() {
-      setIsLoading(false);
+      setIsLoading(true);
       try {
         const [conclavesList, regionsList] = await Promise.all([
           api.get('/admin/conclaves?global=true').catch(() => []),
