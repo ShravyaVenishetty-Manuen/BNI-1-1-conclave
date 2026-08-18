@@ -219,8 +219,8 @@ export default function Dashboard({ setActiveTab, selectedConclaveId, setSelecte
     );
   }
 
-  const conclaveDate = selectedConclave.date ? new Date(selectedConclave.date).toLocaleDateString([], { month: 'short', day: '2-digit', year: 'numeric' }) : 'N/A';
-  const conclaveVenue = selectedConclave.venueLocation || selectedConclave.venue || 'N/A';
+  const conclaveDate = selectedConclave.dateRange || (selectedConclave.date ? new Date(selectedConclave.date).toLocaleDateString([], { month: 'short', day: '2-digit', year: 'numeric' }) : 'N/A');
+  const conclaveVenue = selectedConclave.venueLocation || selectedConclave.venue || selectedConclave.location || 'N/A';
   const conclaveProgress = (selectedConclave.status || '').toLowerCase() === 'completed' ? 100 : (selectedConclave.status || '').toLowerCase() === 'running' ? 60 : 0;
 
   return (
@@ -386,7 +386,7 @@ export default function Dashboard({ setActiveTab, selectedConclaveId, setSelecte
                 <Calendar className="w-5 h-5" />
               </span>
               <div>
-                <h3 className="text-headline-md font-bold leading-tight text-zinc-950">{selectedConclave.name}</h3>
+                <h3 className="text-headline-md font-bold leading-tight text-zinc-950">{selectedConclave.name || selectedConclave.title || 'Conclave'}</h3>
                 <div className="flex flex-wrap gap-3 mt-1.5 items-center">
                   <span className={`text-[9px] px-2 py-0.5 rounded font-extrabold uppercase tracking-wider shadow-sm ${getStatusStyle(selectedConclave.status)}`}>
                     {(selectedConclave.status || '').toLowerCase() === 'running' ? 'Current Conclave Running' : displayStatus(selectedConclave.status)}
@@ -394,6 +394,11 @@ export default function Dashboard({ setActiveTab, selectedConclaveId, setSelecte
                   <span className="text-label-xs text-zinc-500 flex items-center gap-1 font-semibold">
                     <MapPin className="w-3.5 h-3.5 text-zinc-400" /> {conclaveVenue}
                   </span>
+                  {(selectedConclave.regStartDate || selectedConclave.regEndDate || selectedConclave.registrationCloseDate) && (
+                    <span className="text-label-xs text-zinc-500 flex items-center gap-1 font-semibold bg-zinc-50 px-2 py-0.5 rounded border border-zinc-200">
+                      <Clock className="w-3.5 h-3.5 text-zinc-400" /> Reg: {selectedConclave.regStartDate ? new Date(selectedConclave.regStartDate).toLocaleDateString([], { month: 'short', day: 'numeric' }) : 'Open'} – {selectedConclave.regEndDate || selectedConclave.registrationCloseDate ? new Date(selectedConclave.regEndDate || selectedConclave.registrationCloseDate).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) : 'Close'}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
