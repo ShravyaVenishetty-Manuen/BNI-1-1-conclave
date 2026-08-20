@@ -167,7 +167,16 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
 
     if (startedAt && isRunning) {
       const updateTimer = () => {
-        const elapsed = Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000);
+        let startTime = NaN;
+        if (typeof startedAt === 'object' && startedAt !== null) {
+          if (typeof startedAt._seconds === 'number') startTime = startedAt._seconds * 1000;
+          else if (typeof startedAt.seconds === 'number') startTime = startedAt.seconds * 1000;
+          else if (typeof startedAt.toDate === 'function') startTime = startedAt.toDate().getTime();
+        }
+        if (isNaN(startTime)) startTime = new Date(startedAt).getTime();
+        if (isNaN(startTime)) startTime = Date.now();
+
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
         setTimeLeft(Math.max(0, initialTime - elapsed));
       };
       updateTimer();
