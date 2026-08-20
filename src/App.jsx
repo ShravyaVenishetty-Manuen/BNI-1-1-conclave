@@ -396,7 +396,7 @@ export default function App() {
     }
 
     loadMemberData();
-    const interval = setInterval(loadMemberData, 10000);
+    const interval = setInterval(loadMemberData, 2000);
     return () => clearInterval(interval);
   }, [isLoggedIn, userRole]);
 

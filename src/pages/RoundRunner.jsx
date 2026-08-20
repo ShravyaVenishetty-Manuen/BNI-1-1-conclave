@@ -363,14 +363,31 @@ export default function RoundRunner({ selectedConclaveId }) {
 
   // Start next round trigger
   const handleStartNextRound = async () => {
+    const nextRoundVal = activeRound + 1;
+    const now = new Date();
+
+    // Optimistically start timer instantly on button click
+    setConclaves(prev => prev.map(c => {
+      if (c.id === selectedConclaveId) {
+        return {
+          ...c,
+          currentRound: nextRoundVal,
+          currentRoundStartedAt: now,
+          status: 'Running'
+        };
+      }
+      return c;
+    }));
+    setTimerRunning(true);
+    setTimeLeft(ROUND_DURATION_SECS);
+
     try {
-      const nextRoundVal = activeRound + 1;
       await api.post(`/admin/conclaves/${selectedConclaveId}/start-round`, {
         roundNumber: nextRoundVal
       });
       // Reload conclaves from Express backend API to sync states
       const data = await api.get('/admin/conclaves');
-      setConclaves(data);
+      if (Array.isArray(data)) setConclaves(data);
       showToast('Next Round Started', `Round ${nextRoundVal} started. Captains notified.`);
     } catch (err) {
       console.error("Failed to start round:", err);
