@@ -63,16 +63,29 @@ export default function SignUp({ onSwitchToLogin, onLogin }) {
         : 'https://bni-1-2-1-backend.onrender.com/api';
       const apiBase = import.meta.env.VITE_API_URL || defaultBackendUrl;
 
+      let rawPhone = formData.phone.trim();
+      let digitsOnly = rawPhone.replace(/\D/g, '');
+      if (digitsOnly.length === 10) {
+        digitsOnly = '91' + digitsOnly;
+      }
+      const formattedPhone = digitsOnly ? `+${digitsOnly}` : rawPhone;
+      const rawMobile = digitsOnly.length >= 10 ? digitsOnly.slice(-10) : rawPhone;
+      const syntheticIdentifier = digitsOnly ? `${digitsOnly}@bni121.conclave` : `${rawMobile}@bni121.conclave`;
+
       const profilePayload = {
+        id: firebaseUser.uid,
         name: formData.name.trim(),
         email: emailLower,
-        phone: formData.phone.trim(),
-        mobile: formData.phone.trim(),
+        phone: formattedPhone,
+        mobile: rawMobile,
+        identifier: syntheticIdentifier,
         company: formData.company.trim(),
         businessName: formData.company.trim(),
         category: formData.category.trim(),
         businessCategory: formData.category.trim(),
         region: formData.region.trim(),
+        location: formData.region.trim().toLowerCase(),
+        country: 'India',
         chapter: cleanChapter,
         role: 'member'
       };
