@@ -290,27 +290,44 @@ export default function RoundRunner({ selectedConclaveId }) {
     const logs = [];
     if (!selectedConclave) return logs;
 
+    const parseDate = (val) => {
+      if (!val) return null;
+      if (val instanceof Date && !isNaN(val.getTime())) return val;
+      if (typeof val === 'object' && (val.seconds !== undefined || val._seconds !== undefined)) {
+        return new Date((val.seconds ?? val._seconds) * 1000);
+      }
+      const d = new Date(val);
+      return !isNaN(d.getTime()) ? d : null;
+    };
+
+    const formatLogTime = (val) => {
+      const d = parseDate(val);
+      if (!d) return 'Just now';
+      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    };
+
+    const getLogTimestamp = (val) => {
+      const d = parseDate(val);
+      return d ? d.getTime() : Date.now();
+    };
+
     // 1. Real referral events from backend API
     filteredReferrals.forEach(r => {
-      const timeStr = r.createdAt
-        ? new Date(r.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        : 'Synced';
       logs.push({
         event: 'Referral Logged',
         detail: `${r.fromName || 'Member'} sent referral slip to ${r.toName || 'Member'}${r.notes ? `: "${r.notes}"` : ''}`,
-        time: timeStr,
-        timestamp: r.createdAt ? new Date(r.createdAt).getTime() : 0
+        time: formatLogTime(r.createdAt),
+        timestamp: getLogTimestamp(r.createdAt)
       });
     });
 
     // 2. Real round start event from backend
     if (selectedConclave.currentRound > 0 && selectedConclave.currentRoundStartedAt) {
-      const startTime = new Date(selectedConclave.currentRoundStartedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       logs.push({
         event: `Round ${selectedConclave.currentRound} Active`,
         detail: `Official round status updated by administrator.`,
-        time: startTime,
-        timestamp: new Date(selectedConclave.currentRoundStartedAt).getTime()
+        time: formatLogTime(selectedConclave.currentRoundStartedAt),
+        timestamp: getLogTimestamp(selectedConclave.currentRoundStartedAt)
       });
     }
 
