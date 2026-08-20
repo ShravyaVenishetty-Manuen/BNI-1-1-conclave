@@ -98,12 +98,16 @@ export default function RoundRunner({ selectedConclaveId }) {
     if (!selectedConclaveId) return;
     async function loadReferralsAndAttendance() {
       try {
-        const [refData, attData] = await Promise.all([
+        const [refData, attData, conclaveData] = await Promise.all([
           api.get(`/admin/conclaves/${selectedConclaveId}/referrals`).catch(() => []),
-          api.get(`/admin/conclaves/${selectedConclaveId}/attendance`).catch(() => [])
+          api.get(`/admin/conclaves/${selectedConclaveId}/attendance`).catch(() => []),
+          api.get(`/admin/conclaves/${selectedConclaveId}`).catch(() => null)
         ]);
         if (Array.isArray(refData)) setFilteredReferrals(refData);
         if (Array.isArray(attData)) setAttendanceRecords(attData);
+        if (conclaveData && conclaveData.id) {
+          if (setSelectedConclave) setSelectedConclave(conclaveData);
+        }
       } catch (err) {
         console.warn("Failed to load conclave activity data:", err.message);
       }
@@ -112,7 +116,7 @@ export default function RoundRunner({ selectedConclaveId }) {
     loadReferralsAndAttendance();
     const interval = setInterval(loadReferralsAndAttendance, 5000);
     return () => clearInterval(interval);
-  }, [selectedConclaveId]);
+  }, [selectedConclaveId, setSelectedConclave]);
 
   const tables = useMemo(() => {
     if (selectedConclave && selectedConclave.schedule && selectedConclave.participants) {
@@ -165,28 +169,33 @@ export default function RoundRunner({ selectedConclaveId }) {
       return;
     }
 
-    const rawStart = selectedConclave.currentRoundStartedAt;
-    let startedTime = NaN;
-    if (typeof rawStart === 'object' && rawStart !== null) {
-      if (typeof rawStart._seconds === 'number') startedTime = rawStart._seconds * 1000;
-      else if (typeof rawStart.seconds === 'number') startedTime = rawStart.seconds * 1000;
-      else if (typeof rawStart.toDate === 'function') startedTime = rawStart.toDate().getTime();
-    }
-    if (isNaN(startedTime)) {
-      startedTime = new Date(rawStart).getTime();
-    }
-    if (isNaN(startedTime)) {
-      setTimerRunning(false);
-      setTimeLeft(ROUND_DURATION_SECS);
-      return;
-    }
+    const updateTimer = () => {
+      const rawStart = selectedConclave.currentRoundStartedAt;
+      let startedTime = NaN;
+      if (typeof rawStart === 'object' && rawStart !== null) {
+        if (typeof rawStart._seconds === 'number') startedTime = rawStart._seconds * 1000;
+        else if (typeof rawStart.seconds === 'number') startedTime = rawStart.seconds * 1000;
+        else if (typeof rawStart.toDate === 'function') startedTime = rawStart.toDate().getTime();
+      }
+      if (isNaN(startedTime)) {
+        startedTime = new Date(rawStart).getTime();
+      }
+      if (isNaN(startedTime)) {
+        setTimerRunning(false);
+        setTimeLeft(ROUND_DURATION_SECS);
+        return;
+      }
 
+      const elapsed = Math.floor((Date.now() - startedTime) / 1000);
+      const remaining = Math.max(0, ROUND_DURATION_SECS - elapsed);
 
-    const elapsed = Math.floor((Date.now() - startedTime) / 1000);
-    const remaining = Math.max(0, ROUND_DURATION_SECS - elapsed);
+      setTimeLeft(remaining);
+      setTimerRunning(remaining > 0);
+    };
 
-    setTimeLeft(remaining);
-    setTimerRunning(remaining > 0);
+    updateTimer();
+    const timer = setInterval(updateTimer, 1000);
+    return () => clearInterval(timer);
   }, [selectedConclave]);
 
   const [toast, setToast] = useState(null);
