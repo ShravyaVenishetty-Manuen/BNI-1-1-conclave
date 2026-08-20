@@ -176,7 +176,8 @@ export default function Snapshot({ searchQuery, selectedConclaveId }) {
 
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
-  const searchVal = searchQuery !== undefined ? searchQuery : searchTerm;
+  const combinedSearch = (searchQuery || '') + ' ' + (searchTerm || '');
+  const searchVal = combinedSearch.trim().toLowerCase();
   const [categoryFilter, setCategoryFilter] = useState('All');
 
   // Selection/checkboxes
@@ -188,7 +189,7 @@ export default function Snapshot({ searchQuery, selectedConclaveId }) {
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const itemsPerPage = 10;
 
   const [toast, setToast] = useState(null);
   const showToast = (title, desc) => {
@@ -217,17 +218,21 @@ export default function Snapshot({ searchQuery, selectedConclaveId }) {
     };
   }, [isSnapshotModalOpen, isConclaveSelectorOpen]);
 
-
-
-  // Filtered participants
+  // Filtered participants across ENTIRE conclave
   const filteredParticipants = useMemo(() => {
     const list = Array.isArray(currentConclave?.participants) ? currentConclave.participants : [];
+    if (!searchVal && categoryFilter === 'All') return list;
+
     return list.filter(p => {
       if (!p) return false;
       const matchesSearch =
-        (p.name || '').toLowerCase().includes(searchVal.toLowerCase()) ||
-        (p.category || '').toLowerCase().includes(searchVal.toLowerCase()) ||
-        (p.captain || '').toLowerCase().includes(searchVal.toLowerCase());
+        !searchVal ||
+        (p.name || '').toLowerCase().includes(searchVal) ||
+        (p.category || '').toLowerCase().includes(searchVal) ||
+        (p.company || '').toLowerCase().includes(searchVal) ||
+        (p.chapter || '').toLowerCase().includes(searchVal) ||
+        (p.region || '').toLowerCase().includes(searchVal) ||
+        (p.captain || '').toLowerCase().includes(searchVal);
 
       const matchesCategory =
         categoryFilter === 'All' ||
@@ -237,11 +242,11 @@ export default function Snapshot({ searchQuery, selectedConclaveId }) {
     });
   }, [currentConclave, searchVal, categoryFilter]);
 
-  // Paginated list
+  // Paginated list from full filtered dataset
   const paginatedParticipants = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     return filteredParticipants.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredParticipants, currentPage]);
+  }, [filteredParticipants, currentPage, itemsPerPage]);
 
   const toggleRow = (id, e) => {
     e.stopPropagation();
