@@ -106,7 +106,7 @@ export default function RoundRunner({ selectedConclaveId }) {
         if (Array.isArray(refData)) setFilteredReferrals(refData);
         if (Array.isArray(attData)) setAttendanceRecords(attData);
         if (conclaveData && conclaveData.id) {
-          if (setSelectedConclave) setSelectedConclave(conclaveData);
+          setConclaves(prev => prev.map(c => c.id === conclaveData.id ? { ...c, ...conclaveData } : c));
         }
       } catch (err) {
         console.warn("Failed to load conclave activity data:", err.message);
@@ -116,7 +116,7 @@ export default function RoundRunner({ selectedConclaveId }) {
     loadReferralsAndAttendance();
     const interval = setInterval(loadReferralsAndAttendance, 5000);
     return () => clearInterval(interval);
-  }, [selectedConclaveId, setSelectedConclave]);
+  }, [selectedConclaveId]);
 
   const tables = useMemo(() => {
     if (selectedConclave && selectedConclave.schedule && selectedConclave.participants) {
