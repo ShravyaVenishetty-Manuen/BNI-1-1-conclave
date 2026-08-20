@@ -72,6 +72,7 @@ export default function Referrals({ loggedInUser, userType, conclaveSyncData }) 
             toName: r.otherName || 'Recipient',
             notes: r.notes,
             description: r.notes,
+            status: r.status || 'Pending',
             roundNumber: r.roundNumber || 1,
             timestamp: r.createdAt
           }));
@@ -87,6 +88,7 @@ export default function Referrals({ loggedInUser, userType, conclaveSyncData }) 
             toName: myName,
             notes: r.notes,
             description: r.notes,
+            status: r.status || 'Pending',
             roundNumber: r.roundNumber || 1,
             timestamp: r.createdAt
           }));
