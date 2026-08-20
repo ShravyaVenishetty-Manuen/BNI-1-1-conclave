@@ -52,7 +52,7 @@ export default function Sidebar({ activeTab, setActiveTab, onLogout, isOpen, onC
   useEffect(() => {
     async function loadConclaves() {
       try {
-        const data = await api.get('/admin/conclaves?global=true').catch(() => api.get('/conclaves'));
+        const data = await api.get('/admin/conclaves').catch(() => api.get('/conclaves'));
         if (Array.isArray(data)) {
           const mapped = data.map(c => {
             let status = c.status;
@@ -76,9 +76,17 @@ export default function Sidebar({ activeTab, setActiveTab, onLogout, isOpen, onC
     loadConclaves();
   }, []);
 
-  const activeConclaves = conclaves.filter(c => c.status === 'Running');
-  const myConclaves = conclaves;
-  const selectedConclave = conclaves.find(c => c.id === selectedConclaveId) || activeConclaves[0] || conclaves[0] || null;
+  const adminRegion = (loggedInAdmin?.region || '').toLowerCase().replace(/\s+region$/, '').trim();
+  const isSuperAdmin = (loggedInAdmin?.role || '').toLowerCase() === 'superadmin' || adminRegion === 'global' || !adminRegion;
+
+  const myConclaves = conclaves.filter(c => {
+    if (isSuperAdmin) return true;
+    const cRegion = (c.region || '').toLowerCase().replace(/\s+region$/, '').trim();
+    return !adminRegion || cRegion === adminRegion || cRegion.includes(adminRegion) || adminRegion.includes(cRegion);
+  });
+
+  const activeConclaves = myConclaves.filter(c => c.status === 'Running');
+  const selectedConclave = myConclaves.find(c => c.id === selectedConclaveId) || activeConclaves[0] || myConclaves[0] || null;
 
   useEffect(() => {
     function handleClickOutside(event) {
