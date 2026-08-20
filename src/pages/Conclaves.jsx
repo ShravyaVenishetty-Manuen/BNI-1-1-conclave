@@ -70,6 +70,23 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
           else if (s === 'draft') status = 'Draft';
           else status = 'Upcoming';
 
+          const currentR = Number(c.currentRound) || 0;
+          const totalR = Number(c.roundCount) || 5;
+          const isCompleted = s === 'completed' || s === 'finished';
+          const isRunning = s === 'running' || s === 'active';
+          const hasSchedule = Boolean(c.scheduleSummary || c.schedule);
+
+          let progress = 0;
+          if (isCompleted) {
+            progress = 100;
+          } else if (isRunning) {
+            progress = totalR > 0 ? Math.min(95, Math.max(20, Math.round((currentR / totalR) * 100))) : 50;
+          } else if (hasSchedule) {
+            progress = 30; // Schedule generated & ready for rounds
+          } else {
+            progress = 0;
+          }
+
           return {
             ...c,
             state,
@@ -84,7 +101,7 @@ export default function Conclaves({ searchQuery, setActiveTab, loggedInAdmin }) 
             memberLimit: c.memberLimit || 100,
             captainCount: c.captainCount || 0,
             captainLimit: c.captainLimit || 12,
-            progress: (s === 'completed' || s === 'locked' || Boolean(c.scheduleSummary || c.schedule)) ? 100 : s === 'running' ? 60 : 0
+            progress
           };
         });
         setConclaves(mapped);
