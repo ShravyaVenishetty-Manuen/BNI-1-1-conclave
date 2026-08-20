@@ -111,8 +111,7 @@ export default function Referrals({ loggedInUser, userType, conclaveSyncData }) 
               const toName = String(r.toName || '').toLowerCase();
 
               const isMine = (myUid && (fromUser === String(myUid).toLowerCase() || toUser === String(myUid).toLowerCase())) ||
-                (myEmail && (fromUser === myEmail || toUser === myEmail)) ||
-                (myName && myName.length > 2 && (fromName.includes(myName) || toName.includes(myName)));
+                (uids.has(fromUser) || uids.has(toUser));
 
               if (isMine) {
                 combined.push(r);
@@ -142,13 +141,12 @@ export default function Referrals({ loggedInUser, userType, conclaveSyncData }) 
     );
   }
 
-  const myUid = loggedInUser?.uid || loggedInUser?.id;
+  const myUid = loggedInUser?.uid || loggedInUser?.id || loggedInUser?._originalUid;
   const uids = new Set([
     loggedInUser?.uid,
     loggedInUser?.id,
-    loggedInUser?._originalUid,
-    loggedInUser?.email
-  ].filter(Boolean));
+    loggedInUser?._originalUid
+  ].filter(Boolean).map(id => String(id).toLowerCase()));
 
   const cleanMyName = (loggedInUser?.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 
@@ -188,24 +186,22 @@ export default function Referrals({ loggedInUser, userType, conclaveSyncData }) 
     (p.category && p.category.toLowerCase().includes(recipientSearch.toLowerCase()))
   );
 
-  // Calculate statistics
+  // Calculate statistics with strict UID/email matching (no fuzzy "member" substring matching)
   const givenReferrals = uniqueReferrals.filter(r => {
+    const fromId = String(r.fromMemberId || r.fromUserId || '').toLowerCase();
+    const myUidStr = String(myUid || '').toLowerCase();
+    if (fromId && myUidStr && fromId === myUidStr) return true;
     if (r.fromMemberId && uids.has(r.fromMemberId)) return true;
     if (r.fromUserId && uids.has(r.fromUserId)) return true;
-    if (r.fromName) {
-      const cleanGiver = r.fromName.toLowerCase().replace(/[^a-z0-9]/g, '');
-      if (cleanMyName && (cleanGiver.includes(cleanMyName) || cleanMyName.includes(cleanGiver))) return true;
-    }
     return false;
   });
 
   const receivedReferrals = uniqueReferrals.filter(r => {
+    const toId = String(r.toMemberId || r.toUserId || '').toLowerCase();
+    const myUidStr = String(myUid || '').toLowerCase();
+    if (toId && myUidStr && toId === myUidStr) return true;
     if (r.toMemberId && uids.has(r.toMemberId)) return true;
     if (r.toUserId && uids.has(r.toUserId)) return true;
-    if (r.toName) {
-      const cleanReceiver = r.toName.toLowerCase().replace(/[^a-z0-9]/g, '');
-      if (cleanMyName && (cleanReceiver.includes(cleanMyName) || cleanMyName.includes(cleanReceiver))) return true;
-    }
     return false;
   });
 
