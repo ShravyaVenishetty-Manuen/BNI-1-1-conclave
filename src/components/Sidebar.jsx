@@ -52,15 +52,14 @@ export default function Sidebar({ activeTab, setActiveTab, onLogout, isOpen, onC
   useEffect(() => {
     async function loadConclaves() {
       try {
-        const data = await api.get('/admin/conclaves');
+        const data = await api.get('/admin/conclaves?global=true').catch(() => api.get('/conclaves'));
         if (Array.isArray(data)) {
           const mapped = data.map(c => {
             let status = c.status;
             const s = (c.status || '').toLowerCase();
-            if (s === 'registration_open') status = 'Upcoming';
-            else if (s === 'running') status = 'Running';
-            else if (s === 'completed') status = 'Completed';
-            else if (s === 'draft') status = 'Draft';
+            if (s.includes('open') || s === 'upcoming' || s === 'draft') status = 'Upcoming';
+            else if (s === 'running' || s === 'active') status = 'Running';
+            else if (s === 'completed' || s === 'finished' || s === 'ended') status = 'Completed';
             else if (s === 'cancelled') status = 'Cancelled';
             return {
               ...c,
@@ -79,7 +78,7 @@ export default function Sidebar({ activeTab, setActiveTab, onLogout, isOpen, onC
 
   const activeConclaves = conclaves.filter(c => c.status === 'Running');
   const myConclaves = conclaves;
-  const selectedConclave = conclaves.find(c => c.id === selectedConclaveId) || activeConclaves[0] || null;
+  const selectedConclave = conclaves.find(c => c.id === selectedConclaveId) || activeConclaves[0] || conclaves[0] || null;
 
   useEffect(() => {
     function handleClickOutside(event) {
