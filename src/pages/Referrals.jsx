@@ -4,7 +4,6 @@ import {
   ArrowUpRight,
   ArrowDownLeft,
   Calendar,
-  PlusCircle,
   Search,
   X,
   FileText,
@@ -16,7 +15,7 @@ export default function Referrals({ loggedInUser, userType, conclaveSyncData }) 
   const [referrals, setReferrals] = useState(() => {
     const cached = localStorage.getItem('bni_referrals');
     if (cached) {
-      try { return JSON.parse(cached); } catch (e) {}
+      try { return JSON.parse(cached); } catch (e) { }
     }
     return [];
   });
@@ -167,10 +166,14 @@ export default function Referrals({ loggedInUser, userType, conclaveSyncData }) 
   }));
 
   const map = new Map();
-  backendReceived.forEach(item => map.set(item.id, item));
-  referrals.forEach(item => {
+  // 1. Put cached referrals first
+  referrals.forEach(item => map.set(item.id, item));
+
+  // 2. Put live backend referrals so live DB status ('Connected') ALWAYS overwrites local cache
+  backendReceived.forEach(item => {
     const existing = map.get(item.id);
-    map.set(item.id, existing ? { ...existing, ...item } : item);
+    const liveStatus = item.status && item.status !== 'Pending' ? item.status : (existing?.status || item.status || 'Pending');
+    map.set(item.id, existing ? { ...existing, ...item, status: liveStatus } : item);
   });
   const uniqueReferrals = Array.from(map.values());
 
@@ -263,6 +266,9 @@ export default function Referrals({ loggedInUser, userType, conclaveSyncData }) 
       }
     }
     setReferrals(updated);
+    try {
+      localStorage.setItem('bni_referrals', JSON.stringify(updated));
+    } catch { }
 
     const targetRef = updated.find(r => r.id === refId);
     const activeConclaveId = targetRef?.conclaveId || conclaveSyncData?.conclaveStatus?.id || conclaveSyncData?.conclaveId;
@@ -345,8 +351,8 @@ export default function Referrals({ loggedInUser, userType, conclaveSyncData }) 
           <button
             onClick={() => setActiveSubTab('received')}
             className={`flex-1 py-2.5 text-center text-[11px] font-black uppercase tracking-wider rounded-lg transition-smooth cursor-pointer ${activeSubTab === 'received'
-                ? 'bg-white text-brand-red shadow-2xs border border-zinc-200/80'
-                : 'text-zinc-500 hover:text-zinc-800'
+              ? 'bg-white text-brand-red shadow-2xs border border-zinc-200/80'
+              : 'text-zinc-500 hover:text-zinc-800'
               }`}
           >
             Received Referrals ({receivedReferrals.length})
@@ -354,8 +360,8 @@ export default function Referrals({ loggedInUser, userType, conclaveSyncData }) 
           <button
             onClick={() => setActiveSubTab('sent')}
             className={`flex-1 py-2.5 text-center text-[11px] font-black uppercase tracking-wider rounded-lg transition-smooth cursor-pointer ${activeSubTab === 'sent'
-                ? 'bg-white text-brand-red shadow-2xs border border-zinc-200/80'
-                : 'text-zinc-500 hover:text-zinc-800'
+              ? 'bg-white text-brand-red shadow-2xs border border-zinc-200/80'
+              : 'text-zinc-500 hover:text-zinc-800'
               }`}
           >
             Sent Referrals ({givenReferrals.length})
