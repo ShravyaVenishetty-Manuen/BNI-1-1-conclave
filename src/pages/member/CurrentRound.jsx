@@ -99,6 +99,7 @@ export default function MemberCurrentRound({ loggedInMember, onTabChange, concla
 
   useEffect(() => {
     const startedAt = conclaveSyncData?.conclaveStatus?.currentRoundStartedAt;
+    const serverSentAt = conclaveSyncData?.serverSentAt || conclaveSyncData?.conclaveStatus?.serverSentAt;
     const status = (conclaveSyncData?.conclaveStatus?.status || '').toLowerCase();
     const isRunning = status === 'running' || status === 'active';
 
@@ -112,14 +113,22 @@ export default function MemberCurrentRound({ loggedInMember, onTabChange, concla
         }
         if (isNaN(startTime)) startTime = new Date(startedAt).getTime();
         if (isNaN(startTime)) startTime = Date.now();
-        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+
+        let now = Date.now();
+        if (serverSentAt) {
+          const serverTimeMs = new Date(serverSentAt).getTime();
+          if (!isNaN(serverTimeMs)) {
+            now = serverTimeMs;
+          }
+        }
+
+        const elapsed = Math.floor((now - startTime) / 1000);
         setTimeLeft(Math.max(0, initialTime - elapsed));
       };
       updateTimer();
       const timer = setInterval(updateTimer, 1000);
       return () => clearInterval(timer);
-    }
- else {
+    } else {
       setTimeLeft(initialTime);
     }
   }, [conclaveSyncData]);
