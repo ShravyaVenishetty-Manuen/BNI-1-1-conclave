@@ -194,6 +194,8 @@ export default function MemberCurrentRound({ loggedInMember, onTabChange, concla
     return [];
   };
 
+  const agendaSteps = getAgendaSteps(timeLeft || 0);
+
   const conclaveStatusStr = (conclaveSyncData?.conclaveStatus?.status || '').toLowerCase();
   const isConclaveCompleted = conclaveStatusStr === 'completed' || conclaveStatusStr === 'finished' || conclaveStatusStr === 'ended';
 
