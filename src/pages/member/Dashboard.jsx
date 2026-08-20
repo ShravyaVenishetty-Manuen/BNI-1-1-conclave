@@ -367,13 +367,20 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
                     )}
                   </div>
 
-                  <button
-                    onClick={() => onTabChange && onTabChange('registrations')}
-                    className="w-full py-2.5 px-4 rounded-lg font-bold text-xs bg-brand-red hover:bg-red-700 text-white shadow-sm transition-smooth flex items-center justify-center gap-1.5 cursor-pointer"
-                  >
-                    Register Now
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
+                  {c.isRegistered ? (
+                    <div className="w-full py-2.5 px-4 rounded-lg font-bold text-xs bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center justify-center gap-1.5 shadow-2xs">
+                      <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+                      Registered
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => onTabChange && onTabChange('registrations')}
+                      className="w-full py-2.5 px-4 rounded-lg font-bold text-xs bg-brand-red hover:bg-red-700 text-white shadow-sm transition-smooth flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      Register Now
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
