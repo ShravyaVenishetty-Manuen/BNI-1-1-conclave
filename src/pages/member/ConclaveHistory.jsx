@@ -37,9 +37,16 @@ export default function MemberConclaveHistory({ loggedInMember }) {
         // Filter ONLY conclaves the member is registered for
         const registeredOnly = (Array.isArray(data) ? data : []).filter(c => c.isRegistered === true);
 
-        // Get referrals from localStorage
+        // Fetch LIVE referrals from database backend across all conclaves
+        const myRefsRes = await api.get('/me/referrals').catch(() => null);
+        const liveGiven = Array.isArray(myRefsRes?.given) ? myRefsRes.given : [];
+        const liveReceived = Array.isArray(myRefsRes?.received) ? myRefsRes.received : [];
+        const allLiveRefs = [...liveGiven, ...liveReceived];
+
+        // Also check local storage backup
         const storedRefs = localStorage.getItem('bni_referrals');
-        const referralsList = storedRefs ? JSON.parse(storedRefs) : [];
+        const localRefs = storedRefs ? JSON.parse(storedRefs) : [];
+        const referralsList = [...allLiveRefs, ...localRefs];
 
         // Industry frequency counter
         const categoryCounts = {};

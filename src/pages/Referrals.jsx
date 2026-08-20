@@ -50,13 +50,63 @@ export default function Referrals({ loggedInUser, userType, conclaveSyncData }) 
 
   // Load referrals on mount, fetch live database records
   useEffect(() => {
-    const activeConclaveId = conclaveSyncData?.conclaveStatus?.id || conclaveSyncData?.conclaveId || 'conc_1784874808479';
+    const activeConclaveId = conclaveSyncData?.conclaveStatus?.id || conclaveSyncData?.conclaveId;
     const loadRefs = async () => {
       try {
-        const liveRefs = await api.get(`/conclaves/${activeConclaveId}/referrals`);
-        if (Array.isArray(liveRefs)) {
-          setReferrals(liveRefs);
-          localStorage.setItem('bni_referrals', JSON.stringify(liveRefs));
+        let combined = [];
+
+        // 1. Fetch member's referrals across ALL conclaves (completed & active)
+        const myRefs = await api.get('/me/referrals').catch(() => null);
+        if (myRefs && (Array.isArray(myRefs.given) || Array.isArray(myRefs.received))) {
+          const myUid = loggedInUser?.uid || loggedInUser?.id;
+          const myName = loggedInUser?.name || 'Member';
+          const givenList = (myRefs.given || []).map(r => ({
+            id: r.id,
+            conclaveId: r.conclaveId,
+            conclaveName: r.conclaveName,
+            fromUserId: myUid,
+            fromMemberId: myUid,
+            fromName: myName,
+            toUserId: r.otherUserId,
+            toMemberId: r.otherUserId,
+            toName: r.otherName || 'Recipient',
+            notes: r.notes,
+            description: r.notes,
+            roundNumber: r.roundNumber || 1,
+            timestamp: r.createdAt
+          }));
+          const recvList = (myRefs.received || []).map(r => ({
+            id: r.id,
+            conclaveId: r.conclaveId,
+            conclaveName: r.conclaveName,
+            fromUserId: r.otherUserId,
+            fromMemberId: r.otherUserId,
+            fromName: r.otherName || 'Giver',
+            toUserId: myUid,
+            toMemberId: myUid,
+            toName: myName,
+            notes: r.notes,
+            description: r.notes,
+            roundNumber: r.roundNumber || 1,
+            timestamp: r.createdAt
+          }));
+          combined = [...givenList, ...recvList];
+        }
+
+        // 2. Fetch active conclave referrals if available
+        if (activeConclaveId) {
+          const liveRefs = await api.get(`/conclaves/${activeConclaveId}/referrals`).catch(() => []);
+          if (Array.isArray(liveRefs)) {
+            const existingIds = new Set(combined.map(r => r.id));
+            liveRefs.forEach(r => {
+              if (!existingIds.has(r.id)) combined.push(r);
+            });
+          }
+        }
+
+        if (combined.length > 0) {
+          setReferrals(combined);
+          localStorage.setItem('bni_referrals', JSON.stringify(combined));
         }
       } catch (err) {
         console.warn("Failed to fetch live referrals:", err.message);
@@ -65,7 +115,7 @@ export default function Referrals({ loggedInUser, userType, conclaveSyncData }) 
     loadRefs();
     const interval = setInterval(loadRefs, 4000);
     return () => clearInterval(interval);
-  }, [conclaveSyncData?.conclaveStatus?.id, conclaveSyncData?.conclaveId]);
+  }, [conclaveSyncData?.conclaveStatus?.id, conclaveSyncData?.conclaveId, loggedInUser]);
 
   if (!loggedInUser) {
     return (
