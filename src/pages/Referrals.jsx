@@ -210,10 +210,14 @@ export default function Referrals({ loggedInUser, userType, conclaveSyncData }) 
     return false;
   });
 
-  const connectedCount = uniqueReferrals.filter(
-    r => (uids.has(r.fromMemberId) || uids.has(r.fromUserId) || uids.has(r.toMemberId) || uids.has(r.toUserId)) &&
-      (r.status === 'Connected' || r.status === 'Closed')
-  ).length;
+  const connectedCount = uniqueReferrals.filter(r => {
+    const fromId = String(r.fromMemberId || r.fromUserId || '').toLowerCase();
+    const toId = String(r.toMemberId || r.toUserId || '').toLowerCase();
+    const isMine = (fromId && uids.has(fromId)) || (toId && uids.has(toId));
+    const st = String(r.status || '').toLowerCase();
+    const isConnected = st === 'connected' || st === 'closed' || st === 'completed';
+    return isMine && isConnected;
+  }).length;
 
   const currentList = activeSubTab === 'received' ? receivedReferrals : givenReferrals;
 
