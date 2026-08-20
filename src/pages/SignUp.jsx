@@ -3,6 +3,83 @@ import { Award, User, Mail, Lock, Phone, Building2, Layers, MapPin, Globe, Eye, 
 import { auth } from '../config/firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 
+const BNI_CATEGORIES = [
+  "Software Development",
+  "Web Design & Development",
+  "IT Hardware & Networking",
+  "Digital Marketing",
+  "Real Estate",
+  "Chartered Accountant",
+  "Interior Designer",
+  "Architect",
+  "Civil Contractor",
+  "Electrical Contractor",
+  "Plumbing & Sanitary",
+  "Tiles & Flooring",
+  "Modular Kitchen",
+  "Furniture",
+  "Home Appliances",
+  "Solar Energy",
+  "Caterer",
+  "Restaurant",
+  "Bakery & Confectionery",
+  "Event Management",
+  "Wedding Planner",
+  "Photography & Videography",
+  "Travel Agent",
+  "Hotel & Resorts",
+  "Insurance Advisor",
+  "Financial Planner",
+  "Stock Broker",
+  "Mutual Funds Advisor",
+  "Banking & Loans",
+  "Advocate / Lawyer",
+  "Doctor - General Physician",
+  "Dentist",
+  "Dermatologist",
+  "Pharmacy",
+  "Diagnostic Lab",
+  "Hospital & Healthcare",
+  "Ayurveda & Wellness",
+  "Fitness & Gym",
+  "Yoga Trainer",
+  "Boutique & Fashion",
+  "Textiles",
+  "Jeweller",
+  "Footwear",
+  "Cosmetics & Beauty",
+  "Salon & Spa",
+  "Printing & Packaging",
+  "Signage & Branding",
+  "Advertising Agency",
+  "Gifting & Corporate Gifts",
+  "Stationery",
+  "Automobiles - Cars",
+  "Two Wheeler Dealer",
+  "Auto Service & Repair",
+  "Tyres & Batteries",
+  "Packers & Movers",
+  "Logistics & Courier",
+  "Hardware & Paints",
+  "Cement & Building Material",
+  "Borewells & Drilling",
+  "Pest Control",
+  "Housekeeping Services",
+  "Security Services",
+  "Manpower & Recruitment",
+  "Education & Coaching",
+  "Play School",
+  "Study Abroad Consultant",
+  "Mobile & Electronics",
+  "CCTV & Security Systems",
+  "Agriculture & Seeds",
+  "Dairy & Food Products",
+  "Organic Foods",
+  "Catering Equipment",
+  "Aluminium & Glass",
+  "Other"
+];
+
 export default function SignUp({ onSwitchToLogin, onLogin }) {
   const [formData, setFormData] = useState({
     name: '',
@@ -292,16 +369,21 @@ export default function SignUp({ onSwitchToLogin, onLogin }) {
                   Category <span className="text-brand-red">*</span>
                 </label>
                 <div className="relative">
-                  <Layers className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
-                  <input
-                    type="text"
+                  <Layers className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none z-10" />
+                  <select
                     name="category"
                     value={formData.category}
                     onChange={handleChange}
-                    placeholder="IT Services"
                     required
-                    className="w-full pl-10 pr-3 py-2 bg-white border border-zinc-200 rounded-lg text-body-md font-semibold outline-none focus:border-zinc-800 transition-smooth placeholder-zinc-400 text-zinc-900"
-                  />
+                    className="w-full pl-10 pr-4 py-2 bg-white border border-zinc-200 rounded-lg text-body-md font-semibold outline-none focus:border-zinc-800 transition-smooth text-zinc-900 cursor-pointer"
+                  >
+                    <option value="">Select Category</option>
+                    {BNI_CATEGORIES.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
             </div>
