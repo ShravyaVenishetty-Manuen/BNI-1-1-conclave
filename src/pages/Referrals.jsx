@@ -93,13 +93,30 @@ export default function Referrals({ loggedInUser, userType, conclaveSyncData }) 
           combined = [...givenList, ...recvList];
         }
 
-        // 2. Fetch active conclave referrals if available
+        // 2. Fetch active conclave referrals if available and filter ONLY for current logged-in member
         if (activeConclaveId) {
           const liveRefs = await api.get(`/conclaves/${activeConclaveId}/referrals`).catch(() => []);
           if (Array.isArray(liveRefs)) {
             const existingIds = new Set(combined.map(r => r.id));
+            const myUid = loggedInUser?.uid || loggedInUser?.id;
+            const myEmail = (loggedInUser?.email || '').toLowerCase();
+            const myName = (loggedInUser?.name || '').toLowerCase();
+
             liveRefs.forEach(r => {
-              if (!existingIds.has(r.id)) combined.push(r);
+              if (existingIds.has(r.id)) return;
+
+              const fromUser = String(r.fromUserId || r.fromMemberId || '').toLowerCase();
+              const toUser = String(r.toUserId || r.toMemberId || '').toLowerCase();
+              const fromName = String(r.fromName || '').toLowerCase();
+              const toName = String(r.toName || '').toLowerCase();
+
+              const isMine = (myUid && (fromUser === String(myUid).toLowerCase() || toUser === String(myUid).toLowerCase())) ||
+                (myEmail && (fromUser === myEmail || toUser === myEmail)) ||
+                (myName && myName.length > 2 && (fromName.includes(myName) || toName.includes(myName)));
+
+              if (isMine) {
+                combined.push(r);
+              }
             });
           }
         }
