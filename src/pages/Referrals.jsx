@@ -262,8 +262,8 @@ export default function Referrals({ loggedInUser, userType, conclaveSyncData }) 
     }
     setReferrals(updated);
 
-    const activeConclaveId = conclaveSyncData?.conclaveStatus?.id || conclaveSyncData?.conclaveId || 'sku7Q5mTW3t5QeeHZPrO';
     const targetRef = updated.find(r => r.id === refId);
+    const activeConclaveId = targetRef?.conclaveId || conclaveSyncData?.conclaveStatus?.id || conclaveSyncData?.conclaveId;
     if (targetRef && activeConclaveId) {
       try {
         await api.post(`/conclaves/${activeConclaveId}/sync`, {
