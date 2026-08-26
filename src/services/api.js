@@ -106,6 +106,19 @@ async function fetchWithTimeout(resource, options = {}) {
   }
 }
 
+function parseApiError(err, defaultMsg) {
+  let msg = err.error || err.message || defaultMsg;
+  if (err.details?.issues && Array.isArray(err.details.issues) && err.details.issues.length > 0) {
+    const issueMsgs = err.details.issues.map(i => i.message).join(' ');
+    msg = `${msg} Details: ${issueMsgs}`;
+  } else if (err.details?.hint) {
+    msg = `${msg} Hint: ${err.details.hint}`;
+  }
+  const errorObj = new Error(msg);
+  errorObj.details = err.details;
+  return errorObj;
+}
+
 export const api = {
   async get(endpoint) {
     const headers = await getAuthHeaders();
@@ -116,7 +129,7 @@ export const api = {
       });
       if (!response.ok) {
         const err = await response.json().catch(() => ({}));
-        throw new Error(err.error || err.message || `Request to ${endpoint} failed`);
+        throw parseApiError(err, `Request to ${endpoint} failed`);
       }
       const data = await response.json();
       if (data && data.quotaExceeded) {
@@ -150,7 +163,7 @@ export const api = {
     });
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
-      throw new Error(err.error || err.message || `Request to ${endpoint} failed`);
+      throw parseApiError(err, `Request to ${endpoint} failed`);
     }
     return response.json();
   },
@@ -164,7 +177,7 @@ export const api = {
     });
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
-      throw new Error(err.error || err.message || `Request to ${endpoint} failed`);
+      throw parseApiError(err, `Request to ${endpoint} failed`);
     }
     return response.json();
   },
@@ -178,7 +191,7 @@ export const api = {
     });
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
-      throw new Error(err.error || err.message || `Request to ${endpoint} failed`);
+      throw parseApiError(err, `Request to ${endpoint} failed`);
     }
     return response.json();
   },
@@ -191,7 +204,7 @@ export const api = {
     });
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
-      throw new Error(err.error || err.message || `Request to ${endpoint} failed`);
+      throw parseApiError(err, `Request to ${endpoint} failed`);
     }
     return response.json();
   }
