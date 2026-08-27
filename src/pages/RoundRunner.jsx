@@ -152,9 +152,23 @@ export default function RoundRunner({ selectedConclaveId }) {
   }, [selectedConclave, activeRound]);
 
   const totalReferrals = filteredReferrals.length;
-  const connectedReferrals = filteredReferrals.filter(r => (r.status || '').toLowerCase() === 'connected').length;
-  const pendingReferrals = filteredReferrals.filter(r => !r.status || (r.status || '').toLowerCase() === 'pending').length;
-  const closedReferrals = filteredReferrals.filter(r => (r.status || '').toLowerCase() === 'closed').length;
+  const connectedReferrals = filteredReferrals.filter(r => {
+    const st = (r.status || '').toLowerCase();
+    const out = (r.outcome || '').toLowerCase();
+    return st === 'connected' || st === 'completed' || out === 'accepted';
+  }).length;
+  const closedReferrals = filteredReferrals.filter(r => {
+    const st = (r.status || '').toLowerCase();
+    const out = (r.outcome || '').toLowerCase();
+    return st === 'closed' || out === 'closed' || (r.closedAmount && r.closedAmount > 0);
+  }).length;
+  const pendingReferrals = filteredReferrals.filter(r => {
+    const st = (r.status || '').toLowerCase();
+    const out = (r.outcome || '').toLowerCase();
+    const isConnected = st === 'connected' || st === 'completed' || out === 'accepted';
+    const isClosed = st === 'closed' || out === 'closed' || (r.closedAmount && r.closedAmount > 0);
+    return !isConnected && !isClosed;
+  }).length;
 
   // Timer States (15 minutes per round)
   const ROUND_DURATION_SECS = 15 * 60; // 900 seconds (15:00)

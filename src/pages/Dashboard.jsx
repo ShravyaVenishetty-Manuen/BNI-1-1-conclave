@@ -141,15 +141,29 @@ export default function Dashboard({ setActiveTab, selectedConclaveId, setSelecte
   }, [stats, filteredReferrals]);
 
   const connectedReferrals = useMemo(() => {
-    return filteredReferrals.filter(r => (r.status || '').toLowerCase() === 'connected').length;
-  }, [filteredReferrals]);
-
-  const pendingReferrals = useMemo(() => {
-    return filteredReferrals.filter(r => !r.status || (r.status || '').toLowerCase() === 'pending').length;
+    return filteredReferrals.filter(r => {
+      const st = (r.status || '').toLowerCase();
+      const out = (r.outcome || '').toLowerCase();
+      return st === 'connected' || st === 'completed' || out === 'accepted';
+    }).length;
   }, [filteredReferrals]);
 
   const closedReferrals = useMemo(() => {
-    return filteredReferrals.filter(r => (r.status || '').toLowerCase() === 'closed').length;
+    return filteredReferrals.filter(r => {
+      const st = (r.status || '').toLowerCase();
+      const out = (r.outcome || '').toLowerCase();
+      return st === 'closed' || out === 'closed' || (r.closedAmount && r.closedAmount > 0);
+    }).length;
+  }, [filteredReferrals]);
+
+  const pendingReferrals = useMemo(() => {
+    return filteredReferrals.filter(r => {
+      const st = (r.status || '').toLowerCase();
+      const out = (r.outcome || '').toLowerCase();
+      const isConnected = st === 'connected' || st === 'completed' || out === 'accepted';
+      const isClosed = st === 'closed' || out === 'closed' || (r.closedAmount && r.closedAmount > 0);
+      return !isConnected && !isClosed;
+    }).length;
   }, [filteredReferrals]);
 
   // Top referral givers for this conclave
