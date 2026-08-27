@@ -390,7 +390,16 @@ export default function ScheduleGen({ selectedConclaveId, showGenWarning, clearG
       const roundNum = rd.round || rd.number;
       (rd.tables || []).forEach((tbl) => {
         const tableNum = tbl.tableNumber || tbl.number;
-        const participants = tbl.participants || tbl.members || [];
+        const rawMembers = tbl.participants || tbl.members || [];
+        const captainObj = tbl.captain || (tbl.captainName ? { name: tbl.captainName, id: tbl.captainId, uid: tbl.captainId } : null);
+
+        const participants = [...rawMembers];
+        if (captainObj) {
+          const captId = captainObj.uid || captainObj.id || captainObj.name;
+          if (captId && !participants.some(p => (p.uid || p.id || p.name) === captId)) {
+            participants.unshift(captainObj);
+          }
+        }
 
         for (let i = 0; i < participants.length; i++) {
           for (let j = i + 1; j < participants.length; j++) {
@@ -401,8 +410,8 @@ export default function ScheduleGen({ selectedConclaveId, showGenWarning, clearG
 
             if (!u1 || !u2 || u1 === u2) continue;
 
-            const sorted = [m1, m2].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-            const key = `${sorted[0].uid || sorted[0].name}_${sorted[1].uid || sorted[1].name}`;
+            const sorted = [m1, m2].sort((a, b) => String(a.name || a.id || '').localeCompare(String(b.name || b.id || '')));
+            const key = `${sorted[0].uid || sorted[0].id || sorted[0].name}_${sorted[1].uid || sorted[1].id || sorted[1].name}`;
 
             if (!pairMap.has(key)) {
               pairMap.set(key, {
@@ -430,10 +439,6 @@ export default function ScheduleGen({ selectedConclaveId, showGenWarning, clearG
 
     return repeats;
   }, [selectedConclave]);
-
-  const uniqueMeetingsVal = selectedConclave?.scheduleSummary?.coverage !== undefined
-    ? Math.round(selectedConclave.scheduleSummary.coverage * 100)
-    : Math.min(100, Math.round(90 + (overlapWeight * 0.1) - (progress === 100 ? 0 : 2.5)));
 
   const hasSchedule = Boolean(selectedConclave?.schedule?.rounds?.length);
   const repeatedPairingsVal = hasSchedule
