@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   RefreshCw,
   Download,
@@ -1032,90 +1033,53 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
         </div>
       )}
 
-      {showRepeatModal && (
-        <div className="fixed inset-0 z-[99999] bg-zinc-950/75 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 animate-fade-in overflow-hidden">
-          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl border border-zinc-200 overflow-hidden">
+      {showRepeatModal && createPortal(
+        <div className="fixed inset-0 z-[99999] bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 animate-fade-in">
+          <div className="bg-white rounded-2xl max-w-xl w-full max-h-[85vh] flex flex-col p-6 shadow-2xl space-y-5 border border-zinc-200 overflow-hidden">
             {/* Modal Header */}
-            <div className="p-5 sm:p-6 border-b border-zinc-150 flex items-center justify-between bg-zinc-50/80 shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-brand-red/10 border border-brand-red/20 text-brand-red flex items-center justify-center font-black text-lg shrink-0">
-                  <ArrowRightLeft className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-body-lg font-black text-zinc-900 leading-tight">Repeat Pairings Audit</h3>
-                  <p className="text-[11.5px] text-zinc-500 font-semibold mt-0.5">
-                    {repeatPairingDetails.length === 0
-                      ? 'All members have 100% unique partners across rounds'
-                      : `${repeatPairingDetails.length} repeat pairing${repeatPairingDetails.length > 1 ? 's' : ''} detected across rounds`}
-                  </p>
-                </div>
+            <div className="flex items-center justify-between border-b border-zinc-100 pb-4 shrink-0">
+              <div>
+                <h3 className="text-body-lg font-black text-zinc-900">Repeat Pairings Audit</h3>
+                <p className="text-[11px] text-zinc-400 font-medium">Members seated together more than once across rounds</p>
               </div>
               <button
                 type="button"
                 onClick={() => setShowRepeatModal(false)}
-                className="w-9 h-9 rounded-xl hover:bg-zinc-200/80 text-zinc-400 hover:text-zinc-700 flex items-center justify-center transition-smooth cursor-pointer shrink-0"
+                className="p-1.5 rounded-lg hover:bg-zinc-100 text-zinc-400 hover:text-zinc-600 transition-smooth cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Modal Scrollable Body */}
-            <div className="p-5 sm:p-6 overflow-y-auto flex-1 space-y-4">
+            <div className="max-h-[60vh] overflow-y-auto space-y-3 pr-1 flex-1">
               {repeatPairingDetails.length === 0 ? (
-                <div className="py-12 px-6 text-center bg-emerald-50/50 rounded-2xl border border-emerald-200/60 flex flex-col items-center justify-center space-y-3">
-                  <div className="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-black text-xl shadow-xs">
-                    <CheckCircle2 className="w-7 h-7" />
-                  </div>
-                  <div>
-                    <h4 className="text-body-lg font-black text-emerald-950">Zero Repeat Pairings!</h4>
-                    <p className="text-[12px] text-emerald-700 font-medium max-w-md mx-auto mt-1">
-                      Every single member is seated with 100% unique partners in every round. Perfect conclave schedule optimization.
-                    </p>
-                  </div>
+                <div className="p-8 text-center bg-emerald-50/40 rounded-xl border border-emerald-100 space-y-2">
+                  <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto font-black text-lg">✓</div>
+                  <h4 className="text-body-md font-extrabold text-emerald-900">Zero Repeat Pairings!</h4>
+                  <p className="text-[11px] text-emerald-700">Every member meets 100% unique partners in every single round of this conclave.</p>
                 </div>
               ) : (
                 repeatPairingDetails.map((pair, idx) => (
-                  <div key={idx} className="p-4 sm:p-5 rounded-2xl border border-zinc-200/80 bg-zinc-50/40 hover:bg-zinc-50 transition-smooth space-y-3 shadow-2xs">
+                  <div key={idx} className="p-4 rounded-xl border border-zinc-200/80 bg-zinc-50/50 space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-red-50 text-brand-red border border-red-100 flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-brand-red animate-pulse"></span>
+                      <span className="text-[10px] font-black uppercase text-brand-red bg-red-50 px-2 py-0.5 rounded border border-brand-red/10">
                         {pair.occurrences.length} Times Paired
                       </span>
-                      <span className="text-[11px] font-bold text-zinc-450">
-                        Meeting {pair.occurrences.length}x
-                      </span>
                     </div>
-
-                    {/* Members Pair Cards */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                      <div className="bg-white p-3.5 rounded-xl border border-zinc-200/80 shadow-3xs flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-zinc-100 text-zinc-700 flex items-center justify-center text-[11px] font-black shrink-0">
-                          {(pair.member1.name || 'M').split(' ').map(n => n[0]).join('')}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-[12px] font-black text-zinc-900 truncate">{pair.member1.name}</p>
-                          <p className="text-[10px] text-zinc-500 font-medium truncate">{pair.member1.company || pair.member1.businessCategory || 'Member 1'}</p>
-                        </div>
+                    <div className="grid grid-cols-2 gap-3 pt-1">
+                      <div className="bg-white p-3 rounded-lg border border-zinc-200/60 shadow-2xs">
+                        <p className="text-[12px] font-black text-zinc-850 truncate">{pair.member1.name}</p>
+                        <p className="text-[10px] text-zinc-450 truncate mt-0.5">{pair.member1.company || pair.member1.businessCategory || 'Member 1'}</p>
                       </div>
-                      <div className="bg-white p-3.5 rounded-xl border border-zinc-200/80 shadow-3xs flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-zinc-100 text-zinc-700 flex items-center justify-center text-[11px] font-black shrink-0">
-                          {(pair.member2.name || 'M').split(' ').map(n => n[0]).join('')}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-[12px] font-black text-zinc-900 truncate">{pair.member2.name}</p>
-                          <p className="text-[10px] text-zinc-500 font-medium truncate">{pair.member2.company || pair.member2.businessCategory || 'Member 2'}</p>
-                        </div>
+                      <div className="bg-white p-3 rounded-lg border border-zinc-200/60 shadow-2xs">
+                        <p className="text-[12px] font-black text-zinc-850 truncate">{pair.member2.name}</p>
+                        <p className="text-[10px] text-zinc-450 truncate mt-0.5">{pair.member2.company || pair.member2.businessCategory || 'Member 2'}</p>
                       </div>
                     </div>
-
-                    {/* Rounds breakdown pills */}
-                    <div className="pt-2 border-t border-zinc-150 flex flex-wrap items-center gap-1.5 text-[10.5px] font-semibold text-zinc-500">
-                      <span className="font-bold text-zinc-700 mr-1">Seated Together:</span>
-                      {pair.occurrences.map((occ, oIdx) => (
-                        <span key={oIdx} className="px-2 py-0.5 rounded-md bg-white border border-zinc-200 text-zinc-700 text-[10px] font-extrabold shadow-3xs">
-                          Round {occ.round} (Table {occ.tableNumber})
-                        </span>
-                      ))}
+                    <div className="text-[10.5px] text-zinc-500 font-medium pt-1">
+                      <span className="font-bold text-zinc-700">Seated Together: </span>
+                      {pair.occurrences.map(o => `Round ${o.round} (Table ${o.tableNumber})`).join(' & ')}
                     </div>
                   </div>
                 ))
@@ -1123,17 +1087,18 @@ export default function ScheduleReview({ setActiveTab, searchQuery: globalSearch
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 sm:p-5 border-t border-zinc-150 bg-zinc-50/80 flex justify-end shrink-0">
+            <div className="pt-2 text-right shrink-0">
               <button
                 type="button"
                 onClick={() => setShowRepeatModal(false)}
-                className="px-6 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl text-button font-black transition-smooth cursor-pointer shadow-sm"
+                className="px-5 py-2 bg-zinc-900 hover:bg-zinc-800 text-white font-extrabold text-[12px] rounded-xl transition-smooth cursor-pointer"
               >
                 Close Audit
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
