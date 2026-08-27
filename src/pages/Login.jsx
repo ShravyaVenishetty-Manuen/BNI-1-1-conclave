@@ -117,10 +117,14 @@ export default function Login({ onLogin, onSwitchToSignUp }) {
           userMessage = 'Please enter a valid email address or mobile number.';
         } else if (firebaseErr.code === 'auth/user-disabled') {
           userMessage = 'This account has been disabled. Please contact system admin.';
-          setError(userMessage);
-          setIsLoading(false);
+        } else if (firebaseErr.code === 'auth/too-many-requests') {
+          userMessage = 'Access temporarily disabled due to repeated failed attempts. Please try again later.';
         }
-      };
+
+        setError(userMessage);
+        setIsLoading(false);
+      }
+    };
 
       const tryResolveAndLogin = async () => {
         try {
@@ -325,4 +329,3 @@ export default function Login({ onLogin, onSwitchToSignUp }) {
       </div>
     );
   }
-}
