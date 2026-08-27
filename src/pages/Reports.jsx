@@ -102,31 +102,47 @@ export default function Reports({ searchQuery: globalSearchQuery, selectedConcla
       return [];
     }
 
+    const participantsList = selectedConclave.participants || [];
     const pairMap = new Map();
 
     selectedConclave.schedule.rounds.forEach((rd) => {
-      const roundNum = rd.round || rd.number;
+      const roundNum = rd.round || rd.roundNumber || rd.number;
       (rd.tables || []).forEach((tbl) => {
         const tableNum = tbl.tableNumber || tbl.number;
-        const rawMembers = tbl.participants || tbl.members || [];
-        const captainObj = tbl.captain || (tbl.captainName ? { name: tbl.captainName, id: tbl.captainId, uid: tbl.captainId } : null);
+        const occupants = [];
 
-        const participants = [...rawMembers];
-        if (captainObj) {
-          const captId = captainObj.uid || captainObj.id || captainObj.name;
-          if (captId && !participants.some(p => (p.uid || p.id || p.name) === captId)) {
-            participants.unshift(captainObj);
+        if (tbl.captainId !== undefined || Array.isArray(tbl.memberIds)) {
+          if (tbl.captainId !== undefined) {
+            const capt = participantsList.find(p => p.id === tbl.captainId) || { id: tbl.captainId, name: `Captain ${tbl.captainId}` };
+            occupants.push(capt);
+          }
+          if (Array.isArray(tbl.memberIds)) {
+            tbl.memberIds.forEach(mId => {
+              const mem = participantsList.find(p => p.id === mId) || { id: mId, name: `Member ${mId}` };
+              occupants.push(mem);
+            });
+          }
+        } else {
+          const rawMembers = tbl.participants || tbl.members || [];
+          const captainObj = tbl.captain || (tbl.captainName ? { name: tbl.captainName, id: tbl.captainId, uid: tbl.captainId } : null);
+
+          occupants.push(...rawMembers);
+          if (captainObj) {
+            const captId = captainObj.uid || captainObj.id || captainObj.name;
+            if (captId && !occupants.some(p => (p.uid || p.id || p.name) === captId)) {
+              occupants.unshift(captainObj);
+            }
           }
         }
 
-        for (let i = 0; i < participants.length; i++) {
-          for (let j = i + 1; j < participants.length; j++) {
-            const m1 = participants[i];
-            const m2 = participants[j];
-            const u1 = m1.uid || m1.id || m1.name;
-            const u2 = m2.uid || m2.id || m2.name;
+        for (let i = 0; i < occupants.length; i++) {
+          for (let j = i + 1; j < occupants.length; j++) {
+            const m1 = occupants[i];
+            const m2 = occupants[j];
+            const u1 = m1.uid || m1.id || m1._originalUid || m1.name;
+            const u2 = m2.uid || m2.id || m2._originalUid || m2.name;
 
-            if (!u1 || !u2 || u1 === u2) continue;
+            if (u1 === undefined || u2 === undefined || u1 === u2) continue;
 
             const sorted = [m1, m2].sort((a, b) => String(a.name || a.id || '').localeCompare(String(b.name || b.id || '')));
             const key = `${sorted[0].uid || sorted[0].id || sorted[0].name}_${sorted[1].uid || sorted[1].id || sorted[1].name}`;
