@@ -568,7 +568,11 @@ export default function RoundRunner({ selectedConclaveId }) {
                 <div>
                   <p className="text-[10px] text-zinc-400 font-bold uppercase">Members</p>
                   <h4 className="text-headline-md font-extrabold text-zinc-955 mt-1">
-                    {stats?.counts?.registered || selectedConclave?.participants?.length || 0}
+                    {stats?.counts?.members !== undefined
+                      ? stats.counts.members
+                      : (stats?.counts?.registered !== undefined
+                          ? (stats.counts.registered - (stats.counts.captains || 0))
+                          : (selectedConclave?.participants?.filter(p => p.role !== 'captain')?.length || selectedConclave?.participants?.length || 0))}
                   </h4>
                 </div>
               </div>
@@ -578,7 +582,9 @@ export default function RoundRunner({ selectedConclaveId }) {
                 <div>
                   <p className="text-[10px] text-zinc-400 font-bold uppercase">Captains Active</p>
                   <h4 className="text-headline-md font-extrabold text-zinc-955 mt-1">
-                    {stats?.counts?.captains || selectedConclave?.schedule?.rounds?.[0]?.tables?.filter(t => t.captainId).length || selectedConclave?.scheduleSummary?.tableCount || 0}
+                    {stats?.counts?.captains !== undefined
+                      ? stats.counts.captains
+                      : (selectedConclave?.participants?.filter(p => p.role === 'captain')?.length || selectedConclave?.scheduleSummary?.tableCount || 0)}
                   </h4>
                 </div>
               </div>
