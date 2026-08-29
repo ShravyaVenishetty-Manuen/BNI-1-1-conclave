@@ -13,6 +13,7 @@ import {
   PlayCircle,
   StopCircle,
   Lock,
+  ShieldAlert,
 } from 'lucide-react';
 import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 import confetti from 'canvas-confetti';
@@ -1001,8 +1002,8 @@ export default function ScheduleGen({ selectedConclaveId, showGenWarning, clearG
       )}
 
       {/* CONFIRM LOCK MODAL OVERLAY */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-xs animate-fade-in">
+      {isModalOpen && createPortal(
+        <div className="fixed inset-0 z-[99999] bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 animate-fade-in">
           <div className="w-full max-w-lg max-h-[85vh] flex flex-col bg-white rounded-2xl border border-zinc-100 shadow-2xl overflow-hidden animate-scale-up">
 
             <div className="p-5 border-b border-zinc-100 bg-zinc-50 flex items-center gap-2">
@@ -1065,7 +1066,8 @@ export default function ScheduleGen({ selectedConclaveId, showGenWarning, clearG
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Repeat Pairings Audit Modal */}
