@@ -226,13 +226,15 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
   const memberCategory = loggedInMember?.category || 'N/A';
 
   const conclaveStatusStr = (conclaveSyncData?.conclaveStatus?.status || '').toLowerCase();
-  const isConclaveCompleted = conclaveStatusStr === 'completed' || conclaveStatusStr === 'finished';
-  const hasActiveConclave = !isConclaveCompleted && Boolean(
-    conclaveSyncData?.conclaveStatus?.id ||
-    conclaveSyncData?.tableNumber ||
-    (conclaveSyncData?.conclaveStatus?.currentRound && conclaveSyncData.conclaveStatus.currentRound > 0) ||
-    ['running', 'active'].includes(conclaveStatusStr)
-  );
+  const isConclaveCompleted = conclaveStatusStr === 'completed' || conclaveStatusStr === 'finished' || conclaveStatusStr === 'ended';
+  const isConclaveRunning =
+    !isConclaveCompleted &&
+    ['running', 'active'].includes(conclaveStatusStr) &&
+    Number(conclaveSyncData?.conclaveStatus?.currentRound || 0) > 0;
+
+  const hasActiveSession =
+    isConclaveRunning &&
+    Boolean(conclaveSyncData?.tableNumber || (conclaveSyncData?.tableOccupants && conclaveSyncData.tableOccupants.length > 0));
 
   const [isSyncLoading, setIsSyncLoading] = useState(true);
 
@@ -254,14 +256,27 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
     );
   }
 
-
-
-  if (isConclaveCompleted || !conclaveSyncData) {
+  if (!hasActiveSession) {
     const listToFilter = conclavesList.length > 0 ? conclavesList : (propMemberConclaves || []);
     const upcomingConclaves = listToFilter.filter(c => {
       const s = (c.status || '').toLowerCase();
       return s !== 'completed' && s !== 'finished' && s !== 'ended' && s !== 'running' && s !== 'active';
     });
+
+    const localRegs = (() => {
+      try {
+        return JSON.parse(localStorage.getItem('bni_conclave_registrations') || '[]');
+      } catch (e) {
+        return [];
+      }
+    })();
+
+    const checkIsRegistered = (c) => Boolean(
+      c?.isRegistered ||
+      c?.registered ||
+      (loggedInMember?.conclaveIds || []).includes(c?.id) ||
+      localRegs.some(r => r.conclaveId === c?.id)
+    );
 
     const myUid = loggedInMember?.uid || loggedInMember?.id;
     const myName = (loggedInMember?.name || '').toLowerCase();
@@ -276,6 +291,8 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
     ];
     const sentCount = allRefs.filter(r => r.fromMemberId === myUid || r.fromUserId === myUid || (r.fromName && r.fromName.toLowerCase() === myName)).length;
     const recvCount = allRefs.filter(r => r.toMemberId === myUid || r.toUserId === myUid || (r.toName && r.toName.toLowerCase() === myName)).length;
+    const registeredEventsCount = listToFilter.filter(checkIsRegistered).length;
+    const isRegisteredForUpcoming = registeredEventsCount > 0;
 
     return (
       <div className="space-y-8 animate-fade-in font-sans pb-16">
@@ -283,10 +300,32 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
         <div className="bg-white p-6 md:p-8 pb-8 md:pb-10 rounded-xl shadow-2xs border border-zinc-200 relative overflow-hidden flex flex-col justify-between">
           <div className="absolute inset-0 opacity-[0.02] pointer-events-none bg-[radial-gradient(#af101a_1px,transparent_1px)] [background-size:16px_16px]"></div>
           <div className="space-y-4 my-auto relative z-10">
-            <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg ${isConclaveCompleted ? 'bg-emerald-50 border border-emerald-200 text-emerald-800' : 'bg-amber-50 border border-amber-200 text-amber-800'}`}>
-              <CheckCircle className={`w-4 h-4 shrink-0 ${isConclaveCompleted ? 'text-emerald-600' : 'text-amber-600'}`} />
+            <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg ${
+              isConclaveCompleted
+                ? 'bg-emerald-50 border border-emerald-200 text-emerald-800'
+                : isConclaveRunning
+                  ? 'bg-amber-50 border border-amber-200 text-amber-800'
+                  : isRegisteredForUpcoming
+                    ? 'bg-blue-50 border border-blue-200 text-blue-800'
+                    : 'bg-zinc-100 border border-zinc-200 text-zinc-700'
+            }`}>
+              <CheckCircle className={`w-4 h-4 shrink-0 ${
+                isConclaveCompleted
+                  ? 'text-emerald-600'
+                  : isConclaveRunning
+                    ? 'text-amber-600'
+                    : isRegisteredForUpcoming
+                      ? 'text-blue-600'
+                      : 'text-zinc-500'
+              }`} />
               <span className="text-[11px] font-bold">
-                {isConclaveCompleted ? 'Conclave Completed — Ready for Next Event' : 'Not Registered for Active Conclave'}
+                {isConclaveCompleted
+                  ? 'Conclave Completed — Ready for Next Event'
+                  : isConclaveRunning
+                    ? 'Not Seated for Current Round'
+                    : isRegisteredForUpcoming
+                      ? 'Registered for Upcoming Conclave'
+                      : 'No Active Conclave Session'}
               </span>
             </div>
             <div>
@@ -294,8 +333,12 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
               <p className="text-[12px] text-zinc-500 font-semibold mt-0.5">{memberCompany} • {memberChapter}</p>
               <p className="text-body-sm text-zinc-600 mt-2 max-w-2xl leading-relaxed">
                 {isConclaveCompleted
-                  ? `The previous conclave (${conclaveSyncData?.conclaveStatus?.title || 'Conclave Session'}) has officially ended. Browse upcoming conclaves below to register for your next event!`
-                  : 'You are currently not registered for the running conclave session. Browse available conclaves below and register to participate!'}
+                  ? `The previous conclave (${conclaveSyncData?.conclaveStatus?.title || conclaveSyncData?.conclaveStatus?.name || 'Conclave Session'}) has officially ended. Browse upcoming conclaves below to register for your next event!`
+                  : isConclaveRunning
+                    ? 'A conclave session is currently live, but you are not assigned to a table for this round. Please check your schedule or speak to your table captain.'
+                    : isRegisteredForUpcoming
+                      ? 'You are registered for upcoming networking conclaves. Your assigned table and live 1-on-1 networking rounds will appear here automatically as soon as the session begins!'
+                      : 'There are currently no active conclave networking sessions running. Browse available conclaves below and register to participate!'}
               </p>
             </div>
             <div className="pt-4 pb-2 flex flex-wrap gap-3">
@@ -324,7 +367,7 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
             </div>
             <div>
               <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-widest block">My Registered Events</span>
-              <span className="text-xl font-black text-zinc-900 leading-tight mt-0.5 block">{listToFilter.filter(c => c.isRegistered).length} Events</span>
+              <span className="text-xl font-black text-zinc-900 leading-tight mt-0.5 block">{registeredEventsCount} Events</span>
             </div>
           </div>
 
@@ -412,7 +455,7 @@ export default function MemberDashboard({ loggedInMember, onTabChange, conclaveS
                     )}
                   </div>
 
-                  {c.isRegistered ? (
+                  {checkIsRegistered(c) ? (
                     <div className="w-full py-2.5 px-4 rounded-lg font-bold text-xs bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center justify-center gap-1.5 shadow-2xs">
                       <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
                       Registered
