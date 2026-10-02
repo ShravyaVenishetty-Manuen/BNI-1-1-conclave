@@ -2,57 +2,84 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Search,
-  Plus,
   X,
-  Trash2,
-  Download,
-  Upload,
-  FileSpreadsheet,
   Layers,
-  Eye,
-  Edit3,
 } from 'lucide-react';
 import Pagination from '../components/Pagination';
 import SearchableDropdown from '../components/SearchableDropdown';
 import { api } from '../services/api';
 
-export default function BusinessTypes({ searchQuery, selectedConclaveId, loggedInAdmin }) {
+export default function BusinessTypes({
+  searchQuery,
+  selectedConclaveId,
+  loggedInAdmin,
+}) {
   const [categories, setCategories] = useState(() => {
     const cached = localStorage.getItem('bni_admin_categories_cache');
+
     if (cached) {
-      try { return JSON.parse(cached); } catch (e) { }
+      try {
+        return JSON.parse(cached);
+      } catch (e) {
+        return [];
+      }
     }
+
     return [];
   });
+
   const [members, setMembers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [selectedCategory, setSelectedCategory] = useState(null);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
+  // Load registrations and derive business categories
   useEffect(() => {
     async function loadMembersAndCategories() {
-      setIsLoading(false);
+      setIsLoading(true);
+
       try {
         let rawList = [];
+
         if (selectedConclaveId) {
           try {
-            const res = await api.get(`/admin/conclaves/${selectedConclaveId}/registrations`);
+            const res = await api.get(
+              `/admin/conclaves/${selectedConclaveId}/registrations`
+            );
+
             if (res && Array.isArray(res.registrations)) {
               rawList = res.registrations;
             }
-          } catch { }
+          } catch (error) {
+            console.error('Failed to load conclave registrations:', error);
+          }
         } else {
           const allUsers = await api.get('/admin/users');
+
           if (Array.isArray(allUsers)) {
             rawList = allUsers;
           }
         }
 
-        const mapped = rawList.map(r => {
+        const mapped = rawList.map((r) => {
           const displayName = r.name?.trim() || r.uid || 'Unknown Member';
-          const fallbackCategory = r.category || r.businessCategory?.trim() || 'General';
-          const fallbackCompany = r.company || r.businessName?.trim() || 'Self Employed';
-          const fallbackLocation = typeof r.location === 'object' && r.location !== null
-            ? (r.location.place || r.location.city || '')
-            : (r.location || r.address || '');
+
+          const fallbackCategory =
+            r.category || r.businessCategory?.trim() || 'General';
+
+          const fallbackCompany =
+            r.company || r.businessName?.trim() || 'Self Employed';
+
+          const fallbackLocation =
+            typeof r.location === 'object' && r.location !== null
+              ? r.location.place || r.location.city || ''
+              : r.location || r.address || '';
+
           return {
             id: r.id || r.uid,
             name: displayName,
@@ -72,42 +99,53 @@ export default function BusinessTypes({ searchQuery, selectedConclaveId, loggedI
 
         setMembers(mapped);
 
-        // Derive business categories dynamically from registrations only
+        // Derive business categories from registrations
         const catMap = new Map();
-        mapped.forEach(m => {
-          const catName = m.category?.trim() || 'General';
-          if (!catMap.has(catName)) {
-            catMap.set(catName, {
+
+        mapped.forEach((member) => {
+          const categoryName = member.category?.trim() || 'General';
+
+          if (!catMap.has(categoryName)) {
+            catMap.set(categoryName, {
               id: `BT-${String(catMap.size + 1).padStart(3, '0')}`,
-              name: catName,
-              description: `${catName} Industry Classification`,
-              status: 'Active'
+              name: categoryName,
+              description: `${categoryName} Industry Classification`,
+              status: 'Active',
+              memberCount: 0,
+              growth: '0.0%',
+              createdDate: '—',
+              usage: [0, 0, 0, 0, 0, 0],
+              chapters: [],
             });
           }
         });
 
-        const catList = Array.from(catMap.values());
-        setCategories(catList);
-        localStorage.setItem('bni_admin_categories_cache', JSON.stringify(catList));
-      } catch (err) {
-        console.error("Failed to load registrations for business types:", err);
+        const categoryList = Array.from(catMap.values());
+
+        setCategories(categoryList);
+        localStorage.setItem(
+          'bni_admin_categories_cache',
+          JSON.stringify(categoryList)
+        );
+      } catch (error) {
+        console.error(
+          'Failed to load registrations for business types:',
+          error
+        );
       } finally {
         setIsLoading(false);
       }
     }
+
     loadMembersAndCategories();
   }, [selectedConclaveId]);
-  const [searchTerm, setSearchTerm] = useState('');
 
+  // Sync global search
   useEffect(() => {
     if (searchQuery !== undefined && searchQuery !== null) {
       setSearchTerm(searchQuery);
     }
   }, [searchQuery]);
-
-  const searchVal = searchTerm;
-  const [statusFilter, setStatusFilter] = useState('All');
-  const [selectedCategory, setSelectedCategory] = useState(null);
 
   // Lock background body scroll when drawer is open
   useEffect(() => {
@@ -116,361 +154,147 @@ export default function BusinessTypes({ searchQuery, selectedConclaveId, loggedI
     } else {
       document.body.style.overflow = '';
     }
+
     return () => {
       document.body.style.overflow = '';
     };
   }, [selectedCategory]);
-  const [selectedRows, setSelectedRows] = useState(new Set());
-  const [activeDropdown, setActiveDropdown] = useState(null);
-  const [isBulkDeleteConfirmOpen, setIsBulkDeleteConfirmOpen] = useState(false);
 
-  // Modals & toast states
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState(null);
-  const [deleteTarget, setDeleteTarget] = useState(null);
-  const [toast, setToast] = useState(null);
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter]);
 
-  // Pagination
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
-
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    status: 'Active'
-  });
-
-  const showToast = (message, type = 'success') => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
-  };
-
-  // Handle individual row checkbox toggle
-  const toggleRow = (id, e) => {
-    e.stopPropagation();
-    const updated = new Set(selectedRows);
-    if (updated.has(id)) {
-      updated.delete(id);
-    } else {
-      updated.add(id);
-    }
-    setSelectedRows(updated);
-  };
-
-  // Handle select all checkbox toggle
-  const toggleSelectAll = () => {
-    if (selectedRows.size === filteredCategories.length) {
-      setSelectedRows(new Set());
-    } else {
-      setSelectedRows(new Set(filteredCategories.map(c => c.id)));
-    }
-  };
-
-  // Reset all filters
+  // Reset filters
   const resetFilters = () => {
     setSearchTerm('');
     setStatusFilter('All');
-    setSelectedRows(new Set());
   };
 
-  // Conclave-specific members subset (already fetched and filtered by selectedConclaveId)
+  // Members are already filtered by selected conclave
   const conclaveMembers = members;
 
-  // Compute categories with dynamic conclave-based member counts
+  // Calculate category member counts
   const categoriesWithCounts = useMemo(() => {
-    return categories.map(cat => {
-      const count = conclaveMembers.filter(m => m.category === cat.name).length;
+    return categories.map((category) => {
+      const count = conclaveMembers.filter(
+        (member) => member.category === category.name
+      ).length;
+
       return {
-        ...cat,
-        memberCount: count
+        ...category,
+        memberCount: count,
       };
     });
   }, [categories, conclaveMembers]);
 
-  // KPIs
+  // KPI calculations
   const totalTypes = categoriesWithCounts.length;
-  const activeCount = categoriesWithCounts.filter(c => c.status === 'Active').length;
-  const totalMembersCount = categoriesWithCounts.reduce((sum, c) => sum + c.memberCount, 0);
-  const inactiveCount = categoriesWithCounts.filter(c => c.status === 'Inactive').length;
 
-  // Reset page on filter changes
-  useEffect(() => {
-    setCurrentPage(1);
-    setSelectedRows(new Set());
-  }, [searchVal, statusFilter]);
+  const activeCount = categoriesWithCounts.filter(
+    (category) => category.status === 'Active'
+  ).length;
 
-  // Filtered List
+  const totalMembersCount = categoriesWithCounts.reduce(
+    (sum, category) => sum + category.memberCount,
+    0
+  );
+
+  const unusedCount = categoriesWithCounts.filter(
+    (category) => category.memberCount === 0
+  ).length;
+
+  // Filter categories
   const filteredCategories = useMemo(() => {
-    const q = (searchVal || '').trim().toLowerCase();
+    const query = (searchTerm || '').trim().toLowerCase();
 
-    return categoriesWithCounts.filter(cat => {
-      const matchesSearch = !q || (
-        (cat.name && cat.name.toLowerCase().includes(q)) ||
-        (cat.id && cat.id.toLowerCase().includes(q)) ||
-        (cat.description && cat.description.toLowerCase().includes(q)) ||
-        (cat.status && cat.status.toLowerCase().includes(q))
-      );
+    return categoriesWithCounts.filter((category) => {
+      const matchesSearch =
+        !query ||
+        category.name?.toLowerCase().includes(query) ||
+        category.id?.toLowerCase().includes(query) ||
+        category.description?.toLowerCase().includes(query) ||
+        category.status?.toLowerCase().includes(query);
 
-      const matchesStatus = statusFilter === 'All' || cat.status === statusFilter;
+      const matchesStatus =
+        statusFilter === 'All' || category.status === statusFilter;
 
       return matchesSearch && matchesStatus;
     });
-  }, [categoriesWithCounts, searchVal, statusFilter]);
+  }, [categoriesWithCounts, searchTerm, statusFilter]);
 
-  // Paginated List
+  // Paginated categories
   const paginatedCategories = useMemo(() => {
-    const totalPages = Math.ceil(filteredCategories.length / itemsPerPage) || 1;
-    const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+    const totalPages =
+      Math.ceil(filteredCategories.length / itemsPerPage) || 1;
+
+    const safeCurrentPage = Math.min(
+      Math.max(1, currentPage),
+      totalPages
+    );
+
     const startIndex = (safeCurrentPage - 1) * itemsPerPage;
-    return filteredCategories.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredCategories, currentPage, itemsPerPage]);
 
-  const openAddModal = () => {
-    setEditingCategory(null);
-    setFormData({
-      name: '',
-      description: '',
-      status: 'Active'
-    });
-    setIsFormOpen(true);
-  };
-
-  const openEditModal = (category) => {
-    setEditingCategory(category);
-    setFormData({
-      name: category.name,
-      description: category.description,
-      status: category.status
-    });
-    setSelectedCategory(null); // close drawer if open
-    setIsFormOpen(true);
-  };
-
-  const handleFormSubmit = (e) => {
-    e.preventDefault();
-    if (!formData.name.trim()) {
-      showToast('Please enter a classification name.', 'error');
-      return;
-    }
-
-    if (editingCategory) {
-      // Edit mode
-      const updated = categories.map(c => c.id === editingCategory.id ? {
-        ...c,
-        ...formData
-      } : c);
-      setCategories(updated);
-      localStorage.setItem('bni_categories', JSON.stringify(updated));
-      showToast(`Category "${formData.name}" was successfully updated.`, 'success');
-    } else {
-      // Add mode
-      const newCat = {
-        id: `BT-00${Math.floor(100 + Math.random() * 900)}`,
-        name: formData.name,
-        description: formData.description,
-        memberCount: 0,
-        growth: '0.0%',
-        createdDate: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
-        status: formData.status,
-        usage: [0, 0, 0, 0, 0, 0],
-        chapters: []
-      };
-      const next = [newCat, ...categories];
-      setCategories(next);
-      localStorage.setItem('bni_categories', JSON.stringify(next));
-      showToast(`Created new classification "${formData.name}".`, 'success');
-    }
-
-    setIsFormOpen(false);
-  };
-
-  const handleExport = () => {
-    if (filteredCategories.length === 0) {
-      showToast('No classifications to export!', 'error');
-      return;
-    }
-    const headers = ['Classification ID', 'Name', 'Description', 'Member Count', 'Growth', 'Created Date', 'Status'];
-    const rows = filteredCategories.map(c => [
-      c.id,
-      `"${c.name}"`,
-      `"${c.description}"`,
-      c.memberCount,
-      c.growth,
-      c.createdDate,
-      c.status
-    ]);
-
-    const csvContent = "data:text/csv;charset=utf-8,"
-      + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `bni_classifications_${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  // Export only checked classifications to CSV
-  const handleBulkExport = () => {
-    const selectedList = categories.filter(c => selectedRows.has(c.id));
-    if (selectedList.length === 0) return;
-
-    const headers = ['Classification ID', 'Name', 'Description', 'Member Count', 'Growth', 'Created Date', 'Status'];
-    const rows = selectedList.map(c => [
-      c.id,
-      `"${c.name}"`,
-      `"${c.description}"`,
-      c.memberCount,
-      c.growth,
-      c.createdDate,
-      c.status
-    ]);
-
-    const csvContent = "data:text/csv;charset=utf-8,"
-      + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `selected_classifications_${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    showToast(`Successfully exported ${selectedList.length} selected classifications.`, 'success');
-  };
-
-  const handleImport = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const text = event.target.result;
-      const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
-      if (lines.length <= 1) return;
-
-      const newCats = [];
-      for (let i = 1; i < lines.length; i++) {
-        const columns = lines[i].split(',').map(col => col.replace(/^["']|["']$/g, '').trim());
-        if (columns.length >= 3) {
-          const [id, name, description, memberCount, growth, createdDate, status] = columns;
-          newCats.push({
-            id: id || `BT-00${Math.floor(100 + Math.random() * 900)}`,
-            name: name || 'Unnamed Category',
-            description: description || 'No description provided.',
-            memberCount: parseInt(memberCount) || 0,
-            growth: growth || '0.0%',
-            createdDate: createdDate || 'Just now',
-            status: status === 'Inactive' ? 'Inactive' : 'Active',
-            usage: [0, 0, 0, 0, 0, 0],
-            chapters: []
-          });
-        }
-      }
-
-      if (newCats.length > 0) {
-        setCategories(prev => [...newCats, ...prev]);
-        showToast(`Successfully imported ${newCats.length} classifications from CSV!`, 'success');
-      }
-    };
-    reader.readAsText(file);
-    e.target.value = '';
-  };
-
-  const handleDownloadTemplate = () => {
-    const headers = ['Category ID', 'Category Name', 'Description', 'Status'];
-    const sampleRow = [
-      'BT-00101',
-      '"Digital Marketing & SEO"',
-      '"Online growth strategies and social media marketing"',
-      'Active'
-    ];
-
-    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), sampleRow.join(',')].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "bni_categories_import_template.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+    return filteredCategories.slice(
+      startIndex,
+      startIndex + itemsPerPage
+    );
+  }, [filteredCategories, currentPage]);
 
   return (
     <div className="p-4 sm:p-6 max-w-[1600px] mx-auto w-full flex flex-col gap-6 animate-fade-in">
-
       {/* Page Header */}
-      <div className="border-b border-zinc-100 pb-6 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
-        <div>
-          <h2 className="text-dashboard-title text-zinc-950 font-extrabold tracking-tight">Business Types</h2>
-          <p className="text-body-text text-zinc-500 mt-2">
-            Manage professional classifications and network categories.
-          </p>
-        </div>
-        <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
-          <input
-            type="file"
-            id="csv-class-input"
-            accept=".csv"
-            onChange={handleImport}
-            className="hidden"
-          />
-          <button
-            onClick={handleDownloadTemplate}
-            title="Download formatted CSV template for categories import"
-            className="flex items-center justify-center gap-1 px-3 py-2 border border-zinc-250 bg-zinc-50 text-zinc-700 font-bold text-[11px] rounded-lg hover:bg-zinc-100 transition-smooth cursor-pointer shadow-3xs"
-          >
-            <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
-            Template
-          </button>
-          <button
-            onClick={handleExport}
-            className="flex items-center justify-center gap-1.5 px-3 py-2 border border-zinc-200 bg-white text-zinc-700 font-bold text-[11px] rounded-lg hover:bg-zinc-50 transition-smooth cursor-pointer shadow-3xs"
-          >
-            <Upload className="w-4 h-4 text-zinc-400" />
-            Export
-          </button>
-          <button
-            onClick={() => document.getElementById('csv-class-input').click()}
-            className="flex items-center justify-center gap-1.5 px-3 py-2 border border-zinc-200 bg-white text-zinc-700 font-bold text-[11px] rounded-lg hover:bg-zinc-50 transition-smooth cursor-pointer shadow-3xs"
-          >
-            <Download className="w-4 h-4 text-zinc-400" />
-            Import
-          </button>
-          <button
-            onClick={openAddModal}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-4 py-2 bg-brand-red hover:bg-red-700 text-white font-bold text-button rounded-lg transition-smooth shadow-md cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            Add Category
-          </button>
-        </div>
+      <div className="border-b border-zinc-100 pb-6">
+        <h2 className="text-dashboard-title text-zinc-950 font-extrabold tracking-tight">
+          Business Types
+        </h2>
+
+        <p className="text-body-text text-zinc-500 mt-2">
+          View professional classifications and network categories based on
+          registered members.
+        </p>
       </div>
 
       {/* KPI Overview */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         <div className="bg-white border border-zinc-200/80 p-5 rounded-xl flex flex-col justify-between shadow-sm hover:shadow-md transition-smooth">
-          <span className="text-label-md text-zinc-500 uppercase font-semibold">Total Types</span>
-          <span className="text-display-sm font-extrabold text-zinc-900 leading-none mt-3">{totalTypes}</span>
+          <span className="text-label-md text-zinc-500 uppercase font-semibold">
+            Total Types
+          </span>
+
+          <span className="text-display-sm font-extrabold text-zinc-900 leading-none mt-3">
+            {totalTypes}
+          </span>
         </div>
+
         <div className="bg-white border border-zinc-200/80 p-5 rounded-xl flex flex-col justify-between shadow-sm hover:shadow-md transition-smooth">
-          <span className="text-label-md text-zinc-500 uppercase font-semibold">Active Classifications</span>
-          <div className="flex items-baseline justify-between mt-3">
-            <span className="text-display-sm font-extrabold text-zinc-900 leading-none">{activeCount}</span>
-          </div>
+          <span className="text-label-md text-zinc-500 uppercase font-semibold">
+            Active Classifications
+          </span>
+
+          <span className="text-display-sm font-extrabold text-zinc-900 leading-none mt-3">
+            {activeCount}
+          </span>
         </div>
+
         <div className="bg-white border border-zinc-200/80 p-5 rounded-xl flex flex-col justify-between shadow-sm hover:shadow-md transition-smooth">
-          <span className="text-label-md text-zinc-500 uppercase font-semibold">Total Members</span>
+          <span className="text-label-md text-zinc-500 uppercase font-semibold">
+            Total Members
+          </span>
+
           <span className="text-display-sm font-extrabold text-zinc-900 leading-none mt-3">
             {totalMembersCount.toLocaleString()}
           </span>
         </div>
+
         <div className="bg-white border border-zinc-200/80 p-5 rounded-xl flex flex-col justify-between shadow-sm hover:shadow-md transition-smooth">
-          <span className="text-label-md text-zinc-500 uppercase font-semibold">Unused Items</span>
-          <div className="flex items-baseline justify-between mt-3">
-          </div>
+          <span className="text-label-md text-zinc-500 uppercase font-semibold">
+            Unused Items
+          </span>
+
+          <span className="text-display-sm font-extrabold text-zinc-900 leading-none mt-3">
+            {unusedCount}
+          </span>
         </div>
       </div>
 
@@ -479,6 +303,7 @@ export default function BusinessTypes({ searchQuery, selectedConclaveId, loggedI
         <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:flex-1">
           <div className="relative w-full sm:w-72">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 w-4 h-4" />
+
             <input
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -487,6 +312,7 @@ export default function BusinessTypes({ searchQuery, selectedConclaveId, loggedI
               type="text"
             />
           </div>
+
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <SearchableDropdown
               label="Status"
@@ -497,6 +323,7 @@ export default function BusinessTypes({ searchQuery, selectedConclaveId, loggedI
             />
           </div>
         </div>
+
         <button
           onClick={resetFilters}
           className="text-label-md font-bold text-brand-red hover:underline px-4 cursor-pointer shrink-0 transition-smooth"
@@ -508,98 +335,85 @@ export default function BusinessTypes({ searchQuery, selectedConclaveId, loggedI
       {/* Data Table */}
       <div className="bg-white border border-zinc-200/80 rounded-xl overflow-hidden shadow-sm flex flex-col">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[1000px]">
+          <table className="w-full text-left border-collapse min-w-[800px]">
             <thead>
               <tr className="bg-zinc-50 border-b border-zinc-100 text-label-xs font-bold text-zinc-400 uppercase tracking-wider">
-                <th className="px-5 py-4 w-12 text-center">
-                  <input
-                    checked={filteredCategories.length > 0 && selectedRows.size === filteredCategories.length}
-                    onChange={toggleSelectAll}
-                    className="rounded border-zinc-300 text-brand-red focus:ring-brand-red cursor-pointer w-4 h-4"
-                    type="checkbox"
-                  />
-                </th>
                 <th className="px-5 py-4">Business Type</th>
                 <th className="px-5 py-4">Description</th>
                 <th className="px-5 py-4 text-center">Members</th>
                 <th className="px-5 py-4">Created Date</th>
                 <th className="px-5 py-4">Status</th>
-                <th className="px-5 py-4 text-right">Actions</th>
               </tr>
             </thead>
+
             <tbody className="divide-y divide-zinc-100 text-table-text">
-              {filteredCategories.length === 0 ? (
+              {isLoading ? (
                 <tr>
-                  <td colSpan="7" className="p-8 text-center text-zinc-400 font-medium">
+                  <td
+                    colSpan="5"
+                    className="p-8 text-center text-zinc-400 font-medium"
+                  >
+                    Loading business types...
+                  </td>
+                </tr>
+              ) : filteredCategories.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan="5"
+                    className="p-8 text-center text-zinc-400 font-medium"
+                  >
                     No business classifications match the active filters.
                   </td>
                 </tr>
               ) : (
-                paginatedCategories.map((cat) => (
+                paginatedCategories.map((category) => (
                   <tr
-                    key={cat.id}
-                    onClick={() => setSelectedCategory(cat)}
-                    className="group cursor-pointer"
+                    key={category.id}
+                    onClick={() => setSelectedCategory(category)}
+                    className="group cursor-pointer hover:bg-zinc-50/70 transition-colors"
                   >
-                    <td className="px-5 py-4 text-center" onClick={(e) => e.stopPropagation()}>
-                      <input
-                        checked={selectedRows.has(cat.id)}
-                        onChange={(e) => toggleRow(cat.id, e)}
-                        className="rounded border-zinc-300 text-brand-red focus:ring-brand-red cursor-pointer w-4 h-4"
-                        type="checkbox"
-                      />
-                    </td>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
-                        <div className={`w-2 h-2 rounded-full shrink-0 ${cat.status === 'Active' ? 'bg-emerald-500' : 'bg-zinc-300'
-                          }`} />
-                        <span className="text-body-sm font-bold text-zinc-900 transition-smooth">{cat.name}</span>
+                        <div
+                          className={`w-2 h-2 rounded-full shrink-0 ${
+                            category.status === 'Active'
+                              ? 'bg-emerald-500'
+                              : 'bg-zinc-300'
+                          }`}
+                        />
+
+                        <span className="text-body-sm font-bold text-zinc-900 transition-smooth">
+                          {category.name}
+                        </span>
                       </div>
                     </td>
+
                     <td className="px-5 py-4 text-body-sm text-zinc-650 max-w-xs truncate">
-                      {cat.description}
+                      {category.description}
                     </td>
+
                     <td className="px-5 py-4 text-center">
                       <span className="inline-flex items-center justify-center min-w-[2.5rem] px-2 py-0.5 rounded-full bg-zinc-100 text-zinc-650 text-[10px] font-bold font-mono">
-                        {cat.memberCount}
+                        {category.memberCount}
                       </span>
                     </td>
-                    <td className="px-5 py-4 text-body-sm font-medium text-zinc-500">{cat.createdDate}</td>
+
+                    <td className="px-5 py-4 text-body-sm font-medium text-zinc-500">
+                      {category.createdDate || '—'}
+                    </td>
+
                     <td className="px-5 py-4">
-                      {cat.status === 'Active' ? (
+                      {category.status === 'Active' ? (
                         <span className="inline-flex items-center gap-1 text-emerald-700 bg-emerald-50 border border-emerald-150 px-2 py-0.5 rounded text-[10px] font-bold">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                          Active
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 text-zinc-500 bg-zinc-50 border border-zinc-200 px-2 py-0.5 rounded text-[10px] font-semibold">
-                          <span className="w-1.5 h-1.5 rounded-full bg-zinc-400"></span> Inactive
+                          <span className="w-1.5 h-1.5 rounded-full bg-zinc-400" />
+                          Inactive
                         </span>
                       )}
-                    </td>
-                    <td className="px-5 py-4 text-right" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex items-center justify-end gap-1.5">
-                        <button
-                          onClick={() => setSelectedCategory(cat)}
-                          className="p-1.5 hover:bg-zinc-100 rounded-lg text-zinc-500 hover:text-zinc-900 transition-smooth cursor-pointer"
-                          title="View Details"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => openEditModal(cat)}
-                          className="p-1.5 hover:bg-zinc-100 rounded-lg text-zinc-500 hover:text-brand-red transition-smooth cursor-pointer"
-                          title="Edit Category"
-                        >
-                          <Edit3 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => setDeleteTarget(cat)}
-                          className="p-1.5 hover:bg-red-50 rounded-lg text-zinc-400 hover:text-brand-red transition-smooth cursor-pointer"
-                          title="Delete Category"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
                     </td>
                   </tr>
                 ))
@@ -608,7 +422,7 @@ export default function BusinessTypes({ searchQuery, selectedConclaveId, loggedI
           </table>
         </div>
 
-        {/* Reusable Pagination */}
+        {/* Pagination */}
         <Pagination
           totalItems={filteredCategories.length}
           itemsPerPage={itemsPerPage}
@@ -621,14 +435,24 @@ export default function BusinessTypes({ searchQuery, selectedConclaveId, loggedI
       {/* Details Side Drawer */}
       {createPortal(
         <>
+          {/* Drawer Overlay */}
           <div
             onClick={() => setSelectedCategory(null)}
-            className={`fixed inset-0 bg-black/40 backdrop-blur-xs z-[9999] transition-opacity duration-300 ${selectedCategory ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-              }`}
+            className={`fixed inset-0 bg-black/40 backdrop-blur-xs z-[9999] transition-opacity duration-300 ${
+              selectedCategory
+                ? 'opacity-100 pointer-events-auto'
+                : 'opacity-0 pointer-events-none'
+            }`}
           />
 
-          <div className={`fixed right-0 top-0 bottom-0 h-screen w-full max-w-[420px] bg-white border-l border-zinc-200 shadow-2xl transform transition-transform duration-300 flex flex-col overflow-hidden z-[10000] ${selectedCategory ? 'translate-x-0 pointer-events-auto' : 'translate-x-full pointer-events-none'
-            }`}>
+          {/* Drawer */}
+          <div
+            className={`fixed right-0 top-0 bottom-0 h-screen w-full max-w-[420px] bg-white border-l border-zinc-200 shadow-2xl transform transition-transform duration-300 flex flex-col overflow-hidden z-[10000] ${
+              selectedCategory
+                ? 'translate-x-0 pointer-events-auto'
+                : 'translate-x-full pointer-events-none'
+            }`}
+          >
             {selectedCategory && (
               <>
                 {/* Drawer Header */}
@@ -640,27 +464,28 @@ export default function BusinessTypes({ searchQuery, selectedConclaveId, loggedI
                     >
                       <X className="w-4 h-4" />
                     </button>
-                    <h3 className="text-section-heading font-extrabold text-zinc-950">Category Details</h3>
+
+                    <h3 className="text-section-heading font-extrabold text-zinc-950">
+                      Category Details
+                    </h3>
                   </div>
-                  <button
-                    onClick={() => openEditModal(selectedCategory)}
-                    className="p-1.5 hover:bg-zinc-200 rounded-lg text-brand-red hover:bg-brand-red/5 transition-smooth cursor-pointer"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </button>
                 </div>
 
                 {/* Drawer Content */}
                 <div className="flex-1 overflow-y-auto min-h-0 p-5 space-y-6">
-                  {/* Category Card Summary */}
+                  {/* Category Summary */}
                   <div className="flex flex-col items-center gap-3 text-center bg-zinc-50 p-4 rounded-xl border border-zinc-100">
                     <div className="w-16 h-16 rounded-full border-2 border-brand-red/20 p-1 bg-white">
                       <div className="w-full h-full rounded-full bg-brand-red/10 text-brand-red font-bold text-lg flex items-center justify-center shadow-inner">
                         <Layers className="w-5 h-5" />
                       </div>
                     </div>
+
                     <div>
-                      <h4 className="text-headline-md font-bold text-zinc-955 leading-tight">{selectedCategory.name}</h4>
+                      <h4 className="text-headline-md font-bold text-zinc-950 leading-tight">
+                        {selectedCategory.name}
+                      </h4>
+
                       <div className="flex gap-2 mt-2 justify-center">
                         {selectedCategory.status === 'Active' ? (
                           <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-100 rounded-md text-[9px] font-extrabold uppercase">
@@ -675,40 +500,66 @@ export default function BusinessTypes({ searchQuery, selectedConclaveId, loggedI
                     </div>
                   </div>
 
-                  {/* Description Details */}
+                  {/* Description */}
                   <section className="space-y-3">
-                    <h5 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest border-b border-zinc-100 pb-1.5">Description</h5>
-                    <p className="text-body-sm text-zinc-500 leading-relaxed">{selectedCategory.description}</p>
+                    <h5 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest border-b border-zinc-100 pb-1.5">
+                      Description
+                    </h5>
+
+                    <p className="text-body-sm text-zinc-500 leading-relaxed">
+                      {selectedCategory.description}
+                    </p>
                   </section>
 
-                  {/* Performance metrics */}
+                  {/* Performance Metrics */}
                   <section className="space-y-3">
-                    <h5 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest border-b border-zinc-100 pb-1.5">Growth Performance</h5>
+                    <h5 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest border-b border-zinc-100 pb-1.5">
+                      Growth Performance
+                    </h5>
+
                     <div className="grid grid-cols-2 gap-3.5">
                       <div className="bg-zinc-50/50 p-4 rounded-xl border border-zinc-100">
-                        <span className="text-[10px] text-zinc-400 font-bold uppercase block">Members</span>
-                        <span className="text-headline-lg font-bold text-zinc-950 block mt-1">{selectedCategory.memberCount}</span>
+                        <span className="text-[10px] text-zinc-400 font-bold uppercase block">
+                          Members
+                        </span>
+
+                        <span className="text-headline-lg font-bold text-zinc-950 block mt-1">
+                          {selectedCategory.memberCount}
+                        </span>
                       </div>
+
                       <div className="bg-zinc-50/50 p-4 rounded-xl border border-zinc-100">
-                        <span className="text-[10px] text-zinc-400 font-bold uppercase block">Growth Rate</span>
-                        <span className="text-headline-lg font-bold text-brand-red block mt-1">{selectedCategory.growth}</span>
+                        <span className="text-[10px] text-zinc-400 font-bold uppercase block">
+                          Growth Rate
+                        </span>
+
+                        <span className="text-headline-lg font-bold text-brand-red block mt-1">
+                          {selectedCategory.growth || '0.0%'}
+                        </span>
                       </div>
                     </div>
                   </section>
 
-                  {/* Usage analytics chart */}
+                  {/* Usage Analytics */}
                   <section className="space-y-3.5">
-                    <h5 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest border-b border-zinc-100 pb-1.5">Usage Frequency (6mo)</h5>
+                    <h5 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest border-b border-zinc-100 pb-1.5">
+                      Usage Frequency (6mo)
+                    </h5>
+
                     <div className="w-full h-24 bg-white flex items-end px-2 gap-1.5 pb-2 border-b border-zinc-100 mt-2.5">
-                      {selectedCategory.usage.map((height, i) => (
-                        <div
-                          key={i}
-                          style={{ height: `${height}%` }}
-                          className={`flex-1 transition-smooth rounded-t-sm hover:bg-brand-red/30 cursor-pointer ${i === 5 ? 'bg-brand-red' : 'bg-zinc-100'
+                      {(selectedCategory.usage || [0, 0, 0, 0, 0, 0]).map(
+                        (height, index) => (
+                          <div
+                            key={index}
+                            style={{ height: `${height}%` }}
+                            className={`flex-1 transition-smooth rounded-t-sm hover:bg-brand-red/30 cursor-pointer ${
+                              index === 5 ? 'bg-brand-red' : 'bg-zinc-100'
                             }`}
-                        />
-                      ))}
+                          />
+                        )
+                      )}
                     </div>
+
                     <div className="flex justify-between px-1 text-[9px] font-bold text-zinc-350 uppercase">
                       <span>Sep</span>
                       <span>Oct</span>
@@ -720,20 +571,35 @@ export default function BusinessTypes({ searchQuery, selectedConclaveId, loggedI
                   </section>
 
                   {/* Top Chapters */}
-                  {selectedCategory.chapters.length > 0 && (
+                  {selectedCategory.chapters?.length > 0 && (
                     <section className="space-y-3">
                       <div className="flex items-center justify-between border-b border-zinc-100 pb-1.5">
-                        <h5 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Top Chapters</h5>
-                        <span className="text-[9px] font-bold text-brand-red uppercase">Region Peak</span>
+                        <h5 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+                          Top Chapters
+                        </h5>
+
+                        <span className="text-[9px] font-bold text-brand-red uppercase">
+                          Region Peak
+                        </span>
                       </div>
+
                       <div className="space-y-1">
-                        {selectedCategory.chapters.map((ch, idx) => (
-                          <div key={idx} className="flex items-center justify-between py-2 px-2.5 rounded-lg hover:bg-zinc-50 transition-smooth group">
+                        {selectedCategory.chapters.map((chapter, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center justify-between py-2 px-2.5 rounded-lg hover:bg-zinc-50 transition-smooth group"
+                          >
                             <div className="flex items-center gap-2.5">
                               <div className="w-1.5 h-1.5 rounded-full bg-zinc-200 group-hover:bg-brand-red transition-colors" />
-                              <span className="text-body-sm text-zinc-700 font-semibold">{ch.name}</span>
+
+                              <span className="text-body-sm text-zinc-700 font-semibold">
+                                {chapter.name}
+                              </span>
                             </div>
-                            <span className="text-body-sm font-bold font-mono text-zinc-400">{ch.members}</span>
+
+                            <span className="text-body-sm font-bold font-mono text-zinc-400">
+                              {chapter.members}
+                            </span>
                           </div>
                         ))}
                       </div>
@@ -741,14 +607,8 @@ export default function BusinessTypes({ searchQuery, selectedConclaveId, loggedI
                   )}
                 </div>
 
-                {/* Drawer Footer Actions */}
+                {/* Drawer Footer */}
                 <div className="p-4 border-t border-zinc-100 bg-white flex flex-col gap-2 shrink-0 shadow-lg">
-                  <button
-                    onClick={() => showToast(`Manage Assignments for "${selectedCategory.name}" is coming soon!`, 'success')}
-                    className="w-full py-2 bg-brand-red hover:bg-red-700 text-white text-button font-bold rounded-lg shadow-sm transition-smooth cursor-pointer"
-                  >
-                    Manage Assignments
-                  </button>
                   <button
                     onClick={() => setSelectedCategory(null)}
                     className="w-full py-2 bg-white border border-zinc-100 text-zinc-650 hover:bg-zinc-50 text-button font-bold rounded-lg shadow-sm transition-smooth cursor-pointer"
@@ -762,212 +622,6 @@ export default function BusinessTypes({ searchQuery, selectedConclaveId, loggedI
         </>,
         document.body
       )}
-
-      {/* Add / Edit Category Modal */}
-      {isFormOpen && createPortal(
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-xs animate-fade-in">
-          <div className="w-full max-w-lg max-h-[85vh] flex flex-col bg-white rounded-2xl border border-zinc-100 shadow-2xl overflow-hidden animate-scale-up">
-            {/* Modal Header */}
-            <div className="p-4 sm:p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50 shrink-0">
-              <h3 className="text-section-heading font-extrabold text-zinc-950">
-                {editingCategory ? 'Edit Classification' : 'Add New Category'}
-              </h3>
-              <button
-                onClick={() => setIsFormOpen(false)}
-                className="text-zinc-450 hover:text-zinc-700 transition-smooth cursor-pointer font-bold"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Modal Form */}
-            <form onSubmit={handleFormSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
-              <div className="p-4 sm:p-5 space-y-4 flex-1 overflow-y-auto max-h-[60vh] md:max-h-[65vh]">
-                <div className="space-y-4">
-                  {/* Name */}
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">Classification Name</label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-3.5 py-2 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none transition-smooth"
-                      placeholder="e.g. Accounting Systems"
-                    />
-                  </div>
-
-                  {/* Description */}
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">Description Details</label>
-                    <textarea
-                      rows="3"
-                      required
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      className="w-full px-3.5 py-2 border border-zinc-200 rounded-lg text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none transition-smooth resize-none"
-                      placeholder="Provide a detailed scope of this business classification..."
-                    />
-                  </div>
-
-                  {/* Status selection */}
-                  <div className="flex items-center justify-between pt-2 border-t border-zinc-100">
-                    <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">Classification Status</span>
-                    <select
-                      value={formData.status}
-                      onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                      className="border border-zinc-200 rounded-lg px-2.5 py-1 text-body-sm focus:ring-2 focus:ring-brand-red/10 focus:border-brand-red outline-none bg-white font-semibold text-zinc-700 cursor-pointer"
-                    >
-                      <option value="Active">Active</option>
-                      <option value="Inactive">Inactive</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Static Non-Scrolling Footer Action Buttons */}
-              <div className="p-4 border-t border-zinc-100 bg-zinc-50/50 flex justify-end gap-2.5 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setIsFormOpen(false)}
-                  className="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-button rounded-lg transition-smooth cursor-pointer border border-zinc-200 font-bold text-xs"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 bg-brand-red hover:bg-red-700 text-white text-button rounded-lg transition-smooth shadow-md cursor-pointer font-bold text-xs"
-                >
-                  {editingCategory ? 'Save Changes' : 'Create Category'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>,
-        document.body
-      )}
-
-      {/* Delete Confirmation Modal */}
-      {deleteTarget && createPortal(
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-xs animate-fade-in">
-          <div className="w-full max-w-sm bg-white rounded-2xl border border-zinc-100 shadow-2xl p-5 space-y-4 animate-scale-up">
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-brand-red/10 text-brand-red flex items-center justify-center shrink-0 mt-0.5">
-                <X className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="text-body-sm font-bold text-zinc-950 leading-tight">Confirm Deletion</h3>
-                <p className="text-[10px] text-zinc-400 font-semibold mt-0.5">
-                  Are you sure you want to remove this classification? All assigned member counts will be reset.
-                </p>
-              </div>
-            </div>
-            <div className="bg-zinc-50 p-3 rounded-lg border border-zinc-100 text-[11px] text-zinc-500 font-medium">
-              Category: <span className="font-bold text-zinc-900">{deleteTarget.name}</span><br />
-              ID: <span className="font-mono text-zinc-700 font-bold">{deleteTarget.id}</span>
-            </div>
-            <div className="flex justify-end gap-2 pt-1">
-              <button
-                type="button"
-                onClick={() => setDeleteTarget(null)}
-                className="px-3.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-button rounded-lg transition-smooth cursor-pointer text-[10px] font-bold border border-zinc-100"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setCategories(prev => prev.filter(c => c.id !== deleteTarget.id));
-                  showToast(`Classification "${deleteTarget.name}" was deleted.`, 'success');
-                  setDeleteTarget(null);
-                }}
-                className="px-3.5 py-1.5 bg-brand-red hover:bg-red-700 text-white text-button rounded-lg transition-smooth cursor-pointer text-[10px] font-bold"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
-
-      {/* Bulk Delete Confirmation Modal */}
-      {isBulkDeleteConfirmOpen && createPortal(
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-xs animate-fade-in">
-          <div className="w-full max-w-sm bg-white rounded-2xl border border-zinc-100 shadow-2xl p-5 space-y-4 animate-scale-up">
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-brand-red/10 text-brand-red flex items-center justify-center shrink-0 mt-0.5">
-                <X className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="text-body-sm font-bold text-zinc-950 leading-tight">Confirm Bulk Deletion</h3>
-                <p className="text-[10px] text-zinc-400 font-semibold mt-0.5">
-                  Are you sure you want to remove all {selectedRows.size} selected classifications? This action is permanent and cannot be undone.
-                </p>
-              </div>
-            </div>
-            <div className="flex justify-end gap-2 pt-1">
-              <button
-                type="button"
-                onClick={() => setIsBulkDeleteConfirmOpen(false)}
-                className="px-3.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-button rounded-lg transition-smooth cursor-pointer text-[10px] font-bold border border-zinc-100"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setCategories(prev => prev.filter(c => !selectedRows.has(c.id)));
-                  showToast(`Successfully deleted ${selectedRows.size} classifications.`, 'success');
-                  setSelectedRows(new Set());
-                  setIsBulkDeleteConfirmOpen(false);
-                }}
-                className="px-3.5 py-1.5 bg-brand-red hover:bg-red-700 text-white text-button rounded-lg transition-smooth cursor-pointer text-[10px] font-bold"
-              >
-                Delete All
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
-
-
-
-      {/* Floating Bulk Actions Bar */}
-      {selectedRows.size > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-zinc-900 text-white rounded-lg shadow-2xl py-2 px-4 flex items-center gap-3.5 border border-zinc-800 animate-slide-up text-body-sm font-semibold select-none">
-          <span className="text-[10px] font-extrabold uppercase tracking-wide bg-zinc-800 px-2 py-0.5 rounded text-zinc-350">{selectedRows.size} Selected</span>
-          <div className="w-px h-4 bg-zinc-800" />
-          <button
-            onClick={handleBulkExport}
-            className="text-white hover:text-brand-red transition-smooth flex items-center gap-1.5 cursor-pointer text-button text-[10px]"
-          >
-            <Upload className="w-3.5 h-3.5" />
-            Export Selected
-          </button>
-          <button
-            onClick={() => setIsBulkDeleteConfirmOpen(true)}
-            className="text-brand-red hover:text-red-400 transition-smooth flex items-center gap-1.5 cursor-pointer text-button text-[10px]"
-          >
-            <X className="w-3.5 h-3.5" />
-            Delete Selected
-          </button>
-        </div>
-      )}
-
-      {/* Toast Notifications */}
-      {toast && (
-        <div className="fixed bottom-5 right-5 z-[70] bg-zinc-900 text-white text-[11px] font-bold py-2.5 px-4 rounded-lg shadow-xl flex items-center gap-2 border border-zinc-800 animate-slide-up">
-          {toast.type === 'success' ? (
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-          ) : (
-            <span className="w-1.5 h-1.5 rounded-full bg-brand-red"></span>
-          )}
-          <span>{toast.message}</span>
-        </div>
-      )}
-
     </div>
   );
 }
