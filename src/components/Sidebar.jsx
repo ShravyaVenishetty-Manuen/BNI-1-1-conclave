@@ -15,7 +15,8 @@ import {
   Play,
   LogOut,
   X,
-  ChevronDown
+  ChevronDown,
+  Settings as SettingsIcon
 } from 'lucide-react';
 
 import { api } from '../services/api';
@@ -32,6 +33,7 @@ const navItems = [
   { id: 'captains', label: 'Captains', Icon: Award },
   { id: 'business-types', label: 'Business Types', Icon: Layers },
   { id: 'reports', label: 'Reports', Icon: BarChart3 },
+  { id: 'settings', label: 'Settings', Icon: SettingsIcon },
 ];
 
 const getStatusDot = (status) => {

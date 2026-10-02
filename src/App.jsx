@@ -29,6 +29,7 @@ import MemberProfile from './pages/member/Profile';
 import MemberRegistrations from './pages/member/Registrations';
 import AdminProfile from './pages/admin/Profile';
 import Referrals from './pages/Referrals';
+import Settings from './pages/Settings';
 
 import { Sparkles, ShieldAlert, X } from 'lucide-react';
 import SuperadminLayout from './components/SuperadminLayout';
@@ -808,6 +809,8 @@ export default function App() {
             <RoundRunner selectedConclaveId={selectedConclaveId} />
           ) : activeTab === 'reports' ? (
             <Reports selectedConclaveId={selectedConclaveId} />
+          ) : activeTab === 'settings' ? (
+            <Settings />
           ) : activeTab === 'profile' ? (
             <AdminProfile loggedInAdmin={loggedInAdmin} role="admin" onLogout={handleLogout} />
           ) : (
