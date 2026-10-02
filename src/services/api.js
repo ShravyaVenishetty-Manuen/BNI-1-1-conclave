@@ -140,6 +140,19 @@ function parseApiError(err, defaultMsg) {
   return errorObj;
 }
 
+// After any write to a conclave (create / edit / delete / register ...), the
+// cached conclave lists are stale. Clearing them forces every page and dropdown
+// that reads these keys to refetch from the backend — otherwise a deleted
+// conclave lingers in the dashboard and dropdowns even after a refresh.
+function invalidateConclaveCaches(endpoint) {
+  if (!endpoint || !endpoint.toLowerCase().includes('conclave')) return;
+  ['bni_conclaves', 'bni_conclaves_cache', 'bni_admin_conclaves_cache'].forEach(
+    (k) => {
+      try { localStorage.removeItem(k); } catch (e) {}
+    }
+  );
+}
+
 export const api = {
   async get(endpoint) {
     const headers = await getAuthHeaders();
@@ -200,6 +213,7 @@ export const api = {
       const err = await response.json().catch(() => ({}));
       throw parseApiError(err, `Request to ${endpoint} failed`);
     }
+    invalidateConclaveCaches(endpoint);
     return response.json();
   },
 
@@ -214,6 +228,7 @@ export const api = {
       const err = await response.json().catch(() => ({}));
       throw parseApiError(err, `Request to ${endpoint} failed`);
     }
+    invalidateConclaveCaches(endpoint);
     return response.json();
   },
 
@@ -228,6 +243,7 @@ export const api = {
       const err = await response.json().catch(() => ({}));
       throw parseApiError(err, `Request to ${endpoint} failed`);
     }
+    invalidateConclaveCaches(endpoint);
     return response.json();
   },
 
@@ -241,6 +257,7 @@ export const api = {
       const err = await response.json().catch(() => ({}));
       throw parseApiError(err, `Request to ${endpoint} failed`);
     }
+    invalidateConclaveCaches(endpoint);
     return response.json();
   }
 };
