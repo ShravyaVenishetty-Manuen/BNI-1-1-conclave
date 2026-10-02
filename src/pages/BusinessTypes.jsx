@@ -1,10 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import {
-  Search,
-  X,
-  Layers,
-} from 'lucide-react';
+import { Search, X, Layers } from 'lucide-react';
 import Pagination from '../components/Pagination';
 import SearchableDropdown from '../components/SearchableDropdown';
 import { api } from '../services/api';
@@ -20,7 +16,7 @@ export default function BusinessTypes({
     if (cached) {
       try {
         return JSON.parse(cached);
-      } catch (e) {
+      } catch {
         return [];
       }
     }
@@ -30,12 +26,11 @@ export default function BusinessTypes({
 
   const [members, setMembers] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [selectedCategory, setSelectedCategory] = useState(null);
-
   const [currentPage, setCurrentPage] = useState(1);
+
   const itemsPerPage = 5;
 
   // Load registrations and derive business categories
@@ -99,7 +94,7 @@ export default function BusinessTypes({
 
         setMembers(mapped);
 
-        // Derive business categories from registrations
+        // Derive unique business categories from registrations
         const catMap = new Map();
 
         mapped.forEach((member) => {
@@ -147,13 +142,9 @@ export default function BusinessTypes({
     }
   }, [searchQuery]);
 
-  // Lock background body scroll when drawer is open
+  // Lock background scrolling when drawer is open
   useEffect(() => {
-    if (selectedCategory) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
+    document.body.style.overflow = selectedCategory ? 'hidden' : '';
 
     return () => {
       document.body.style.overflow = '';
@@ -165,16 +156,14 @@ export default function BusinessTypes({
     setCurrentPage(1);
   }, [searchTerm, statusFilter]);
 
-  // Reset filters
   const resetFilters = () => {
     setSearchTerm('');
     setStatusFilter('All');
   };
 
-  // Members are already filtered by selected conclave
   const conclaveMembers = members;
 
-  // Calculate category member counts
+  // Calculate member count for each category
   const categoriesWithCounts = useMemo(() => {
     return categories.map((category) => {
       const count = conclaveMembers.filter(
@@ -223,7 +212,7 @@ export default function BusinessTypes({
     });
   }, [categoriesWithCounts, searchTerm, statusFilter]);
 
-  // Paginated categories
+  // Pagination
   const paginatedCategories = useMemo(() => {
     const totalPages =
       Math.ceil(filteredCategories.length / itemsPerPage) || 1;
@@ -261,7 +250,6 @@ export default function BusinessTypes({
           <span className="text-label-md text-zinc-500 uppercase font-semibold">
             Total Types
           </span>
-
           <span className="text-display-sm font-extrabold text-zinc-900 leading-none mt-3">
             {totalTypes}
           </span>
@@ -271,7 +259,6 @@ export default function BusinessTypes({
           <span className="text-label-md text-zinc-500 uppercase font-semibold">
             Active Classifications
           </span>
-
           <span className="text-display-sm font-extrabold text-zinc-900 leading-none mt-3">
             {activeCount}
           </span>
@@ -281,7 +268,6 @@ export default function BusinessTypes({
           <span className="text-label-md text-zinc-500 uppercase font-semibold">
             Total Members
           </span>
-
           <span className="text-display-sm font-extrabold text-zinc-900 leading-none mt-3">
             {totalMembersCount.toLocaleString()}
           </span>
@@ -291,7 +277,6 @@ export default function BusinessTypes({
           <span className="text-label-md text-zinc-500 uppercase font-semibold">
             Unused Items
           </span>
-
           <span className="text-display-sm font-extrabold text-zinc-900 leading-none mt-3">
             {unusedCount}
           </span>
@@ -332,16 +317,15 @@ export default function BusinessTypes({
         </button>
       </div>
 
-      {/* Data Table */}
+      {/* Business Types Table */}
       <div className="bg-white border border-zinc-200/80 rounded-xl overflow-hidden shadow-sm flex flex-col">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[800px]">
+          <table className="w-full text-left border-collapse min-w-[700px]">
             <thead>
               <tr className="bg-zinc-50 border-b border-zinc-100 text-label-xs font-bold text-zinc-400 uppercase tracking-wider">
                 <th className="px-5 py-4">Business Type</th>
                 <th className="px-5 py-4">Description</th>
                 <th className="px-5 py-4 text-center">Members</th>
-                <th className="px-5 py-4">Created Date</th>
                 <th className="px-5 py-4">Status</th>
               </tr>
             </thead>
@@ -350,7 +334,7 @@ export default function BusinessTypes({
               {isLoading ? (
                 <tr>
                   <td
-                    colSpan="5"
+                    colSpan="4"
                     className="p-8 text-center text-zinc-400 font-medium"
                   >
                     Loading business types...
@@ -359,7 +343,7 @@ export default function BusinessTypes({
               ) : filteredCategories.length === 0 ? (
                 <tr>
                   <td
-                    colSpan="5"
+                    colSpan="4"
                     className="p-8 text-center text-zinc-400 font-medium"
                   >
                     No business classifications match the active filters.
@@ -381,7 +365,6 @@ export default function BusinessTypes({
                               : 'bg-zinc-300'
                           }`}
                         />
-
                         <span className="text-body-sm font-bold text-zinc-900 transition-smooth">
                           {category.name}
                         </span>
@@ -396,10 +379,6 @@ export default function BusinessTypes({
                       <span className="inline-flex items-center justify-center min-w-[2.5rem] px-2 py-0.5 rounded-full bg-zinc-100 text-zinc-650 text-[10px] font-bold font-mono">
                         {category.memberCount}
                       </span>
-                    </td>
-
-                    <td className="px-5 py-4 text-body-sm font-medium text-zinc-500">
-                      {category.createdDate || '—'}
                     </td>
 
                     <td className="px-5 py-4">
@@ -522,7 +501,6 @@ export default function BusinessTypes({
                         <span className="text-[10px] text-zinc-400 font-bold uppercase block">
                           Members
                         </span>
-
                         <span className="text-headline-lg font-bold text-zinc-950 block mt-1">
                           {selectedCategory.memberCount}
                         </span>
@@ -532,7 +510,6 @@ export default function BusinessTypes({
                         <span className="text-[10px] text-zinc-400 font-bold uppercase block">
                           Growth Rate
                         </span>
-
                         <span className="text-headline-lg font-bold text-brand-red block mt-1">
                           {selectedCategory.growth || '0.0%'}
                         </span>
@@ -577,7 +554,6 @@ export default function BusinessTypes({
                         <h5 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
                           Top Chapters
                         </h5>
-
                         <span className="text-[9px] font-bold text-brand-red uppercase">
                           Region Peak
                         </span>
@@ -591,7 +567,6 @@ export default function BusinessTypes({
                           >
                             <div className="flex items-center gap-2.5">
                               <div className="w-1.5 h-1.5 rounded-full bg-zinc-200 group-hover:bg-brand-red transition-colors" />
-
                               <span className="text-body-sm text-zinc-700 font-semibold">
                                 {chapter.name}
                               </span>
