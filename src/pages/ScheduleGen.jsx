@@ -89,9 +89,10 @@ export default function ScheduleGen({ selectedConclaveId, showGenWarning, clearG
   );
   const conclaveName = selectedConclave?.name || 'Conclave';
 
-  const isLocked = selectedConclave?.status === 'Locked';
+  const isLocked = Boolean(selectedConclave?.isScheduleLocked || selectedConclave?.status?.toLowerCase() === 'locked');
 
   const displayStatus = (status) => {
+    if (isLocked) return 'Locked';
     const s = (status || '').toLowerCase();
     if (s === 'registration_open') return 'Registration Open';
     return s.charAt(0).toUpperCase() + s.slice(1);
@@ -323,6 +324,9 @@ export default function ScheduleGen({ selectedConclaveId, showGenWarning, clearG
         c.id === selectedConclaveId ? { ...c, isScheduleLocked: true } : c
       );
       setConclaves(updatedConclaves);
+      try {
+        localStorage.setItem('bni_schedule_gen_conclaves_cache', JSON.stringify(updatedConclaves));
+      } catch (e) { }
       setIsModalOpen(false);
       showToast('Conclave Locked Successfully', 'Seating assignments are now frozen and published.');
     } catch (err) {
@@ -607,7 +611,11 @@ export default function ScheduleGen({ selectedConclaveId, showGenWarning, clearG
           </div>
           <div className="flex flex-col">
             <span className="text-[10px] text-zinc-400 font-bold uppercase">Status</span>
-            <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-100 w-fit mt-1 uppercase tracking-wider">
+            <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-extrabold border w-fit mt-1 uppercase tracking-wider ${
+              isLocked
+                ? 'bg-amber-50 text-amber-800 border-amber-200'
+                : 'bg-emerald-50 text-emerald-800 border-emerald-100'
+            }`}>
               {selectedConclave ? displayStatus(selectedConclave.status) : 'Running'}
             </span>
           </div>
