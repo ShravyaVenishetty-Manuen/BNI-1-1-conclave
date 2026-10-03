@@ -13,6 +13,7 @@ import {
   Eye,
   Edit3,
   Trash2,
+  Edit
 } from 'lucide-react';
 import Pagination from '../components/Pagination';
 import SearchableDropdown from '../components/SearchableDropdown';
